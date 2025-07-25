@@ -39,7 +39,6 @@ namespace BE.Data
         public DbSet<ChatSessionNhanVien> Chat_Session_Nhan_Vien { get; set; }
         public DbSet<Message> Message { get; set; }
         public DbSet<SanPhamDoNgot> SanPham_DoNgot { get; set; }
-        public DbSet<PhiShip> Phi_Ship { get; set; }
         public DbSet<HoaDonVoucher> HoaDonVouchers { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
@@ -162,10 +161,7 @@ namespace BE.Data
             modelBuilder.Entity<Voucher>()
                 .Property(v => v.So_Tien_Dat_Yeu_Cau)
                 .HasPrecision(18, 2);
-            modelBuilder.Entity<Voucher>()
-                .Property(v => v.Khach_Hang_Online)
-                .IsRequired(true)
-                .HasDefaultValue(true);
+            
             modelBuilder.Entity<Voucher>()
                 .Property(v => v.Trang_Thai)
                 .IsRequired(true)
@@ -317,11 +313,7 @@ namespace BE.Data
                 .WithMany(d => d.HoaDons)
                 .HasForeignKey(hd => hd.ID_Dia_Chi)
                 .IsRequired(false);
-            modelBuilder.Entity<HoaDon>()
-                .HasOne(hd => hd.PhiShip)
-                .WithMany(ps => ps.HoaDons)
-                .HasForeignKey(hd => hd.ID_Phi_Ship)
-                .IsRequired(false);
+            
             modelBuilder.Entity<HoaDon>()
                 .Property(hd => hd.Tong_Tien)
                 .HasPrecision(18, 2);
@@ -593,32 +585,8 @@ namespace BE.Data
                 .IsRequired(true)
                 .HasDefaultValue(true);
 
-            // 32. Phi_Ship
-            modelBuilder.Entity<PhiShip>()
-                .HasKey(ps => ps.ID_Phi_Ship);
-            modelBuilder.Entity<PhiShip>()
-                .Property(ps => ps.Muc_Phi)
-                .HasPrecision(18, 2)
-                .IsRequired(true);
-            modelBuilder.Entity<PhiShip>()
-                .Property(ps => ps.Mo_Ta)
-                .IsRequired(false);
-            modelBuilder.Entity<PhiShip>()
-                .Property(ps => ps.Trang_Thai)
-                .IsRequired(false);
-            modelBuilder.Entity<PhiShip>()
-                .Property(ps => ps.Tinh_Thanh_Ap_Dung)
-                .HasMaxLength(100)
-                .IsRequired(false);
-            modelBuilder.Entity<PhiShip>()
-                .Property(ps => ps.Khoang_Cach_Toi_Da_Km)
-                .IsRequired(false);
-            modelBuilder.Entity<PhiShip>()
-                .HasMany(ps => ps.HoaDons)
-                .WithOne(hd => hd.PhiShip)
-                .HasForeignKey(hd => hd.ID_Phi_Ship);
-
-            // 33. HoaDonVoucher
+           
+            // 32. HoaDonVoucher
             modelBuilder.Entity<HoaDonVoucher>()
                 .HasKey(hdv => hdv.ID_HoaDonVoucher);
             modelBuilder.Entity<HoaDonVoucher>()
