@@ -24,8 +24,7 @@ namespace BE.models
 
         public DateTime? Ngay_Ket_Thuc { get; set; }
 
-        public bool? Khach_Hang_Online { get; set; }
-
+       
         public bool? Trang_Thai { get; set; }
 
         public virtual ICollection<KhachHangVoucher> KhachHangVouchers { get; set; } = new List<KhachHangVoucher>();
