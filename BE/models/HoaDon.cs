@@ -23,7 +23,6 @@ namespace BE.models
         public NhanVien NhanVien { get; set; }
         public HinhThucThanhToan HinhThucThanhToan { get; set; }
         public DiaChi DiaChi { get; set; }
-        public PhiShip PhiShip { get; set; }
         public string? LyDoHuyDon { get; set; }  // Cho phép null nếu không hủy đơn
         public string? LyDoDonHangCoVanDe { get; set; }  // Cho phép null nếu không hủy đơn
 
