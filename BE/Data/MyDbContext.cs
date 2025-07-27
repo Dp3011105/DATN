@@ -238,6 +238,9 @@ namespace BE.Data
             modelBuilder.Entity<SanPhamSize>()
                 .Property(ss => ss.Ghi_Chu)
                 .IsRequired(false);
+            modelBuilder.Entity<SanPhamSize>()
+               .Property(ss => ss.Mo_Ta)
+               .IsRequired(false);
 
             // 14. Topping
             modelBuilder.Entity<Topping>()
@@ -260,7 +263,9 @@ namespace BE.Data
                 .HasOne(st => st.SanPham)
                 .WithMany(sp => sp.SanPhamToppings)
                 .HasForeignKey(st => st.ID_San_Pham);
-
+            modelBuilder.Entity<SanPhamTopping>()
+               .Property(ss => ss.Mo_Ta)
+               .IsRequired(false);
             // 16. LuongDa
             modelBuilder.Entity<LuongDa>()
                 .HasKey(ld => ld.ID_LuongDa);
