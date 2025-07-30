@@ -1,4 +1,4 @@
-﻿using BE.DTOs;
+using BE.DTOs;
 using BE.models;
 using BE.Repository.IRepository;
 using Microsoft.AspNetCore.Http;
@@ -9,12 +9,14 @@ using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 
+
 namespace BE.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
     public class SanPhamController : ControllerBase
     {
+
         private readonly ISanPhamRepository _sanPhamRepository;
         private readonly string _uploadPath = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot/uploads/Images_SanPham");
 
@@ -73,6 +75,7 @@ namespace BE.Controllers
         }
 
         [HttpGet("{id}")]
+
         [ProducesResponseType(typeof(object), StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         public async Task<ActionResult> GetSanPhamById(int id)
@@ -214,6 +217,7 @@ namespace BE.Controllers
             }
 
             return Ok(sanPham);
+
         }
     }
 }

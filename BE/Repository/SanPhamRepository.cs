@@ -1,4 +1,4 @@
-﻿using BE.Data;
+using BE.Data;
 using BE.DTOs;
 using BE.models;
 using BE.Repository.IRepository;
@@ -14,7 +14,6 @@ namespace BE.Repository
         {
             _context = context;
         }
-
         public async Task<List<SanPham>> GetAllWithDetailsAsync()
         {
             return await _context.San_Pham
@@ -343,4 +342,3 @@ namespace BE.Repository
     }
 
 }
-

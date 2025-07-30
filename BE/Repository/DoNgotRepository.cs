@@ -1,10 +1,11 @@
-﻿using BE.Data;
+using BE.Data;
 using BE.DTOs;
 using BE.models;
 using BE.Repository.IRepository;
 using Microsoft.EntityFrameworkCore;
 
 namespace BE.Repository
+
 {
     public class DoNgotRepository : IDoNgotRepository
     {
@@ -14,6 +15,7 @@ namespace BE.Repository
         {
             _context = context;
         }
+
 
         public async Task<List<DoNgotDTO>> GetAllAsync()
         {
@@ -89,3 +91,4 @@ namespace BE.Repository
         }
     }
 }
+

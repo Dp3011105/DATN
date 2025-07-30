@@ -1,4 +1,5 @@
-﻿using BE.DTOs;
+
+using BE.DTOs;
 using BE.models;
 using BE.Repository;
 using BE.Repository.IRepository;
@@ -8,12 +9,15 @@ using System.Threading.Tasks;
 using BE.Repository.IRepository;
 
 
+
+
 namespace BE.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
     public class DoNgotController : ControllerBase
     {
+
         private readonly IDoNgotRepository _doNgotRepository;
 
         public DoNgotController(IDoNgotRepository doNgotRepository)
@@ -71,6 +75,7 @@ namespace BE.Controllers
             }
 
             return Ok(updatedDoNgot);
+
         }
     }
 }

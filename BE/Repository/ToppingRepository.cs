@@ -1,10 +1,11 @@
-﻿using BE.Data;
+using BE.Data;
 using BE.DTOs;
 using BE.models;
 using BE.Repository.IRepository;
 using Microsoft.EntityFrameworkCore;
 
 namespace BE.Repository
+
 {
     public class ToppingRepository : IToppingRepository
     {
@@ -14,7 +15,6 @@ namespace BE.Repository
         {
             _context = context;
         }
-
         public async Task<List<ToppingDTO>> GetAllAsync()
         {
             return await _context.Topping

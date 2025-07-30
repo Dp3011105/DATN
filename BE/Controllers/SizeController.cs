@@ -1,4 +1,5 @@
-﻿using BE.DTOs;
+
+using BE.DTOs;
 using BE.models;
 using BE.Repository;
 using BE.Repository.IRepository;
@@ -6,12 +7,14 @@ using Microsoft.AspNetCore.Mvc;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 
+
 namespace BE.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
     public class SizeController : ControllerBase
     {
+
         private readonly ISizeRepository _sizeRepository;
 
         public SizeController(ISizeRepository sizeRepository)
@@ -69,6 +72,7 @@ namespace BE.Controllers
             }
 
             return Ok(updatedSize);
+
         }
     }
 }

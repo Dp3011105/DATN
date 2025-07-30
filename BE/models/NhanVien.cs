@@ -22,6 +22,8 @@ namespace BE.models
         [StringLength(255)]
         public string Dia_Chi { get; set; }
 
+        public DateTime NamSinh { get; set; }
+
         [StringLength(20)]
         public string CCCD { get; set; }
 

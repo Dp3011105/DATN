@@ -1,4 +1,4 @@
-﻿using BE.DTOs;
+using BE.DTOs;
 
 namespace BE.Repository.IRepository
 {
@@ -10,3 +10,4 @@ namespace BE.Repository.IRepository
         Task<LuongDaDTO> UpdateAsync(int id, LuongDaDTO luongDaDTO);
     }
 }
+
