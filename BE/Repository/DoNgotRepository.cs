@@ -1,9 +1,11 @@
-using BE.models;
 using BE.Data;
+using BE.DTOs;
+using BE.models;
+using BE.Repository.IRepository;
 using Microsoft.EntityFrameworkCore;
-using Repository.IRepository;
 
-namespace Repository
+namespace BE.Repository
+
 {
     public class DoNgotRepository : IDoNgotRepository
     {
@@ -14,36 +16,79 @@ namespace Repository
             _context = context;
         }
 
-        public async Task<IEnumerable<DoNgot>> GetAllAsync()
+
+        public async Task<List<DoNgotDTO>> GetAllAsync()
         {
-            return await _context.DoNgot.ToListAsync();
+            return await _context.DoNgot
+                .Select(dn => new DoNgotDTO
+                {
+                    ID_DoNgot = dn.ID_DoNgot,
+                    Muc_Do = dn.Muc_Do,
+                    Ghi_Chu = dn.Ghi_Chu,
+                    Trang_Thai = dn.Trang_Thai
+                })
+                .ToListAsync();
         }
 
-        public async Task<DoNgot?> GetByIdAsync(int id)
+        public async Task<DoNgotDTO> GetByIdAsync(int id)
         {
-            return await _context.DoNgot.FindAsync(id);
+            return await _context.DoNgot
+                .Where(dn => dn.ID_DoNgot == id)
+                .Select(dn => new DoNgotDTO
+                {
+                    ID_DoNgot = dn.ID_DoNgot,
+                    Muc_Do = dn.Muc_Do,
+                    Ghi_Chu = dn.Ghi_Chu,
+                    Trang_Thai = dn.Trang_Thai
+                })
+                .FirstOrDefaultAsync();
         }
 
-        public async Task AddAsync(DoNgot entity)
+        public async Task<DoNgotDTO> CreateAsync(DoNgotDTO doNgotDTO)
         {
-            await _context.DoNgot.AddAsync(entity);
-            await _context.SaveChangesAsync();
-        }
-
-        public async Task UpdateAsync(DoNgot entity)
-        {
-            _context.DoNgot.Update(entity);
-            await _context.SaveChangesAsync();
-        }
-
-        public async Task DeleteAsync(int id)
-        {
-            var entity = await GetByIdAsync(id);
-            if (entity != null)
+            var doNgot = new DoNgot
             {
-                _context.DoNgot.Remove(entity);
-                await _context.SaveChangesAsync();
+                Muc_Do = doNgotDTO.Muc_Do,
+                Ghi_Chu = doNgotDTO.Ghi_Chu,
+                Trang_Thai = doNgotDTO.Trang_Thai
+            };
+
+            _context.DoNgot.Add(doNgot);
+            await _context.SaveChangesAsync();
+
+            return new DoNgotDTO
+            {
+                ID_DoNgot = doNgot.ID_DoNgot,
+                Muc_Do = doNgot.Muc_Do,
+                Ghi_Chu = doNgot.Ghi_Chu,
+                Trang_Thai = doNgot.Trang_Thai
+            };
+        }
+
+        public async Task<DoNgotDTO> UpdateAsync(int id, DoNgotDTO doNgotDTO)
+        {
+            var doNgot = await _context.DoNgot
+                .FirstOrDefaultAsync(dn => dn.ID_DoNgot == id);
+
+            if (doNgot == null)
+            {
+                return null;
             }
+
+            doNgot.Muc_Do = doNgotDTO.Muc_Do;
+            doNgot.Ghi_Chu = doNgotDTO.Ghi_Chu;
+            doNgot.Trang_Thai = doNgotDTO.Trang_Thai;
+
+            await _context.SaveChangesAsync();
+
+            return new DoNgotDTO
+            {
+                ID_DoNgot = doNgot.ID_DoNgot,
+                Muc_Do = doNgot.Muc_Do,
+                Ghi_Chu = doNgot.Ghi_Chu,
+                Trang_Thai = doNgot.Trang_Thai
+            };
         }
     }
 }
+

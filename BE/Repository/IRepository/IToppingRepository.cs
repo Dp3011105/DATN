@@ -1,13 +1,12 @@
-using BE.models;
+using BE.DTOs;
 
-namespace Repository.IRepository
+namespace BE.Repository.IRepository
 {
     public interface IToppingRepository
     {
-        Task<IEnumerable<Topping>> GetAllAsync();
-        Task<Topping?> GetByIdAsync(int id);
-        Task AddAsync(Topping entity);
-        Task UpdateAsync(Topping entity);
-        Task DeleteAsync(int id);
+        Task<List<ToppingDTO>> GetAllAsync();
+        Task<ToppingDTO> GetByIdAsync(int id);
+        Task<ToppingDTO> CreateAsync(ToppingDTO toppingDTO);
+        Task<ToppingDTO> UpdateAsync(int id, ToppingDTO toppingDTO);
     }
 }

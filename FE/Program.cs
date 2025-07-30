@@ -1,10 +1,17 @@
-﻿using Service;
-using Service.IService;
+using FE.Service;
+using FE.Service.IService;
+using FE.Services;
+
 
 var builder = WebApplication.CreateBuilder(args);
 
+
 // Add services to the container.
 builder.Services.AddControllersWithViews();
+
+builder.Services.AddHttpClient<IProductService, ProductService>();
+builder.Services.AddHttpClient<IProductDetailsService, ProductDetailsService>();
+
 
 // Đăng ký các Service dùng Dependency Injection
 builder.Services.AddScoped<IChatSessionService, ChatSessionService>();
@@ -40,6 +47,7 @@ builder.Services.AddScoped<IThueService, ThueService>();
 builder.Services.AddScoped<IToppingService, ToppingService>();
 builder.Services.AddScoped<IVaiTroService, VaiTroService>();
 builder.Services.AddScoped<IVoucherService, VoucherService>();
+
 
 var app = builder.Build();
 

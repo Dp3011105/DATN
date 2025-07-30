@@ -1,6 +1,11 @@
+using BE.DTOs;
 using BE.models;
+using BE.Repository;
+using BE.Repository.IRepository;
 using Microsoft.AspNetCore.Mvc;
-using Repository.IRepository;
+using System.Collections.Generic;
+using System.Threading.Tasks;
+
 
 namespace BE.Controllers
 {
@@ -8,46 +13,65 @@ namespace BE.Controllers
     [ApiController]
     public class ToppingController : ControllerBase
     {
-        private readonly IToppingRepository _repository;
 
-        public ToppingController(IToppingRepository repository)
+        private readonly IToppingRepository _toppingRepository;
+
+        public ToppingController(IToppingRepository toppingRepository)
         {
-            _repository = repository;
+            _toppingRepository = toppingRepository;
         }
 
         [HttpGet]
-        public async Task<IActionResult> GetAll()
+        public async Task<ActionResult<List<ToppingDTO>>> GetAllToppings()
         {
-            var result = await _repository.GetAllAsync();
-            return Ok(result);
+            var toppings = await _toppingRepository.GetAllAsync();
+            return Ok(toppings);
         }
 
         [HttpGet("{id}")]
-        public async Task<IActionResult> GetById(int id)
+        public async Task<ActionResult<ToppingDTO>> GetToppingById(int id)
         {
-            var result = await _repository.GetByIdAsync(id);
-            return result == null ? NotFound() : Ok(result);
+            var topping = await _toppingRepository.GetByIdAsync(id);
+            if (topping == null)
+            {
+                return NotFound(new { message = "Topping không tồn tại" });
+            }
+            return Ok(topping);
         }
 
         [HttpPost]
-        public async Task<IActionResult> Create(Topping model)
+        public async Task<ActionResult<ToppingDTO>> CreateTopping([FromBody] ToppingDTO toppingDTO)
         {
-            await _repository.AddAsync(model);
-            return Ok();
+            if (!ModelState.IsValid)
+            {
+                return BadRequest(ModelState);
+            }
+
+            var createdTopping = await _toppingRepository.CreateAsync(toppingDTO);
+            return CreatedAtAction(nameof(GetToppingById), new { id = createdTopping.ID_Topping }, createdTopping);
         }
 
-        [HttpPut]
-        public async Task<IActionResult> Update(Topping model)
+        [HttpPut("{id}")]
+        public async Task<ActionResult<ToppingDTO>> UpdateTopping(int id, [FromBody] ToppingDTO toppingDTO)
         {
-            await _repository.UpdateAsync(model);
-            return Ok();
-        }
+            if (!ModelState.IsValid)
+            {
+                return BadRequest(ModelState);
+            }
 
-        [HttpDelete("{id}")]
-        public async Task<IActionResult> Delete(int id)
-        {
-            await _repository.DeleteAsync(id);
-            return Ok();
+            if (id != toppingDTO.ID_Topping)
+            {
+                return BadRequest(new { message = "ID topping không khớp" });
+            }
+
+            var updatedTopping = await _toppingRepository.UpdateAsync(id, toppingDTO);
+            if (updatedTopping == null)
+            {
+                return NotFound(new { message = "Topping không tồn tại" });
+            }
+
+            return Ok(updatedTopping);
+
         }
     }
 }

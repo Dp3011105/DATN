@@ -1,9 +1,14 @@
-using BE.models;
 using BE.Data;
+using BE.DTOs;
+using BE.Repository.IRepository;
 using Microsoft.EntityFrameworkCore;
-using Repository.IRepository;
+using BE.Data;
+using BE.DTOs;
+using BE.models;
+using BE.Repository.IRepository;
+using Microsoft.EntityFrameworkCore;
 
-namespace Repository
+namespace BE.Repository
 {
     public class SizeRepository : ISizeRepository
     {
@@ -14,36 +19,77 @@ namespace Repository
             _context = context;
         }
 
-        public async Task<IEnumerable<Size>> GetAllAsync()
+        public async Task<List<SizeDTO>> GetAllAsync()
         {
-            return await _context.Size.ToListAsync();
+            return await _context.Size
+                .Select(s => new SizeDTO
+                {
+                    ID_Size = s.ID_Size,
+                    SizeName = s.SizeName,
+                    Gia = s.Gia,
+                    Trang_Thai = s.Trang_Thai
+                })
+                .ToListAsync();
         }
 
-        public async Task<Size?> GetByIdAsync(int id)
+        public async Task<SizeDTO> GetByIdAsync(int id)
         {
-            return await _context.Size.FindAsync(id);
+            return await _context.Size
+                .Where(s => s.ID_Size == id)
+                .Select(s => new SizeDTO
+                {
+                    ID_Size = s.ID_Size,
+                    SizeName = s.SizeName,
+                    Gia = s.Gia,
+                    Trang_Thai = s.Trang_Thai
+                })
+                .FirstOrDefaultAsync();
         }
 
-        public async Task AddAsync(Size entity)
+        public async Task<SizeDTO> CreateAsync(SizeDTO sizeDTO)
         {
-            await _context.Size.AddAsync(entity);
-            await _context.SaveChangesAsync();
-        }
-
-        public async Task UpdateAsync(Size entity)
-        {
-            _context.Size.Update(entity);
-            await _context.SaveChangesAsync();
-        }
-
-        public async Task DeleteAsync(int id)
-        {
-            var entity = await GetByIdAsync(id);
-            if (entity != null)
+            var size = new Size
             {
-                _context.Size.Remove(entity);
-                await _context.SaveChangesAsync();
+                SizeName = sizeDTO.SizeName,
+                Gia = sizeDTO.Gia,
+                Trang_Thai = sizeDTO.Trang_Thai
+            };
+
+            _context.Size.Add(size);
+            await _context.SaveChangesAsync();
+
+            return new SizeDTO
+            {
+                ID_Size = size.ID_Size,
+                SizeName = size.SizeName,
+                Gia = size.Gia,
+                Trang_Thai = size.Trang_Thai
+            };
+        }
+
+        public async Task<SizeDTO> UpdateAsync(int id, SizeDTO sizeDTO)
+        {
+            var size = await _context.Size
+                .FirstOrDefaultAsync(s => s.ID_Size == id);
+
+            if (size == null)
+            {
+                return null;
             }
+
+            size.SizeName = sizeDTO.SizeName;
+            size.Gia = sizeDTO.Gia;
+            size.Trang_Thai = sizeDTO.Trang_Thai;
+
+            await _context.SaveChangesAsync();
+
+            return new SizeDTO
+            {
+                ID_Size = size.ID_Size,
+                SizeName = size.SizeName,
+                Gia = size.Gia,
+                Trang_Thai = size.Trang_Thai
+            };
         }
     }
 }

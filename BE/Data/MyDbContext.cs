@@ -161,7 +161,7 @@ namespace BE.Data
             modelBuilder.Entity<Voucher>()
                 .Property(v => v.So_Tien_Dat_Yeu_Cau)
                 .HasPrecision(18, 2);
-            
+
             modelBuilder.Entity<Voucher>()
                 .Property(v => v.Trang_Thai)
                 .IsRequired(true)

@@ -1,13 +1,12 @@
-using BE.models;
+using BE.DTOs;
 
-namespace Repository.IRepository
+namespace BE.Repository.IRepository
 {
     public interface ISizeRepository
     {
-        Task<IEnumerable<Size>> GetAllAsync();
-        Task<Size?> GetByIdAsync(int id);
-        Task AddAsync(Size entity);
-        Task UpdateAsync(Size entity);
-        Task DeleteAsync(int id);
+        Task<List<SizeDTO>> GetAllAsync();
+        Task<SizeDTO> GetByIdAsync(int id);
+        Task<SizeDTO> CreateAsync(SizeDTO sizeDTO);
+        Task<SizeDTO> UpdateAsync(int id, SizeDTO sizeDTO);
     }
 }

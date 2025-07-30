@@ -1,6 +1,12 @@
+
+using BE.DTOs;
 using BE.models;
+using BE.Repository;
+using BE.Repository.IRepository;
 using Microsoft.AspNetCore.Mvc;
-using Repository.IRepository;
+using System.Collections.Generic;
+using System.Threading.Tasks;
+
 
 namespace BE.Controllers
 {
@@ -8,46 +14,65 @@ namespace BE.Controllers
     [ApiController]
     public class SizeController : ControllerBase
     {
-        private readonly ISizeRepository _repository;
 
-        public SizeController(ISizeRepository repository)
+        private readonly ISizeRepository _sizeRepository;
+
+        public SizeController(ISizeRepository sizeRepository)
         {
-            _repository = repository;
+            _sizeRepository = sizeRepository;
         }
 
         [HttpGet]
-        public async Task<IActionResult> GetAll()
+        public async Task<ActionResult<List<SizeDTO>>> GetAllSizes()
         {
-            var result = await _repository.GetAllAsync();
-            return Ok(result);
+            var sizes = await _sizeRepository.GetAllAsync();
+            return Ok(sizes);
         }
 
         [HttpGet("{id}")]
-        public async Task<IActionResult> GetById(int id)
+        public async Task<ActionResult<SizeDTO>> GetSizeById(int id)
         {
-            var result = await _repository.GetByIdAsync(id);
-            return result == null ? NotFound() : Ok(result);
+            var size = await _sizeRepository.GetByIdAsync(id);
+            if (size == null)
+            {
+                return NotFound(new { message = "Size không tồn tại" });
+            }
+            return Ok(size);
         }
 
         [HttpPost]
-        public async Task<IActionResult> Create(Size model)
+        public async Task<ActionResult<SizeDTO>> CreateSize([FromBody] SizeDTO sizeDTO)
         {
-            await _repository.AddAsync(model);
-            return Ok();
+            if (!ModelState.IsValid)
+            {
+                return BadRequest(ModelState);
+            }
+
+            var createdSize = await _sizeRepository.CreateAsync(sizeDTO);
+            return CreatedAtAction(nameof(GetSizeById), new { id = createdSize.ID_Size }, createdSize);
         }
 
-        [HttpPut]
-        public async Task<IActionResult> Update(Size model)
+        [HttpPut("{id}")]
+        public async Task<ActionResult<SizeDTO>> UpdateSize(int id, [FromBody] SizeDTO sizeDTO)
         {
-            await _repository.UpdateAsync(model);
-            return Ok();
-        }
+            if (!ModelState.IsValid)
+            {
+                return BadRequest(ModelState);
+            }
 
-        [HttpDelete("{id}")]
-        public async Task<IActionResult> Delete(int id)
-        {
-            await _repository.DeleteAsync(id);
-            return Ok();
+            if (id != sizeDTO.ID_Size)
+            {
+                return BadRequest(new { message = "ID size không khớp" });
+            }
+
+            var updatedSize = await _sizeRepository.UpdateAsync(id, sizeDTO);
+            if (updatedSize == null)
+            {
+                return NotFound(new { message = "Size không tồn tại" });
+            }
+
+            return Ok(updatedSize);
+
         }
     }
 }

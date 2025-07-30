@@ -1,13 +1,12 @@
-using BE.models;
+using BE.DTOs;
 
-namespace Repository.IRepository
+namespace BE.Repository.IRepository
 {
     public interface IDoNgotRepository
     {
-        Task<IEnumerable<DoNgot>> GetAllAsync();
-        Task<DoNgot?> GetByIdAsync(int id);
-        Task AddAsync(DoNgot entity);
-        Task UpdateAsync(DoNgot entity);
-        Task DeleteAsync(int id);
+        Task<List<DoNgotDTO>> GetAllAsync();
+        Task<DoNgotDTO> GetByIdAsync(int id);
+        Task<DoNgotDTO> CreateAsync(DoNgotDTO doNgotDTO);
+        Task<DoNgotDTO> UpdateAsync(int id, DoNgotDTO doNgotDTO);
     }
 }

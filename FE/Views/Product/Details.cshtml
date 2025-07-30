@@ -1,0 +1,61 @@
+﻿@{
+    Layout = "~/Views/Shared/_AdminLayout.cshtml";
+}
+@model SanPham
+<h2>Chi tiết sản phẩm</h2>
+<div>
+    <h4>@Model.Ten_San_Pham</h4>
+    <hr />
+    <dl class="row">
+        <dt class="col-sm-2">ID</dt>
+        <dd class="col-sm-10">@Model.ID_San_Pham</dd>
+        <dt class="col-sm-2">Giá</dt>
+        <dd class="col-sm-10">@Model.Gia</dd>
+        <dt class="col-sm-2">Số lượng</dt>
+        <dd class="col-sm-10">@Model.So_Luong</dd>
+        <dt class="col-sm-2">Hình ảnh</dt>
+        <dd class="col-sm-10"><img src="@("https://localhost:7169" + Model.Hinh_Anh)" alt="Hình ảnh sản phẩm" width="200" /></dd>
+        <dt class="col-sm-2">Mô tả</dt>
+        <dd class="col-sm-10">@Model.Mo_Ta</dd>
+        <dt class="col-sm-2">Trạng thái</dt>
+        <dd class="col-sm-10">@(Model.Trang_Thai ? "Hoạt động" : "Không hoạt động")</dd>
+        <dt class="col-sm-2">Kích thước</dt>
+        <dd class="col-sm-10">
+            @foreach (var size in Model.Sizes)
+            {
+                <span>@size.SizeName (@(size.Trang_Thai ? "Hoạt động" : "Không hoạt động"))</span>
+            
+                <br />
+            }
+        </dd>
+        <dt class="col-sm-2">Lượng đá</dt>
+        <dd class="col-sm-10">
+            @foreach (var luongDa in Model.LuongDas)
+            {
+                <span>@luongDa.Ten_LuongDa (@(luongDa.Trang_Thai ? "Hoạt động" : "Không hoạt động"))</span>
+            
+                <br />
+            }
+        </dd>
+        <dt class="col-sm-2">Độ ngọt</dt>
+        <dd class="col-sm-10">
+            @foreach (var doNgot in Model.DoNgots)
+            {
+                <span>@doNgot.Muc_Do (@(doNgot.Trang_Thai ? "Hoạt động" : "Không hoạt động"))</span>
+            
+                <br />
+            }
+        </dd>
+        <dt class="col-sm-2">Topping</dt>
+        <dd class="col-sm-10">
+            @foreach (var topping in Model.Toppings)
+            {
+                <span>@topping.Ten (Giá: @topping.Gia, Số lượng: @topping.So_Luong, @(topping.Trang_Thai ? "Hoạt động" : "Không hoạt động"))</span>
+            
+                <br />
+            }
+        </dd>
+    </dl>
+</div>
+<a asp-action="EditProduct" asp-route-id="@Model.ID_San_Pham">Sửa</a> |
+<a asp-action="Index">Quay lại</a>

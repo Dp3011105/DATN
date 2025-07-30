@@ -1,13 +1,14 @@
+using BE.DTOs;
 using BE.models;
 
-namespace Repository.IRepository
+namespace BE.Repository.IRepository
 {
     public interface ISanPhamRepository
     {
-        Task<IEnumerable<SanPham>> GetAllAsync();
-        Task<SanPham?> GetByIdAsync(int id);
-        Task AddAsync(SanPham entity);
-        Task UpdateAsync(SanPham entity);
-        Task DeleteAsync(int id);
+        Task<List<SanPham>> GetAllWithDetailsAsync();
+        Task<SanPham> GetByIdWithDetailsAsync(int id);
+        Task<SanPhamDTO> CreateSanPhamAsync(SanPhamDTO sanPhamDTO, string imagePath);
+        Task<SanPhamDTO> UpdateSanPhamAsync(int id, SanPhamDTO sanPhamDTO, string imagePath);
+
     }
 }

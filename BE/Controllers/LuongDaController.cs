@@ -1,6 +1,11 @@
+using BE.DTOs;
 using BE.models;
+using BE.Repository;
+using BE.Repository.IRepository;
 using Microsoft.AspNetCore.Mvc;
-using Repository.IRepository;
+using System.Collections.Generic;
+using System.Threading.Tasks;
+
 
 namespace BE.Controllers
 {
@@ -8,46 +13,64 @@ namespace BE.Controllers
     [ApiController]
     public class LuongDaController : ControllerBase
     {
-        private readonly ILuongDaRepository _repository;
+        private readonly ILuongDaRepository _luongDaRepository;
 
-        public LuongDaController(ILuongDaRepository repository)
+        public LuongDaController(ILuongDaRepository luongDaRepository)
         {
-            _repository = repository;
+            _luongDaRepository = luongDaRepository;
         }
 
         [HttpGet]
-        public async Task<IActionResult> GetAll()
+        public async Task<ActionResult<List<LuongDaDTO>>> GetAllLuongDa()
         {
-            var result = await _repository.GetAllAsync();
-            return Ok(result);
+            var luongDas = await _luongDaRepository.GetAllAsync();
+            return Ok(luongDas);
         }
 
         [HttpGet("{id}")]
-        public async Task<IActionResult> GetById(int id)
+        public async Task<ActionResult<LuongDaDTO>> GetLuongDaById(int id)
         {
-            var result = await _repository.GetByIdAsync(id);
-            return result == null ? NotFound() : Ok(result);
+            var luongDa = await _luongDaRepository.GetByIdAsync(id);
+            if (luongDa == null)
+            {
+                return NotFound(new { message = "Lượng đá không tồn tại" });
+            }
+            return Ok(luongDa);
         }
 
         [HttpPost]
-        public async Task<IActionResult> Create(LuongDa model)
+        public async Task<ActionResult<LuongDaDTO>> CreateLuongDa([FromBody] LuongDaDTO luongDaDTO)
         {
-            await _repository.AddAsync(model);
-            return Ok();
+            if (!ModelState.IsValid)
+            {
+                return BadRequest(ModelState);
+            }
+
+            var createdLuongDa = await _luongDaRepository.CreateAsync(luongDaDTO);
+            return CreatedAtAction(nameof(GetLuongDaById), new { id = createdLuongDa.ID_LuongDa }, createdLuongDa);
         }
 
-        [HttpPut]
-        public async Task<IActionResult> Update(LuongDa model)
+        [HttpPut("{id}")]
+        public async Task<ActionResult<LuongDaDTO>> UpdateLuongDa(int id, [FromBody] LuongDaDTO luongDaDTO)
         {
-            await _repository.UpdateAsync(model);
-            return Ok();
-        }
+            if (!ModelState.IsValid)
+            {
+                return BadRequest(ModelState);
+            }
 
-        [HttpDelete("{id}")]
-        public async Task<IActionResult> Delete(int id)
-        {
-            await _repository.DeleteAsync(id);
-            return Ok();
+            if (id != luongDaDTO.ID_LuongDa)
+            {
+                return BadRequest(new { message = "ID lượng đá không khớp" });
+            }
+
+            var updatedLuongDa = await _luongDaRepository.UpdateAsync(id, luongDaDTO);
+            if (updatedLuongDa == null)
+            {
+                return NotFound(new { message = "Lượng đá không tồn tại" });
+            }
+
+            return Ok(updatedLuongDa);
+
         }
     }
 }

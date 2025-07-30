@@ -1,6 +1,15 @@
+
+using BE.DTOs;
 using BE.models;
+using BE.Repository;
+using BE.Repository.IRepository;
 using Microsoft.AspNetCore.Mvc;
-using Repository.IRepository;
+using System.Collections.Generic;
+using System.Threading.Tasks;
+using BE.Repository.IRepository;
+
+
+
 
 namespace BE.Controllers
 {
@@ -8,46 +17,65 @@ namespace BE.Controllers
     [ApiController]
     public class DoNgotController : ControllerBase
     {
-        private readonly IDoNgotRepository _repository;
 
-        public DoNgotController(IDoNgotRepository repository)
+        private readonly IDoNgotRepository _doNgotRepository;
+
+        public DoNgotController(IDoNgotRepository doNgotRepository)
         {
-            _repository = repository;
+            _doNgotRepository = doNgotRepository;
         }
 
         [HttpGet]
-        public async Task<IActionResult> GetAll()
+        public async Task<ActionResult<List<DoNgotDTO>>> GetAllDoNgots()
         {
-            var result = await _repository.GetAllAsync();
-            return Ok(result);
+            var doNgots = await _doNgotRepository.GetAllAsync();
+            return Ok(doNgots);
         }
 
         [HttpGet("{id}")]
-        public async Task<IActionResult> GetById(int id)
+        public async Task<ActionResult<DoNgotDTO>> GetDoNgotById(int id)
         {
-            var result = await _repository.GetByIdAsync(id);
-            return result == null ? NotFound() : Ok(result);
+            var doNgot = await _doNgotRepository.GetByIdAsync(id);
+            if (doNgot == null)
+            {
+                return NotFound(new { message = "Độ ngọt không tồn tại" });
+            }
+            return Ok(doNgot);
         }
 
         [HttpPost]
-        public async Task<IActionResult> Create(DoNgot model)
+        public async Task<ActionResult<DoNgotDTO>> CreateDoNgot([FromBody] DoNgotDTO doNgotDTO)
         {
-            await _repository.AddAsync(model);
-            return Ok();
+            if (!ModelState.IsValid)
+            {
+                return BadRequest(ModelState);
+            }
+
+            var createdDoNgot = await _doNgotRepository.CreateAsync(doNgotDTO);
+            return CreatedAtAction(nameof(GetDoNgotById), new { id = createdDoNgot.ID_DoNgot }, createdDoNgot);
         }
 
-        [HttpPut]
-        public async Task<IActionResult> Update(DoNgot model)
+        [HttpPut("{id}")]
+        public async Task<ActionResult<DoNgotDTO>> UpdateDoNgot(int id, [FromBody] DoNgotDTO doNgotDTO)
         {
-            await _repository.UpdateAsync(model);
-            return Ok();
-        }
+            if (!ModelState.IsValid)
+            {
+                return BadRequest(ModelState);
+            }
 
-        [HttpDelete("{id}")]
-        public async Task<IActionResult> Delete(int id)
-        {
-            await _repository.DeleteAsync(id);
-            return Ok();
+            if (id != doNgotDTO.ID_DoNgot)
+            {
+                return BadRequest(new { message = "ID độ ngọt không khớp" });
+            }
+
+            var updatedDoNgot = await _doNgotRepository.UpdateAsync(id, doNgotDTO);
+            if (updatedDoNgot == null)
+            {
+                return NotFound(new { message = "Độ ngọt không tồn tại" });
+            }
+
+            return Ok(updatedDoNgot);
+
         }
     }
 }

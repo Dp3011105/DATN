@@ -1,20 +1,24 @@
-﻿using BE.Data;
+using BE.Data;
+using BE.Repository;
+using BE.Repository.IRepository;
 using Microsoft.EntityFrameworkCore;
-using Repository;
-using Repository.IRepository;
+using Microsoft.AspNetCore.Builder;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Hosting;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// Đăng ký DbContext
-builder.Services.AddDbContext<MyDbContext>(options =>
-    options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
+// Add services to the container.
+builder.Services.AddDbContext<MyDbContext>(option =>
+{
+    option.UseSqlServer(builder.Configuration.GetConnectionString("Default"));
+});
 
-// Đăng ký Repository cho từng model
+
 builder.Services.AddScoped<IChatSessionRepository, ChatSessionRepository>();
 builder.Services.AddScoped<IChatSessionNhanVienRepository, ChatSessionNhanVienRepository>();
 builder.Services.AddScoped<IDiaChiRepository, DiaChiRepository>();
 builder.Services.AddScoped<IDiemDanhRepository, DiemDanhRepository>();
-builder.Services.AddScoped<IDoNgotRepository, DoNgotRepository>();
 builder.Services.AddScoped<IGioHang_ChiTietRepository, GioHang_ChiTietRepository>();
 builder.Services.AddScoped<IGioHangChiTiet_ToppingRepository, GioHangChiTiet_ToppingRepository>();
 builder.Services.AddScoped<IGio_HangRepository, Gio_HangRepository>();
@@ -28,21 +32,35 @@ builder.Services.AddScoped<IKhachHangRepository, KhachHangRepository>();
 builder.Services.AddScoped<IKhachHangDiaChiRepository, KhachHangDiaChiRepository>();
 builder.Services.AddScoped<IKhachHangVoucherRepository, KhachHangVoucherRepository>();
 builder.Services.AddScoped<ILichSuHoaDonRepository, LichSuHoaDonRepository>();
-builder.Services.AddScoped<ILuongDaRepository, LuongDaRepository>();
 builder.Services.AddScoped<IMessageRepository, MessageRepository>();
 builder.Services.AddScoped<INhanVienRepository, NhanVienRepository>();
-builder.Services.AddScoped<ISanPhamRepository, SanPhamRepository>();
 builder.Services.AddScoped<ISanPhamDoNgotRepository, SanPhamDoNgotRepository>();
 builder.Services.AddScoped<ISanPhamLuongDaRepository, SanPhamLuongDaRepository>();
 builder.Services.AddScoped<ISanPhamSizeRepository, SanPhamSizeRepository>();
 builder.Services.AddScoped<ISanPhamToppingRepository, SanPhamToppingRepository>();
-builder.Services.AddScoped<ISizeRepository, SizeRepository>();
 builder.Services.AddScoped<ITaiKhoanRepository, TaiKhoanRepository>();
 builder.Services.AddScoped<ITaiKhoanVaiTroRepository, TaiKhoanVaiTroRepository>();
 builder.Services.AddScoped<IThueRepository, ThueRepository>();
-builder.Services.AddScoped<IToppingRepository, ToppingRepository>();
 builder.Services.AddScoped<IVaiTroRepository, VaiTroRepository>();
 builder.Services.AddScoped<IVoucherRepository, VoucherRepository>();
+builder.Services.AddScoped<ISanPhamRepository, SanPhamRepository>();
+builder.Services.AddScoped<ILuongDaRepository, LuongDaRepository>();
+builder.Services.AddScoped<ISizeRepository, SizeRepository>();
+builder.Services.AddScoped<IDoNgotRepository, DoNgotRepository>();
+builder.Services.AddScoped<IToppingRepository, ToppingRepository>();
+
+// Configure CORS
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("AllowFrontend", builder =>
+    {
+        builder.WithOrigins("http://localhost:7081", "https://localhost:7081") // AE thay đường dẫn của FE ae vào 
+               .AllowAnyMethod()
+               .AllowAnyHeader()
+               .WithExposedHeaders("Access-Control-Allow-Origin"); // Expose CORS headers for debugging
+    });
+});
+
 
 // Swagger & Controller
 builder.Services.AddControllers();
@@ -58,7 +76,21 @@ if (app.Environment.IsDevelopment())
     app.UseSwaggerUI();
 }
 
+// Add middleware to log CORS headers
+app.Use(async (context, next) =>
+{
+    context.Response.OnStarting(() =>
+    {
+        Console.WriteLine($"Response Headers: {string.Join(", ", context.Response.Headers.Select(h => $"{h.Key}: {h.Value}"))}");
+        return Task.CompletedTask;
+    });
+    await next.Invoke();
+});
+
 app.UseHttpsRedirection();
+app.UseCors("AllowFrontend");
 app.UseAuthorization();
+app.UseStaticFiles();
 app.MapControllers();
+
 app.Run();

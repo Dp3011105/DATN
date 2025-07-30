@@ -1,0 +1,91 @@
+﻿@{
+    Layout = "~/Views/Shared/_AdminLayout.cshtml";
+}
+@model UpdateProductViewModel
+<h2>Sửa sản phẩm</h2>
+<form asp-action="EditProduct" enctype="multipart/form-data">
+    <input type="hidden" asp-for="ID_San_Pham" />
+    <input type="hidden" asp-for="CurrentImagePath" />
+    <div class="form-group">
+        <label asp-for="TenSanPham" class="control-label"></label>
+        <input asp-for="TenSanPham" class="form-control" />
+        <span asp-validation-for="TenSanPham" class="text-danger"></span>
+    </div>
+    <div class="form-group">
+        <label asp-for="Gia" class="control-label"></label>
+        <input asp-for="Gia" class="form-control" />
+        <span asp-validation-for="Gia" class="text-danger"></span>
+    </div>
+    <div class="form-group">
+        <label asp-for="SoLuong" class="control-label"></label>
+        <input asp-for="SoLuong" class="form-control" />
+        <span asp-validation-for="SoLuong" class="text-danger"></span>
+    </div>
+    <div class="form-group">
+        <label asp-for="MoTa" class="control-label"></label>
+        <textarea asp-for="MoTa" class="form-control"></textarea>
+        <span asp-validation-for="MoTa" class="text-danger"></span>
+    </div>
+    <div class="form-group">
+        <label>Hình ảnh hiện tại</label>
+        @if (!string.IsNullOrEmpty(Model.CurrentImagePath))
+        {
+            <div>
+                <img src="@("https://localhost:7169" + Model.CurrentImagePath)" alt="Hình ảnh hiện tại" width="200" />
+            </div>
+        }
+    </div>
+    <div class="form-group">
+        <label asp-for="Image" class="control-label">Chọn hình ảnh mới (bỏ trống để giữ nguyên)</label>
+        <input asp-for="Image" type="file" class="form-control" />
+        <span asp-validation-for="Image" class="text-danger"></span>
+    </div>
+    <div class="form-group">
+        <label>Kích thước</label>
+        @foreach (var size in ViewBag.Sizes)
+        {
+            <div class="form-check">
+                <input type="checkbox" name="SelectedSizes" value="@size.ID_Size"
+                       @(Model.SelectedSizes.Contains(size.ID_Size) ? "checked" : "") />
+                <label>@size.SizeName</label>
+            </div>
+        }
+    </div>
+    <div class="form-group">
+        <label>Topping</label>
+        @foreach (var topping in ViewBag.Toppings)
+        {
+            <div class="form-check">
+                <input type="checkbox" name="SelectedToppings" value="@topping.ID_Topping"
+                       @(Model.SelectedToppings.Contains(topping.ID_Topping) ? "checked" : "") />
+                <label>@topping.Ten</label>
+            </div>
+        }
+    </div>
+    <div class="form-group">
+        <label>Lượng đá</label>
+        @foreach (var luongDa in ViewBag.LuongDas)
+        {
+            <div class="form-check">
+                <input type="checkbox" name="SelectedLuongDas" value="@luongDa.ID_LuongDa"
+                       @(Model.SelectedLuongDas.Contains(luongDa.ID_LuongDa) ? "checked" : "") />
+                <label>@luongDa.Ten_LuongDa</label>
+            </div>
+        }
+    </div>
+    <div class="form-group">
+        <label>Độ ngọt</label>
+        @foreach (var doNgot in ViewBag.DoNgots)
+        {
+            <div class="form-check">
+                <input type="checkbox" name="SelectedDoNgots" value="@doNgot.ID_DoNgot"
+                       @(Model.SelectedDoNgots.Contains(doNgot.ID_DoNgot) ? "checked" : "") />
+                <label>@doNgot.Muc_Do</label>
+            </div>
+        }
+    </div>
+    <div class="form-group">
+        <input type="submit" value="Cập nhật" class="btn btn-primary" />
+    </div>
+</form>
+<a asp-action="Index">Quay lại</a>
