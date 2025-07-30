@@ -6,9 +6,9 @@ namespace Service
 {
     public class DoNgotService : IDoNgotService
     {
-        private readonly IDoNgotRepository _repository;
+        private readonly IDoNgotService _repository;
 
-        public DoNgotService(IDoNgotRepository repository)
+        public DoNgotService(IDoNgotService repository)
         {
             _repository = repository;
         }

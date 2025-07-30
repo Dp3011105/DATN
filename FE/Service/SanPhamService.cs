@@ -6,9 +6,9 @@ namespace Service
 {
     public class SanPhamService : ISanPhamService
     {
-        private readonly ISanPhamRepository _repository;
+        private readonly ISanPhamService _repository;
 
-        public SanPhamService(ISanPhamRepository repository)
+        public SanPhamService(ISanPhamService repository)
         {
             _repository = repository;
         }

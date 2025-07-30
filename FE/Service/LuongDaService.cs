@@ -6,9 +6,9 @@ namespace Service
 {
     public class LuongDaService : ILuongDaService
     {
-        private readonly ILuongDaRepository _repository;
+        private readonly ILuongDaService _repository;
 
-        public LuongDaService(ILuongDaRepository repository)
+        public LuongDaService(ILuongDaService repository)
         {
             _repository = repository;
         }

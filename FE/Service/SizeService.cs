@@ -6,9 +6,9 @@ namespace Service
 {
     public class SizeService : ISizeService
     {
-        private readonly ISizeRepository _repository;
+        private readonly ISizeService _repository;
 
-        public SizeService(ISizeRepository repository)
+        public SizeService(ISizeService repository)
         {
             _repository = repository;
         }

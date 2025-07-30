@@ -6,9 +6,9 @@ namespace Service
 {
     public class ToppingService : IToppingService
     {
-        private readonly IToppingRepository _repository;
+        private readonly IToppingService _repository;
 
-        public ToppingService(IToppingRepository repository)
+        public ToppingService(IToppingService repository)
         {
             _repository = repository;
         }
