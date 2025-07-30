@@ -1,0 +1,241 @@
+﻿@* @{
+    ViewData["Title"] = "Quản lý chi tiết sản phẩm";
+}
+<h2>Quản lý chi tiết sản phẩm</h2>
+<ul class="nav nav-tabs">
+    <li class="nav-item">
+        <a class="nav-link active" data-bs-toggle="tab" href="#doNgot">Độ Ngọt</a>
+    </li>
+    <li class="nav-item">
+        <a class="nav-link" data-bs-toggle="tab" href="#size">Size</a>
+    </li>
+    <li class="nav-item">
+        <a class="nav-link" data-bs-toggle="tab" href="#topping">Topping</a>
+    </li>
+    <li class="nav-item">
+        <a class="nav-link" data-bs-toggle="tab" href="#luongDa">Lượng Đá</a>
+    </li>
+</ul>
+<div class="tab-content mt-3">
+    <div class="tab-pane fade show active" id="doNgot">
+        <div id="doNgotContent"></div>
+    </div>
+    <div class="tab-pane fade" id="size">
+        <div id="sizeContent"></div>
+    </div>
+    <div class="tab-pane fade" id="topping">
+        <div id="toppingContent"></div>
+    </div>
+    <div class="tab-pane fade" id="luongDa">
+        <div id="luongDaContent"></div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        $(document).ready(function () {
+            // Load DoNgot by default
+            $("#doNgotContent").load("/ProductDetails/DoNgotIndex");
+
+            // Handle tab clicks
+            $('a[data-bs-toggle="tab"]').on('shown.bs.tab', function (e) {
+                var target = $(e.target).attr("href");
+                if (target === "#doNgot") {
+                    $("#doNgotContent").load("/ProductDetails/DoNgotIndex");
+                } else if (target === "#size") {
+                    $("#sizeContent").load("/ProductDetails/SizeIndex");
+                } else if (target === "#topping") {
+                    $("#toppingContent").load("/ProductDetails/ToppingIndex");
+                } else if (target === "#luongDa") {
+                    $("#luongDaContent").load("/ProductDetails/LuongDaIndex");
+                }
+            });
+
+            // Handle AJAX form submissions and link clicks
+            $(document).on("submit", "form", function (e) {
+                e.preventDefault();
+                var form = $(this);
+                $.ajax({
+                    url: form.attr("action"),
+                    type: form.attr("method"),
+                    data: form.serialize(),
+                    success: function (response) {
+                        if (response.redirectTo) {
+                            window.location.href = response.redirectTo;
+                        } else {
+                            form.closest(".tab-pane").html(response);
+                        }
+                    },
+                    error: function () {
+                        alert("Đã có lỗi xảy ra. Vui lòng thử lại.");
+                    }
+                });
+            });
+
+            $(document).on("click", "a[href^='/ProductDetails/']", function (e) {
+                e.preventDefault();
+                var url = $(this).attr("href");
+                var targetPane = $(this).closest(".tab-pane");
+                $.ajax({
+                    url: url,
+                    type: "GET",
+                    success: function (response) {
+                        targetPane.html(response);
+                    },
+                    error: function () {
+                        alert("Đã có lỗi xảy ra. Vui lòng thử lại.");
+                    }
+                });
+            });
+        });
+    </script>
+} *@
+
+
+
+
+@{
+    ViewData["Title"] = "Quản lý chi tiết sản phẩm";
+}
+<h2>Quản lý chi tiết sản phẩm</h2>
+<ul class="nav nav-tabs">
+    <li class="nav-item">
+        <a class="nav-link active" data-bs-toggle="tab" href="#doNgot">Độ Ngọt</a>
+    </li>
+    <li class="nav-item">
+        <a class="nav-link" data-bs-toggle="tab" href="#size">Size</a>
+    </li>
+    <li class="nav-item">
+        <a class="nav-link" data-bs-toggle="tab" href="#topping">Topping</a>
+    </li>
+    <li class="nav-item">
+        <a class="nav-link" data-bs-toggle="tab" href="#luongDa">Lượng Đá</a>
+    </li>
+</ul>
+<div class="tab-content mt-3">
+    <div class="tab-pane fade show active" id="doNgot">
+        <div id="doNgotContent" class="content-container">
+            <div class="loading-spinner" style="display: none; text-align: center;">
+                <div class="spinner-border text-primary" role="status">
+                    <span class="visually-hidden">Đang tải...</span>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="tab-pane fade" id="size">
+        <div id="sizeContent" class="content-container">
+            <div class="loading-spinner" style="display: none; text-align: center;">
+                <div class="spinner-border text-primary" role="status">
+                    <span class="visually-hidden">Đang tải...</span>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="tab-pane fade" id="topping">
+        <div id="toppingContent" class="content-container">
+            <div class="loading-spinner" style="display: none; text-align: center;">
+                <div class="spinner-border text-primary" role="status">
+                    <span class="visually-hidden">Đang tải...</span>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="tab-pane fade" id="luongDa">
+        <div id="luongDaContent" class="content-container">
+            <div class="loading-spinner" style="display: none; text-align: center;">
+                <div class="spinner-border text-primary" role="status">
+                    <span class="visually-hidden">Đang tải...</span>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        $(document).ready(function () {
+            function showLoading(container) {
+                container.find(".loading-spinner").show();
+            }
+
+            function hideLoading(container) {
+                container.find(".loading-spinner").hide();
+            }
+
+            // Load DoNgot by default
+            showLoading($("#doNgotContent"));
+            $("#doNgotContent").load("@Url.Action("DoNgotIndex", "ProductDetails")", function () {
+                hideLoading($("#doNgotContent"));
+            });
+
+            // Handle tab clicks
+            $('a[data-bs-toggle="tab"]').on('shown.bs.tab', function (e) {
+                var target = $(e.target).attr("href");
+                var targetContainer = $(target).find(".content-container");
+                showLoading(targetContainer);
+                if (target === "#doNgot") {
+                    $("#doNgotContent").load("@Url.Action("DoNgotIndex", "ProductDetails")", function () {
+                        hideLoading(targetContainer);
+                    });
+                } else if (target === "#size") {
+                    $("#sizeContent").load("@Url.Action("SizeIndex", "ProductDetails")", function () {
+                        hideLoading(targetContainer);
+                    });
+                } else if (target === "#topping") {
+                    $("#toppingContent").load("@Url.Action("ToppingIndex", "ProductDetails")", function () {
+                        hideLoading(targetContainer);
+                    });
+                } else if (target === "#luongDa") {
+                    $("#luongDaContent").load("@Url.Action("LuongDaIndex", "ProductDetails")", function () {
+                        hideLoading(targetContainer);
+                    });
+                }
+            });
+
+            // Handle AJAX form submissions
+            $(document).on("submit", "form", function (e) {
+                e.preventDefault();
+                var form = $(this);
+                var targetPane = form.closest(".tab-pane");
+                showLoading(targetPane.find(".content-container"));
+                $.ajax({
+                    url: form.attr("action"),
+                    type: form.attr("method"),
+                    data: form.serialize(),
+                    success: function (response) {
+                        hideLoading(targetPane.find(".content-container"));
+                        if (response.redirectTo) {
+                            window.location.href = response.redirectTo;
+                        } else {
+                            targetPane.html(response);
+                        }
+                    },
+                    error: function (xhr) {
+                        hideLoading(targetPane.find(".content-container"));
+                        alert("Lỗi: " + xhr.status + " - " + xhr.statusText + ". Vui lòng kiểm tra kết nối hoặc thử lại.");
+                    }
+                });
+            });
+
+            // Handle AJAX link clicks
+            $(document).on("click", "a[href^='/ProductDetails/']", function (e) {
+                e.preventDefault();
+                var url = $(this).attr("href");
+                var targetPane = $(this).closest(".tab-pane");
+                showLoading(targetPane.find(".content-container"));
+                $.ajax({
+                    url: url,
+                    type: "GET",
+                    success: function (response) {
+                        hideLoading(targetPane.find(".content-container"));
+                        targetPane.html(response);
+                    },
+                    error: function (xhr) {
+                        hideLoading(targetPane.find(".content-container"));
+                        alert("Lỗi: " + xhr.status + " - " + xhr.statusText + ". Vui lòng kiểm tra kết nối hoặc thử lại.");
+                    }
+                });
+            });
+        });
+    </script>
+}

@@ -1,0 +1,39 @@
+﻿@{
+    Layout = "~/Views/Shared/_AdminLayout.cshtml";
+}
+
+@model List<SanPham>
+<h2>Danh sách sản phẩm</h2>
+<table class="table">
+    <thead>
+        <tr>
+            <th>ID</th>
+            <th>Tên sản phẩm</th>
+            <th>Giá</th>
+            <th>Số lượng</th>
+            <th>Hình ảnh</th>
+            <th>Mô tả</th>
+            <th>Trạng thái</th>
+            <th>Hành động</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var product in Model)
+        {
+            <tr>
+                <td>@product.ID_San_Pham</td>
+                <td>@product.Ten_San_Pham</td>
+                <td>@product.Gia</td>
+                <td>@product.So_Luong</td>
+                <td><img src="@("https://localhost:7169" + product.Hinh_Anh)" alt="Hình ảnh sản phẩm" width="100" /></td>
+                <td>@product.Mo_Ta</td>
+                <td>@(product.Trang_Thai ? "Hoạt động" : "Không hoạt động")</td>
+                <td>
+                    <a asp-action="Details" asp-route-id="@product.ID_San_Pham">Chi tiết</a> |
+                    <a asp-action="EditProduct" asp-route-id="@product.ID_San_Pham">Sửa</a>
+                </td>
+            </tr>
+        }
+    </tbody>
+</table>
+<a asp-action="AddProduct">Thêm sản phẩm</a>

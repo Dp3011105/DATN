@@ -1,0 +1,79 @@
+﻿@{
+    Layout = "~/Views/Shared/_AdminLayout.cshtml";
+}
+
+@model AddProductViewModel
+@{
+    ViewData["Title"] = "Thêm sản phẩm";
+}
+
+<h2>Thêm sản phẩm mới</h2>
+
+<form asp-action="AddProduct" enctype="multipart/form-data">
+    <div class="form-group">
+        <label>Tên sản phẩm</label>
+        <input asp-for="TenSanPham" class="form-control" required />
+    </div>
+
+    <div class="form-group">
+        <label>Giá</label>
+        <input asp-for="Gia" class="form-control" type="number" required />
+    </div>
+
+    <div class="form-group">
+        <label>Số lượng</label>
+        <input asp-for="SoLuong" class="form-control" type="number" required />
+    </div>
+
+    <div class="form-group">
+        <label>Mô tả</label>
+        <textarea asp-for="MoTa" class="form-control"></textarea>
+    </div>
+
+    <div class="form-group">
+        <label>Hình ảnh</label>
+        <input asp-for="Image" type="file" class="form-control" accept="image/*" required />
+    </div>
+
+    <div class="form-group">
+        <label>Size</label>
+        <select asp-for="SelectedSizes" multiple class="form-control">
+            @foreach (var size in ViewBag.Sizes)
+            {
+                <option value="@size.ID_Size">@size.SizeName (Giá: @size.Gia)</option>
+            }
+        </select>
+    </div>
+
+    <div class="form-group">
+        <label>Topping</label>
+        <select asp-for="SelectedToppings" multiple class="form-control">
+            @foreach (var topping in ViewBag.Toppings)
+            {
+                <option value="@topping.ID_Topping">@topping.Ten (Giá: @topping.Gia)</option>
+            }
+        </select>
+    </div>
+
+    <div class="form-group">
+        <label>Lượng đá</label>
+        <select asp-for="SelectedLuongDas" multiple class="form-control">
+            @foreach (var luongDa in ViewBag.LuongDas)
+            {
+                <option value="@luongDa.ID_LuongDa">@luongDa.Ten_LuongDa</option>
+            }
+        </select>
+    </div>
+
+    <div class="form-group">
+        <label>Độ ngọt</label>
+        <select asp-for="SelectedDoNgots" multiple class="form-control">
+            @foreach (var doNgot in ViewBag.DoNgots)
+            {
+                <option value="@doNgot.ID_DoNgot">@doNgot.Muc_Do</option>
+            }
+        </select>
+    </div>
+
+    <button type="submit" class="btn btn-primary">Thêm</button>
+</form>
