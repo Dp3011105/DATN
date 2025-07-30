@@ -1,13 +1,17 @@
-﻿using FE.Service.IService;
-using FE.Models;
+﻿using FE.Models;
+using FE.Service.IService;
+using Newtonsoft.Json;
+using System.Collections.Generic;
+using System.Net.Http;
 using System.Text;
-using System.Text.Json;
+using System.Threading.Tasks;
 
-namespace FE.Service
+namespace FE.Services
 {
     public class ProductDetailsService : IProductDetailsService
     {
         private readonly HttpClient _httpClient;
+        private readonly string _baseUrl = "https://localhost:7169/api/";
 
         public ProductDetailsService(HttpClient httpClient)
         {
@@ -15,132 +19,135 @@ namespace FE.Service
         }
 
         // DoNgot
-        private const string DoNgotApiBaseUrl = "https://localhost:7169/api/DoNgot";
-        public async Task<List<DoNgot>> GetAllDoNgotsAsync()
+        public async Task<List<DoNgot>> GetDoNgotsAsync()
         {
-            var response = await _httpClient.GetAsync(DoNgotApiBaseUrl);
+            var response = await _httpClient.GetAsync(_baseUrl + "DoNgot");
             response.EnsureSuccessStatusCode();
             var content = await response.Content.ReadAsStringAsync();
-            return JsonSerializer.Deserialize<List<DoNgot>>(content);
+            return JsonConvert.DeserializeObject<List<DoNgot>>(content);
         }
 
         public async Task<DoNgot> GetDoNgotByIdAsync(int id)
         {
-            var response = await _httpClient.GetAsync($"{DoNgotApiBaseUrl}/{id}");
+            var response = await _httpClient.GetAsync(_baseUrl + $"DoNgot/{id}");
             response.EnsureSuccessStatusCode();
             var content = await response.Content.ReadAsStringAsync();
-            return JsonSerializer.Deserialize<DoNgot>(content);
+            return JsonConvert.DeserializeObject<DoNgot>(content);
         }
 
-        public async Task CreateDoNgotAsync(DoNgot doNgot)
+        public async Task<bool> AddDoNgotAsync(DoNgot doNgot)
         {
-            var content = new StringContent(JsonSerializer.Serialize(doNgot), Encoding.UTF8, "application/json");
-            var response = await _httpClient.PostAsync(DoNgotApiBaseUrl, content);
-            response.EnsureSuccessStatusCode();
+            var json = JsonConvert.SerializeObject(doNgot);
+            var content = new StringContent(json, Encoding.UTF8, "application/json");
+            var response = await _httpClient.PostAsync(_baseUrl + "DoNgot", content);
+            return response.IsSuccessStatusCode;
         }
 
-        public async Task UpdateDoNgotAsync(DoNgot doNgot)
+        public async Task<bool> UpdateDoNgotAsync(DoNgot doNgot)
         {
-            var content = new StringContent(JsonSerializer.Serialize(doNgot), Encoding.UTF8, "application/json");
-            var response = await _httpClient.PutAsync($"{DoNgotApiBaseUrl}/{doNgot.ID_DoNgot}", content);
-            response.EnsureSuccessStatusCode();
+            var json = JsonConvert.SerializeObject(doNgot);
+            var content = new StringContent(json, Encoding.UTF8, "application/json");
+            var response = await _httpClient.PutAsync(_baseUrl + $"DoNgot/{doNgot.ID_DoNgot}", content);
+            return response.IsSuccessStatusCode;
         }
 
         // Size
-        private const string SizeApiBaseUrl = "https://localhost:7169/api/Size";
-        public async Task<List<Size>> GetAllSizesAsync()
+        public async Task<List<Size>> GetSizesAsync()
         {
-            var response = await _httpClient.GetAsync(SizeApiBaseUrl);
+            var response = await _httpClient.GetAsync(_baseUrl + "Size");
             response.EnsureSuccessStatusCode();
             var content = await response.Content.ReadAsStringAsync();
-            return JsonSerializer.Deserialize<List<Size>>(content);
+            return JsonConvert.DeserializeObject<List<Size>>(content);
         }
 
         public async Task<Size> GetSizeByIdAsync(int id)
         {
-            var response = await _httpClient.GetAsync($"{SizeApiBaseUrl}/{id}");
+            var response = await _httpClient.GetAsync(_baseUrl + $"Size/{id}");
             response.EnsureSuccessStatusCode();
             var content = await response.Content.ReadAsStringAsync();
-            return JsonSerializer.Deserialize<Size>(content);
+            return JsonConvert.DeserializeObject<Size>(content);
         }
 
-        public async Task CreateSizeAsync(Size size)
+        public async Task<bool> AddSizeAsync(Size size)
         {
-            var content = new StringContent(JsonSerializer.Serialize(size), Encoding.UTF8, "application/json");
-            var response = await _httpClient.PostAsync(SizeApiBaseUrl, content);
-            response.EnsureSuccessStatusCode();
+            var json = JsonConvert.SerializeObject(size);
+            var content = new StringContent(json, Encoding.UTF8, "application/json");
+            var response = await _httpClient.PostAsync(_baseUrl + "Size", content);
+            return response.IsSuccessStatusCode;
         }
 
-        public async Task UpdateSizeAsync(Size size)
+        public async Task<bool> UpdateSizeAsync(Size size)
         {
-            var content = new StringContent(JsonSerializer.Serialize(size), Encoding.UTF8, "application/json");
-            var response = await _httpClient.PutAsync($"{SizeApiBaseUrl}/{size.ID_Size}", content);
-            response.EnsureSuccessStatusCode();
+            var json = JsonConvert.SerializeObject(size);
+            var content = new StringContent(json, Encoding.UTF8, "application/json");
+            var response = await _httpClient.PutAsync(_baseUrl + $"Size/{size.ID_Size}", content);
+            return response.IsSuccessStatusCode;
         }
 
         // Topping
-        private const string ToppingApiBaseUrl = "https://localhost:7169/api/Topping";
-        public async Task<List<Topping>> GetAllToppingsAsync()
+        public async Task<List<Topping>> GetToppingsAsync()
         {
-            var response = await _httpClient.GetAsync(ToppingApiBaseUrl);
+            var response = await _httpClient.GetAsync(_baseUrl + "Topping");
             response.EnsureSuccessStatusCode();
             var content = await response.Content.ReadAsStringAsync();
-            return JsonSerializer.Deserialize<List<Topping>>(content);
+            return JsonConvert.DeserializeObject<List<Topping>>(content);
         }
 
         public async Task<Topping> GetToppingByIdAsync(int id)
         {
-            var response = await _httpClient.GetAsync($"{ToppingApiBaseUrl}/{id}");
+            var response = await _httpClient.GetAsync(_baseUrl + $"Topping/{id}");
             response.EnsureSuccessStatusCode();
             var content = await response.Content.ReadAsStringAsync();
-            return JsonSerializer.Deserialize<Topping>(content);
+            return JsonConvert.DeserializeObject<Topping>(content);
         }
 
-        public async Task CreateToppingAsync(Topping topping)
+        public async Task<bool> AddToppingAsync(Topping topping)
         {
-            var content = new StringContent(JsonSerializer.Serialize(topping), Encoding.UTF8, "application/json");
-            var response = await _httpClient.PostAsync(ToppingApiBaseUrl, content);
-            response.EnsureSuccessStatusCode();
+            var json = JsonConvert.SerializeObject(topping);
+            var content = new StringContent(json, Encoding.UTF8, "application/json");
+            var response = await _httpClient.PostAsync(_baseUrl + "Topping", content);
+            return response.IsSuccessStatusCode;
         }
 
-        public async Task UpdateToppingAsync(Topping topping)
+        public async Task<bool> UpdateToppingAsync(Topping topping)
         {
-            var content = new StringContent(JsonSerializer.Serialize(topping), Encoding.UTF8, "application/json");
-            var response = await _httpClient.PutAsync($"{ToppingApiBaseUrl}/{topping.ID_Topping}", content);
-            response.EnsureSuccessStatusCode();
+            var json = JsonConvert.SerializeObject(topping);
+            var content = new StringContent(json, Encoding.UTF8, "application/json");
+            var response = await _httpClient.PutAsync(_baseUrl + $"Topping/{topping.ID_Topping}", content);
+            return response.IsSuccessStatusCode;
         }
 
         // LuongDa
-        // LuongDa
-        private const string LuongDaApiBaseUrl = "https://localhost:7169/api/LuongDa";
-        public async Task<List<LuongDa>> GetAllLuongDasAsync()
+        public async Task<List<LuongDa>> GetLuongDasAsync()
         {
-            var response = await _httpClient.GetAsync(LuongDaApiBaseUrl);
+            var response = await _httpClient.GetAsync(_baseUrl + "LuongDa");
             response.EnsureSuccessStatusCode();
             var content = await response.Content.ReadAsStringAsync();
-            return JsonSerializer.Deserialize<List<LuongDa>>(content);
+            return JsonConvert.DeserializeObject<List<LuongDa>>(content);
         }
 
         public async Task<LuongDa> GetLuongDaByIdAsync(int id)
         {
-            var response = await _httpClient.GetAsync($"{LuongDaApiBaseUrl}/{id}");
+            var response = await _httpClient.GetAsync(_baseUrl + $"LuongDa/{id}");
             response.EnsureSuccessStatusCode();
             var content = await response.Content.ReadAsStringAsync();
-            return JsonSerializer.Deserialize<LuongDa>(content);
+            return JsonConvert.DeserializeObject<LuongDa>(content);
         }
 
-        public async Task CreateLuongDaAsync(LuongDa luongDa)
+        public async Task<bool> AddLuongDaAsync(LuongDa luongDa)
         {
-            var content = new StringContent(JsonSerializer.Serialize(luongDa), Encoding.UTF8, "application/json");
-            var response = await _httpClient.PostAsync(LuongDaApiBaseUrl, content);
-            response.EnsureSuccessStatusCode();
+            var json = JsonConvert.SerializeObject(luongDa);
+            var content = new StringContent(json, Encoding.UTF8, "application/json");
+            var response = await _httpClient.PostAsync(_baseUrl + "LuongDa", content);
+            return response.IsSuccessStatusCode;
         }
 
-        public async Task UpdateLuongDaAsync(LuongDa luongDa)
+        public async Task<bool> UpdateLuongDaAsync(LuongDa luongDa)
         {
-            var content = new StringContent(JsonSerializer.Serialize(luongDa), Encoding.UTF8, "application/json");
-            var response = await _httpClient.PutAsync($"{LuongDaApiBaseUrl}/{luongDa.ID_LuongDa}", content);
-            response.EnsureSuccessStatusCode();
+            var json = JsonConvert.SerializeObject(luongDa);
+            var content = new StringContent(json, Encoding.UTF8, "application/json");
+            var response = await _httpClient.PutAsync(_baseUrl + $"LuongDa/{luongDa.ID_LuongDa}", content);
+            return response.IsSuccessStatusCode;
         }
     }
 }
