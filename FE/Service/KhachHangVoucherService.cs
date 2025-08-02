@@ -1,26 +1,40 @@
-using BE.models;
-using Repository.IRepository;
+using System.Net.Http;
+using System.Net.Http.Json;
+using System.Threading.Tasks;
+using System.Collections.Generic;
 using Service.IService;
+using BE.models;
 
-namespace Service
+public class KhachHangVoucherService : IKhachHangVoucherService
 {
-    public class KhachHangVoucherService : IKhachHangVoucherService
+    private readonly HttpClient _httpClient;
+    public KhachHangVoucherService(HttpClient httpClient)
     {
-        private readonly IKhachHangVoucherRepository _repository;
+        _httpClient = httpClient;
+    }
 
-        public KhachHangVoucherService(IKhachHangVoucherRepository repository)
-        {
-            _repository = repository;
-        }
+    public async Task<IEnumerable<KhachHangVoucher>> GetAllAsync()
+    {
+        return await _httpClient.GetFromJsonAsync<IEnumerable<KhachHangVoucher>>("api/KhachHangVoucher");
+    }
 
-        public Task<IEnumerable<KhachHangVoucher>> GetAllAsync() => _repository.GetAllAsync();
+    public async Task<KhachHangVoucher?> GetByIdAsync(int id)
+    {
+        return await _httpClient.GetFromJsonAsync<KhachHangVoucher>($"api/KhachHangVoucher/{id}");
+    }
 
-        public Task<KhachHangVoucher?> GetByIdAsync(int id) => _repository.GetByIdAsync(id);
+    public async Task AddAsync(KhachHangVoucher entity)
+    {
+        await _httpClient.PostAsJsonAsync("api/KhachHangVoucher", entity);
+    }
 
-        public Task AddAsync(KhachHangVoucher entity) => _repository.AddAsync(entity);
+    public async Task UpdateAsync(KhachHangVoucher entity)
+    {
+        await _httpClient.PutAsJsonAsync("api/KhachHangVoucher", entity);
+    }
 
-        public Task UpdateAsync(KhachHangVoucher entity) => _repository.UpdateAsync(entity);
-
-        public Task DeleteAsync(int id) => _repository.DeleteAsync(id);
+    public async Task DeleteAsync(int id)
+    {
+        await _httpClient.DeleteAsync($"api/KhachHangVoucher/{id}");
     }
 }

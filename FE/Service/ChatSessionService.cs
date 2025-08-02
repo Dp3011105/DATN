@@ -1,26 +1,40 @@
-using BE.models;
-using Repository.IRepository;
+using System.Net.Http;
+using System.Net.Http.Json;
+using System.Threading.Tasks;
+using System.Collections.Generic;
 using Service.IService;
+using BE.models;
 
-namespace Service
+public class ChatSessionService : IChatSessionService
 {
-    public class ChatSessionService : IChatSessionService
+    private readonly HttpClient _httpClient;
+    public ChatSessionService(HttpClient httpClient)
     {
-        private readonly IChatSessionRepository _repository;
+        _httpClient = httpClient;
+    }
 
-        public ChatSessionService(IChatSessionRepository repository)
-        {
-            _repository = repository;
-        }
+    public async Task<IEnumerable<ChatSession>> GetAllAsync()
+    {
+        return await _httpClient.GetFromJsonAsync<IEnumerable<ChatSession>>("api/ChatSession");
+    }
 
-        public Task<IEnumerable<ChatSession>> GetAllAsync() => _repository.GetAllAsync();
+    public async Task<ChatSession?> GetByIdAsync(int id)
+    {
+        return await _httpClient.GetFromJsonAsync<ChatSession>($"api/ChatSession/{id}");
+    }
 
-        public Task<ChatSession?> GetByIdAsync(int id) => _repository.GetByIdAsync(id);
+    public async Task AddAsync(ChatSession entity)
+    {
+        await _httpClient.PostAsJsonAsync("api/ChatSession", entity);
+    }
 
-        public Task AddAsync(ChatSession entity) => _repository.AddAsync(entity);
+    public async Task UpdateAsync(ChatSession entity)
+    {
+        await _httpClient.PutAsJsonAsync("api/ChatSession", entity);
+    }
 
-        public Task UpdateAsync(ChatSession entity) => _repository.UpdateAsync(entity);
-
-        public Task DeleteAsync(int id) => _repository.DeleteAsync(id);
+    public async Task DeleteAsync(int id)
+    {
+        await _httpClient.DeleteAsync($"api/ChatSession/{id}");
     }
 }

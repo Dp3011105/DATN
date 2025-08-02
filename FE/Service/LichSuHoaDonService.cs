@@ -1,26 +1,40 @@
-using BE.models;
-using Repository.IRepository;
+using System.Net.Http;
+using System.Net.Http.Json;
+using System.Threading.Tasks;
+using System.Collections.Generic;
 using Service.IService;
+using BE.models;
 
-namespace Service
+public class LichSuHoaDonService : ILichSuHoaDonService
 {
-    public class LichSuHoaDonService : ILichSuHoaDonService
+    private readonly HttpClient _httpClient;
+    public LichSuHoaDonService(HttpClient httpClient)
     {
-        private readonly ILichSuHoaDonRepository _repository;
+        _httpClient = httpClient;
+    }
 
-        public LichSuHoaDonService(ILichSuHoaDonRepository repository)
-        {
-            _repository = repository;
-        }
+    public async Task<IEnumerable<LichSuHoaDon>> GetAllAsync()
+    {
+        return await _httpClient.GetFromJsonAsync<IEnumerable<LichSuHoaDon>>("api/LichSuHoaDon");
+    }
 
-        public Task<IEnumerable<LichSuHoaDon>> GetAllAsync() => _repository.GetAllAsync();
+    public async Task<LichSuHoaDon?> GetByIdAsync(int id)
+    {
+        return await _httpClient.GetFromJsonAsync<LichSuHoaDon>($"api/LichSuHoaDon/{id}");
+    }
 
-        public Task<LichSuHoaDon?> GetByIdAsync(int id) => _repository.GetByIdAsync(id);
+    public async Task AddAsync(LichSuHoaDon entity)
+    {
+        await _httpClient.PostAsJsonAsync("api/LichSuHoaDon", entity);
+    }
 
-        public Task AddAsync(LichSuHoaDon entity) => _repository.AddAsync(entity);
+    public async Task UpdateAsync(LichSuHoaDon entity)
+    {
+        await _httpClient.PutAsJsonAsync("api/LichSuHoaDon", entity);
+    }
 
-        public Task UpdateAsync(LichSuHoaDon entity) => _repository.UpdateAsync(entity);
-
-        public Task DeleteAsync(int id) => _repository.DeleteAsync(id);
+    public async Task DeleteAsync(int id)
+    {
+        await _httpClient.DeleteAsync($"api/LichSuHoaDon/{id}");
     }
 }

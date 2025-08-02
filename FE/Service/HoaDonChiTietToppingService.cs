@@ -1,26 +1,40 @@
-using BE.models;
-using Repository.IRepository;
+using System.Net.Http;
+using System.Net.Http.Json;
+using System.Threading.Tasks;
+using System.Collections.Generic;
 using Service.IService;
+using BE.models;
 
-namespace Service
+public class HoaDonChiTietToppingService : IHoaDonChiTietToppingService
 {
-    public class HoaDonChiTietToppingService : IHoaDonChiTietToppingService
+    private readonly HttpClient _httpClient;
+    public HoaDonChiTietToppingService(HttpClient httpClient)
     {
-        private readonly IHoaDonChiTietToppingRepository _repository;
+        _httpClient = httpClient;
+    }
 
-        public HoaDonChiTietToppingService(IHoaDonChiTietToppingRepository repository)
-        {
-            _repository = repository;
-        }
+    public async Task<IEnumerable<HoaDonChiTietTopping>> GetAllAsync()
+    {
+        return await _httpClient.GetFromJsonAsync<IEnumerable<HoaDonChiTietTopping>>("api/HoaDonChiTietTopping");
+    }
 
-        public Task<IEnumerable<HoaDonChiTietTopping>> GetAllAsync() => _repository.GetAllAsync();
+    public async Task<HoaDonChiTietTopping?> GetByIdAsync(int id)
+    {
+        return await _httpClient.GetFromJsonAsync<HoaDonChiTietTopping>($"api/HoaDonChiTietTopping/{id}");
+    }
 
-        public Task<HoaDonChiTietTopping?> GetByIdAsync(int id) => _repository.GetByIdAsync(id);
+    public async Task AddAsync(HoaDonChiTietTopping entity)
+    {
+        await _httpClient.PostAsJsonAsync("api/HoaDonChiTietTopping", entity);
+    }
 
-        public Task AddAsync(HoaDonChiTietTopping entity) => _repository.AddAsync(entity);
+    public async Task UpdateAsync(HoaDonChiTietTopping entity)
+    {
+        await _httpClient.PutAsJsonAsync("api/HoaDonChiTietTopping", entity);
+    }
 
-        public Task UpdateAsync(HoaDonChiTietTopping entity) => _repository.UpdateAsync(entity);
-
-        public Task DeleteAsync(int id) => _repository.DeleteAsync(id);
+    public async Task DeleteAsync(int id)
+    {
+        await _httpClient.DeleteAsync($"api/HoaDonChiTietTopping/{id}");
     }
 }

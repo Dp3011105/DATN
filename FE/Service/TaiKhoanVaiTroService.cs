@@ -1,26 +1,40 @@
-using BE.models;
-using Repository.IRepository;
+using System.Net.Http;
+using System.Net.Http.Json;
+using System.Threading.Tasks;
+using System.Collections.Generic;
 using Service.IService;
+using BE.models;
 
-namespace Service
+public class TaiKhoanVaiTroService : ITaiKhoanVaiTroService
 {
-    public class TaiKhoanVaiTroService : ITaiKhoanVaiTroService
+    private readonly HttpClient _httpClient;
+    public TaiKhoanVaiTroService(HttpClient httpClient)
     {
-        private readonly ITaiKhoanVaiTroRepository _repository;
+        _httpClient = httpClient;
+    }
 
-        public TaiKhoanVaiTroService(ITaiKhoanVaiTroRepository repository)
-        {
-            _repository = repository;
-        }
+    public async Task<IEnumerable<TaiKhoanVaiTro>> GetAllAsync()
+    {
+        return await _httpClient.GetFromJsonAsync<IEnumerable<TaiKhoanVaiTro>>("api/TaiKhoanVaiTro");
+    }
 
-        public Task<IEnumerable<TaiKhoanVaiTro>> GetAllAsync() => _repository.GetAllAsync();
+    public async Task<TaiKhoanVaiTro?> GetByIdAsync(int id)
+    {
+        return await _httpClient.GetFromJsonAsync<TaiKhoanVaiTro>($"api/TaiKhoanVaiTro/{id}");
+    }
 
-        public Task<TaiKhoanVaiTro?> GetByIdAsync(int id) => _repository.GetByIdAsync(id);
+    public async Task AddAsync(TaiKhoanVaiTro entity)
+    {
+        await _httpClient.PostAsJsonAsync("api/TaiKhoanVaiTro", entity);
+    }
 
-        public Task AddAsync(TaiKhoanVaiTro entity) => _repository.AddAsync(entity);
+    public async Task UpdateAsync(TaiKhoanVaiTro entity)
+    {
+        await _httpClient.PutAsJsonAsync("api/TaiKhoanVaiTro", entity);
+    }
 
-        public Task UpdateAsync(TaiKhoanVaiTro entity) => _repository.UpdateAsync(entity);
-
-        public Task DeleteAsync(int id) => _repository.DeleteAsync(id);
+    public async Task DeleteAsync(int id)
+    {
+        await _httpClient.DeleteAsync($"api/TaiKhoanVaiTro/{id}");
     }
 }

@@ -1,26 +1,40 @@
-using BE.models;
-using Repository.IRepository;
+using System.Net.Http;
+using System.Net.Http.Json;
+using System.Threading.Tasks;
+using System.Collections.Generic;
 using Service.IService;
+using BE.models;
 
-namespace Service
+public class SanPhamLuongDaService : ISanPhamLuongDaService
 {
-    public class SanPhamLuongDaService : ISanPhamLuongDaService
+    private readonly HttpClient _httpClient;
+    public SanPhamLuongDaService(HttpClient httpClient)
     {
-        private readonly ISanPhamLuongDaRepository _repository;
+        _httpClient = httpClient;
+    }
 
-        public SanPhamLuongDaService(ISanPhamLuongDaRepository repository)
-        {
-            _repository = repository;
-        }
+    public async Task<IEnumerable<SanPhamLuongDa>> GetAllAsync()
+    {
+        return await _httpClient.GetFromJsonAsync<IEnumerable<SanPhamLuongDa>>("api/SanPhamLuongDa");
+    }
 
-        public Task<IEnumerable<SanPhamLuongDa>> GetAllAsync() => _repository.GetAllAsync();
+    public async Task<SanPhamLuongDa?> GetByIdAsync(int id)
+    {
+        return await _httpClient.GetFromJsonAsync<SanPhamLuongDa>($"api/SanPhamLuongDa/{id}");
+    }
 
-        public Task<SanPhamLuongDa?> GetByIdAsync(int id) => _repository.GetByIdAsync(id);
+    public async Task AddAsync(SanPhamLuongDa entity)
+    {
+        await _httpClient.PostAsJsonAsync("api/SanPhamLuongDa", entity);
+    }
 
-        public Task AddAsync(SanPhamLuongDa entity) => _repository.AddAsync(entity);
+    public async Task UpdateAsync(SanPhamLuongDa entity)
+    {
+        await _httpClient.PutAsJsonAsync("api/SanPhamLuongDa", entity);
+    }
 
-        public Task UpdateAsync(SanPhamLuongDa entity) => _repository.UpdateAsync(entity);
-
-        public Task DeleteAsync(int id) => _repository.DeleteAsync(id);
+    public async Task DeleteAsync(int id)
+    {
+        await _httpClient.DeleteAsync($"api/SanPhamLuongDa/{id}");
     }
 }

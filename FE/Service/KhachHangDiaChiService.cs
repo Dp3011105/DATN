@@ -1,26 +1,40 @@
-using BE.models;
-using Repository.IRepository;
+using System.Net.Http;
+using System.Net.Http.Json;
+using System.Threading.Tasks;
+using System.Collections.Generic;
 using Service.IService;
+using BE.models;
 
-namespace Service
+public class KhachHangDiaChiService : IKhachHangDiaChiService
 {
-    public class KhachHangDiaChiService : IKhachHangDiaChiService
+    private readonly HttpClient _httpClient;
+    public KhachHangDiaChiService(HttpClient httpClient)
     {
-        private readonly IKhachHangDiaChiRepository _repository;
+        _httpClient = httpClient;
+    }
 
-        public KhachHangDiaChiService(IKhachHangDiaChiRepository repository)
-        {
-            _repository = repository;
-        }
+    public async Task<IEnumerable<KhachHangDiaChi>> GetAllAsync()
+    {
+        return await _httpClient.GetFromJsonAsync<IEnumerable<KhachHangDiaChi>>("api/KhachHangDiaChi");
+    }
 
-        public Task<IEnumerable<KhachHangDiaChi>> GetAllAsync() => _repository.GetAllAsync();
+    public async Task<KhachHangDiaChi?> GetByIdAsync(int id)
+    {
+        return await _httpClient.GetFromJsonAsync<KhachHangDiaChi>($"api/KhachHangDiaChi/{id}");
+    }
 
-        public Task<KhachHangDiaChi?> GetByIdAsync(int id) => _repository.GetByIdAsync(id);
+    public async Task AddAsync(KhachHangDiaChi entity)
+    {
+        await _httpClient.PostAsJsonAsync("api/KhachHangDiaChi", entity);
+    }
 
-        public Task AddAsync(KhachHangDiaChi entity) => _repository.AddAsync(entity);
+    public async Task UpdateAsync(KhachHangDiaChi entity)
+    {
+        await _httpClient.PutAsJsonAsync("api/KhachHangDiaChi", entity);
+    }
 
-        public Task UpdateAsync(KhachHangDiaChi entity) => _repository.UpdateAsync(entity);
-
-        public Task DeleteAsync(int id) => _repository.DeleteAsync(id);
+    public async Task DeleteAsync(int id)
+    {
+        await _httpClient.DeleteAsync($"api/KhachHangDiaChi/{id}");
     }
 }

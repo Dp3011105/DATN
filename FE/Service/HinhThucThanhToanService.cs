@@ -1,26 +1,40 @@
-using BE.models;
-using Repository.IRepository;
+using System.Net.Http;
+using System.Net.Http.Json;
+using System.Threading.Tasks;
+using System.Collections.Generic;
 using Service.IService;
+using BE.models;
 
-namespace Service
+public class HinhThucThanhToanService : IHinhThucThanhToanService
 {
-    public class HinhThucThanhToanService : IHinhThucThanhToanService
+    private readonly HttpClient _httpClient;
+    public HinhThucThanhToanService(HttpClient httpClient)
     {
-        private readonly IHinhThucThanhToanRepository _repository;
+        _httpClient = httpClient;
+    }
 
-        public HinhThucThanhToanService(IHinhThucThanhToanRepository repository)
-        {
-            _repository = repository;
-        }
+    public async Task<IEnumerable<HinhThucThanhToan>> GetAllAsync()
+    {
+        return await _httpClient.GetFromJsonAsync<IEnumerable<HinhThucThanhToan>>("api/HinhThucThanhToan");
+    }
 
-        public Task<IEnumerable<HinhThucThanhToan>> GetAllAsync() => _repository.GetAllAsync();
+    public async Task<HinhThucThanhToan?> GetByIdAsync(int id)
+    {
+        return await _httpClient.GetFromJsonAsync<HinhThucThanhToan>($"api/HinhThucThanhToan/{id}");
+    }
 
-        public Task<HinhThucThanhToan?> GetByIdAsync(int id) => _repository.GetByIdAsync(id);
+    public async Task AddAsync(HinhThucThanhToan entity)
+    {
+        await _httpClient.PostAsJsonAsync("api/HinhThucThanhToan", entity);
+    }
 
-        public Task AddAsync(HinhThucThanhToan entity) => _repository.AddAsync(entity);
+    public async Task UpdateAsync(HinhThucThanhToan entity)
+    {
+        await _httpClient.PutAsJsonAsync("api/HinhThucThanhToan", entity);
+    }
 
-        public Task UpdateAsync(HinhThucThanhToan entity) => _repository.UpdateAsync(entity);
-
-        public Task DeleteAsync(int id) => _repository.DeleteAsync(id);
+    public async Task DeleteAsync(int id)
+    {
+        await _httpClient.DeleteAsync($"api/HinhThucThanhToan/{id}");
     }
 }

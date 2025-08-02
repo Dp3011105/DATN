@@ -1,26 +1,40 @@
-using BE.models;
-using Repository.IRepository;
+using System.Net.Http;
+using System.Net.Http.Json;
+using System.Threading.Tasks;
+using System.Collections.Generic;
 using Service.IService;
+using BE.models;
 
-namespace Service
+public class MessageService : IMessageService
 {
-    public class MessageService : IMessageService
+    private readonly HttpClient _httpClient;
+    public MessageService(HttpClient httpClient)
     {
-        private readonly IMessageRepository _repository;
+        _httpClient = httpClient;
+    }
 
-        public MessageService(IMessageRepository repository)
-        {
-            _repository = repository;
-        }
+    public async Task<IEnumerable<Message>> GetAllAsync()
+    {
+        return await _httpClient.GetFromJsonAsync<IEnumerable<Message>>("api/Message");
+    }
 
-        public Task<IEnumerable<Message>> GetAllAsync() => _repository.GetAllAsync();
+    public async Task<Message?> GetByIdAsync(int id)
+    {
+        return await _httpClient.GetFromJsonAsync<Message>($"api/Message/{id}");
+    }
 
-        public Task<Message?> GetByIdAsync(int id) => _repository.GetByIdAsync(id);
+    public async Task AddAsync(Message entity)
+    {
+        await _httpClient.PostAsJsonAsync("api/Message", entity);
+    }
 
-        public Task AddAsync(Message entity) => _repository.AddAsync(entity);
+    public async Task UpdateAsync(Message entity)
+    {
+        await _httpClient.PutAsJsonAsync("api/Message", entity);
+    }
 
-        public Task UpdateAsync(Message entity) => _repository.UpdateAsync(entity);
-
-        public Task DeleteAsync(int id) => _repository.DeleteAsync(id);
+    public async Task DeleteAsync(int id)
+    {
+        await _httpClient.DeleteAsync($"api/Message/{id}");
     }
 }

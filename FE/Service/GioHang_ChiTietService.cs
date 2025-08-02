@@ -1,26 +1,40 @@
-using BE.models;
-using Repository.IRepository;
+using System.Net.Http;
+using System.Net.Http.Json;
+using System.Threading.Tasks;
+using System.Collections.Generic;
 using Service.IService;
+using BE.models;
 
-namespace Service
+public class GioHang_ChiTietService : IGioHang_ChiTietService
 {
-    public class GioHang_ChiTietService : IGioHang_ChiTietService
+    private readonly HttpClient _httpClient;
+    public GioHang_ChiTietService(HttpClient httpClient)
     {
-        private readonly IGioHang_ChiTietRepository _repository;
+        _httpClient = httpClient;
+    }
 
-        public GioHang_ChiTietService(IGioHang_ChiTietRepository repository)
-        {
-            _repository = repository;
-        }
+    public async Task<IEnumerable<GioHang_ChiTiet>> GetAllAsync()
+    {
+        return await _httpClient.GetFromJsonAsync<IEnumerable<GioHang_ChiTiet>>("api/GioHang_ChiTiet");
+    }
 
-        public Task<IEnumerable<GioHang_ChiTiet>> GetAllAsync() => _repository.GetAllAsync();
+    public async Task<GioHang_ChiTiet?> GetByIdAsync(int id)
+    {
+        return await _httpClient.GetFromJsonAsync<GioHang_ChiTiet>($"api/GioHang_ChiTiet/{id}");
+    }
 
-        public Task<GioHang_ChiTiet?> GetByIdAsync(int id) => _repository.GetByIdAsync(id);
+    public async Task AddAsync(GioHang_ChiTiet entity)
+    {
+        await _httpClient.PostAsJsonAsync("api/GioHang_ChiTiet", entity);
+    }
 
-        public Task AddAsync(GioHang_ChiTiet entity) => _repository.AddAsync(entity);
+    public async Task UpdateAsync(GioHang_ChiTiet entity)
+    {
+        await _httpClient.PutAsJsonAsync("api/GioHang_ChiTiet", entity);
+    }
 
-        public Task UpdateAsync(GioHang_ChiTiet entity) => _repository.UpdateAsync(entity);
-
-        public Task DeleteAsync(int id) => _repository.DeleteAsync(id);
+    public async Task DeleteAsync(int id)
+    {
+        await _httpClient.DeleteAsync($"api/GioHang_ChiTiet/{id}");
     }
 }
