@@ -1,26 +1,40 @@
-using BE.models;
-using Repository.IRepository;
+using System.Net.Http;
+using System.Net.Http.Json;
+using System.Threading.Tasks;
+using System.Collections.Generic;
 using Service.IService;
+using BE.models;
 
-namespace Service
+public class TaiKhoanService : ITaiKhoanService
 {
-    public class TaiKhoanService : ITaiKhoanService
+    private readonly HttpClient _httpClient;
+    public TaiKhoanService(HttpClient httpClient)
     {
-        private readonly ITaiKhoanRepository _repository;
+        _httpClient = httpClient;
+    }
 
-        public TaiKhoanService(ITaiKhoanRepository repository)
-        {
-            _repository = repository;
-        }
+    public async Task<IEnumerable<TaiKhoan>> GetAllAsync()
+    {
+        return await _httpClient.GetFromJsonAsync<IEnumerable<TaiKhoan>>("api/TaiKhoan");
+    }
 
-        public Task<IEnumerable<TaiKhoan>> GetAllAsync() => _repository.GetAllAsync();
+    public async Task<TaiKhoan?> GetByIdAsync(int id)
+    {
+        return await _httpClient.GetFromJsonAsync<TaiKhoan>($"api/TaiKhoan/{id}");
+    }
 
-        public Task<TaiKhoan?> GetByIdAsync(int id) => _repository.GetByIdAsync(id);
+    public async Task AddAsync(TaiKhoan entity)
+    {
+        await _httpClient.PostAsJsonAsync("api/TaiKhoan", entity);
+    }
 
-        public Task AddAsync(TaiKhoan entity) => _repository.AddAsync(entity);
+    public async Task UpdateAsync(TaiKhoan entity)
+    {
+        await _httpClient.PutAsJsonAsync("api/TaiKhoan", entity);
+    }
 
-        public Task UpdateAsync(TaiKhoan entity) => _repository.UpdateAsync(entity);
-
-        public Task DeleteAsync(int id) => _repository.DeleteAsync(id);
+    public async Task DeleteAsync(int id)
+    {
+        await _httpClient.DeleteAsync($"api/TaiKhoan/{id}");
     }
 }

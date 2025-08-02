@@ -1,26 +1,41 @@
+using BE.DTOs;
 using BE.models;
-using Repository.IRepository;
 using Service.IService;
+using System.Collections.Generic;
+using System.Net.Http;
+using System.Net.Http.Json;
+using System.Threading.Tasks;
 
-namespace Service
+public class HoaDonService : IHoaDonService
 {
-    public class HoaDonService : IHoaDonService
+    private readonly HttpClient _httpClient;
+    public HoaDonService(HttpClient httpClient)
     {
-        private readonly IHoaDonRepository _repository;
+        _httpClient = httpClient;
+    }
 
-        public HoaDonService(IHoaDonRepository repository)
-        {
-            _repository = repository;
-        }
+    public async Task<IEnumerable<HoaDonDTO>> GetAllAsync()
+    {
+        return await _httpClient.GetFromJsonAsync<IEnumerable<HoaDonDTO>>("api/HoaDon");
+    }
 
-        public Task<IEnumerable<HoaDon>> GetAllAsync() => _repository.GetAllAsync();
+    public async Task<HoaDon?> GetByIdAsync(int id)
+    {
+        return await _httpClient.GetFromJsonAsync<HoaDon>($"api/HoaDon/{id}");
+    }
 
-        public Task<HoaDon?> GetByIdAsync(int id) => _repository.GetByIdAsync(id);
+    public async Task AddAsync(HoaDon entity)
+    {
+        await _httpClient.PostAsJsonAsync("api/HoaDon", entity);
+    }
 
-        public Task AddAsync(HoaDon entity) => _repository.AddAsync(entity);
+    public async Task UpdateAsync(HoaDon entity)
+    {
+        await _httpClient.PutAsJsonAsync("api/HoaDon", entity);
+    }
 
-        public Task UpdateAsync(HoaDon entity) => _repository.UpdateAsync(entity);
-
-        public Task DeleteAsync(int id) => _repository.DeleteAsync(id);
+    public async Task DeleteAsync(int id)
+    {
+        await _httpClient.DeleteAsync($"api/HoaDon/{id}");
     }
 }

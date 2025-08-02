@@ -1,26 +1,40 @@
-using BE.models;
-using Repository.IRepository;
+using System.Net.Http;
+using System.Net.Http.Json;
+using System.Threading.Tasks;
+using System.Collections.Generic;
 using Service.IService;
+using BE.models;
 
-namespace Service
+public class DiemDanhService : IDiemDanhService
 {
-    public class DiemDanhService : IDiemDanhService
+    private readonly HttpClient _httpClient;
+    public DiemDanhService(HttpClient httpClient)
     {
-        private readonly IDiemDanhRepository _repository;
+        _httpClient = httpClient;
+    }
 
-        public DiemDanhService(IDiemDanhRepository repository)
-        {
-            _repository = repository;
-        }
+    public async Task<IEnumerable<DiemDanh>> GetAllAsync()
+    {
+        return await _httpClient.GetFromJsonAsync<IEnumerable<DiemDanh>>("api/DiemDanh");
+    }
 
-        public Task<IEnumerable<DiemDanh>> GetAllAsync() => _repository.GetAllAsync();
+    public async Task<DiemDanh?> GetByIdAsync(int id)
+    {
+        return await _httpClient.GetFromJsonAsync<DiemDanh>($"api/DiemDanh/{id}");
+    }
 
-        public Task<DiemDanh?> GetByIdAsync(int id) => _repository.GetByIdAsync(id);
+    public async Task AddAsync(DiemDanh entity)
+    {
+        await _httpClient.PostAsJsonAsync("api/DiemDanh", entity);
+    }
 
-        public Task AddAsync(DiemDanh entity) => _repository.AddAsync(entity);
+    public async Task UpdateAsync(DiemDanh entity)
+    {
+        await _httpClient.PutAsJsonAsync("api/DiemDanh", entity);
+    }
 
-        public Task UpdateAsync(DiemDanh entity) => _repository.UpdateAsync(entity);
-
-        public Task DeleteAsync(int id) => _repository.DeleteAsync(id);
+    public async Task DeleteAsync(int id)
+    {
+        await _httpClient.DeleteAsync($"api/DiemDanh/{id}");
     }
 }

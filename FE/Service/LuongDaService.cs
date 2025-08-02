@@ -1,26 +1,40 @@
-using BE.models;
-using Repository.IRepository;
+using System.Net.Http;
+using System.Net.Http.Json;
+using System.Threading.Tasks;
+using System.Collections.Generic;
 using Service.IService;
+using BE.models;
 
-namespace Service
+public class LuongDaService : ILuongDaService
 {
-    public class LuongDaService : ILuongDaService
+    private readonly HttpClient _httpClient;
+    public LuongDaService(HttpClient httpClient)
     {
-        private readonly ILuongDaService _repository;
+        _httpClient = httpClient;
+    }
 
-        public LuongDaService(ILuongDaService repository)
-        {
-            _repository = repository;
-        }
+    public async Task<IEnumerable<LuongDa>> GetAllAsync()
+    {
+        return await _httpClient.GetFromJsonAsync<IEnumerable<LuongDa>>("api/LuongDa");
+    }
 
-        public Task<IEnumerable<LuongDa>> GetAllAsync() => _repository.GetAllAsync();
+    public async Task<LuongDa?> GetByIdAsync(int id)
+    {
+        return await _httpClient.GetFromJsonAsync<LuongDa>($"api/LuongDa/{id}");
+    }
 
-        public Task<LuongDa?> GetByIdAsync(int id) => _repository.GetByIdAsync(id);
+    public async Task AddAsync(LuongDa entity)
+    {
+        await _httpClient.PostAsJsonAsync("api/LuongDa", entity);
+    }
 
-        public Task AddAsync(LuongDa entity) => _repository.AddAsync(entity);
+    public async Task UpdateAsync(LuongDa entity)
+    {
+        await _httpClient.PutAsJsonAsync("api/LuongDa", entity);
+    }
 
-        public Task UpdateAsync(LuongDa entity) => _repository.UpdateAsync(entity);
-
-        public Task DeleteAsync(int id) => _repository.DeleteAsync(id);
+    public async Task DeleteAsync(int id)
+    {
+        await _httpClient.DeleteAsync($"api/LuongDa/{id}");
     }
 }

@@ -1,26 +1,40 @@
-using BE.models;
-using Repository.IRepository;
+using System.Net.Http;
+using System.Net.Http.Json;
+using System.Threading.Tasks;
+using System.Collections.Generic;
 using Service.IService;
+using BE.models;
 
-namespace Service
+public class VoucherService : IVoucherService
 {
-    public class VoucherService : IVoucherService
+    private readonly HttpClient _httpClient;
+    public VoucherService(HttpClient httpClient)
     {
-        private readonly IVoucherRepository _repository;
+        _httpClient = httpClient;
+    }
 
-        public VoucherService(IVoucherRepository repository)
-        {
-            _repository = repository;
-        }
+    public async Task<IEnumerable<Voucher>> GetAllAsync()
+    {
+        return await _httpClient.GetFromJsonAsync<IEnumerable<Voucher>>("api/Voucher");
+    }
 
-        public Task<IEnumerable<Voucher>> GetAllAsync() => _repository.GetAllAsync();
+    public async Task<Voucher?> GetByIdAsync(int id)
+    {
+        return await _httpClient.GetFromJsonAsync<Voucher>($"api/Voucher/{id}");
+    }
 
-        public Task<Voucher?> GetByIdAsync(int id) => _repository.GetByIdAsync(id);
+    public async Task AddAsync(Voucher entity)
+    {
+        await _httpClient.PostAsJsonAsync("api/Voucher", entity);
+    }
 
-        public Task AddAsync(Voucher entity) => _repository.AddAsync(entity);
+    public async Task UpdateAsync(Voucher entity)
+    {
+        await _httpClient.PutAsJsonAsync("api/Voucher", entity);
+    }
 
-        public Task UpdateAsync(Voucher entity) => _repository.UpdateAsync(entity);
-
-        public Task DeleteAsync(int id) => _repository.DeleteAsync(id);
+    public async Task DeleteAsync(int id)
+    {
+        await _httpClient.DeleteAsync($"api/Voucher/{id}");
     }
 }

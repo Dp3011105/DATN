@@ -1,26 +1,40 @@
-using BE.models;
-using Repository.IRepository;
+using System.Net.Http;
+using System.Net.Http.Json;
+using System.Threading.Tasks;
+using System.Collections.Generic;
 using Service.IService;
+using BE.models;
 
-namespace Service
+public class DiaChiService : IDiaChiService
 {
-    public class DiaChiService : IDiaChiService
+    private readonly HttpClient _httpClient;
+    public DiaChiService(HttpClient httpClient)
     {
-        private readonly IDiaChiRepository _repository;
+        _httpClient = httpClient;
+    }
 
-        public DiaChiService(IDiaChiRepository repository)
-        {
-            _repository = repository;
-        }
+    public async Task<IEnumerable<DiaChi>> GetAllAsync()
+    {
+        return await _httpClient.GetFromJsonAsync<IEnumerable<DiaChi>>("api/DiaChi");
+    }
 
-        public Task<IEnumerable<DiaChi>> GetAllAsync() => _repository.GetAllAsync();
+    public async Task<DiaChi?> GetByIdAsync(int id)
+    {
+        return await _httpClient.GetFromJsonAsync<DiaChi>($"api/DiaChi/{id}");
+    }
 
-        public Task<DiaChi?> GetByIdAsync(int id) => _repository.GetByIdAsync(id);
+    public async Task AddAsync(DiaChi entity)
+    {
+        await _httpClient.PostAsJsonAsync("api/DiaChi", entity);
+    }
 
-        public Task AddAsync(DiaChi entity) => _repository.AddAsync(entity);
+    public async Task UpdateAsync(DiaChi entity)
+    {
+        await _httpClient.PutAsJsonAsync("api/DiaChi", entity);
+    }
 
-        public Task UpdateAsync(DiaChi entity) => _repository.UpdateAsync(entity);
-
-        public Task DeleteAsync(int id) => _repository.DeleteAsync(id);
+    public async Task DeleteAsync(int id)
+    {
+        await _httpClient.DeleteAsync($"api/DiaChi/{id}");
     }
 }

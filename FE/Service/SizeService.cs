@@ -1,26 +1,40 @@
-using BE.models;
-using Repository.IRepository;
+using System.Net.Http;
+using System.Net.Http.Json;
+using System.Threading.Tasks;
+using System.Collections.Generic;
 using Service.IService;
+using BE.models;
 
-namespace Service
+public class SizeService : ISizeService
 {
-    public class SizeService : ISizeService
+    private readonly HttpClient _httpClient;
+    public SizeService(HttpClient httpClient)
     {
-        private readonly ISizeService _repository;
+        _httpClient = httpClient;
+    }
 
-        public SizeService(ISizeService repository)
-        {
-            _repository = repository;
-        }
+    public async Task<IEnumerable<Size>> GetAllAsync()
+    {
+        return await _httpClient.GetFromJsonAsync<IEnumerable<Size>>("api/Size");
+    }
 
-        public Task<IEnumerable<Size>> GetAllAsync() => _repository.GetAllAsync();
+    public async Task<Size?> GetByIdAsync(int id)
+    {
+        return await _httpClient.GetFromJsonAsync<Size>($"api/Size/{id}");
+    }
 
-        public Task<Size?> GetByIdAsync(int id) => _repository.GetByIdAsync(id);
+    public async Task AddAsync(Size entity)
+    {
+        await _httpClient.PostAsJsonAsync("api/Size", entity);
+    }
 
-        public Task AddAsync(Size entity) => _repository.AddAsync(entity);
+    public async Task UpdateAsync(Size entity)
+    {
+        await _httpClient.PutAsJsonAsync("api/Size", entity);
+    }
 
-        public Task UpdateAsync(Size entity) => _repository.UpdateAsync(entity);
-
-        public Task DeleteAsync(int id) => _repository.DeleteAsync(id);
+    public async Task DeleteAsync(int id)
+    {
+        await _httpClient.DeleteAsync($"api/Size/{id}");
     }
 }

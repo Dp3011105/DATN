@@ -1,26 +1,40 @@
-using BE.models;
-using Repository.IRepository;
+using System.Net.Http;
+using System.Net.Http.Json;
+using System.Threading.Tasks;
+using System.Collections.Generic;
 using Service.IService;
+using BE.models;
 
-namespace Service
+public class DoNgotService : IDoNgotService
 {
-    public class DoNgotService : IDoNgotService
+    private readonly HttpClient _httpClient;
+    public DoNgotService(HttpClient httpClient)
     {
-        private readonly IDoNgotService _repository;
+        _httpClient = httpClient;
+    }
 
-        public DoNgotService(IDoNgotService repository)
-        {
-            _repository = repository;
-        }
+    public async Task<IEnumerable<DoNgot>> GetAllAsync()
+    {
+        return await _httpClient.GetFromJsonAsync<IEnumerable<DoNgot>>("api/DoNgot");
+    }
 
-        public Task<IEnumerable<DoNgot>> GetAllAsync() => _repository.GetAllAsync();
+    public async Task<DoNgot?> GetByIdAsync(int id)
+    {
+        return await _httpClient.GetFromJsonAsync<DoNgot>($"api/DoNgot/{id}");
+    }
 
-        public Task<DoNgot?> GetByIdAsync(int id) => _repository.GetByIdAsync(id);
+    public async Task AddAsync(DoNgot entity)
+    {
+        await _httpClient.PostAsJsonAsync("api/DoNgot", entity);
+    }
 
-        public Task AddAsync(DoNgot entity) => _repository.AddAsync(entity);
+    public async Task UpdateAsync(DoNgot entity)
+    {
+        await _httpClient.PutAsJsonAsync("api/DoNgot", entity);
+    }
 
-        public Task UpdateAsync(DoNgot entity) => _repository.UpdateAsync(entity);
-
-        public Task DeleteAsync(int id) => _repository.DeleteAsync(id);
+    public async Task DeleteAsync(int id)
+    {
+        await _httpClient.DeleteAsync($"api/DoNgot/{id}");
     }
 }
