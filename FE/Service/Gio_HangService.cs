@@ -1,26 +1,40 @@
-using BE.models;
-using Repository.IRepository;
+using System.Net.Http;
+using System.Net.Http.Json;
+using System.Threading.Tasks;
+using System.Collections.Generic;
 using Service.IService;
+using BE.models;
 
-namespace Service
+public class Gio_HangService : IGio_HangService
 {
-    public class Gio_HangService : IGio_HangService
+    private readonly HttpClient _httpClient;
+    public Gio_HangService(HttpClient httpClient)
     {
-        private readonly IGio_HangRepository _repository;
+        _httpClient = httpClient;
+    }
 
-        public Gio_HangService(IGio_HangRepository repository)
-        {
-            _repository = repository;
-        }
+    public async Task<IEnumerable<Gio_Hang>> GetAllAsync()
+    {
+        return await _httpClient.GetFromJsonAsync<IEnumerable<Gio_Hang>>("api/Gio_Hang");
+    }
 
-        public Task<IEnumerable<Gio_Hang>> GetAllAsync() => _repository.GetAllAsync();
+    public async Task<Gio_Hang?> GetByIdAsync(int id)
+    {
+        return await _httpClient.GetFromJsonAsync<Gio_Hang>($"api/Gio_Hang/{id}");
+    }
 
-        public Task<Gio_Hang?> GetByIdAsync(int id) => _repository.GetByIdAsync(id);
+    public async Task AddAsync(Gio_Hang entity)
+    {
+        await _httpClient.PostAsJsonAsync("api/Gio_Hang", entity);
+    }
 
-        public Task AddAsync(Gio_Hang entity) => _repository.AddAsync(entity);
+    public async Task UpdateAsync(Gio_Hang entity)
+    {
+        await _httpClient.PutAsJsonAsync("api/Gio_Hang", entity);
+    }
 
-        public Task UpdateAsync(Gio_Hang entity) => _repository.UpdateAsync(entity);
-
-        public Task DeleteAsync(int id) => _repository.DeleteAsync(id);
+    public async Task DeleteAsync(int id)
+    {
+        await _httpClient.DeleteAsync($"api/Gio_Hang/{id}");
     }
 }

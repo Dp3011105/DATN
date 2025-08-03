@@ -1,26 +1,40 @@
-using BE.models;
-using Repository.IRepository;
+using System.Net.Http;
+using System.Net.Http.Json;
+using System.Threading.Tasks;
+using System.Collections.Generic;
 using Service.IService;
+using BE.models;
 
-namespace Service
+public class ThueService : IThueService
 {
-    public class ThueService : IThueService
+    private readonly HttpClient _httpClient;
+    public ThueService(HttpClient httpClient)
     {
-        private readonly IThueRepository _repository;
+        _httpClient = httpClient;
+    }
 
-        public ThueService(IThueRepository repository)
-        {
-            _repository = repository;
-        }
+    public async Task<IEnumerable<Thue>> GetAllAsync()
+    {
+        return await _httpClient.GetFromJsonAsync<IEnumerable<Thue>>("api/Thue");
+    }
 
-        public Task<IEnumerable<Thue>> GetAllAsync() => _repository.GetAllAsync();
+    public async Task<Thue?> GetByIdAsync(int id)
+    {
+        return await _httpClient.GetFromJsonAsync<Thue>($"api/Thue/{id}");
+    }
 
-        public Task<Thue?> GetByIdAsync(int id) => _repository.GetByIdAsync(id);
+    public async Task AddAsync(Thue entity)
+    {
+        await _httpClient.PostAsJsonAsync("api/Thue", entity);
+    }
 
-        public Task AddAsync(Thue entity) => _repository.AddAsync(entity);
+    public async Task UpdateAsync(Thue entity)
+    {
+        await _httpClient.PutAsJsonAsync("api/Thue", entity);
+    }
 
-        public Task UpdateAsync(Thue entity) => _repository.UpdateAsync(entity);
-
-        public Task DeleteAsync(int id) => _repository.DeleteAsync(id);
+    public async Task DeleteAsync(int id)
+    {
+        await _httpClient.DeleteAsync($"api/Thue/{id}");
     }
 }

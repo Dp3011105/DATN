@@ -1,26 +1,40 @@
-using BE.models;
-using Repository.IRepository;
+using System.Net.Http;
+using System.Net.Http.Json;
+using System.Threading.Tasks;
+using System.Collections.Generic;
 using Service.IService;
+using BE.models;
 
-namespace Service
+public class ChatSessionNhanVienService : IChatSessionNhanVienService
 {
-    public class ChatSessionNhanVienService : IChatSessionNhanVienService
+    private readonly HttpClient _httpClient;
+    public ChatSessionNhanVienService(HttpClient httpClient)
     {
-        private readonly IChatSessionNhanVienRepository _repository;
+        _httpClient = httpClient;
+    }
 
-        public ChatSessionNhanVienService(IChatSessionNhanVienRepository repository)
-        {
-            _repository = repository;
-        }
+    public async Task<IEnumerable<ChatSessionNhanVien>> GetAllAsync()
+    {
+        return await _httpClient.GetFromJsonAsync<IEnumerable<ChatSessionNhanVien>>("api/ChatSessionNhanVien");
+    }
 
-        public Task<IEnumerable<ChatSessionNhanVien>> GetAllAsync() => _repository.GetAllAsync();
+    public async Task<ChatSessionNhanVien?> GetByIdAsync(int id)
+    {
+        return await _httpClient.GetFromJsonAsync<ChatSessionNhanVien>($"api/ChatSessionNhanVien/{id}");
+    }
 
-        public Task<ChatSessionNhanVien?> GetByIdAsync(int id) => _repository.GetByIdAsync(id);
+    public async Task AddAsync(ChatSessionNhanVien entity)
+    {
+        await _httpClient.PostAsJsonAsync("api/ChatSessionNhanVien", entity);
+    }
 
-        public Task AddAsync(ChatSessionNhanVien entity) => _repository.AddAsync(entity);
+    public async Task UpdateAsync(ChatSessionNhanVien entity)
+    {
+        await _httpClient.PutAsJsonAsync("api/ChatSessionNhanVien", entity);
+    }
 
-        public Task UpdateAsync(ChatSessionNhanVien entity) => _repository.UpdateAsync(entity);
-
-        public Task DeleteAsync(int id) => _repository.DeleteAsync(id);
+    public async Task DeleteAsync(int id)
+    {
+        await _httpClient.DeleteAsync($"api/ChatSessionNhanVien/{id}");
     }
 }

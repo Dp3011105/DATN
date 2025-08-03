@@ -1,26 +1,40 @@
-using BE.models;
-using Repository.IRepository;
+using System.Net.Http;
+using System.Net.Http.Json;
+using System.Threading.Tasks;
+using System.Collections.Generic;
 using Service.IService;
+using BE.models;
 
-namespace Service
+public class SanPhamSizeService : ISanPhamSizeService
 {
-    public class SanPhamSizeService : ISanPhamSizeService
+    private readonly HttpClient _httpClient;
+    public SanPhamSizeService(HttpClient httpClient)
     {
-        private readonly ISanPhamSizeRepository _repository;
+        _httpClient = httpClient;
+    }
 
-        public SanPhamSizeService(ISanPhamSizeRepository repository)
-        {
-            _repository = repository;
-        }
+    public async Task<IEnumerable<SanPhamSize>> GetAllAsync()
+    {
+        return await _httpClient.GetFromJsonAsync<IEnumerable<SanPhamSize>>("api/SanPhamSize");
+    }
 
-        public Task<IEnumerable<SanPhamSize>> GetAllAsync() => _repository.GetAllAsync();
+    public async Task<SanPhamSize?> GetByIdAsync(int id)
+    {
+        return await _httpClient.GetFromJsonAsync<SanPhamSize>($"api/SanPhamSize/{id}");
+    }
 
-        public Task<SanPhamSize?> GetByIdAsync(int id) => _repository.GetByIdAsync(id);
+    public async Task AddAsync(SanPhamSize entity)
+    {
+        await _httpClient.PostAsJsonAsync("api/SanPhamSize", entity);
+    }
 
-        public Task AddAsync(SanPhamSize entity) => _repository.AddAsync(entity);
+    public async Task UpdateAsync(SanPhamSize entity)
+    {
+        await _httpClient.PutAsJsonAsync("api/SanPhamSize", entity);
+    }
 
-        public Task UpdateAsync(SanPhamSize entity) => _repository.UpdateAsync(entity);
-
-        public Task DeleteAsync(int id) => _repository.DeleteAsync(id);
+    public async Task DeleteAsync(int id)
+    {
+        await _httpClient.DeleteAsync($"api/SanPhamSize/{id}");
     }
 }
