@@ -1018,6 +1018,10 @@ namespace BE.Migrations
                         .HasPrecision(18, 2)
                         .HasColumnType("decimal(18,2)");
 
+                    b.Property<string>("Hinh_Anh")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
                     b.Property<int?>("So_Luong")
                         .HasColumnType("int");
 

@@ -13,6 +13,7 @@ namespace BE.DTOs
         public decimal? Gia { get; set; }
 
         public int? So_Luong { get; set; }
+        public string Hinh_Anh { get; set; }
 
         [StringLength(255)]
         public string Ghi_Chu { get; set; }

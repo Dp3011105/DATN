@@ -201,4 +201,5 @@ app.MapControllerRoute(
     name: "default",
     pattern: "{controller=ThongKe}/{action=Index}/{id?}");
 
+
 app.Run();

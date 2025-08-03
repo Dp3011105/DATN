@@ -28,6 +28,6 @@ namespace BE.models
 
         public List<HoaDonChiTiet> HoaDonChiTiets { get; set; }
         public List<LichSuHoaDon> LichSuHoaDons { get; set; }
-        public List<HoaDonVoucher> HoaDonVouchers { get; set; } // Quan hệ mới với bảng trung gian
+        public List<HoaDonVoucher> HoaDonVouchers { get; set; } 
     }
 }
