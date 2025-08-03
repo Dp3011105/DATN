@@ -1,4 +1,4 @@
-
+﻿
 using BE.DTOs;
 using BE.models;
 using Service.IService;
@@ -16,10 +16,10 @@ public class HoaDonService : IHoaDonService
     }
 
 
-    public async Task<IEnumerable<HoaDonDTO>> GetAllAsync()
-    {
-        return await _httpClient.GetFromJsonAsync<IEnumerable<HoaDonDTO>>("api/HoaDon");
-    }
+    //public async Task<IEnumerable<HoaDonDTO>> GetAllAsync()
+    //{
+    //    return await _httpClient.GetFromJsonAsync<IEnumerable<HoaDonDTO>>("api/HoaDon");
+    //} Hiện mình không thấy HoaDonDTO nên command lại để tránh lỗi 
 
     public async Task<HoaDon?> GetByIdAsync(int id)
     {
