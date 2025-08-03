@@ -1,3 +1,5 @@
+
+﻿using BE.DTOs;
 using BE.models;
 
 namespace Service.IService
@@ -5,6 +7,7 @@ namespace Service.IService
     public interface IHoaDonService
     {
         Task<IEnumerable<HoaDon>> GetAllAsync();
+
         Task<HoaDon?> GetByIdAsync(int id);
         Task AddAsync(HoaDon entity);
         Task UpdateAsync(HoaDon entity);

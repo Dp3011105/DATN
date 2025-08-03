@@ -1,3 +1,5 @@
+
+﻿using BE.DTOs;
 using BE.models;
 using Repository.IRepository;
 using Service.IService;
@@ -12,6 +14,7 @@ namespace Service
         {
             _repository = repository;
         }
+
 
         public Task<IEnumerable<HoaDon>> GetAllAsync() => _repository.GetAllAsync();
 
