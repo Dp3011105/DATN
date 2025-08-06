@@ -19,7 +19,6 @@ builder.Services.AddScoped<IHoaDonChiTietService, HoaDonChiTietService>();
 builder.Services.AddScoped<IHoaDonChiTietThueService, HoaDonChiTietThueService>();
 builder.Services.AddScoped<INhanVienService, NhanVienService>();
 builder.Services.AddScoped<IKhachHangService, KhachHangService>();
-builder.Services.AddScoped<IAccountService, AccountService>();
 
 var baseApiUrl = "https://localhost:7081/";
 //Đăng ký các Service dùng Dependency Injection
