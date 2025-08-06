@@ -37,19 +37,22 @@ builder.Services.AddScoped<ILichSuHoaDonRepository, LichSuHoaDonRepository>();
 builder.Services.AddScoped<IMessageRepository, MessageRepository>();
 builder.Services.AddScoped<INhanVienRepository, NhanVienRepository>();
 builder.Services.AddScoped<ISanPhamDoNgotRepository, SanPhamDoNgotRepository>();
-builder.Services.AddScoped<ISanPhamLuongDaRepository, SanPhamLuongDaRepository>();
 builder.Services.AddScoped<ISanPhamSizeRepository, SanPhamSizeRepository>();
-builder.Services.AddScoped<ISanPhamToppingRepository, SanPhamToppingRepository>();
 builder.Services.AddScoped<ITaiKhoanRepository, TaiKhoanRepository>();
 builder.Services.AddScoped<ITaiKhoanVaiTroRepository, TaiKhoanVaiTroRepository>();
 builder.Services.AddScoped<IThueRepository, ThueRepository>();
 builder.Services.AddScoped<IVaiTroRepository, VaiTroRepository>();
+
+
+
+//phước
 builder.Services.AddScoped<IVoucherRepository, VoucherRepository>();
-builder.Services.AddScoped<ISanPhamRepository, SanPhamRepository>();
 builder.Services.AddScoped<ILuongDaRepository, LuongDaRepository>();
 builder.Services.AddScoped<ISizeRepository, SizeRepository>();
 builder.Services.AddScoped<IDoNgotRepository, DoNgotRepository>();
 builder.Services.AddScoped<IToppingRepository, ToppingRepository>();
+builder.Services.AddScoped<ISanPhamLuongDaRepository, SanPhamLuongDaRepository>();
+builder.Services.AddScoped<ISanPhamRepository, SanPhamRepository>();
 
 // Configure CORS
 builder.Services.AddCors(options =>
