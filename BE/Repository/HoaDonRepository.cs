@@ -1,49 +1,46 @@
+﻿using BE.Data;
 using BE.models;
-using BE.Data;
 using Microsoft.EntityFrameworkCore;
-using Repository.IRepository;
 
-namespace Repository
+public class HoaDonRepository : IHoaDonRepository
 {
-    public class HoaDonRepository : IHoaDonRepository
+    private readonly MyDbContext _context;
+    public HoaDonRepository(MyDbContext context) => _context = context;
+
+    public async Task<IEnumerable<HoaDonDTO>> GetAllAsync()
     {
-        private readonly MyDbContext _context;
-
-        public HoaDonRepository(MyDbContext context)
+        return await _context.Hoa_Don.Select(h => new HoaDonDTO
         {
-            _context = context;
-        }
+            ID_Hoa_Don = h.ID_Hoa_Don,
+            Ma_Hoa_Don = h.Ma_Hoa_Don,
+            Ngay_Tao = h.Ngay_Tao,
+            Tong_Tien = h.Tong_Tien,
+            Trang_Thai = h.Trang_Thai
+        }).ToListAsync();
+    }
 
-        public async Task<IEnumerable<HoaDon>> GetAllAsync()
-        {
-            return await _context.Hoa_Don.ToListAsync();
-        }
+    public async Task<HoaDon?> GetByIdAsync(int id)
+        => await _context.Hoa_Don.FindAsync(id);
 
-        public async Task<HoaDon?> GetByIdAsync(int id)
-        {
-            return await _context.Hoa_Don.FindAsync(id);
-        }
+    public async Task AddAsync(HoaDon entity)
+    {
+        await _context.Hoa_Don.AddAsync(entity);
+        await _context.SaveChangesAsync();
+    }
 
-        public async Task AddAsync(HoaDon entity)
+    public async Task UpdateAsync(HoaDon entity)
+    {
+        _context.Hoa_Don.Update(entity);
+        await _context.SaveChangesAsync();
+    }
+
+    public async Task DeleteAsync(int id)
+    {
+        var entity = await GetByIdAsync(id);
+        if (entity != null)
         {
-            await _context.Hoa_Don.AddAsync(entity);
+            _context.Hoa_Don.Remove(entity);
             await _context.SaveChangesAsync();
-        }
-
-        public async Task UpdateAsync(HoaDon entity)
-        {
-            _context.Hoa_Don.Update(entity);
-            await _context.SaveChangesAsync();
-        }
-
-        public async Task DeleteAsync(int id)
-        {
-            var entity = await GetByIdAsync(id);
-            if (entity != null)
-            {
-                _context.Hoa_Don.Remove(entity);
-                await _context.SaveChangesAsync();
-            }
         }
     }
 }
