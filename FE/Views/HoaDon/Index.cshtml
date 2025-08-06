@@ -1,0 +1,41 @@
+﻿@model IEnumerable<BE.models.HoaDon>
+@{
+    ViewData["Title"] = "Quản lý Hóa Đơn";
+}
+
+<h2 class="mb-4">Quản lý Hóa Đơn</h2>
+
+<table class="table table-bordered table-hover">
+    <thead class="table-dark">
+        <tr>
+            <th>Mã HĐ</th>
+            <th>Khách Hàng</th>
+            <th>Ngày Tạo</th>
+            <th>Tổng Tiền</th>
+            <th>Trạng Thái</th>
+            <th>Thao Tác</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var hd in Model)
+        {
+            <tr>
+                <td>@hd.Ma_Hoa_Don</td>
+                @* <td>@hd.KhachHang?.Ten_Khach_Hang</td> *@
+                <td>@hd.Ngay_Tao.ToString("dd/MM/yyyy HH:mm")</td>
+                <td>@hd.Tong_Tien.ToString("N0") đ</td>
+                <td>
+                    <a asp-action="Details" asp-route-id="@hd.ID_Hoa_Don" class="btn btn-sm btn-primary me-1">
+                        <i class="fas fa-eye"></i> Chi tiết
+                    </a>
+                    <a asp-action="Edit" asp-route-id="@hd.ID_Hoa_Don" class="btn btn-sm btn-warning me-1">
+                        <i class="fas fa-edit"></i> Sửa trạng thái
+                    </a>
+                    <a asp-action="Print" asp-route-id="@hd.ID_Hoa_Don" class="btn btn-sm btn-success">
+                        <i class="fas fa-print"></i> In hóa đơn
+                    </a>
+                </td>
+            </tr>
+        }
+    </tbody>
+</table>

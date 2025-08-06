@@ -1,0 +1,91 @@
+﻿@model BE.models.HoaDon
+@{
+    ViewData["Title"] = "Tạo hóa đơn mới";
+}
+
+<h2 class="mb-4">Tạo hóa đơn mới</h2>
+
+<form asp-action="Create" asp-controller="HoaDon" method="post">
+    <div class="row">
+        <div class="col-md-6 mb-3">
+            <label asp-for="Ma_Hoa_Don" class="form-label">Mã hóa đơn</label>
+            <input asp-for="Ma_Hoa_Don" class="form-control" />
+            <span asp-validation-for="Ma_Hoa_Don" class="text-danger"></span>
+        </div>
+
+        <div class="col-md-6 mb-3">
+            <label asp-for="ID_Khach_Hang" class="form-label">Khách hàng</label>
+            <input asp-for="ID_Khach_Hang" class="form-control" placeholder="ID Khách hàng hoặc để trống" />
+        </div>
+
+        <div class="col-md-6 mb-3">
+            <label asp-for="ID_Nhan_Vien" class="form-label">Nhân viên</label>
+            <input asp-for="ID_Nhan_Vien" class="form-control" placeholder="ID Nhân viên xử lý" />
+        </div>
+
+        <div class="col-md-6 mb-3">
+            <label asp-for="ID_Hinh_Thuc_Thanh_Toan" class="form-label">Hình thức thanh toán</label>
+            <input asp-for="ID_Hinh_Thuc_Thanh_Toan" class="form-control" />
+        </div>
+
+        <div class="col-md-12 mb-3">
+            <label asp-for="Dia_Chi_Tu_Nhap" class="form-label">Địa chỉ giao hàng</label>
+            <input asp-for="Dia_Chi_Tu_Nhap" class="form-control" />
+        </div>
+
+        <div class="col-md-6 mb-3">
+            <label asp-for="Tong_Tien" class="form-label">Tổng tiền</label>
+            <input asp-for="Tong_Tien" class="form-control" />
+        </div>
+
+        <div class="col-md-6 mb-3">
+            <label asp-for="Phi_Ship" class="form-label">Phí ship</label>
+            <input asp-for="Phi_Ship" class="form-control" />
+        </div>
+
+        <div class="col-md-6 mb-3">
+            <label asp-for="Loai_Hoa_Don" class="form-label">Loại hóa đơn</label>
+            <input asp-for="Loai_Hoa_Don" class="form-control" />
+        </div>
+
+        <div class="col-md-6 mb-3">
+            <label asp-for="Trang_Thai" class="form-label">Trạng thái</label>
+            <select asp-for="Trang_Thai" class="form-control">
+                <option value="Chua_Xac_Nhan">Chưa xác nhận</option>
+                <option value="Da_Xac_Nhan">Đã xác nhận</option>
+                <option value="Dang_Giao_Hang">Đang giao hàng</option>
+                <option value="Hoan_Thanh">Hoàn thành</option>
+                <option value="Do_Hang_Co_Van_De">Đơn hàng có vấn đề</option>
+                <option value="Huy_Don">Hủy đơn</option>
+            </select>
+        </div>
+
+        <div class="col-md-12 mb-3">
+            <label asp-for="Ghi_Chu" class="form-label">Ghi chú</label>
+            <textarea asp-for="Ghi_Chu" class="form-control" rows="3"></textarea>
+        </div>
+
+        <div class="col-md-12 mb-3">
+            <label asp-for="LyDoHuyDon" class="form-label">Lý do hủy đơn (nếu có)</label>
+            <input asp-for="LyDoHuyDon" class="form-control" />
+        </div>
+
+        <div class="col-md-12 mb-3">
+            <label asp-for="LyDoDonHangCoVanDe" class="form-label">Lý do đơn hàng có vấn đề (nếu có)</label>
+            <input asp-for="LyDoDonHangCoVanDe" class="form-control" />
+        </div>
+    </div>
+
+    <div class="form-group mt-3">
+        <button type="submit" class="btn btn-success">
+            <i class="fas fa-plus"></i> Tạo mới
+        </button>
+        <a asp-action="Index" asp-controller="HoaDon" class="btn btn-secondary">
+            <i class="fas fa-arrow-left"></i> Quay lại
+        </a>
+    </div>
+</form>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}
