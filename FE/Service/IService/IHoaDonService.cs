@@ -7,10 +7,10 @@ namespace Service.IService
 {
     public interface IHoaDonService
     {
-        Task<IEnumerable<HoaDonDTO>> GetAllAsync();
-        Task<HoaDon?> GetByIdAsync(int id);
+        Task<IEnumerable<HoaDon>> GetAllAsync();
+        Task<HoaDon> GetByIdAsync(int id);
         Task AddAsync(HoaDon entity);
-        Task UpdateAsync(HoaDon entity);
+        Task UpdateAsync(int id,HoaDon entity);
         Task DeleteAsync(int id);
     }
 }

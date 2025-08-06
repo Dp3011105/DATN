@@ -1,0 +1,81 @@
+﻿
+@model BE.DTOs.KhachHangDTO
+@{
+    ViewData["Title"] = "Thêm khách hàng";
+    Layout = "_AdminLayout";
+}
+
+<div class="container-fluid p-4">
+    <div class="card">
+        <div class="card-header bg-primary text-white">
+            <h4>Thêm khách hàng mới</h4>
+        </div>
+        <div class="card-body">
+            <form asp-action="Create" method="post">
+                <div class="row g-3">
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <label for="Ho_Ten" class="form-label">Họ tên</label>
+                            <input asp-for="Ho_Ten" class="form-control" id="Ho_Ten" />
+                            <span asp-validation-for="Ho_Ten" class="text-danger"></span>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <label for="Email" class="form-label">Email</label>
+                            <input asp-for="Email" class="form-control" id="Email" />
+                            <span asp-validation-for="Email" class="text-danger"></span>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <label for="So_Dien_Thoai" class="form-label">Số điện thoại</label>
+                            <input asp-for="So_Dien_Thoai" class="form-control" id="So_Dien_Thoai" />
+                            <span asp-validation-for="So_Dien_Thoai" class="text-danger"></span>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <label for="GioiTinh" class="form-label">Giới tính</label>
+                            <select asp-for="GioiTinh" class="form-select" id="GioiTinh">
+                                <option value="">-- Chọn giới tính --</option>
+                                <option value="true">Nam</option>
+                                <option value="false">Nữ</option>
+                            </select>
+                            <span asp-validation-for="GioiTinh" class="text-danger"></span>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <label for="Trang_Thai" class="form-label">Trạng thái</label>
+                            <select asp-for="Trang_Thai" class="form-select" id="Trang_Thai">
+                                <option value="true">Đang hoạt động</option>
+                                <option value="false">Không hoạt động</option>
+                            </select>
+                            <span asp-validation-for="Trang_Thai" class="text-danger"></span>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <label for="Ghi_Chu" class="form-label">Ghi chú</label>
+                            <input asp-for="Ghi_Chu" class="form-control" id="Ghi_Chu" />
+                            <span asp-validation-for="Ghi_Chu" class="text-danger"></span>
+                        </div>
+                    </div>
+                </div>
+                <div class="mt-4 text-end">
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-save"></i> Lưu
+                    </button>
+                    <a href="@Url.Action("Index")" class="btn btn-secondary ms-2">
+                        <i class="fas fa-arrow-left"></i> Quay lại
+                    </a>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    @await Html.PartialAsync("_ValidationScriptsPartial")
+}

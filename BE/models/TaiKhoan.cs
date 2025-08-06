@@ -21,6 +21,8 @@ namespace BE.models
         public string Mat_Khau { get; set; }
 
         public bool? Trang_Thai { get; set; }
+        public DateTime Ngay_Tao { get; set; } = DateTime.Now;
+        public DateTime? Ngay_Cap_Nhat { get; set; }
 
         [ForeignKey("ID_Khach_Hang")]
         public virtual KhachHang KhachHang { get; set; }
