@@ -5,7 +5,6 @@ using BE.Repository.IRepository;
 using Microsoft.EntityFrameworkCore;
 
 namespace BE.Repository
-
 {
     public class ToppingRepository : IToppingRepository
     {
@@ -15,6 +14,7 @@ namespace BE.Repository
         {
             _context = context;
         }
+
         public async Task<List<ToppingDTO>> GetAllAsync()
         {
             return await _context.Topping
@@ -24,6 +24,7 @@ namespace BE.Repository
                     Ten = t.Ten,
                     Gia = t.Gia,
                     So_Luong = t.So_Luong,
+                    Hinh_Anh = t.Hinh_Anh,
                     Ghi_Chu = t.Ghi_Chu,
                     Trang_Thai = t.Trang_Thai
                 })
@@ -40,6 +41,7 @@ namespace BE.Repository
                     Ten = t.Ten,
                     Gia = t.Gia,
                     So_Luong = t.So_Luong,
+                    Hinh_Anh = t.Hinh_Anh,
                     Ghi_Chu = t.Ghi_Chu,
                     Trang_Thai = t.Trang_Thai
                 })
@@ -53,6 +55,7 @@ namespace BE.Repository
                 Ten = toppingDTO.Ten,
                 Gia = toppingDTO.Gia,
                 So_Luong = toppingDTO.So_Luong,
+                Hinh_Anh = toppingDTO.Hinh_Anh,
                 Ghi_Chu = toppingDTO.Ghi_Chu,
                 Trang_Thai = toppingDTO.Trang_Thai
             };
@@ -66,6 +69,7 @@ namespace BE.Repository
                 Ten = topping.Ten,
                 Gia = topping.Gia,
                 So_Luong = topping.So_Luong,
+                Hinh_Anh = topping.Hinh_Anh,
                 Ghi_Chu = topping.Ghi_Chu,
                 Trang_Thai = topping.Trang_Thai
             };
@@ -84,6 +88,7 @@ namespace BE.Repository
             topping.Ten = toppingDTO.Ten;
             topping.Gia = toppingDTO.Gia;
             topping.So_Luong = toppingDTO.So_Luong;
+            topping.Hinh_Anh = toppingDTO.Hinh_Anh;
             topping.Ghi_Chu = toppingDTO.Ghi_Chu;
             topping.Trang_Thai = toppingDTO.Trang_Thai;
 
@@ -95,6 +100,7 @@ namespace BE.Repository
                 Ten = topping.Ten,
                 Gia = topping.Gia,
                 So_Luong = topping.So_Luong,
+                Hinh_Anh = topping.Hinh_Anh,
                 Ghi_Chu = topping.Ghi_Chu,
                 Trang_Thai = topping.Trang_Thai
             };

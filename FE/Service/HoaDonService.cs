@@ -1,3 +1,4 @@
+﻿
 using BE.DTOs;
 using BE.models;
 using Service.IService;
@@ -20,6 +21,7 @@ public class HoaDonService : IHoaDonService
         var response = await _httpClient.PostAsJsonAsync("api/HoaDon", entity);
         response.EnsureSuccessStatusCode();
     }
+
 
     public async Task DeleteAsync(int id)
     {
