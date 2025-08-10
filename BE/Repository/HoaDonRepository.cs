@@ -1,18 +1,24 @@
+﻿using BE.Data;
 using BE.models;
-using BE.Data;
 using Microsoft.EntityFrameworkCore;
-using Repository.IRepository;
 
-namespace Repository
+public class HoaDonRepository : IHoaDonRepository
 {
-    public class HoaDonRepository : IHoaDonRepository
-    {
-        private readonly MyDbContext _context;
+    private readonly MyDbContext _context;
+    public HoaDonRepository(MyDbContext context) => _context = context;
 
-        public HoaDonRepository(MyDbContext context)
+    public async Task<IEnumerable<HoaDonDTO>> GetAllAsync()
+    {
+        return await _context.Hoa_Don.Select(h => new HoaDonDTO
         {
-            _context = context;
-        }
+            ID_Hoa_Don = h.ID_Hoa_Don,
+            Ma_Hoa_Don = h.Ma_Hoa_Don,
+            Ngay_Tao = h.Ngay_Tao,
+            Tong_Tien = h.Tong_Tien,
+            Trang_Thai = h.Trang_Thai
+        }).ToListAsync();
+    }
+
 
         public async Task AddAsync(HoaDon entity)
         {

@@ -1,14 +1,12 @@
 using BE.models;
 using Microsoft.AspNetCore.Mvc;
-using Repository.IRepository;
 
-namespace BE.Controllers
+[Route("api/[controller]")]
+[ApiController]
+public class HoaDonController : ControllerBase
 {
-    [Route("api/[controller]")]
-    [ApiController]
-    public class HoaDonController : ControllerBase
-    {
-        private readonly IHoaDonRepository _repository;
+    private readonly IHoaDonRepository _repository;
+
 
         public HoaDonController(IHoaDonRepository repository)
         {
@@ -66,5 +64,6 @@ namespace BE.Controllers
             await _repository.DeleteAsync(id);
             return NoContent();
         }
+
     }
 }
