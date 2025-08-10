@@ -1,4 +1,5 @@
-﻿@model IEnumerable<HoaDonDTO>
+﻿@model IEnumerable<BE.models.HoaDon>
+
 
 <!DOCTYPE html>
 <html lang="vi">
@@ -138,7 +139,8 @@
 
     <script>
         // Lấy dữ liệu từ server
-        const hoaDonData = @Html.Raw(Json.Serialize(Model ?? new List<HoaDonDTO>()));
+        const hoaDonData = @Html.Raw(Json.Serialize(Model));
+
 
         // Xử lý dữ liệu cho biểu đồ doanh thu 7 ngày qua
         function createRevenueChart() {

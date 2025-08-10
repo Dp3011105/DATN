@@ -1,5 +1,6 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using BE.models;
+using Service.IService;
 
 namespace FE.Controllers
 {
@@ -16,80 +17,42 @@ namespace FE.Controllers
         {
             try
             {
-                var hoaDons = await _hoaDonService.GetAllAsync();
-
-                // Kiểm tra null để tránh lỗi
-                if (hoaDons == null)
-                {
-                    hoaDons = new List<HoaDonDTO>();
-                }
-
+                var hoaDons = await _hoaDonService.GetAllAsync() ?? new List<HoaDon>();
                 return View(hoaDons);
             }
-            catch (Exception ex)
+            catch
             {
-                // Log lỗi nếu cần
-                // _logger.LogError(ex, "Error occurred while getting hoa don data");
-
-                // Trả về view với danh sách rỗng nếu có lỗi
-                return View(new List<HoaDonDTO>());
+                return View(new List<HoaDon>());
             }
         }
 
-        // Thêm các action khác cho thống kê
         public async Task<IActionResult> ThongKeTheoTrangThai()
         {
             try
             {
-                var hoaDons = await _hoaDonService.GetAllAsync();
-
-                if (hoaDons == null)
-                {
-                    return View(new List<HoaDonDTO>());
-                }
-
-                // Có thể thêm logic thống kê theo trạng thái ở đây
+                var hoaDons = await _hoaDonService.GetAllAsync() ?? new List<HoaDon>();
                 return View(hoaDons);
             }
-            catch (Exception ex)
+            catch
             {
-                return View(new List<HoaDonDTO>());
+                return View(new List<HoaDon>());
             }
         }
 
         public async Task<IActionResult> ChiTietHoaDon(int id)
         {
-            try
-            {
-                var hoaDon = await _hoaDonService.GetByIdAsync(id);
-
-                if (hoaDon == null)
-                {
-                    return NotFound();
-                }
-
-                return View(hoaDon);
-            }
-            catch (Exception ex)
-            {
-                return NotFound();
-            }
+            var hoaDon = await _hoaDonService.GetByIdAsync(id);
+            if (hoaDon == null) return NotFound();
+            return View(hoaDon);
         }
 
-        // API endpoint để lấy dữ liệu cho biểu đồ (nếu cần)
         [HttpGet]
         public async Task<IActionResult> GetThongKeData()
         {
             try
             {
                 var hoaDons = await _hoaDonService.GetAllAsync();
-
-                if (hoaDons == null)
-                {
-                    return Json(new { success = false, data = new List<HoaDonDTO>() });
-                }
-
-                return Json(new { success = true, data = hoaDons });
+                return Json(new { success = true, data = hoaDons ?? new List<HoaDon>() });
             }
             catch (Exception ex)
             {
