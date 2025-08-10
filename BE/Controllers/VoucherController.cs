@@ -1,3 +1,4 @@
+﻿using BE.DTOs;
 using BE.models;
 using Microsoft.AspNetCore.Mvc;
 using Repository.IRepository;
@@ -8,46 +9,102 @@ namespace BE.Controllers
     [ApiController]
     public class VoucherController : ControllerBase
     {
-        private readonly IVoucherRepository _repository;
+        private readonly IVoucherRepository _voucherRepository;
 
-        public VoucherController(IVoucherRepository repository)
+        public VoucherController(IVoucherRepository voucherRepository)
         {
-            _repository = repository;
+            _voucherRepository = voucherRepository;
         }
 
+        // GET: api/Voucher
         [HttpGet]
-        public async Task<IActionResult> GetAll()
+        public async Task<ActionResult<IEnumerable<VoucherDTO>>> GetVouchers()
         {
-            var result = await _repository.GetAllAsync();
-            return Ok(result);
+            try
+            {
+                var vouchers = await _voucherRepository.GetAllAsync();
+                return Ok(vouchers);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { message = "Lỗi khi lấy danh sách voucher.", error = ex.Message });
+            }
         }
 
+        // GET: api/Voucher/5
         [HttpGet("{id}")]
-        public async Task<IActionResult> GetById(int id)
+        public async Task<ActionResult<VoucherDTO>> GetVoucher(int id)
         {
-            var result = await _repository.GetByIdAsync(id);
-            return result == null ? NotFound() : Ok(result);
+            try
+            {
+                var voucher = await _voucherRepository.GetByIdAsync(id);
+                return Ok(voucher);
+            }
+            catch (KeyNotFoundException ex)
+            {
+                return NotFound(new { message = ex.Message });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { message = "Lỗi khi lấy chi tiết voucher.", error = ex.Message });
+            }
         }
 
+        // POST: api/Voucher
         [HttpPost]
-        public async Task<IActionResult> Create(Voucher model)
+        public async Task<ActionResult<VoucherDTO>> CreateVoucher([FromBody] VoucherDTO voucherDTO)
         {
-            await _repository.AddAsync(model);
-            return Ok();
+            if (!ModelState.IsValid)
+            {
+                return BadRequest(ModelState);
+            }
+
+            try
+            {
+                var createdVoucher = await _voucherRepository.AddAsync(voucherDTO);
+                return CreatedAtAction(nameof(GetVoucher), new { id = createdVoucher.ID_Voucher }, createdVoucher);
+            }
+            catch (InvalidOperationException ex)
+            {
+                return BadRequest(new { message = ex.Message });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { message = "Lỗi khi thêm voucher.", error = ex.Message });
+            }
         }
 
-        [HttpPut]
-        public async Task<IActionResult> Update(Voucher model)
+        // PUT: api/Voucher/5
+        [HttpPut("{id}")]
+        public async Task<ActionResult<VoucherDTO>> UpdateVoucher(int id, [FromBody] VoucherDTO voucherDTO)
         {
-            await _repository.UpdateAsync(model);
-            return Ok();
-        }
+            if (!ModelState.IsValid)
+            {
+                return BadRequest(ModelState);
+            }
 
-        [HttpDelete("{id}")]
-        public async Task<IActionResult> Delete(int id)
-        {
-            await _repository.DeleteAsync(id);
-            return Ok();
+            if (id != voucherDTO.ID_Voucher)
+            {
+                return BadRequest(new { message = "ID voucher không khớp." });
+            }
+
+            try
+            {
+                var updatedVoucher = await _voucherRepository.UpdateAsync(id, voucherDTO);
+                return Ok(updatedVoucher);
+            }
+            catch (KeyNotFoundException ex)
+            {
+                return NotFound(new { message = ex.Message });
+            }
+            catch (InvalidOperationException ex)
+            {
+                return BadRequest(new { message = ex.Message });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { message = "Lỗi khi cập nhật voucher.", error = ex.Message });
+            }
         }
     }
 }

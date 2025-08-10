@@ -7,56 +7,63 @@ public class HoaDonController : ControllerBase
 {
     private readonly IHoaDonRepository _repository;
 
-    public HoaDonController(IHoaDonRepository repository) => _repository = repository;
 
-    [HttpGet]
-    public async Task<IActionResult> GetAll()
-        => Ok(await _repository.GetAllAsync());
-
-    [HttpGet("{id}")]
-    public async Task<IActionResult> GetById(int id)
-    {
-        var result = await _repository.GetByIdAsync(id);
-        return result == null ? NotFound() : Ok(result);
-    }
-
-    [HttpPost]
-    public async Task<IActionResult> Create(HoaDonCreateDTO dto)
-    {
-        var model = new HoaDon
+        public HoaDonController(IHoaDonRepository repository)
         {
-            ID_Khach_Hang = dto.ID_Khach_Hang,
-            ID_Nhan_Vien = dto.ID_Nhan_Vien,
-            ID_Hinh_Thuc_Thanh_Toan = dto.ID_Hinh_Thuc_Thanh_Toan,
-            ID_Dia_Chi = dto.ID_Dia_Chi,
-            ID_Phi_Ship = dto.ID_Phi_Ship,
-            Dia_Chi_Tu_Nhap = dto.Dia_Chi_Tu_Nhap,
-            Ngay_Tao = dto.Ngay_Tao,
-            Tong_Tien = dto.Tong_Tien,
-            Phi_Ship = dto.Phi_Ship,
-            Trang_Thai = dto.Trang_Thai,
-            Ghi_Chu = dto.Ghi_Chu,
-            Ma_Hoa_Don = dto.Ma_Hoa_Don,
-            Loai_Hoa_Don = dto.Loai_Hoa_Don,
-            LyDoHuyDon = dto.LyDoHuyDon,
-            LyDoDonHangCoVanDe = dto.LyDoDonHangCoVanDe
-        };
+            _repository = repository;
+        }
+        [HttpGet]
+        public async Task<IActionResult> GetAll()
+        {
+            var hoaDons = await _repository.GetAllAsync();
+            return Ok(hoaDons);
+        }
+        [HttpGet("{id}")]
+        public async Task<IActionResult> GetById(int id)
+        {
+            var hoaDon = await _repository.GetByIdAsync(id);
+            if (hoaDon == null)
+            {
+                return NotFound();
+            }
+            return Ok(hoaDon);
+        }
+        [HttpPost]
+        public async Task<IActionResult> Create([FromBody] HoaDon hoaDon)
+        {
+            if (hoaDon == null)
+            {
+                return BadRequest("HoaDon cannot be null.");
+            }
+            await _repository.AddAsync(hoaDon);
+            return CreatedAtAction(nameof(GetById), new { id = hoaDon.ID_Hoa_Don }, hoaDon);
+        }
+        [HttpPut("{id}")]
+        public async Task<IActionResult> Update(int id, [FromBody] HoaDon hoaDon)
+        {
+            if (hoaDon == null || id != hoaDon.ID_Hoa_Don)
+            {
+                return BadRequest("Invalid HoaDon data.");
+            }
+            var existingHoaDon = await _repository.GetByIdAsync(id);
+            if (existingHoaDon == null)
+            {
+                return NotFound();
+            }
+            await _repository.UpdateAsync(id, hoaDon);
+            return NoContent();
+        }
+        [HttpDelete("{id}")]
+        public async Task<IActionResult> Delete(int id)
+        {
+            var existingHoaDon = await _repository.GetByIdAsync(id);
+            if (existingHoaDon == null)
+            {
+                return NotFound();
+            }
+            await _repository.DeleteAsync(id);
+            return NoContent();
+        }
 
-        await _repository.AddAsync(model);
-        return Ok();
-    }
-
-    [HttpPut]
-    public async Task<IActionResult> Update(HoaDon model)
-    {
-        await _repository.UpdateAsync(model);
-        return Ok();
-    }
-
-    [HttpDelete("{id}")]
-    public async Task<IActionResult> Delete(int id)
-    {
-        await _repository.DeleteAsync(id);
-        return Ok();
     }
 }

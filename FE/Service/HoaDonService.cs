@@ -3,21 +3,39 @@
 public class HoaDonService : IHoaDonService
 {
     private readonly HttpClient _httpClient;
-    public HoaDonService(HttpClient httpClient) => _httpClient = httpClient;
 
-    public async Task<HoaDon?> GetByIdAsync(int id)
-        => await _httpClient.GetFromJsonAsync<HoaDon>($"api/HoaDon/{id}");
+    public HoaDonService(IHttpClientFactory httpClient)
+    {
+        _httpClient = httpClient.CreateClient();
+        _httpClient.BaseAddress = new Uri("https://localhost:7169/");
+    }
 
     public async Task AddAsync(HoaDon entity)
-        => await _httpClient.PostAsJsonAsync("api/HoaDon", entity);
+    {
+        var response = await _httpClient.PostAsJsonAsync("api/HoaDon", entity);
+        response.EnsureSuccessStatusCode();
+    }
 
-    public async Task UpdateAsync(HoaDon entity)
-        => await _httpClient.PutAsJsonAsync("api/HoaDon", entity);
 
     public async Task DeleteAsync(int id)
-        => await _httpClient.DeleteAsync($"api/HoaDon/{id}");
-    public async Task<IEnumerable<HoaDonDTO>> GetAllAsync()
     {
-        return await _httpClient.GetFromJsonAsync<IEnumerable<HoaDonDTO>>("api/HoaDon");
+        var response = await _httpClient.DeleteAsync($"api/HoaDon/{id}");
+        response.EnsureSuccessStatusCode();
+    }
+
+    public async Task<IEnumerable<HoaDon>> GetAllAsync()
+    {
+        return await _httpClient.GetFromJsonAsync<IEnumerable<HoaDon>>("api/HoaDon");
+    }
+
+    public async Task<HoaDon> GetByIdAsync(int id)
+    {
+        return await _httpClient.GetFromJsonAsync<HoaDon>($"api/HoaDon/{id}");
+    }
+
+    public async Task UpdateAsync(int id, HoaDon entity)
+    {
+        var response = await _httpClient.PutAsJsonAsync($"api/HoaDon/{id}", entity);
+        response.EnsureSuccessStatusCode();
     }
 }

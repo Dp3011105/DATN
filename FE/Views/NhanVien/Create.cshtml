@@ -1,0 +1,147 @@
+﻿@model BE.models.NhanVien
+@{
+    ViewData["Title"] = "Thêm nhân viên";
+    Layout = "_AdminLayout";
+}
+
+<style>
+    .card-nhanvien {
+        border-radius: 8px;
+        overflow: hidden;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    }
+
+    .card-header {
+        background: linear-gradient(180deg, #1e3a8a, #3b82f6);
+        color: white;
+        border-bottom: none;
+    }
+
+    .form-control, .form-select {
+        font-size: 0.9rem;
+        transition: all 0.3s ease;
+    }
+
+        .form-control:focus, .form-select:focus {
+            border-color: #3b82f6;
+            box-shadow: 0 0 5px rgba(59, 130, 246, 0.5);
+        }
+
+    .form-label {
+        font-size: 0.85rem;
+        color: #1e3a8a;
+    }
+
+    .btn {
+        font-size: 0.9rem;
+        transition: all 0.3s ease;
+    }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+        }
+
+    .text-primary {
+        color: #1e3a8a !important;
+    }
+
+    .text-danger {
+        font-size: 0.8rem;
+    }
+</style>
+
+<div class="card card-nhanvien">
+    <div class="card-header">
+        <h2 class="text-center my-2">Thêm nhân viên mới</h2>
+    </div>
+    <div class="card-body p-3">
+        <form asp-action="Create" method="post" enctype="multipart/form-data">
+            <div class="row g-3">
+                <div class="col-md-6">
+                    <label asp-for="Ho_Ten" class="form-label">Họ tên</label>
+                    <input asp-for="Ho_Ten" class="form-control" />
+                    <span asp-validation-for="Ho_Ten" class="text-danger"></span>
+                </div>
+                <div class="col-md-6">
+                    <label asp-for="Email" class="form-label">Email</label>
+                    <input asp-for="Email" class="form-control" />
+                    <span asp-validation-for="Email" class="text-danger"></span>
+                </div>
+                <div class="col-md-6">
+                    <label asp-for="So_Dien_Thoai" class="form-label">SĐT</label>
+                    <input asp-for="So_Dien_Thoai" class="form-control" />
+                    <span asp-validation-for="So_Dien_Thoai" class="text-danger"></span>
+                </div>
+                <div class="col-md-6">
+                    <label asp-for="GioiTinh" class="form-label">Giới tính</label>
+                    <select asp-for="GioiTinh" class="form-select">
+                        <option value="">-- Chọn --</option>
+                        <option value="true">Nam</option>
+                        <option value="false">Nữ</option>
+                    </select>
+                    <span asp-validation-for="GioiTinh" class="text-danger"></span>
+                </div>
+                <div class="col-md-6">
+                    <label asp-for="NamSinh" class="form-label">Năm sinh</label>
+                    <input asp-for="NamSinh" type="date" class="form-control" />
+                    <span asp-validation-for="NamSinh" class="text-danger"></span>
+                </div>
+                <div class="col-md-6">
+                    <label asp-for="CCCD" class="form-label">CCCD</label>
+                    <input asp-for="CCCD" class="form-control" />
+                    <span asp-validation-for="CCCD" class="text-danger"></span>
+                </div>
+                <div class="col-md-12">
+                    <label asp-for="Dia_Chi" class="form-label">Địa chỉ</label>
+                    <input asp-for="Dia_Chi" class="form-control" />
+                    <span asp-validation-for="Dia_Chi" class="text-danger"></span>
+                </div>
+                <div class="col-md-6">
+                    <label asp-for="Trang_Thai" class="form-label">Trạng thái</label>
+                    <select asp-for="Trang_Thai" class="form-select">
+                        <option value="true">Đang làm</option>
+                        <option value="false">Nghỉ</option>
+                    </select>
+                    <span asp-validation-for="Trang_Thai" class="text-danger"></span>
+                </div>
+                <div class="col-md-6">
+                    <label asp-for="Ghi_Chu" class="form-label">Ghi chú</label>
+                    <input asp-for="Ghi_Chu" class="form-control" />
+                    <span asp-validation-for="Ghi_Chu" class="text-danger"></span>
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label">Ảnh nhân viên</label>
+                    <input type="file" name="anhNhanVien" class="form-control" accept="image/*" />
+                </div>
+                <div class="col-md-6">
+                    <label asp-for="AnhCCCD" class="form-label">Ảnh CCCD (URL)</label>
+                    <input asp-for="AnhCCCD" class="form-control" />
+                    <span asp-validation-for="AnhCCCD" class="text-danger"></span>
+                </div>
+            </div>
+            <div class="mt-4 text-end">
+                <button type="submit" class="btn btn-primary btn-sm"><i class="fas fa-save me-1"></i> Lưu</button>
+                <a asp-action="Index" class="btn btn-secondary btn-sm"><i class="fas fa-arrow-left me-1"></i> Quay lại</a>
+            </div>
+        </form>
+    </div>
+</div>
+
+@section Scripts {
+    @await Html.PartialAsync("_ValidationScriptsPartial")
+    <script>
+        // Thêm hiệu ứng mượt mà cho các trường nhập liệu
+        document.addEventListener('DOMContentLoaded', function () {
+            const inputs = document.querySelectorAll('.form-control, .form-select');
+            inputs.forEach(input => {
+                input.addEventListener('focus', function () {
+                    this.style.transform = 'scale(1.02)';
+                });
+                input.addEventListener('blur', function () {
+                    this.style.transform = 'scale(1)';
+                });
+            });
+        });
+    </script>
+}

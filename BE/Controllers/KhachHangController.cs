@@ -1,4 +1,4 @@
-using BE.models;
+using BE.DTOs;
 using Microsoft.AspNetCore.Mvc;
 using Repository.IRepository;
 
@@ -16,38 +16,89 @@ namespace BE.Controllers
         }
 
         [HttpGet]
-        public async Task<IActionResult> GetAll()
+        public async Task<IActionResult> GetAllKh()
         {
-            var result = await _repository.GetAllAsync();
-            return Ok(result);
+            try
+            {
+                var customers = await _repository.GetAllKhachHang();
+                return Ok(customers);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, $"Internal server error: {ex.Message}");
+            }
         }
 
         [HttpGet("{id}")]
-        public async Task<IActionResult> GetById(int id)
+        public async Task<IActionResult> GetKh(int id)
         {
-            var result = await _repository.GetByIdAsync(id);
-            return result == null ? NotFound() : Ok(result);
+            try
+            {
+                var customer = await _repository.GetKhachHangById(id);
+                return Ok(customer);
+            }
+            catch (KeyNotFoundException)
+            {
+                return NotFound("Customer not found.");
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, $"Internal server error: {ex.Message}");
+            }
         }
 
         [HttpPost]
-        public async Task<IActionResult> Create(KhachHang model)
+        public async Task<IActionResult> AddKh([FromBody] KhachHangDTO entity)
         {
-            await _repository.AddAsync(model);
-            return Ok();
+            if (entity == null)
+            {
+                return BadRequest("Customer data is invalid.");
+            }
+            try
+            {
+                await _repository.AddKhachHang(entity);
+                return CreatedAtAction(nameof(GetKh), new { id = entity.ID_Khach_Hang }, entity);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, $"Internal server error: {ex.Message}");
+            }
         }
 
-        [HttpPut]
-        public async Task<IActionResult> Update(KhachHang model)
+        [HttpPut("{id}")]
+        public async Task<IActionResult> UpdateKh(int id, [FromBody] KhachHangDTO entity)
         {
-            await _repository.UpdateAsync(model);
-            return Ok();
+            try
+            {
+                await _repository.UpdateKhachHang(id, entity);
+                return Ok();
+            }
+            catch (KeyNotFoundException)
+            {
+                return NotFound("Customer not found.");
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, $"Internal server error: {ex.Message}");
+            }
         }
 
         [HttpDelete("{id}")]
-        public async Task<IActionResult> Delete(int id)
+        public async Task<IActionResult> DeleteKh(int id)
         {
-            await _repository.DeleteAsync(id);
-            return Ok();
+            try
+            {
+                await _repository.DeleteKhachHang(id);
+                return NoContent();
+            }
+            catch (KeyNotFoundException)
+            {
+                return NotFound("Customer not found.");
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, $"Internal server error: {ex.Message}");
+            }
         }
     }
 }
