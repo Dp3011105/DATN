@@ -1,12 +1,13 @@
 using BE.Data;
 using BE.Repository;
 using BE.Repository.IRepository;
-using Microsoft.EntityFrameworkCore;
+using BE.Service;
 using Microsoft.AspNetCore.Builder;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
-using Repository.IRepository;
 using Repository;
+using Repository.IRepository;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -53,6 +54,13 @@ builder.Services.AddScoped<IDoNgotRepository, DoNgotRepository>();
 builder.Services.AddScoped<IToppingRepository, ToppingRepository>();
 builder.Services.AddScoped<ISanPhamLuongDaRepository, SanPhamLuongDaRepository>();
 builder.Services.AddScoped<ISanPhamRepository, SanPhamRepository>();
+// Register Repositories chức năng đăng ký tài khoản 
+builder.Services.AddScoped<ICustomerRepository, CustomerRepository>();
+builder.Services.AddScoped<IAccountRepository, AccountRepository>();
+// Đăng ký EmailService
+builder.Services.AddSingleton<EmailService>();
+
+
 
 // Configure CORS
 builder.Services.AddCors(options =>
