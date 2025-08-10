@@ -14,40 +14,57 @@ namespace BE.Controllers
         {
             _repository = repository;
         }
-
         [HttpGet]
         public async Task<IActionResult> GetAll()
         {
-            var result = await _repository.GetAllAsync();
-            return Ok(result);
+            var hoaDons = await _repository.GetAllAsync();
+            return Ok(hoaDons);
         }
-
         [HttpGet("{id}")]
         public async Task<IActionResult> GetById(int id)
         {
-            var result = await _repository.GetByIdAsync(id);
-            return result == null ? NotFound() : Ok(result);
+            var hoaDon = await _repository.GetByIdAsync(id);
+            if (hoaDon == null)
+            {
+                return NotFound();
+            }
+            return Ok(hoaDon);
         }
-
         [HttpPost]
-        public async Task<IActionResult> Create(HoaDon model)
+        public async Task<IActionResult> Create([FromBody] HoaDon hoaDon)
         {
-            await _repository.AddAsync(model);
-            return Ok();
+            if (hoaDon == null)
+            {
+                return BadRequest("HoaDon cannot be null.");
+            }
+            await _repository.AddAsync(hoaDon);
+            return CreatedAtAction(nameof(GetById), new { id = hoaDon.ID_Hoa_Don }, hoaDon);
         }
-
-        [HttpPut]
-        public async Task<IActionResult> Update(HoaDon model)
+        [HttpPut("{id}")]
+        public async Task<IActionResult> Update(int id, [FromBody] HoaDon hoaDon)
         {
-            await _repository.UpdateAsync(model);
-            return Ok();
+            if (hoaDon == null || id != hoaDon.ID_Hoa_Don)
+            {
+                return BadRequest("Invalid HoaDon data.");
+            }
+            var existingHoaDon = await _repository.GetByIdAsync(id);
+            if (existingHoaDon == null)
+            {
+                return NotFound();
+            }
+            await _repository.UpdateAsync(id, hoaDon);
+            return NoContent();
         }
-
         [HttpDelete("{id}")]
         public async Task<IActionResult> Delete(int id)
         {
+            var existingHoaDon = await _repository.GetByIdAsync(id);
+            if (existingHoaDon == null)
+            {
+                return NotFound();
+            }
             await _repository.DeleteAsync(id);
-            return Ok();
+            return NoContent();
         }
     }
 }

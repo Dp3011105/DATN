@@ -8,6 +8,9 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Repository;
 using Repository.IRepository;
+using Microsoft.IdentityModel.Tokens;
+using System.Text;
+
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -16,8 +19,7 @@ builder.Services.AddDbContext<MyDbContext>(option =>
 {
     option.UseSqlServer(builder.Configuration.GetConnectionString("Default"));
 });
-
-
+builder.Services.AddScoped<INhanVienRepository, NhanVienRepository>();
 builder.Services.AddScoped<IChatSessionRepository, ChatSessionRepository>();
 builder.Services.AddScoped<IChatSessionNhanVienRepository, ChatSessionNhanVienRepository>();
 builder.Services.AddScoped<IDiaChiRepository, DiaChiRepository>();
@@ -36,7 +38,6 @@ builder.Services.AddScoped<IKhachHangDiaChiRepository, KhachHangDiaChiRepository
 builder.Services.AddScoped<IKhachHangVoucherRepository, KhachHangVoucherRepository>();
 builder.Services.AddScoped<ILichSuHoaDonRepository, LichSuHoaDonRepository>();
 builder.Services.AddScoped<IMessageRepository, MessageRepository>();
-builder.Services.AddScoped<INhanVienRepository, NhanVienRepository>();
 builder.Services.AddScoped<ISanPhamDoNgotRepository, SanPhamDoNgotRepository>();
 builder.Services.AddScoped<ISanPhamSizeRepository, SanPhamSizeRepository>();
 builder.Services.AddScoped<ITaiKhoanRepository, TaiKhoanRepository>();
@@ -80,6 +81,8 @@ builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
+
+
 var app = builder.Build();
 
 // Middleware
@@ -99,6 +102,7 @@ app.Use(async (context, next) =>
     });
     await next.Invoke();
 });
+
 
 app.UseHttpsRedirection();
 app.UseCors("AllowFrontend");

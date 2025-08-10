@@ -8,11 +8,11 @@ namespace Service.IService
 {
     public interface IHoaDonService
     {
+        Task<IEnumerable<HoaDon>> GetAllAsync();
+        Task<HoaDon> GetByIdAsync(int id);
 
-        // Task<IEnumerable<HoaDonDTO>> GetAllAsync(); Hiện mình không thấy HoaDonDTO nên command lại để tránh lỗi 
-        Task<HoaDon?> GetByIdAsync(int id);
         Task AddAsync(HoaDon entity);
-        Task UpdateAsync(HoaDon entity);
+        Task UpdateAsync(int id,HoaDon entity);
         Task DeleteAsync(int id);
     }
 }

@@ -13,6 +13,12 @@ builder.Services.AddControllersWithViews();
 
 builder.Services.AddHttpClient<IProductService, ProductService>();
 builder.Services.AddHttpClient<IProductDetailsService, ProductDetailsService>();
+builder.Services.AddHttpClient();
+builder.Services.AddScoped<IHoaDonService, HoaDonService>();
+builder.Services.AddScoped<IHoaDonChiTietService, HoaDonChiTietService>();
+builder.Services.AddScoped<IHoaDonChiTietThueService, HoaDonChiTietThueService>();
+builder.Services.AddScoped<INhanVienService, NhanVienService>();
+builder.Services.AddScoped<IKhachHangService, KhachHangService>();
 
 var baseApiUrl = "https://localhost:7081/";
 //Đăng ký các Service dùng Dependency Injection
@@ -61,33 +67,12 @@ builder.Services.AddHttpClient<IHinhThucThanhToanService, HinhThucThanhToanServi
 {
     client.BaseAddress = new Uri(baseApiUrl);
 });
-
-builder.Services.AddHttpClient<IHoaDonService, HoaDonService>(client =>
-{
-    client.BaseAddress = new Uri(baseApiUrl);
-});
-
-builder.Services.AddHttpClient<IHoaDonChiTietService, HoaDonChiTietService>(client =>
-{
-    client.BaseAddress = new Uri(baseApiUrl);
-});
-
-builder.Services.AddHttpClient<IHoaDonChiTietThueService, HoaDonChiTietThueService>(client =>
-{
-    client.BaseAddress = new Uri(baseApiUrl);
-});
-
 builder.Services.AddHttpClient<IHoaDonChiTietToppingService, HoaDonChiTietToppingService>(client =>
 {
     client.BaseAddress = new Uri(baseApiUrl);
 });
 
 builder.Services.AddHttpClient<IHoaDonVoucherService, HoaDonVoucherService>(client =>
-{
-    client.BaseAddress = new Uri(baseApiUrl);
-});
-
-builder.Services.AddHttpClient<IKhachHangService, KhachHangService>(client =>
 {
     client.BaseAddress = new Uri(baseApiUrl);
 });
@@ -113,11 +98,6 @@ builder.Services.AddHttpClient<ILuongDaService, LuongDaService>(client =>
 });
 
 builder.Services.AddHttpClient<IMessageService, MessageService>(client =>
-{
-    client.BaseAddress = new Uri(baseApiUrl);
-});
-
-builder.Services.AddHttpClient<INhanVienService, NhanVienService>(client =>
 {
     client.BaseAddress = new Uri(baseApiUrl);
 });
@@ -199,6 +179,7 @@ if (!app.Environment.IsDevelopment())
     app.UseHsts();
 }
 
+app.UseStaticFiles(); // Cho phép truy cập file trong wwwroot
 app.UseHttpsRedirection();
 app.UseStaticFiles();
 app.UseRouting();

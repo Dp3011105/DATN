@@ -8,9 +8,22 @@ using BE.models;
 public class NhanVienService : INhanVienService
 {
     private readonly HttpClient _httpClient;
-    public NhanVienService(HttpClient httpClient)
+    public NhanVienService(IHttpClientFactory httpClient)
     {
-        _httpClient = httpClient;
+        _httpClient = httpClient.CreateClient();
+        _httpClient.BaseAddress = new Uri("https://localhost:7169/");
+    }
+
+    public async Task AddAsync(NhanVien entity)
+    {
+        var response = await _httpClient.PostAsJsonAsync("api/NhanVien", entity);
+        response.EnsureSuccessStatusCode();
+    }
+
+    public async Task DeleteAsync(int id)
+    {
+        var response = await _httpClient.DeleteAsync($"api/NhanVien/{id}");
+        response.EnsureSuccessStatusCode();
     }
 
     public async Task<IEnumerable<NhanVien>> GetAllAsync()
@@ -18,23 +31,18 @@ public class NhanVienService : INhanVienService
         return await _httpClient.GetFromJsonAsync<IEnumerable<NhanVien>>("api/NhanVien");
     }
 
-    public async Task<NhanVien?> GetByIdAsync(int id)
+    public async Task<NhanVien> GetByIdAsync(int id)
     {
         return await _httpClient.GetFromJsonAsync<NhanVien>($"api/NhanVien/{id}");
     }
 
-    public async Task AddAsync(NhanVien entity)
+    public async Task UpdateAsync(int id, NhanVien entity)
     {
-        await _httpClient.PostAsJsonAsync("api/NhanVien", entity);
-    }
-
-    public async Task UpdateAsync(NhanVien entity)
-    {
-        await _httpClient.PutAsJsonAsync("api/NhanVien", entity);
-    }
-
-    public async Task DeleteAsync(int id)
-    {
-        await _httpClient.DeleteAsync($"api/NhanVien/{id}");
+        var response = await _httpClient.PutAsJsonAsync($"api/NhanVien/{id}", entity);
+        if (!response.IsSuccessStatusCode)
+        {
+            var error = await response.Content.ReadAsStringAsync();
+            throw new Exception($"API Update failed: {response.StatusCode} - {error}");
+        }
     }
 }

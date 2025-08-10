@@ -1,13 +1,15 @@
-using BE.models;
+using BE.DTOs;
+using System.Collections.Generic;
+using System.Threading.Tasks;
 
 namespace Repository.IRepository
 {
     public interface IKhachHangRepository
     {
-        Task<IEnumerable<KhachHang>> GetAllAsync();
-        Task<KhachHang?> GetByIdAsync(int id);
-        Task AddAsync(KhachHang entity);
-        Task UpdateAsync(KhachHang entity);
-        Task DeleteAsync(int id);
+        Task<IEnumerable<KhachHangDTO>> GetAllKhachHang();
+        Task<KhachHangDTO> GetKhachHangById(int id);
+        Task AddKhachHang(KhachHangDTO entity);
+        Task UpdateKhachHang(int id, KhachHangDTO entity);
+        Task DeleteKhachHang(int id);
     }
 }

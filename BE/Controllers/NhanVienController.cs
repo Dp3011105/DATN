@@ -1,5 +1,6 @@
-using BE.models;
+﻿using BE.models;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 using Repository.IRepository;
 
 namespace BE.Controllers
@@ -9,45 +10,96 @@ namespace BE.Controllers
     public class NhanVienController : ControllerBase
     {
         private readonly INhanVienRepository _repository;
-
         public NhanVienController(INhanVienRepository repository)
         {
             _repository = repository;
         }
-
         [HttpGet]
-        public async Task<IActionResult> GetAll()
-        {
-            var result = await _repository.GetAllAsync();
-            return Ok(result);
+        public ActionResult GetAllNv() {
+            try
+            {
+                var result = _repository.GetAllAsync().Result;
+                return Ok(result);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, $"Internal server error: {ex.Message}");
+            }
         }
-
         [HttpGet("{id}")]
-        public async Task<IActionResult> GetById(int id)
-        {
-            var result = await _repository.GetByIdAsync(id);
-            return result == null ? NotFound() : Ok(result);
+        public ActionResult ChiTietNv() {
+            try
+            {
+                var id = int.Parse(HttpContext.Request.RouteValues["id"].ToString());
+                var result = _repository.GetByIdAsync(id).Result;
+                return Ok(result);
+            }
+            catch (KeyNotFoundException knfEx)
+            {
+                return NotFound(knfEx.Message);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, $"Internal server error: {ex.Message}");
+            }
         }
-
         [HttpPost]
-        public async Task<IActionResult> Create(NhanVien model)
+        public ActionResult ThemNv([FromBody] NhanVien entity)
         {
-            await _repository.AddAsync(model);
-            return Ok();
-        }
+            if (entity == null)
+            {
+                return BadRequest("Entity cannot be null.");
+            }
 
-        [HttpPut]
-        public async Task<IActionResult> Update(NhanVien model)
+            try
+            {
+                _repository.AddAsync(entity);
+                return CreatedAtAction(nameof(ChiTietNv), new { id = entity.ID_Nhan_Vien }, entity);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, $"Internal server error: {ex.Message}");
+            }
+        }
+        [HttpPut("{id}")]
+        public ActionResult SuaNv(int id, [FromBody] NhanVien entity)
         {
-            await _repository.UpdateAsync(model);
-            return Ok();
+            if (entity == null || entity.ID_Nhan_Vien != id)
+            {
+                return BadRequest("Entity cannot be null and ID must match.");
+            }
+
+            try
+            {
+                _repository.UpdateAsync(id, entity).Wait();
+                return Ok();
+            }
+            catch (KeyNotFoundException knfEx)
+            {
+                return NotFound(knfEx.Message);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, $"Internal server error: {ex.Message}");
+            }
         }
 
         [HttpDelete("{id}")]
-        public async Task<IActionResult> Delete(int id)
+        public ActionResult XoaNv(int id)
         {
-            await _repository.DeleteAsync(id);
-            return Ok();
+            try
+            {
+                _repository.DeleteAsync(id).Wait();
+                return NoContent(); // 204 No Content
+            }
+            catch (KeyNotFoundException knfEx)
+            {
+                return NotFound(knfEx.Message);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, $"Internal server error: {ex.Message}");
+            }
         }
     }
 }
