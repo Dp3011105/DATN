@@ -1,11 +1,15 @@
-﻿using BE.Data;
 using BE.models;
+using BE.Data;
+
 using Microsoft.EntityFrameworkCore;
 
 public class HoaDonRepository : IHoaDonRepository
 {
-    private readonly MyDbContext _context;
-    public HoaDonRepository(MyDbContext context) => _context = context;
+    public class HoaDonRepository : IHoaDonRepository
+    {
+        // nói chung thif a em mình cũng cũng đã làm đúng rồi, chỉ cần thêm các phương thức vào interface và implement chúng trong repository là được
+        private readonly MyDbContext _context;
+
 
     public async Task<IEnumerable<HoaDonDTO>> GetAllAsync()
     {
