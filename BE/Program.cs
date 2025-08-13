@@ -1,14 +1,16 @@
 using BE.Data;
 using BE.Repository;
 using BE.Repository.IRepository;
-using Microsoft.EntityFrameworkCore;
+using BE.Service;
 using Microsoft.AspNetCore.Builder;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
-using Repository.IRepository;
 using Repository;
+using Repository.IRepository;
 using Microsoft.IdentityModel.Tokens;
 using System.Text;
+
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -37,19 +39,29 @@ builder.Services.AddScoped<IKhachHangVoucherRepository, KhachHangVoucherReposito
 builder.Services.AddScoped<ILichSuHoaDonRepository, LichSuHoaDonRepository>();
 builder.Services.AddScoped<IMessageRepository, MessageRepository>();
 builder.Services.AddScoped<ISanPhamDoNgotRepository, SanPhamDoNgotRepository>();
-builder.Services.AddScoped<ISanPhamLuongDaRepository, SanPhamLuongDaRepository>();
 builder.Services.AddScoped<ISanPhamSizeRepository, SanPhamSizeRepository>();
-builder.Services.AddScoped<ISanPhamToppingRepository, SanPhamToppingRepository>();
 builder.Services.AddScoped<ITaiKhoanRepository, TaiKhoanRepository>();
 builder.Services.AddScoped<ITaiKhoanVaiTroRepository, TaiKhoanVaiTroRepository>();
 builder.Services.AddScoped<IThueRepository, ThueRepository>();
 builder.Services.AddScoped<IVaiTroRepository, VaiTroRepository>();
+
+
+
+//phước
 builder.Services.AddScoped<IVoucherRepository, VoucherRepository>();
-builder.Services.AddScoped<ISanPhamRepository, SanPhamRepository>();
 builder.Services.AddScoped<ILuongDaRepository, LuongDaRepository>();
 builder.Services.AddScoped<ISizeRepository, SizeRepository>();
 builder.Services.AddScoped<IDoNgotRepository, DoNgotRepository>();
 builder.Services.AddScoped<IToppingRepository, ToppingRepository>();
+builder.Services.AddScoped<ISanPhamLuongDaRepository, SanPhamLuongDaRepository>();
+builder.Services.AddScoped<ISanPhamRepository, SanPhamRepository>();
+// Register Repositories chức năng đăng ký tài khoản 
+builder.Services.AddScoped<ICustomerRepository, CustomerRepository>();
+builder.Services.AddScoped<IAccountRepository, AccountRepository>();
+// Đăng ký EmailService
+builder.Services.AddSingleton<EmailService>();
+
+
 
 // Configure CORS
 builder.Services.AddCors(options =>
