@@ -20,6 +20,10 @@ builder.Services.AddScoped<IHoaDonChiTietService, HoaDonChiTietService>();
 builder.Services.AddScoped<IHoaDonChiTietThueService, HoaDonChiTietThueService>();
 builder.Services.AddScoped<INhanVienService, NhanVienService>();
 builder.Services.AddScoped<IKhachHangService, KhachHangService>();
+builder.Services.AddScoped<ICartService, CartService>();
+
+
+
 
 var baseApiUrl = "https://localhost:7081/";
 //Đăng ký các Service dùng Dependency Injection
@@ -188,7 +192,8 @@ app.UseAuthorization();
 
 app.MapControllerRoute(
     name: "default",
-    pattern: "{controller=Admin}/{action=Index}/{id?}");
+    pattern: "{controller=home}/{action=index}/{id?}");
+
 
 
 app.Run();
