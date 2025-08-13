@@ -67,7 +67,7 @@ namespace FE.Controllers
             if (anhNhanVien != null && anhNhanVien.Length > 0)
             {
                 var fileName = Path.GetFileName(anhNhanVien.FileName);
-                var filePath = Path.Combine("C:\\hoctap\\hoc_Tap\\DATN\\DATN\\FE\\wwwroot\\uploads", fileName);
+                var filePath = Path.Combine("wwwroot/uploads", fileName);
 
                 using (var stream = new FileStream(filePath, FileMode.Create))
                 {
@@ -100,7 +100,7 @@ namespace FE.Controllers
             if (anhNhanVien != null && anhNhanVien.Length > 0)
             {
                 var fileName = Path.GetFileName(anhNhanVien.FileName);
-                var filePath = Path.Combine("C:\\hoctap\\hoc_Tap\\DATN\\DATN\\FE\\wwwroot\\uploads", fileName);
+                var filePath = Path.Combine("wwwroot/uploads", fileName);
 
                 using (var stream = new FileStream(filePath, FileMode.Create))
                 {

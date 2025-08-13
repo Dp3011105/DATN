@@ -3,6 +3,7 @@ using FE.Service.IService;
 using FE.Services;
 using Service;
 using Service.IService;
+using Service.Services;
 
 
 var builder = WebApplication.CreateBuilder(args);
@@ -192,6 +193,7 @@ app.UseAuthorization();
 app.MapControllerRoute(
     name: "default",
     pattern: "{controller=home}/{action=index}/{id?}");
+
 
 
 app.Run();
