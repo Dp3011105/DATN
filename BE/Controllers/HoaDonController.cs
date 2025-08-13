@@ -1,4 +1,4 @@
-using BE.models;
+﻿using BE.models;
 using Microsoft.AspNetCore.Mvc;
 using Repository.IRepository;
 
@@ -9,7 +9,8 @@ namespace BE.Controllers
     public class HoaDonController : ControllerBase
     {
         private readonly IHoaDonRepository _repository;
-
+         
+        // tình anh em có vậy thôi 
         public HoaDonController(IHoaDonRepository repository)
         {
             _repository = repository;

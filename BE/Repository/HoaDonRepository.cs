@@ -1,4 +1,4 @@
-using BE.models;
+﻿using BE.models;
 using BE.Data;
 using Microsoft.EntityFrameworkCore;
 using Repository.IRepository;
@@ -7,6 +7,7 @@ namespace Repository
 {
     public class HoaDonRepository : IHoaDonRepository
     {
+        // nói chung thif a em mình cũng cũng đã làm đúng rồi, chỉ cần thêm các phương thức vào interface và implement chúng trong repository là được
         private readonly MyDbContext _context;
 
         public HoaDonRepository(MyDbContext context)
