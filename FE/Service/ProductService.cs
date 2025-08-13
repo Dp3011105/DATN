@@ -78,27 +78,7 @@ namespace FE.Service
             return response.IsSuccessStatusCode;
         }
 
-        //public async Task<bool> UpdateProductAsync(UpdateProductViewModel model)
-        //{
-        //    var product = new
-        //    {
-        //        ID_San_Pham = model.ID_San_Pham,
-        //        Ten_San_Pham = model.TenSanPham,
-        //        Gia = model.Gia,
-        //        So_Luong = model.SoLuong,
-        //        Hinh_Anh = model.Image != null ? await UploadImageAsync(model.Image) : model.CurrentImagePath, // Giữ nguyên hình ảnh nếu không có file mới
-        //        Mo_Ta = model.MoTa,
-        //        Trang_Thai = true,
-        //        Sizes = model.SelectedSizes ?? new List<int>(),
-        //        LuongDas = model.SelectedLuongDas ?? new List<int>(),
-        //        DoNgots = model.SelectedDoNgots ?? new List<int>(),
-        //        Toppings = model.SelectedToppings ?? new List<int>()
-        //    };
-
-        //    var response = await _httpClient.PutAsJsonAsync($"https://localhost:7169/api/SanPham/{model.ID_San_Pham}", product);
-        //    return response.IsSuccessStatusCode;
-        //}
-
+      
 
 
         public async Task<bool> UpdateProductAsync(UpdateProductViewModel model)

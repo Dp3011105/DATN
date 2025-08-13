@@ -1,11 +1,11 @@
-using BE.models;
+﻿using BE.models;
 using BE.Data;
 using Microsoft.EntityFrameworkCore;
 using Repository.IRepository;
 
 namespace Repository
 {
-    public class Gio_HangRepository : IGio_HangRepository
+    public class Gio_HangRepository : IGio_HangRepository  // cái này dùng cho chức năng lấy danh sách dữ liệu giỏ hàng của khách hàng (Phước)
     {
         private readonly MyDbContext _context;
 
@@ -14,36 +14,61 @@ namespace Repository
             _context = context;
         }
 
-        public async Task<IEnumerable<Gio_Hang>> GetAllAsync()
+        public async Task<Gio_Hang> GetGioHangByKhachHangIdAsync(int idKhachHang)
         {
-            return await _context.Gio_Hang.ToListAsync();
+            return await _context.Gio_Hang
+                .Include(gh => gh.GioHang_ChiTiets)
+                    .ThenInclude(ct => ct.San_Pham)
+                .Include(gh => gh.GioHang_ChiTiets)
+                    .ThenInclude(ct => ct.Size)
+                .Include(gh => gh.GioHang_ChiTiets)
+                    .ThenInclude(ct => ct.DoNgot)
+                .Include(gh => gh.GioHang_ChiTiets)
+                    .ThenInclude(ct => ct.LuongDa)
+                .Include(gh => gh.GioHang_ChiTiets)
+                    .ThenInclude(ct => ct.GioHangChiTiet_Toppings)
+                        .ThenInclude(t => t.Topping)
+                .FirstOrDefaultAsync(gh => gh.ID_Khach_Hang == idKhachHang && gh.Trang_Thai);
         }
 
-        public async Task<Gio_Hang?> GetByIdAsync(int id)
+        public async Task CreateGioHangAsync(Gio_Hang gioHang)
         {
-            return await _context.Gio_Hang.FindAsync(id);
-        }
-
-        public async Task AddAsync(Gio_Hang entity)
-        {
-            await _context.Gio_Hang.AddAsync(entity);
+            _context.Gio_Hang.Add(gioHang);
             await _context.SaveChangesAsync();
         }
 
-        public async Task UpdateAsync(Gio_Hang entity)
+
+
+        public async Task AddGioHangChiTietAsync(GioHang_ChiTiet gioHangChiTiet)
         {
-            _context.Gio_Hang.Update(entity);
+            _context.GioHang_ChiTiet.Add(gioHangChiTiet);
             await _context.SaveChangesAsync();
         }
 
-        public async Task DeleteAsync(int id)
+
+
+        public async Task<bool> DeleteGioHangChiTietAsync(int idGioHangChiTiet, int idKhachHang)
         {
-            var entity = await GetByIdAsync(id);
-            if (entity != null)
+            var gioHangChiTiet = await _context.GioHang_ChiTiet
+                .Include(ct => ct.GioHangChiTiet_Toppings)
+                .FirstOrDefaultAsync(ct => ct.ID_GioHang_ChiTiet == idGioHangChiTiet && ct.Gio_Hang.ID_Khach_Hang == idKhachHang);
+
+            if (gioHangChiTiet == null)
             {
-                _context.Gio_Hang.Remove(entity);
-                await _context.SaveChangesAsync();
+                return false; // Không tìm thấy chi tiết giỏ hàng hoặc không thuộc khách hàng
             }
+
+            // Xóa các topping liên quan
+            _context.GioHangChiTiet_Topping.RemoveRange(gioHangChiTiet.GioHangChiTiet_Toppings);
+
+            // Xóa chi tiết giỏ hàng
+            _context.GioHang_ChiTiet.Remove(gioHangChiTiet);
+
+            await _context.SaveChangesAsync();
+            return true;
         }
+
+
+
     }
 }
