@@ -1,4 +1,4 @@
-﻿<!-- Views/Account/Register.cshtml -->
+﻿@* <!-- Views/Account/Register.cshtml -->
 @model FE.Models.RegisterModel
 
 @{
@@ -25,4 +25,140 @@
         <span asp-validation-for="Ten_Nguoi_Dung" class="text-danger"></span>
     </div>
     <button type="submit" class="btn btn-primary">Đăng ký</button>
-</form>
+</form> *@
+
+
+
+@model FE.Models.RegisterModel
+
+@{
+    ViewData["Title"] = "Đăng ký";
+}
+
+<!-- Hero Section -->
+<header class="hero-section position-relative overflow-hidden text-center bg-dark text-white animate__animated animate__fadeIn">
+    <img src="/Logo/bia.jpg" alt="Ảnh bìa trà sữa" class="hero-image" />
+    <div class="hero-overlay position-absolute top-0 start-0 w-100 h-100 bg-dark opacity-50"></div>
+    <div class="hero-content position-absolute top-50 start-50 translate-middle">
+        <h1 class="display-4 fw-bold mb-3 animate__animated animate__zoomIn">Đăng Ký</h1>
+        <p class="lead mb-4 animate__animated animate__fadeInUp animate__delay-1s">Tạo tài khoản để trải nghiệm trà sữa tuyệt vời!</p>
+    </div>
+</header>
+
+<div class="container my-5">
+    <!-- Success/Error Notifications -->
+    @if (TempData["Success"] != null)
+    {
+        <div class="alert alert-success alert-dismissible fade show animate__animated animate__fadeInDown" role="alert">
+            @TempData["Success"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    }
+    @if (TempData["Error"] != null)
+    {
+        <div class="alert alert-danger alert-dismissible fade show animate__animated animate__fadeInDown" role="alert">
+            @TempData["Error"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    }
+
+    <!-- Register Form -->
+    <div class="row justify-content-center">
+        <div class="col-md-6">
+            <div class="card shadow-lg border-0 rounded animate__animated animate__fadeInUp">
+                <div class="card-body p-5">
+                    <h2 class="text-center mb-4 fw-bold text-primary">Đăng Ký</h2>
+                    <form asp-action="Register" method="post">
+                        <div asp-validation-summary="ModelOnly" class="text-danger mb-3 text-center"></div>
+                        <div class="form-floating mb-3">
+                            <input asp-for="Email" class="form-control rounded-pill shadow-sm" id="email" placeholder="Email" required />
+                            <label asp-for="Email" class="form-label">Email</label>
+                            <span asp-validation-for="Email" class="text-danger small"></span>
+                        </div>
+                        <div class="form-floating mb-3">
+                            <input asp-for="Ho_Ten" class="form-control rounded-pill shadow-sm" id="fullname" placeholder="Họ tên" required />
+                            <label asp-for="Ho_Ten" class="form-label">Họ tên</label>
+                            <span asp-validation-for="Ho_Ten" class="text-danger small"></span>
+                        </div>
+                        <div class="form-floating mb-3">
+                            <input asp-for="Ten_Nguoi_Dung" class="form-control rounded-pill shadow-sm" id="username" placeholder="Tên người dùng" required />
+                            <label asp-for="Ten_Nguoi_Dung" class="form-label">Tên người dùng</label>
+                            <span asp-validation-for="Ten_Nguoi_Dung" class="text-danger small"></span>
+                        </div>
+                        <button type="submit" class="btn btn-primary btn-lg w-100 rounded-pill shadow-sm animate__animated animate__pulse animate__infinite">
+                            <i class="bi bi-person-plus-fill me-2"></i>Đăng ký
+                        </button>
+                    </form>
+                    <div class="text-center mt-3">
+                        <p>Đã có tài khoản? <a href="@Url.Action("Login", "Account")" class="text-primary">Đăng nhập ngay</a></p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script src="~/lib/jquery-validation/dist/jquery.validate.min.js"></script>
+    <script src="~/lib/jquery-validation-unobtrusive/jquery.validate.unobtrusive.min.js"></script>
+    <script>
+        $(document).ready(function () {
+            // Custom validation styling
+            $("form").validate({
+                errorClass: "text-danger",
+                highlight: function (element) {
+                    $(element).addClass("is-invalid").removeClass("is-valid");
+                },
+                unhighlight: function (element) {
+                    $(element).removeClass("is-invalid").addClass("is-valid");
+                },
+                errorPlacement: function (error, element) {
+                    error.insertAfter(element);
+                }
+            });
+        });
+    </script>
+}
+
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css" />
+
+<style>
+    .hero-section {
+        height: 50vh;
+        min-height: 350px;
+        max-height: 500px;
+    }
+
+    .hero-image {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        position: absolute;
+        top: 0;
+        left: 0;
+    }
+
+    .hero-content {
+        z-index: 2;
+    }
+
+    .form-control.is-invalid {
+        border-color: #dc3545;
+        box-shadow: 0 0 5px rgba(220, 53, 69, 0.5);
+    }
+
+    .form-control.is-valid {
+        border-color: #28a745;
+        box-shadow: 0 0 5px rgba(40, 167, 69, 0.5);
+    }
+
+    .form-floating label {
+        color: #495057;
+    }
+
+    .btn-primary:hover {
+        background-color: #0056b3;
+        transform: scale(1.05);
+        transition: all 0.3s ease;
+    }
+</style>
