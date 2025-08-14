@@ -8,6 +8,7 @@
         public int SoLuong { get; set; }
         public string MoTa { get; set; }
         public IFormFile Image { get; set; }
+        public bool TrangThai { get; set; }
         public string CurrentImagePath { get; set; } // Lưu đường dẫn hình ảnh hiện tại
 
         public List<int> SelectedSizes { get; set; } = new List<int>();

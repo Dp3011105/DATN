@@ -2,9 +2,7 @@
 using FE.Service;
 using FE.Service.IService;
 using Microsoft.AspNetCore.Mvc;
-using System.Diagnostics;
-using System.Text.Json;
-using FE.Service;
+using System.Threading.Tasks;
 
 namespace FE.Controllers
 {
@@ -30,22 +28,25 @@ namespace FE.Controllers
             var product = await _productService.GetProductByIdAsync(id);
             if (product == null)
             {
+                TempData["Error"] = "Sản phẩm không tồn tại.";
                 return NotFound();
             }
             return View(product);
         }
 
+        // GET: Hiển thị form thêm sản phẩm
         public async Task<IActionResult> AddProduct()
         {
             ViewBag.Sizes = await _productService.GetSizesAsync();
             ViewBag.Toppings = await _productService.GetToppingsAsync();
             ViewBag.LuongDas = await _productService.GetLuongDasAsync();
             ViewBag.DoNgots = await _productService.GetDoNgotsAsync();
-
             return View(new AddProductViewModel());
         }
 
+        // POST: Thêm sản phẩm
         [HttpPost]
+        [ValidateAntiForgeryToken]
         public async Task<IActionResult> AddProduct(AddProductViewModel model)
         {
             if (ModelState.IsValid)
@@ -53,19 +54,18 @@ namespace FE.Controllers
                 var result = await _productService.AddProductAsync(model);
                 if (result)
                 {
+                    TempData["Success"] = "Thêm sản phẩm thành công!";
                     return RedirectToAction("Index");
                 }
+                TempData["Error"] = "Không thể thêm sản phẩm. Vui lòng thử lại.";
             }
 
             ViewBag.Sizes = await _productService.GetSizesAsync();
             ViewBag.Toppings = await _productService.GetToppingsAsync();
             ViewBag.LuongDas = await _productService.GetLuongDasAsync();
             ViewBag.DoNgots = await _productService.GetDoNgotsAsync();
-
             return View(model);
         }
-
-
 
         // GET: Hiển thị form sửa sản phẩm
         public async Task<IActionResult> EditProduct(int id)
@@ -73,6 +73,7 @@ namespace FE.Controllers
             var product = await _productService.GetProductByIdAsync(id);
             if (product == null)
             {
+                TempData["Error"] = "Sản phẩm không tồn tại.";
                 return NotFound();
             }
 
@@ -83,7 +84,8 @@ namespace FE.Controllers
                 Gia = product.Gia,
                 SoLuong = product.So_Luong,
                 MoTa = product.Mo_Ta,
-                CurrentImagePath = product.Hinh_Anh, // Lưu đường dẫn hình ảnh hiện tại
+                TrangThai = product.Trang_Thai,
+                CurrentImagePath = product.Hinh_Anh,
                 SelectedSizes = product.Sizes?.Select(s => s.ID_Size).ToList() ?? new List<int>(),
                 SelectedToppings = product.Toppings?.Select(t => t.ID_Topping).ToList() ?? new List<int>(),
                 SelectedLuongDas = product.LuongDas?.Select(l => l.ID_LuongDa).ToList() ?? new List<int>(),
@@ -100,26 +102,46 @@ namespace FE.Controllers
 
         // POST: Cập nhật sản phẩm
         [HttpPost]
+        [ValidateAntiForgeryToken]
         public async Task<IActionResult> EditProduct(UpdateProductViewModel model)
         {
-            if (ModelState.IsValid)
+            // Loại bỏ xác thực bắt buộc cho trường Image
+            if (model.Image == null && !string.IsNullOrEmpty(model.CurrentImagePath))
             {
+                ModelState.Remove("Image");
+            }
+
+            if (!ModelState.IsValid)
+            {
+                ViewBag.Sizes = await _productService.GetSizesAsync();
+                ViewBag.Toppings = await _productService.GetToppingsAsync();
+                ViewBag.LuongDas = await _productService.GetLuongDasAsync();
+                ViewBag.DoNgots = await _productService.GetDoNgotsAsync();
+                TempData["Error"] = "Vui lòng kiểm tra lại thông tin nhập.";
+                return View(model);
+            }
+
+            try
+            {
+                // Gọi service để cập nhật sản phẩm
                 var result = await _productService.UpdateProductAsync(model);
                 if (result)
                 {
+                    TempData["Success"] = "Cập nhật sản phẩm thành công!";
                     return RedirectToAction("Index");
                 }
+                TempData["Error"] = "Không thể cập nhật sản phẩm. Vui lòng thử lại.";
+            }
+            catch (Exception ex)
+            {
+                TempData["Error"] = $"Lỗi khi cập nhật sản phẩm: {ex.Message}";
             }
 
             ViewBag.Sizes = await _productService.GetSizesAsync();
             ViewBag.Toppings = await _productService.GetToppingsAsync();
             ViewBag.LuongDas = await _productService.GetLuongDasAsync();
             ViewBag.DoNgots = await _productService.GetDoNgotsAsync();
-
             return View(model);
         }
-
-
     }
 }
-

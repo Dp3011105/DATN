@@ -1,41 +1,253 @@
-﻿@{
+﻿@model List<SanPham>
+@{
     Layout = "~/Views/Shared/_AdminLayout.cshtml";
+
+    // Sort products by ID in descending order (newest first)
+    var sortedProducts = Model.OrderByDescending(p => p.ID_San_Pham).ToList();
+
+    var activeProducts = sortedProducts.Where(p => p.Trang_Thai).ToList();
+    var inactiveProducts = sortedProducts.Where(p => !p.Trang_Thai).ToList();
 }
 
-@model List<SanPham>
-<h2>Danh sách sản phẩm</h2>
-<table class="table">
-    <thead>
-        <tr>
-            <th>ID</th>
-            <th>Tên sản phẩm</th>
-            <th>Giá</th>
-            <th>Số lượng</th>
-            <th>Hình ảnh</th>
-            <th>Mô tả</th>
-            <th>Trạng thái</th>
-            <th>Hành động</th>
-        </tr>
-    </thead>
-    <tbody>
-        @foreach (var product in Model)
-        {
-            <tr>
-                <td>@product.ID_San_Pham</td>
-                <td>@product.Ten_San_Pham</td>
-                <td>@product.Gia</td>
-                <td>@product.So_Luong</td>
-                <td><img src="@("https://localhost:7169" + product.Hinh_Anh)" alt="Hình ảnh sản phẩm" width="100" /></td>
-                <td>@product.Mo_Ta</td>
-                <td>@(product.Trang_Thai ? "Hoạt động" : "Không hoạt động")</td>
-                <td>
-                    <a asp-action="Details" asp-route-id="@product.ID_San_Pham">Chi tiết</a> |
-                    <a asp-action="EditProduct" asp-route-id="@product.ID_San_Pham">Sửa</a>
-                </td>
-            </tr>
-        }
-    </tbody>
-</table>
-<a asp-action="AddProduct">Thêm sản phẩm</a>
-<br/>
-<a asp-controller="ProductDetails" asp-action="Index">Đến trang chi tiết sản phẩm</a>
+<div class="container-fluid my-5">
+    <!-- Notifications -->
+    @if (TempData["Success"] != null)
+    {
+        <div class="alert alert-success alert-dismissible fade show animate__animated animate__fadeInDown" role="alert">
+            @TempData["Success"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    }
+    @if (TempData["Error"] != null)
+    {
+        <div class="alert alert-danger alert-dismissible fade show animate__animated animate__fadeInDown" role="alert">
+            @TempData["Error"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    }
+
+    <!-- Search Bar -->
+    <div class="mb-4">
+        <div class="input-group">
+            <span class="input-group-text bg-primary text-white rounded-pill rounded-end-0"><i class="bi bi-search"></i></span>
+            <input type="text" id="searchInput" class="form-control shadow-sm" placeholder="Tìm kiếm sản phẩm theo tên..." aria-label="Search" style="font-size: 1.1rem; padding: 0.75rem;">
+            <button class="btn btn-primary ms-2 rounded-pill shadow-sm" type="button" id="searchButton">Tìm kiếm</button>
+        </div>
+    </div>
+
+  
+
+    <!-- Toggle Buttons -->
+    <div class="mb-4 d-flex justify-content-center gap-3">
+        <button id="showActive" class="btn btn-primary rounded-pill shadow-sm active">Sản Phẩm Hoạt Động</button>
+        <button id="showInactive" class="btn btn-outline-primary rounded-pill shadow-sm">Sản Phẩm Ngừng Hoạt Động</button>
+    </div>
+
+    <div class="mt-3 text-center">
+        <a asp-controller="ProductDetails" asp-action="Index" class="btn btn-outline-primary animate__animated animate__pulse">
+            <i class="bi bi-arrow-right-circle me-2"></i>Đến Trang Chi Tiết Sản Phẩm
+        </a>
+    </div>
+
+    <!-- Active Products -->
+    <div id="activeProducts" class="card shadow-lg border-0 rounded mb-5 animate__animated animate__fadeInUp">
+        <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
+            <h5 class="mb-0">Sản Phẩm Hoạt Động</h5>
+            <a asp-action="AddProduct" class="btn btn-light btn-sm animate__animated animate__pulse">
+                <i class="bi bi-plus-circle me-2"></i>Thêm Sản Phẩm
+            </a>
+        </div>
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-hover table-striped align-middle" id="activeTable">
+                    <thead class="bg-light">
+                        <tr>
+                            <th>ID</th>
+                            <th>Tên Sản Phẩm</th>
+                            <th>Giá</th>
+                            <th>Số Lượng</th>
+                            <th>Hình Ảnh</th>
+                            <th>Mô Tả</th>
+                            <th>Trạng Thái</th>
+                            <th>Hành Động</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var product in activeProducts)
+                        {
+                            <tr class="product-row animate__animated animate__fadeIn" data-name="@product.Ten_San_Pham.ToLower()">
+                                <td>@product.ID_San_Pham</td>
+                                <td>@product.Ten_San_Pham</td>
+                                <td>@string.Format("{0:N0} đ", product.Gia)</td>
+                                <td>@product.So_Luong</td>
+                                <td>
+                                    <img src="@("https://localhost:7169" + product.Hinh_Anh)" alt="@product.Ten_San_Pham" class="img-fluid rounded hover-scale" style="max-width: 100px; aspect-ratio: 4/3; object-fit: cover;" />
+                                </td>
+                                <td class="text-truncate" style="max-width: 200px;">@product.Mo_Ta</td>
+                                <td>
+                                    <span class="badge bg-success">Hoạt động</span>
+                                </td>
+                                <td>
+                                    <a asp-action="Details" asp-route-id="@product.ID_San_Pham" class="btn btn-outline-primary btn-sm">
+                                        <i class="bi bi-eye"></i> Chi tiết
+                                    </a>
+                                    <a asp-action="EditProduct" asp-route-id="@product.ID_San_Pham" class="btn btn-outline-primary btn-sm">
+                                        <i class="bi bi-pencil"></i> Sửa
+                                    </a>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- Inactive Products -->
+    <div id="inactiveProducts" class="card shadow-lg border-0 rounded mb-5 animate__animated animate__fadeInUp d-none">
+        <div class="card-header bg-secondary text-white d-flex justify-content-between align-items-center">
+            <h5 class="mb-0">Sản Phẩm Ngừng Hoạt Động</h5>
+        </div>
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-hover table-striped align-middle" id="inactiveTable">
+                    <thead class="bg-light">
+                        <tr>
+                            <th>ID</th>
+                            <th>Tên Sản Phẩm</th>
+                            <th>Giá</th>
+                            <th>Số Lượng</th>
+                            <th>Hình Ảnh</th>
+                            <th>Mô Tả</th>
+                            <th>Trạng Thái</th>
+                            <th>Hành Động</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var product in inactiveProducts)
+                        {
+                            <tr class="product-row animate__animated animate__fadeIn" data-name="@product.Ten_San_Pham.ToLower()">
+                                <td>@product.ID_San_Pham</td>
+                                <td>@product.Ten_San_Pham</td>
+                                <td>@string.Format("{0:N0} đ", product.Gia)</td>
+                                <td>@product.So_Luong</td>
+                                <td>
+                                    <img src="@("https://localhost:7169" + product.Hinh_Anh)" alt="@product.Ten_San_Pham" class="img-fluid rounded hover-scale" style="max-width: 100px; aspect-ratio: 4/3; object-fit: cover;" />
+                                </td>
+                                <td class="text-truncate" style="max-width: 200px;">@product.Mo_Ta</td>
+                                <td>
+                                    <span class="badge bg-danger">Không hoạt động</span>
+                                </td>
+                                <td>
+                                    <a asp-action="Details" asp-route-id="@product.ID_San_Pham" class="btn btn-outline-primary btn-sm">
+                                        <i class="bi bi-eye"></i> Chi tiết
+                                    </a>
+                                    <a asp-action="EditProduct" asp-route-id="@product.ID_San_Pham" class="btn btn-outline-primary btn-sm">
+                                        <i class="bi bi-pencil"></i> Sửa
+                                    </a>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <div class="mt-3 text-center">
+        <a asp-controller="ProductDetails" asp-action="Index" class="btn btn-outline-primary animate__animated animate__pulse">
+            <i class="bi bi-arrow-right-circle me-2"></i>Đến Trang Chi Tiết Sản Phẩm
+        </a>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            const searchInput = document.getElementById('searchInput');
+            const searchButton = document.getElementById('searchButton');
+            const showActive = document.getElementById('showActive');
+            const showInactive = document.getElementById('showInactive');
+            const activeProducts = document.getElementById('activeProducts');
+            const inactiveProducts = document.getElementById('inactiveProducts');
+            const tables = [document.getElementById('activeTable'), document.getElementById('inactiveTable')];
+
+            function filterProducts() {
+                const searchTerm = searchInput.value.toLowerCase();
+                tables.forEach(table => {
+                    const rows = table.querySelectorAll('.product-row');
+                    rows.forEach(row => {
+                        const name = row.getAttribute('data-name');
+                        if (name.includes(searchTerm)) {
+                            row.style.display = 'table-row';
+                            row.classList.add('animate__fadeIn');
+                        } else {
+                            row.style.display = 'none';
+                        }
+                    });
+                });
+            }
+
+            searchButton.addEventListener('click', filterProducts);
+            searchInput.addEventListener('keyup', function (e) {
+                if (e.key === 'Enter') filterProducts();
+            });
+
+            showActive.addEventListener('click', function () {
+                activeProducts.classList.remove('d-none');
+                inactiveProducts.classList.add('d-none');
+                showActive.classList.add('btn-primary', 'active');
+                showActive.classList.remove('btn-outline-primary');
+                showInactive.classList.add('btn-outline-primary');
+                showInactive.classList.remove('btn-primary', 'active');
+            });
+
+            showInactive.addEventListener('click', function () {
+                inactiveProducts.classList.remove('d-none');
+                activeProducts.classList.add('d-none');
+                showInactive.classList.add('btn-primary', 'active');
+                showInactive.classList.remove('btn-outline-primary');
+                showActive.classList.add('btn-outline-primary');
+                showActive.classList.remove('btn-primary', 'active');
+            });
+        });
+    </script>
+}
+
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css" />
+
+<style>
+    .table th, .table td {
+        vertical-align: middle;
+    }
+
+    .hover-scale:hover {
+        transform: scale(1.1);
+        transition: transform 0.3s ease;
+    }
+
+    .btn-outline-primary:hover, .btn-primary:hover {
+        transform: scale(1.05);
+        transition: transform 0.3s ease;
+    }
+
+    .table-responsive {
+        border-radius: 0.5rem;
+        overflow: hidden;
+    }
+
+    .badge {
+        font-size: 0.9rem;
+        padding: 0.5em 1em;
+    }
+
+    .input-group-text {
+        border-top-right-radius: 0 !important;
+        border-bottom-right-radius: 0 !important;
+    }
+
+    .btn.active {
+        background-color: #007bff !important;
+        color: white !important;
+    }
+</style>

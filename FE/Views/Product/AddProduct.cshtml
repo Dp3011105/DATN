@@ -1,79 +1,181 @@
-﻿@{
-    Layout = "~/Views/Shared/_AdminLayout.cshtml";
-}
-
-@model AddProductViewModel
+﻿@model AddProductViewModel
 @{
+    Layout = "~/Views/Shared/_AdminLayout.cshtml";
     ViewData["Title"] = "Thêm sản phẩm";
 }
 
-<h2>Thêm sản phẩm mới</h2>
+<div class="container-fluid my-5">
+    <!-- Notifications -->
+    @if (TempData["Success"] != null)
+    {
+        <div class="alert alert-success alert-dismissible fade show animate__animated animate__fadeInDown" role="alert">
+            @TempData["Success"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    }
+    @if (TempData["Error"] != null)
+    {
+        <div class="alert alert-danger alert-dismissible fade show animate__animated animate__fadeInDown" role="alert">
+            @TempData["Error"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    }
 
-<form asp-action="AddProduct" enctype="multipart/form-data">
-    <div class="form-group">
-        <label>Tên sản phẩm</label>
-        <input asp-for="TenSanPham" class="form-control" required />
+    <!-- Add Product Form -->
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card shadow-lg border-0 rounded animate__animated animate__fadeInUp">
+                <div class="card-body p-5">
+                    <h2 class="text-center mb-4 fw-bold text-primary">Thêm Sản Phẩm</h2>
+                    <form asp-action="AddProduct" enctype="multipart/form-data" id="addProductForm">
+                        <div asp-validation-summary="ModelOnly" class="text-danger mb-3 text-center"></div>
+
+                        <div class="form-floating mb-3">
+                            <input asp-for="TenSanPham" class="form-control rounded-pill shadow-sm" id="tenSanPham" placeholder="Tên sản phẩm" required />
+                            <label asp-for="TenSanPham" class="form-label">Tên sản phẩm</label>
+                            <span asp-validation-for="TenSanPham" class="text-danger small"></span>
+                        </div>
+
+                        <div class="form-floating mb-3">
+                            <input asp-for="Gia" class="form-control rounded-pill shadow-sm" type="number" id="gia" placeholder="Giá" required />
+                            <label asp-for="Gia" class="form-label">Giá</label>
+                            <span asp-validation-for="Gia" class="text-danger small"></span>
+                        </div>
+
+                        <div class="form-floating mb-3">
+                            <input asp-for="SoLuong" class="form-control rounded-pill shadow-sm" type="number" id="soLuong" placeholder="Số lượng" required />
+                            <label asp-for="SoLuong" class="form-label">Số lượng</label>
+                            <span asp-validation-for="SoLuong" class="text-danger small"></span>
+                        </div>
+
+                        <div class="form-floating mb-3">
+                            <textarea asp-for="MoTa" class="form-control shadow-sm" id="moTa" placeholder="Mô tả" style="height: 100px;"></textarea>
+                            <label asp-for="MoTa" class="form-label">Mô tả</label>
+                            <span asp-validation-for="MoTa" class="text-danger small"></span>
+                        </div>
+
+                        <div class="mb-3">
+                            <label asp-for="Image" class="form-label fw-bold">Hình ảnh</label>
+                            <input asp-for="Image" type="file" class="form-control shadow-sm" accept="image/*" required />
+                            <span asp-validation-for="Image" class="text-danger small"></span>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">Kích thước</label>
+                            <div class="row">
+                                @foreach (var size in ViewBag.Sizes)
+                                {
+                                    <div class="col-md-4 form-check">
+                                        <input type="checkbox" name="SelectedSizes" value="@size.ID_Size" class="form-check-input" id="size_@size.ID_Size" />
+                                        <label class="form-check-label" for="size_@size.ID_Size">@size.SizeName (Giá: @string.Format("{0:N0} đ", size.Gia))</label>
+                                    </div>
+                                }
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">Topping</label>
+                            <div class="row">
+                                @foreach (var topping in ViewBag.Toppings)
+                                {
+                                    <div class="col-md-4 form-check">
+                                        <input type="checkbox" name="SelectedToppings" value="@topping.ID_Topping" class="form-check-input" id="topping_@topping.ID_Topping" />
+                                        <label class="form-check-label" for="topping_@topping.ID_Topping">@topping.Ten (Giá: @string.Format("{0:N0} đ", topping.Gia))</label>
+                                    </div>
+                                }
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">Lượng đá</label>
+                            <div class="row">
+                                @foreach (var luongDa in ViewBag.LuongDas)
+                                {
+                                    <div class="col-md-4 form-check">
+                                        <input type="checkbox" name="SelectedLuongDas" value="@luongDa.ID_LuongDa" class="form-check-input" id="luongDa_@luongDa.ID_LuongDa" />
+                                        <label class="form-check-label" for="luongDa_@luongDa.ID_LuongDa">@luongDa.Ten_LuongDa</label>
+                                    </div>
+                                }
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">Độ ngọt</label>
+                            <div class="row">
+                                @foreach (var doNgot in ViewBag.DoNgots)
+                                {
+                                    <div class="col-md-4 form-check">
+                                        <input type="checkbox" name="SelectedDoNgots" value="@doNgot.ID_DoNgot" class="form-check-input" id="doNgot_@doNgot.ID_DoNgot" />
+                                        <label class="form-check-label" for="doNgot_@doNgot.ID_DoNgot">@doNgot.Muc_Do</label>
+                                    </div>
+                                }
+                            </div>
+                        </div>
+
+                        <div class="d-flex justify-content-between">
+                            <a asp-action="Index" class="btn btn-outline-secondary rounded-pill">
+                                <i class="bi bi-arrow-left me-2"></i>Quay lại
+                            </a>
+                            <button type="submit" class="btn btn-primary btn-lg rounded-pill shadow-sm animate__animated animate__pulse animate__infinite">
+                                <i class="bi bi-plus me-2"></i>Thêm
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
     </div>
+</div>
 
-    <div class="form-group">
-        <label>Giá</label>
-        <input asp-for="Gia" class="form-control" type="number" required />
-    </div>
+@section Scripts {
+    <script src="~/lib/jquery-validation/dist/jquery.validate.min.js"></script>
+    <script src="~/lib/jquery-validation-unobtrusive/jquery.validate.unobtrusive.min.js"></script>
+    <script>
+        $(document).ready(function () {
+            $("#addProductForm").validate({
+                errorClass: "text-danger",
+                highlight: function (element) {
+                    $(element).addClass("is-invalid").removeClass("is-valid");
+                },
+                unhighlight: function (element) {
+                    $(element).removeClass("is-invalid").addClass("is-valid");
+                },
+                errorPlacement: function (error, element) {
+                    error.insertAfter(element);
+                }
+            });
+        });
+    </script>
+}
 
-    <div class="form-group">
-        <label>Số lượng</label>
-        <input asp-for="SoLuong" class="form-control" type="number" required />
-    </div>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css" />
 
-    <div class="form-group">
-        <label>Mô tả</label>
-        <textarea asp-for="MoTa" class="form-control"></textarea>
-    </div>
+<style>
+    .form-control.is-invalid, .form-control-file.is-invalid {
+        border-color: #dc3545;
+        box-shadow: 0 0 5px rgba(220, 53, 69, 0.5);
+    }
 
-    <div class="form-group">
-        <label>Hình ảnh</label>
-        <input asp-for="Image" type="file" class="form-control" accept="image/*" required />
-    </div>
+    .form-control.is-valid, .form-control-file.is-valid {
+        border-color: #28a745;
+        box-shadow: 0 0 5px rgba(40, 167, 69, 0.5);
+    }
 
-    <div class="form-group">
-        <label>Size</label>
-        <select asp-for="SelectedSizes" multiple class="form-control">
-            @foreach (var size in ViewBag.Sizes)
-            {
-                <option value="@size.ID_Size">@size.SizeName (Giá: @size.Gia)</option>
-            }
-        </select>
-    </div>
+    .form-floating label {
+        color: #495057;
+    }
 
-    <div class="form-group">
-        <label>Topping</label>
-        <select asp-for="SelectedToppings" multiple class="form-control">
-            @foreach (var topping in ViewBag.Toppings)
-            {
-                <option value="@topping.ID_Topping">@topping.Ten (Giá: @topping.Gia)</option>
-            }
-        </select>
-    </div>
+    .hover-scale:hover {
+        transform: scale(1.1);
+        transition: transform 0.3s ease;
+    }
 
-    <div class="form-group">
-        <label>Lượng đá</label>
-        <select asp-for="SelectedLuongDas" multiple class="form-control">
-            @foreach (var luongDa in ViewBag.LuongDas)
-            {
-                <option value="@luongDa.ID_LuongDa">@luongDa.Ten_LuongDa</option>
-            }
-        </select>
-    </div>
+    .btn-primary:hover, .btn-outline-secondary:hover {
+        transform: scale(1.05);
+        transition: transform 0.3s ease;
+    }
 
-    <div class="form-group">
-        <label>Độ ngọt</label>
-        <select asp-for="SelectedDoNgots" multiple class="form-control">
-            @foreach (var doNgot in ViewBag.DoNgots)
-            {
-                <option value="@doNgot.ID_DoNgot">@doNgot.Muc_Do</option>
-            }
-        </select>
-    </div>
-
-    <button type="submit" class="btn btn-primary">Thêm</button>
-</form>
+    .form-check {
+        margin-bottom: 0.5rem;
+    }
+</style>
