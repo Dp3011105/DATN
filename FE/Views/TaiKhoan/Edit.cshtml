@@ -1,0 +1,207 @@
+﻿@model BE.models.TaiKhoan
+@{
+    ViewData["Title"] = "Sửa tài khoản";
+    Layout = "_AdminLayout";
+
+    var nhanViens = ViewBag.NhanViens as IEnumerable<BE.models.NhanVien>;
+    var searchNhanVien = ViewBag.SearchNhanVien as string ?? "";
+}
+
+<style>
+
+    .btn-gradient {
+        background: linear-gradient(45deg, #4facfe, #00f2fe);
+        color: white;
+        border: none;
+        transition: all 0.3s ease-in-out;
+        box-shadow: 0 4px 10px rgba(0, 150, 255, 0.3);
+    }
+
+        .btn-gradient:hover {
+            background: linear-gradient(45deg, #00f2fe, #4facfe);
+            transform: translateY(-2px);
+            box-shadow: 0 6px 15px rgba(0, 150, 255, 0.5);
+        }
+
+        .btn-gradient:active {
+            transform: scale(0.95);
+            box-shadow: 0 3px 6px rgba(0, 150, 255, 0.4);
+        }
+
+    .btn-secondary {
+        transition: all 0.3s ease;
+    }
+
+        .btn-secondary:hover {
+            background-color: #6c757d;
+            color: #fff;
+            transform: translateY(-2px);
+        }
+
+    .card {
+        border-radius: 20px;
+        background: #ffffff;
+        box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+    }
+
+    .table-nhanvien {
+        margin-top: 20px;
+    }
+
+        .table-nhanvien tr:hover {
+            background-color: #f8f9fa;
+            cursor: pointer;
+        }
+
+    .btn-select {
+        background: linear-gradient(45deg, #28a745, #20c997);
+        color: white;
+        border: none;
+        transition: all 0.3s ease;
+    }
+
+        .btn-select:hover {
+            background: linear-gradient(45deg, #20c997, #28a745);
+            transform: translateY(-2px);
+        }
+
+    .search-form-nhanvien {
+        margin-bottom: 20px;
+    }
+
+        .search-form-nhanvien input {
+            border-radius: 5px;
+            transition: border-color 0.3s ease;
+        }
+
+            .search-form-nhanvien input:focus {
+                border-color: #00f2fe;
+                box-shadow: 0 0 0 0.2rem rgba(0, 150, 255, 0.25);
+            }
+
+        .search-form-nhanvien .btn-search {
+            background: linear-gradient(45deg, #007bff, #0056b3);
+            color: white;
+            border: none;
+        }
+
+            .search-form-nhanvien .btn-search:hover {
+                background: linear-gradient(45deg, #0056b3, #004085);
+                transform: translateY(-2px);
+            }
+
+    .form-control:focus {
+        border-color: #00f2fe;
+        box-shadow: 0 0 0 0.2rem rgba(0, 150, 255, 0.25);
+    }
+</style>
+
+<div class="row">
+    <div class="col-md-6">
+        <div class="card shadow border-0 p-4">
+            <h4 class="mb-4"><i class="fas fa-edit me-2 text-primary"></i> Sửa tài khoản</h4>
+
+            @if (ViewBag.Error != null)
+            {
+                <div class="alert alert-danger">@ViewBag.Error</div>
+            }
+
+            <form asp-action="Edit" method="post">
+                <div asp-validation-summary="All" class="text-danger mb-3"></div>
+
+                <input type="hidden" asp-for="ID_Tai_Khoan" />
+                <input type="hidden" asp-for="ID_Nhan_Vien" id="selectedNhanVienId" />
+
+                <div class="mb-3">
+                    <label asp-for="Ten_Nguoi_Dung" class="form-label fw-semibold"><i class="fas fa-user me-2 text-primary"></i>Tên người dùng</label>
+                    <input asp-for="Ten_Nguoi_Dung" id="tenNguoiDung" class="form-control" />
+                    <span asp-validation-for="Ten_Nguoi_Dung" class="text-danger"></span>
+                </div>
+                <div class="mb-3">
+                    <label asp-for="Email" class="form-label fw-semibold"><i class="fas fa-envelope me-2 text-primary"></i>Email</label>
+                    <input asp-for="Email" id="email" class="form-control" />
+                    <span asp-validation-for="Email" class="text-danger"></span>
+                </div>
+                <div class="mb-3">
+                    <label asp-for="Mat_Khau" class="form-label fw-semibold"><i class="fas fa-lock me-2 text-primary"></i>Mật khẩu (để trống nếu không thay đổi)</label>
+                    <input asp-for="Mat_Khau" class="form-control" type="password" />
+                    <span asp-validation-for="Mat_Khau" class="text-danger"></span>
+                </div>
+
+                <div class="d-flex justify-content-between mt-4">
+                    <a asp-action="Index" class="btn btn-secondary rounded-pill">
+                        <i class="fas fa-arrow-left me-1"></i> Quay lại
+                    </a>
+                    <button type="submit" class="btn btn-gradient rounded-pill px-4">
+                        <i class="fas fa-save me-1"></i> Cập nhật
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div class="col-md-6">
+        <div class="card shadow border-0 p-4">
+            <h4 class="mb-4"><i class="fas fa-users me-2 text-primary"></i> Danh sách nhân viên chưa có tài khoản</h4>
+
+            <form asp-action="Edit" method="get" class="row g-2 search-form-nhanvien">
+                <input type="hidden" name="id" value="@Model.ID_Tai_Khoan" />
+                <div class="col-md-8">
+                    <input type="text" name="searchNhanVien" class="form-control"
+                           placeholder="Tìm kiếm theo tên hoặc email..."
+                           value="@searchNhanVien" />
+                </div>
+                <div class="col-md-4">
+                    <button type="submit" class="btn btn-search w-100"><i class="fas fa-search me-1"></i> Tìm</button>
+                </div>
+            </form>
+
+            @if (nhanViens != null && nhanViens.Any())
+            {
+                <div class="table-responsive table-nhanvien">
+                    <table class="table table-hover align-middle">
+                        <thead class="table-primary">
+                            <tr>
+                                <th>#</th>
+                                <th>Tên nhân viên</th>
+                                <th>Email</th>
+                                <th>Thao tác</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @{
+                                int stt = 1;
+                            }
+                            @foreach (var nv in nhanViens)
+                            {
+                                <tr>
+                                    <td>@stt</td>
+                                    <td>@nv.Ho_Ten</td>
+                                    <td>@nv.Email</td>
+                                    <td>
+                                        <button class="btn btn-select btn-sm" onclick="selectNhanVien(@nv.ID_Nhan_Vien, '@nv.Ho_Ten', '@nv.Email')">
+                                            <i class="fas fa-check me-1"></i> Chọn
+                                        </button>
+                                    </td>
+                                </tr>
+                                stt++;
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            }
+            else
+            {
+                <p class="text-muted">Không có nhân viên nào chưa có tài khoản hoặc không tìm thấy kết quả.</p>
+            }
+        </div>
+    </div>
+</div>
+
+<script>
+    function selectNhanVien(id, ten, email) {
+        document.getElementById('selectedNhanVienId').value = id;
+        document.getElementById('tenNguoiDung').value = ten;
+        document.getElementById('email').value = email;
+    }
+</script>

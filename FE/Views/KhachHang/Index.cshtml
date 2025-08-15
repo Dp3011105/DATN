@@ -1,12 +1,11 @@
-﻿
-@model IEnumerable<BE.DTOs.KhachHangDTO>
+﻿@model IEnumerable<BE.DTOs.KhachHangDTO>
 @{
     ViewData["Title"] = "Danh sách khách hàng";
     Layout = "_AdminLayout";
 }
 
 <div class="container-fluid p-4">
-    <div class="card">
+    <div class="card shadow-lg">
         <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
             <h4>Danh sách khách hàng</h4>
             <a href="@Url.Action("Create")" class="btn btn-success btn-sm">
@@ -44,7 +43,7 @@
                                 {
                                     @foreach (var kh in Model)
                                     {
-                                        <tr>
+                                        <tr class="table-row">
                                             <td>@kh.ID_Khach_Hang</td>
                                             <td>@kh.Ho_Ten</td>
                                             <td>@kh.So_Dien_Thoai</td>
@@ -55,12 +54,12 @@
                                                 </span>
                                             </td>
                                             <td>
-                                                <a href="@Url.Action("Edit", new { id = kh.ID_Khach_Hang })" class="btn btn-warning btn-sm me-1">
+                                                <a href="@Url.Action("Edit", new { id = kh.ID_Khach_Hang })" class="btn btn-warning btn-sm me-1 btn-action">
                                                     <i class="fas fa-edit"></i>
                                                 </a>
                                                 <form asp-action="Delete" asp-route-id="@kh.ID_Khach_Hang" method="post" style="display:inline" onsubmit="return confirm('Bạn có chắc muốn xóa?');">
                                                     @Html.AntiForgeryToken()
-                                                    <button type="submit" class="btn btn-danger btn-sm">
+                                                    <button type="submit" class="btn btn-danger btn-sm btn-action">
                                                         <i class="fas fa-trash"></i>
                                                     </button>
                                                 </form>
@@ -86,12 +85,12 @@
                                 <strong>@kh.Ho_Ten</strong> (@kh.So_Dien_Thoai)
                             </div>
                             <div>
-                                <a href="@Url.Action("Edit", new { id = kh.ID_Khach_Hang })" class="btn btn-warning btn-sm me-1">
+                                <a href="@Url.Action("Edit", new { id = kh.ID_Khach_Hang })" class="btn btn-warning btn-sm me-1 btn-action">
                                     <i class="fas fa-edit"></i>
                                 </a>
                                 <form asp-action="Delete" asp-route-id="@kh.ID_Khach_Hang" method="post" style="display:inline" onsubmit="return confirm('Bạn có chắc muốn xóa?');">
                                     @Html.AntiForgeryToken()
-                                    <button type="submit" class="btn btn-danger btn-sm">
+                                    <button type="submit" class="btn btn-danger btn-sm btn-action">
                                         <i class="fas fa-trash"></i>
                                     </button>
                                 </form>
@@ -111,12 +110,12 @@
                                 <strong>@kh.Ho_Ten</strong> (@kh.So_Dien_Thoai)
                             </div>
                             <div>
-                                <a href="@Url.Action("Edit", new { id = kh.ID_Khach_Hang })" class="btn btn-warning btn-sm me-1">
+                                <a href="@Url.Action("Edit", new { id = kh.ID_Khach_Hang })" class="btn btn-warning btn-sm me-1 btn-action">
                                     <i class="fas fa-edit"></i>
                                 </a>
                                 <form asp-action="Delete" asp-route-id="@kh.ID_Khach_Hang" method="post" style="display:inline" onsubmit="return confirm('Bạn có chắc muốn xóa?');">
                                     @Html.AntiForgeryToken()
-                                    <button type="submit" class="btn btn-danger btn-sm">
+                                    <button type="submit" class="btn btn-danger btn-sm btn-action">
                                         <i class="fas fa-trash"></i>
                                     </button>
                                 </form>
@@ -147,3 +146,21 @@
         });
     </script>
 }
+
+<style>
+    .table-row {
+        transition: background-color 0.3s ease;
+    }
+
+        .table-row:hover {
+            background-color: #f1f1f1; /* Light gray on hover */
+        }
+
+    .btn-action {
+        transition: transform 0.2s ease;
+    }
+
+        .btn-action:hover {
+            transform: scale(1.1); /* Slightly enlarge on hover */
+        }
+</style>

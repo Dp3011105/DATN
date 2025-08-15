@@ -137,17 +137,32 @@ namespace BE.Data
                 .Property(t => t.Mat_Khau)
                 .IsRequired(true);
 
-            // 7. TaiKhoan_VaiTro
+            // Khóa chính tổng hợp
             modelBuilder.Entity<TaiKhoanVaiTro>()
-                .HasKey(tv => new { tv.ID_Vai_Tro, tv.ID_Tai_Khoan });
+                .HasKey(x => new { x.ID_Tai_Khoan, x.ID_Vai_Tro });
+
+            // Quan hệ n-n (bắc cầu qua bảng TaiKhoanVaiTro)
             modelBuilder.Entity<TaiKhoanVaiTro>()
-                .HasOne(tv => tv.VaiTro)
-                .WithMany(v => v.TaiKhoanVaiTros)
-                .HasForeignKey(tv => tv.ID_Vai_Tro);
+                .HasOne(x => x.TaiKhoan)
+                .WithMany(tk => tk.TaiKhoanVaiTros)
+                .HasForeignKey(x => x.ID_Tai_Khoan)
+                .OnDelete(DeleteBehavior.Cascade);
+
             modelBuilder.Entity<TaiKhoanVaiTro>()
-                .HasOne(tv => tv.TaiKhoan)
-                .WithMany(t => t.TaiKhoanVaiTros)
-                .HasForeignKey(tv => tv.ID_Tai_Khoan);
+                .HasOne(x => x.VaiTro)
+                .WithMany(vt => vt.TaiKhoanVaiTros)
+                .HasForeignKey(x => x.ID_Vai_Tro)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            // Index để tăng tốc tra cứu
+            modelBuilder.Entity<TaiKhoanVaiTro>()
+                .HasIndex(x => new { x.ID_Tai_Khoan, x.ID_Vai_Tro })
+                .IsUnique();
+
+            modelBuilder.Entity<TaiKhoan>().HasIndex(t => t.Email)
+                .IsUnique(false);
+            modelBuilder.Entity<TaiKhoan>().HasIndex(t => t.Ten_Nguoi_Dung)
+                .IsUnique();
 
             // 8. Voucher
             modelBuilder.Entity<Voucher>()

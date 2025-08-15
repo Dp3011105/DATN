@@ -14,40 +14,99 @@ namespace BE.Controllers
         {
             _repository = repository;
         }
-
         [HttpGet]
-        public async Task<IActionResult> GetAll()
+        public async Task<IActionResult> GetAllTk()
         {
-            var result = await _repository.GetAllAsync();
-            return Ok(result);
+            try
+            {
+                var taiKhoans = await _repository.GetAllAsync();
+                return Ok(taiKhoans);
+            }
+            catch (Exception ex)
+            {
+                // Log the exception
+                return StatusCode(500, "Internal server error: " + ex.Message);
+            }
         }
-
         [HttpGet("{id}")]
         public async Task<IActionResult> GetById(int id)
         {
-            var result = await _repository.GetByIdAsync(id);
-            return result == null ? NotFound() : Ok(result);
+            try
+            {
+                var taiKhoan = await _repository.GetByIdAsync(id);
+                if (taiKhoan == null)
+                {
+                    return NotFound("TaiKhoan not found.");
+                }
+                return Ok(taiKhoan);
+            }
+            catch (Exception ex)
+            {
+                // Log the exception
+                return StatusCode(500, "Internal server error: " + ex.Message);
+            }
         }
-
         [HttpPost]
-        public async Task<IActionResult> Create(TaiKhoan model)
+        public async Task<IActionResult> CreateTaiKhoan([FromBody] TaiKhoan taiKhoan)
         {
-            await _repository.AddAsync(model);
-            return Ok();
+            if (taiKhoan == null)
+            {
+                return BadRequest("TaiKhoan is null.");
+            }
+            if (string.IsNullOrEmpty(taiKhoan.Ten_Nguoi_Dung) || string.IsNullOrEmpty(taiKhoan.Mat_Khau))
+            {
+                return BadRequest("Ten_Nguoi_Dung and Mat_Khau are required.");
+            }
+            try
+            {
+                await _repository.AddAsync(taiKhoan);
+                return CreatedAtAction(nameof(GetById), new { id = taiKhoan.ID_Tai_Khoan }, taiKhoan);
+            }
+            catch (Exception ex)
+            {
+                // Log the exception
+                return StatusCode(500, "Internal server error: " + ex.Message);
+            }
         }
-
-        [HttpPut]
-        public async Task<IActionResult> Update(TaiKhoan model)
+        [HttpPut("{id}")]
+        public async Task<IActionResult> UpdateTaiKhoan(int id, [FromBody] TaiKhoan taiKhoan)
         {
-            await _repository.UpdateAsync(model);
-            return Ok();
+            if (taiKhoan == null || taiKhoan.ID_Tai_Khoan != id)
+            {
+                return BadRequest("TaiKhoan is null or ID mismatch.");
+            }
+            try
+            {
+                await _repository.UpdateAsync(id, taiKhoan);
+                return NoContent();
+            }
+            catch (KeyNotFoundException)
+            {
+                return NotFound("TaiKhoan not found.");
+            }
+            catch (Exception ex)
+            {
+                // Log the exception
+                return StatusCode(500, "Internal server error: " + ex.Message);
+            }
         }
-
         [HttpDelete("{id}")]
-        public async Task<IActionResult> Delete(int id)
+        public async Task<IActionResult> DeleteTaiKhoan(int id)
         {
-            await _repository.DeleteAsync(id);
-            return Ok();
+            try
+            {
+                await _repository.DeleteAsync(id);
+                return NoContent();
+            }
+            catch (KeyNotFoundException)
+            {
+                return NotFound("TaiKhoan not found.");
+            }
+            catch (Exception ex)
+            {
+                // Log the exception
+                return StatusCode(500, "Internal server error: " + ex.Message);
+            }
         }
     }
 }

@@ -5,6 +5,7 @@ namespace BE.models
 {
     public class TaiKhoanVaiTro
     {
+
         [Key, Column(Order = 0)]
         public int ID_Vai_Tro { get; set; }
 
