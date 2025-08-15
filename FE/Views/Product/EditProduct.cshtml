@@ -1,91 +1,236 @@
-﻿@{
+﻿@model UpdateProductViewModel
+@{
     Layout = "~/Views/Shared/_AdminLayout.cshtml";
 }
-@model UpdateProductViewModel
-<h2>Sửa sản phẩm</h2>
-<form asp-action="EditProduct" enctype="multipart/form-data">
-    <input type="hidden" asp-for="ID_San_Pham" />
-    <input type="hidden" asp-for="CurrentImagePath" />
-    <div class="form-group">
-        <label asp-for="TenSanPham" class="control-label"></label>
-        <input asp-for="TenSanPham" class="form-control" />
-        <span asp-validation-for="TenSanPham" class="text-danger"></span>
-    </div>
-    <div class="form-group">
-        <label asp-for="Gia" class="control-label"></label>
-        <input asp-for="Gia" class="form-control" />
-        <span asp-validation-for="Gia" class="text-danger"></span>
-    </div>
-    <div class="form-group">
-        <label asp-for="SoLuong" class="control-label"></label>
-        <input asp-for="SoLuong" class="form-control" />
-        <span asp-validation-for="SoLuong" class="text-danger"></span>
-    </div>
-    <div class="form-group">
-        <label asp-for="MoTa" class="control-label"></label>
-        <textarea asp-for="MoTa" class="form-control"></textarea>
-        <span asp-validation-for="MoTa" class="text-danger"></span>
-    </div>
-    <div class="form-group">
-        <label>Hình ảnh hiện tại</label>
-        @if (!string.IsNullOrEmpty(Model.CurrentImagePath))
-        {
-            <div>
-                <img src="@("https://localhost:7169" + Model.CurrentImagePath)" alt="Hình ảnh hiện tại" width="200" />
+
+<div class="container-fluid my-5">
+    <!-- Notifications -->
+    @if (TempData["Success"] != null)
+    {
+        <div class="alert alert-success alert-dismissible fade show animate__animated animate__fadeInDown" role="alert">
+            @TempData["Success"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    }
+    @if (TempData["Error"] != null)
+    {
+        <div class="alert alert-danger alert-dismissible fade show animate__animated animate__fadeInDown" role="alert">
+            @TempData["Error"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    }
+
+    <!-- Edit Form -->
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card shadow-lg border-0 rounded animate__animated animate__fadeInUp">
+                <div class="card-body p-5">
+                    <h2 class="text-center mb-4 fw-bold text-primary">Cập Nhật Sản Phẩm</h2>
+                    <form asp-action="EditProduct" enctype="multipart/form-data" id="editProductForm">
+                        <input type="hidden" asp-for="ID_San_Pham" />
+                        <input type="hidden" asp-for="CurrentImagePath" />
+                        <div asp-validation-summary="ModelOnly" class="text-danger mb-3 text-center"></div>
+
+                        <div class="form-floating mb-3">
+                            <input asp-for="TenSanPham" class="form-control rounded-pill shadow-sm" id="tenSanPham" placeholder="Tên sản phẩm" required />
+                            <label asp-for="TenSanPham" class="form-label">Tên sản phẩm</label>
+                            <span asp-validation-for="TenSanPham" class="text-danger small"></span>
+                        </div>
+
+                        <div class="form-floating mb-3">
+                            <input asp-for="Gia" class="form-control rounded-pill shadow-sm" type="number" id="gia" placeholder="Giá" required />
+                            <label asp-for="Gia" class="form-label">Giá</label>
+                            <span asp-validation-for="Gia" class="text-danger small"></span>
+                        </div>
+
+                        <div class="form-floating mb-3">
+                            <input asp-for="SoLuong" class="form-control rounded-pill shadow-sm" type="number" id="soLuong" placeholder="Số lượng" required />
+                            <label asp-for="SoLuong" class="form-label">Số lượng</label>
+                            <span asp-validation-for="SoLuong" class="text-danger small"></span>
+                        </div>
+
+                        <div class="form-floating mb-3">
+                            <textarea asp-for="MoTa" class="form-control shadow-sm" id="moTa" placeholder="Mô tả" style="height: 100px;"></textarea>
+                            <label asp-for="MoTa" class="form-label">Mô tả</label>
+                            <span asp-validation-for="MoTa" class="text-danger small"></span>
+                        </div>
+
+                        <div class="form-floating mb-3">
+                            <select asp-for="TrangThai" class="form-select rounded-pill shadow-sm" id="trangThai" required>
+                                <option value="true" selected="@(Model.TrangThai ? "selected" : null)">Hoạt động</option>
+                                <option value="false" selected="@(Model.TrangThai ? null : "selected")">Không hoạt động</option>
+
+                            </select>
+                            <label for="trangThai" class="form-label">Trạng thái</label>
+                            <span asp-validation-for="TrangThai" class="text-danger small"></span>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">Hình ảnh hiện tại</label>
+                            @if (!string.IsNullOrEmpty(Model.CurrentImagePath))
+                            {
+                                <div class="mb-2">
+                                    <img src="@("https://localhost:7169" + Model.CurrentImagePath)" alt="Hình ảnh hiện tại" class="img-fluid rounded shadow hover-scale" style="max-width: 200px; aspect-ratio: 4/3; object-fit: cover;" />
+                                </div>
+                            }
+                            <div class="form-check form-switch mb-3">
+                                <input class="form-check-input" type="checkbox" id="changeImageSwitch" />
+                                <label class="form-check-label" for="changeImageSwitch">Thay đổi hình ảnh</label>
+                            </div>
+                            <div id="imageUploadSection" style="display: none;">
+                                <label asp-for="Image" class="form-label">Chọn hình ảnh mới</label>
+                                <input asp-for="Image" type="file" class="form-control shadow-sm" accept="image/*" />
+                                <span asp-validation-for="Image" class="text-danger small"></span>
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">Kích thước</label>
+                            <div class="row">
+                                @foreach (var size in ViewBag.Sizes)
+                                {
+                                    <div class="col-md-4 form-check">
+                                        <input type="checkbox" name="SelectedSizes" value="@size.ID_Size" class="form-check-input" id="size_@size.ID_Size" @(Model.SelectedSizes.Contains(size.ID_Size) ? "checked" : "") />
+                                        <label class="form-check-label" for="size_@size.ID_Size">@size.SizeName @(size.Trang_Thai ? "" : "(Không hoạt động)")</label>
+                                    </div>
+                                }
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">Topping</label>
+                            <div class="row">
+                                @foreach (var topping in ViewBag.Toppings)
+                                {
+                                    <div class="col-md-4 form-check">
+                                        <input type="checkbox" name="SelectedToppings" value="@topping.ID_Topping" class="form-check-input" id="topping_@topping.ID_Topping" @(Model.SelectedToppings.Contains(topping.ID_Topping) ? "checked" : "") />
+                                        <label class="form-check-label" for="topping_@topping.ID_Topping">@topping.Ten @(topping.Trang_Thai ? "" : "(Không hoạt động)")</label>
+                                    </div>
+                                }
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">Lượng đá</label>
+                            <div class="row">
+                                @foreach (var luongDa in ViewBag.LuongDas)
+                                {
+                                    <div class="col-md-4 form-check">
+                                        <input type="checkbox" name="SelectedLuongDas" value="@luongDa.ID_LuongDa" class="form-check-input" id="luongDa_@luongDa.ID_LuongDa" @(Model.SelectedLuongDas.Contains(luongDa.ID_LuongDa) ? "checked" : "") />
+                                        <label class="form-check-label" for="luongDa_@luongDa.ID_LuongDa">@luongDa.Ten_LuongDa @(luongDa.Trang_Thai ? "" : "(Không hoạt động)")</label>
+                                    </div>
+                                }
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">Độ ngọt</label>
+                            <div class="row">
+                                @foreach (var doNgot in ViewBag.DoNgots)
+                                {
+                                    <div class="col-md-4 form-check">
+                                        <input type="checkbox" name="SelectedDoNgots" value="@doNgot.ID_DoNgot" class="form-check-input" id="doNgot_@doNgot.ID_DoNgot" @(Model.SelectedDoNgots.Contains(doNgot.ID_DoNgot) ? "checked" : "") />
+                                        <label class="form-check-label" for="doNgot_@doNgot.ID_DoNgot">@doNgot.Muc_Do @(doNgot.Trang_Thai ? "" : "(Không hoạt động)")</label>
+                                    </div>
+                                }
+                            </div>
+                        </div>
+
+                        <div class="d-flex justify-content-between">
+                            <a asp-action="Index" class="btn btn-outline-primary rounded-pill">
+                                <i class="bi bi-arrow-left me-2"></i>Quay lại
+                            </a>
+                            <button type="submit" class="btn btn-primary btn-lg rounded-pill shadow-sm animate__animated animate__pulse animate__infinite">
+                                <i class="bi bi-check-circle me-2"></i>Cập nhật
+                            </button>
+                        </div>
+                    </form>
+                </div>
             </div>
-        }
+        </div>
     </div>
-    <div class="form-group">
-        <label asp-for="Image" class="control-label">Chọn hình ảnh mới (bỏ trống để giữ nguyên)</label>
-        <input asp-for="Image" type="file" class="form-control" />
-        <span asp-validation-for="Image" class="text-danger"></span>
-    </div>
-    <div class="form-group">
-        <label>Kích thước</label>
-        @foreach (var size in ViewBag.Sizes)
-        {
-            <div class="form-check">
-                <input type="checkbox" name="SelectedSizes" value="@size.ID_Size"
-                       @(Model.SelectedSizes.Contains(size.ID_Size) ? "checked" : "") />
-                <label>@size.SizeName</label>
-            </div>
-        }
-    </div>
-    <div class="form-group">
-        <label>Topping</label>
-        @foreach (var topping in ViewBag.Toppings)
-        {
-            <div class="form-check">
-                <input type="checkbox" name="SelectedToppings" value="@topping.ID_Topping"
-                       @(Model.SelectedToppings.Contains(topping.ID_Topping) ? "checked" : "") />
-                <label>@topping.Ten</label>
-            </div>
-        }
-    </div>
-    <div class="form-group">
-        <label>Lượng đá</label>
-        @foreach (var luongDa in ViewBag.LuongDas)
-        {
-            <div class="form-check">
-                <input type="checkbox" name="SelectedLuongDas" value="@luongDa.ID_LuongDa"
-                       @(Model.SelectedLuongDas.Contains(luongDa.ID_LuongDa) ? "checked" : "") />
-                <label>@luongDa.Ten_LuongDa</label>
-            </div>
-        }
-    </div>
-    <div class="form-group">
-        <label>Độ ngọt</label>
-        @foreach (var doNgot in ViewBag.DoNgots)
-        {
-            <div class="form-check">
-                <input type="checkbox" name="SelectedDoNgots" value="@doNgot.ID_DoNgot"
-                       @(Model.SelectedDoNgots.Contains(doNgot.ID_DoNgot) ? "checked" : "") />
-                <label>@doNgot.Muc_Do</label>
-            </div>
-        }
-    </div>
-    <div class="form-group">
-        <input type="submit" value="Cập nhật" class="btn btn-primary" />
-    </div>
-</form>
-<a asp-action="Index">Quay lại</a>
+</div>
+
+@section Scripts {
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js" integrity="sha256-/xUj+3OJU5yExlq6GSYGSHk7tPXikynS7ogEvDej/m4=" crossorigin="anonymous"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-validate/1.19.5/jquery.validate.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-validation-unobtrusive/3.2.12/jquery.validate.unobtrusive.min.js"></script>
+    <script>
+        $(document).ready(function () {
+            $("#editProductForm").validate({
+                errorClass: "text-danger",
+                highlight: function (element) {
+                    $(element).addClass("is-invalid").removeClass("is-valid");
+                },
+                unhighlight: function (element) {
+                    $(element).removeClass("is-invalid").addClass("is-valid");
+                },
+                errorPlacement: function (error, element) {
+                    error.insertAfter(element);
+                },
+                rules: {
+                    Image: {
+                        required: false // Không yêu cầu trường Image
+                    }
+                },
+                messages: {
+                    Image: {
+                        required: "" // Không hiển thị thông báo lỗi nếu Image trống
+                    }
+                }
+            });
+
+            // Hiển thị trường upload khi người dùng bật nút "Thay đổi hình ảnh"
+            $('#changeImageSwitch').on('change', function () {
+                if ($(this).is(':checked')) {
+                    $('#imageUploadSection').show();
+                    $('#Image').attr('required', 'required'); // Bắt buộc nếu chọn thay đổi
+                } else {
+                    $('#imageUploadSection').hide();
+                    $('#Image').removeAttr('required'); // Không bắt buộc nếu giữ ảnh cũ
+                }
+            });
+        });
+    </script>
+}
+
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css" />
+
+<style>
+    .form-control.is-invalid, .form-control-file.is-invalid, .form-select.is-invalid {
+        border-color: #dc3545;
+        box-shadow: 0 0 5px rgba(220, 53, 69, 0.5);
+    }
+
+    .form-control.is-valid, .form-control-file.is-valid, .form-select.is-valid {
+        border-color: #28a745;
+        box-shadow: 0 0 5px rgba(40, 167, 69, 0.5);
+    }
+
+    .form-floating label {
+        color: #495057;
+    }
+
+    .hover-scale:hover {
+        transform: scale(1.1);
+        transition: transform 0.3s ease;
+    }
+
+    .btn-primary:hover, .btn-outline-primary:hover {
+        transform: scale(1.05);
+        transition: transform 0.3s ease;
+    }
+
+    .form-check {
+        margin-bottom: 0.5rem;
+    }
+
+    .text-danger.small {
+        font-size: 0.85rem;
+    }
+
+    .form-switch .form-check-input {
+        height: 1.5em;
+        width: 3em;
+    }
+</style>

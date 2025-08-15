@@ -16,78 +16,27 @@
     </div>
 }
 
-<!-- Ảnh bìa điều chỉnh kích thước với đường dẫn cụ thể -->
-<header class="hero-section position-relative overflow-hidden text-center bg-dark text-white animate__animated animate__fadeIn">
-    <img src="/Logo/bia.jpg" alt="Ảnh bìa trà sữa" class="hero-image" />
-    <div class="hero-overlay position-absolute top-0 start-0 w-100 h-100 bg-dark opacity-50"></div>
-    <div class="hero-content position-absolute top-50 start-50 translate-middle">
-        <h1 class="display-4 fw-bold mb-3 animate__animated animate__zoomIn">Trà Sữa THE BOY</h1>
-        <p class="lead mb-4 animate__animated animate__fadeInUp animate__delay-1s">Thưởng thức những ly trà sữa tuyệt hảo!</p>
-        <a href="#menu" class="btn btn-primary btn-lg animate__animated animate__bounceIn animate__delay-2s">Xem Menu</a>
-    </div>
-</header>
+<h2 class="text-center mb-4">Menu Trà Sữa</h2>
 
-<div class="container-fluid my-5" id="menu">
-    <!-- Phần gợi ý đặc biệt: Slider ngang -->
-    @{
-        var suggestedProducts = Model.Where(p => p.Trang_Thai && p.ID_San_Pham > 0).OrderBy(x => Guid.NewGuid()).Take(5).ToList();
-    }
-    @if (suggestedProducts.Any())
-    {
-        <section class="mb-5">
-            <h3 class="text-center mb-4 fw-bold fs-3 text-primary animate__animated animate__fadeInDown">Gợi Ý Trà Sữa Đặc Biệt</h3>
-            <div class="special-suggestions overflow-hidden position-relative">
-                <div class="suggestions-slider d-flex flex-nowrap animate__animated animate__slideInLeft">
-                    @foreach (var product in suggestedProducts)
-                    {
-                        <div class="suggestion-item mx-2 shadow-lg rounded overflow-hidden hover-scale-up">
-                            <img src="@("https://localhost:7169" + product.Hinh_Anh)" alt="@product.Ten_San_Pham" class="img-fluid" style="height: 200px; aspect-ratio: 4/3; object-fit: cover;" />
-                            <div class="p-3 text-center bg-white">
-                                <h5 class="fw-bold fs-5">@product.Ten_San_Pham</h5>
-                                <p class="text-danger fw-bold">@string.Format("{0:N0} đ", product.Gia)</p>
-                                <button class="btn btn-outline-primary btn-sm animate__animated animate__pulse animate__infinite" data-bs-toggle="modal" data-bs-target="#productModal_@product.ID_San_Pham">Chi Tiết</button>
-                            </div>
-                        </div>
-                    }
-                </div>
-            </div>
-        </section>
-    }
-
-    <h2 class="text-center mb-5 fs-2 fw-bold text-primary animate__animated animate__fadeIn">Menu Trà Sữa</h2>
-
+<div class="container">
     <div class="row">
-        <!-- Phần danh sách sản phẩm -->
+        <!-- Phần danh sách sản phẩm bên trái -->
         <div class="col-md-9">
-            <div class="mb-4 d-flex justify-content-between align-items-center animate__animated animate__fadeIn">
-                <div class="input-group w-50">
-                    <input type="text" id="searchInput" class="form-control rounded-pill shadow-sm" placeholder="Tìm kiếm trà sữa..." aria-label="Search">
-                    <button class="btn btn-outline-primary ms-2 rounded-pill shadow-sm" type="button" id="searchButton"><i class="bi bi-search"></i></button>
-                </div>
-                <select id="sortSelect" class="form-select w-25 rounded-pill shadow-sm">
-                    <option value="">Sắp xếp theo...</option>
-                    <option value="name-asc">Tên (A-Z)</option>
-                    <option value="name-desc">Tên (Z-A)</option>
-                    <option value="price-asc">Giá tăng dần</option>
-                    <option value="price-desc">Giá giảm dần</option>
-                </select>
-            </div>
-
-            <div class="row" id="productList">
+            <div class="row">
                 @foreach (var product in Model.Where(p => p.Trang_Thai && p.ID_San_Pham > 0))
                 {
-                    <div class="col-md-4 mb-4 product-item animate__animated animate__fadeInUp" data-name="@product.Ten_San_Pham.ToLower()" data-price="@product.Gia">
-                        <div class="card h-100 shadow-lg border-0 rounded overflow-hidden hover-scale-up hover-shadow">
+                    <div class="col-md-4 mb-4">
+                        <div class="card h-100 shadow-sm">
                             <img src="@("https://localhost:7169" + product.Hinh_Anh)"
                                  class="card-img-top"
                                  alt="@product.Ten_San_Pham"
-                                 style="height: 200px; aspect-ratio: 4/3; object-fit: cover; cursor: pointer;"
+                                 style="height: 200px; object-fit: cover; cursor: pointer;"
                                  data-bs-toggle="modal"
                                  data-bs-target="#productModal_@product.ID_San_Pham" />
                             <div class="card-body text-center">
-                                <h5 class="card-title fw-bold fs-5">@product.Ten_San_Pham</h5>
-                                <p class="text-danger fw-bold fs-5">@string.Format("{0:N0} đ", product.Gia)</p>
-                                <p class="text-muted" style="min-height: 60px;">@product.Mo_Ta</p>
+                                <h5 class="card-title">@product.Ten_San_Pham</h5>
+                                <p class="text-danger fw-bold">@string.Format("{0:N0} đ", product.Gia)</p>
+                                <p class="text-muted" style="min-height: 40px;">@product.Mo_Ta</p>
                             </div>
                         </div>
                     </div>
@@ -95,9 +44,9 @@
             </div>
         </div>
 
-        <!-- Phần giỏ hàng -->
+        <!-- Phần giỏ hàng bên phải -->
         <div class="col-md-3">
-            <div class="card shadow-lg border-0 rounded sticky-top animate__animated animate__slideInRight" style="top: 20px;">
+            <div class="card shadow-sm border-0">
                 <div class="card-header bg-primary text-white d-flex align-items-center justify-content-between">
                     <h5 class="mb-0 flex-grow-1">Giỏ Hàng</h5>
                     <div class="form-check mb-0">
@@ -121,14 +70,14 @@
                                     if (item.Size != null) itemPrice += item.Size.Gia;
                                     itemPrice += item.GioHangChiTiet_Toppings.Sum(t => t.Topping.Gia);
                                     decimal itemTotal = itemPrice * item.So_Luong;
-                                    totalPrice += itemTotal;
+                                    totalPrice += itemTotal; // Tổng ban đầu (sẽ cập nhật động bằng JS)
 
                                     if (item.San_Pham.So_Luong == 0)
                                     {
                                         hasOutOfStock = true;
                                     }
 
-                                    <li class="list-group-item border rounded mb-2 p-3 hover-bg-light hover-scale">
+                                    <li class="list-group-item border rounded mb-2 p-3 hover-bg-light">
                                         <div class="d-flex align-items-start">
                                             <input type="checkbox" class="form-check-input me-2 select-item" data-price="@itemTotal" checked />
                                             <div class="flex-grow-1">
@@ -170,7 +119,7 @@
                         }
                         else
                         {
-                            <div class="text-center text-muted py-4 animate__animated animate__pulse">
+                            <div class="text-center text-muted py-4">
                                 <i class="bi bi-cart-x display-6"></i>
                                 <p class="mt-2">Giỏ hàng hiện đang trống.</p>
                             </div>
@@ -193,7 +142,7 @@
                     }
                     else
                     {
-                        <a href="@Url.Action("Checkout", "Cart")" class="btn btn-success w-100 mt-3 animate__animated animate__tada">
+                        <a href="@Url.Action("Checkout", "Cart")" class="btn btn-success w-100 mt-3">
                             <i class="bi bi-check-circle-fill me-2"></i>Thanh toán
                         </a>
                     }
@@ -203,34 +152,50 @@
     </div>
 </div>
 
-<!-- Modal chi tiết sản phẩm -->
+<!-- Modal chi tiết sản phẩm (giữ nguyên) -->
 @foreach (var product in Model.Where(p => p.Trang_Thai && p.ID_San_Pham > 0))
 {
     <div class="modal fade" id="productModal_@product.ID_San_Pham" tabindex="-1" aria-labelledby="productModalLabel_@product.ID_San_Pham" aria-hidden="true">
         <div class="modal-dialog modal-lg">
-            <div class="modal-content rounded shadow-lg animate__animated animate__zoomIn">
-                <div class="modal-header bg-primary text-white">
+            <div class="modal-content">
+                <div class="modal-header">
                     <h5 class="modal-title" id="productModalLabel_@product.ID_San_Pham">@product.Ten_San_Pham</h5>
-                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
                 <div class="modal-body">
                     <div class="row">
-                        <div class="col-md-5">
-                            <img src="@("https://localhost:7169" + product.Hinh_Anh)" alt="@product.Ten_San_Pham" class="img-fluid rounded shadow hover-rotate" style="aspect-ratio: 4/3; object-fit: cover;" />
+                        <div class="col-md-4">
+                            <img src="@("https://localhost:7169" + product.Hinh_Anh)" alt="@product.Ten_San_Pham" class="img-fluid rounded" />
                         </div>
-                        <div class="col-md-7">
-                            <p><strong>Giá:</strong> <span class="text-danger fw-bold fs-4">@string.Format("{0:N0} đ", product.Gia)</span></p>
+                        <div class="col-md-8">
+                            <p><strong>Giá:</strong> @string.Format("{0:N0} đ", product.Gia)</p>
                             <p><strong>Số lượng còn lại:</strong> @product.So_Luong</p>
                             <p><strong>Mô tả:</strong> @product.Mo_Ta</p>
 
+                            <!-- Form chọn tùy chọn -->
                             <form asp-controller="Cart" asp-action="AddToCart" asp-route-id="@product.ID_San_Pham" method="post">
+                                <!-- Số lượng -->
+                                @* <div class="mb-3">
+                                    <label class="form-label"><strong>Số lượng:</strong></label>
+                                    <input type="number" name="so_Luong" class="form-control" min="1" value="1" required />
+                                </div> *@
+                                <!-- Số lượng -->
                                 <div class="mb-3">
-                                    <label class="form-label fw-bold">Số lượng:</label>
-                                    <input type="number" name="so_Luong" class="form-control shadow-sm" min="1" max="@product.So_Luong" value="1" required />
+                                    <label class="form-label"><strong>Số lượng:</strong></label>
+                                    <input type="number"
+                                           name="so_Luong"
+                                           class="form-control"
+                                           min="1"
+                                           max="@product.So_Luong"
+                                           value="1"
+                                           required />
                                 </div>
+
+
+                                <!-- Chọn kích thước (chọn 1) -->
                                 <div class="mb-3">
-                                    <label class="form-label fw-bold">Kích thước:</label>
-                                    <select name="selectedSize" class="form-select shadow-sm" required>
+                                    <label class="form-label"><strong>Kích thước:</strong></label>
+                                    <select name="selectedSize" class="form-select" required>
                                         <option value="">Chọn kích thước</option>
                                         @foreach (var size in product.Sizes.Where(s => s.Trang_Thai))
                                         {
@@ -238,9 +203,11 @@
                                         }
                                     </select>
                                 </div>
+
+                                <!-- Chọn lượng đá (chọn 1) -->
                                 <div class="mb-3">
-                                    <label class="form-label fw-bold">Lượng đá:</label>
-                                    <select name="selectedLuongDa" class="form-select shadow-sm" required>
+                                    <label class="form-label"><strong>Lượng đá:</strong></label>
+                                    <select name="selectedLuongDa" class="form-select" required>
                                         <option value="">Chọn lượng đá</option>
                                         @foreach (var luongDa in product.LuongDas.Where(ld => ld.Trang_Thai))
                                         {
@@ -248,9 +215,11 @@
                                         }
                                     </select>
                                 </div>
+
+                                <!-- Chọn độ ngọt (chọn 1) -->
                                 <div class="mb-3">
-                                    <label class="form-label fw-bold">Độ ngọt:</label>
-                                    <select name="selectedDoNgot" class="form-select shadow-sm" required>
+                                    <label class="form-label"><strong>Độ ngọt:</strong></label>
+                                    <select name="selectedDoNgot" class="form-select" required>
                                         <option value="">Chọn độ ngọt</option>
                                         @foreach (var doNgot in product.DoNgots.Where(dn => dn.Trang_Thai))
                                         {
@@ -258,8 +227,10 @@
                                         }
                                     </select>
                                 </div>
+
+                                <!-- Chọn topping (chọn nhiều) -->
                                 <div class="mb-3">
-                                    <label class="form-label fw-bold">Topping:</label>
+                                    <label class="form-label"><strong>Topping:</strong></label>
                                     @foreach (var topping in product.Toppings.Where(t => t.Trang_Thai))
                                     {
                                         <div class="form-check">
@@ -270,7 +241,8 @@
                                         </div>
                                     }
                                 </div>
-                                <button type="submit" class="btn btn-primary btn-lg w-100 shadow-sm animate__animated animate__pulse animate__infinite">
+
+                                <button type="submit" class="btn btn-primary">
                                     <i class="bi bi-cart-plus me-2"></i>Thêm vào giỏ hàng
                                 </button>
                             </form>
@@ -285,12 +257,14 @@
 @section Scripts {
     <script>
         document.addEventListener('DOMContentLoaded', function () {
+            // Khởi tạo modal
             var modals = document.querySelectorAll('.modal');
             modals.forEach(function (modal) {
                 new bootstrap.Modal(modal);
             });
 
-            var userId = @ViewBag.UserId;
+            // Xử lý xóa item trong giỏ hàng
+            var userId = @ViewBag.UserId; // Lấy từ ViewBag
             document.querySelectorAll('.remove-cart-item').forEach(button => {
                 button.addEventListener('click', function () {
                     const itemId = this.getAttribute('data-item-id');
@@ -303,7 +277,7 @@
                         })
                         .then(response => {
                             if (response.ok) {
-                                window.location.reload();
+                                window.location.reload(); // Reload trang để cập nhật giỏ hàng
                             } else {
                                 alert('Xóa sản phẩm thất bại. Vui lòng thử lại.');
                             }
@@ -318,6 +292,7 @@
                 });
             });
 
+            // Xử lý chọn tất cả
             const selectAll = document.getElementById('select-all');
             const selectItems = document.querySelectorAll('.select-item');
             selectAll.addEventListener('change', function () {
@@ -327,6 +302,7 @@
                 updateTotalPrice();
             });
 
+            // Xử lý chọn từng item
             selectItems.forEach(item => {
                 item.addEventListener('change', function () {
                     if (!this.checked) {
@@ -338,6 +314,7 @@
                 });
             });
 
+            // Hàm cập nhật tổng tiền
             function updateTotalPrice() {
                 let total = 0;
                 selectItems.forEach(item => {
@@ -347,118 +324,14 @@
                 });
                 document.getElementById('total-price').textContent = total.toLocaleString('vi-VN') + ' đ';
             }
+
+            // Khởi tạo tổng tiền ban đầu
             updateTotalPrice();
-
-            const searchInput = document.getElementById('searchInput');
-            const searchButton = document.getElementById('searchButton');
-            const productItems = document.querySelectorAll('.product-item');
-
-            function filterProducts() {
-                const searchTerm = searchInput.value.toLowerCase();
-                productItems.forEach(item => {
-                    const name = item.getAttribute('data-name');
-                    if (name.includes(searchTerm)) {
-                        item.style.display = 'block';
-                        item.classList.add('animate__fadeIn');
-                    } else {
-                        item Lá»›n item.style.display = 'none';
-                    }
-                });
-            }
-
-            searchButton.addEventListener('click', filterProducts);
-            searchInput.addEventListener('keyup', function (e) {
-                if (e.key === 'Enter') filterProducts();
-            });
-
-            const sortSelect = document.getElementById('sortSelect');
-            sortSelect.addEventListener('change', function () {
-                const sortValue = this.value;
-                const productList = document.getElementById('productList');
-                const itemsArray = Array.from(productItems);
-
-                itemsArray.sort((a, b) => {
-                    const nameA = a.getAttribute('data-name');
-                    const nameB = b.getAttribute('data-name');
-                    const priceA = parseFloat(a.getAttribute('data-price'));
-                    const priceB = parseFloat(b.getAttribute('data-price'));
-
-                    if (sortValue === 'name-asc') return nameA.localeCompare(nameB);
-                    if (sortValue === 'name-desc') return nameB.localeCompare(nameA);
-                    if (sortValue === 'price-asc') return priceA - priceB;
-                    if (sortValue === 'price-desc') return priceB - priceA;
-                    return 0;
-                });
-
-                itemsArray.forEach(item => {
-                    productList.appendChild(item);
-                    item.classList.add('animate__fadeIn');
-                });
-            });
-
-            window.addEventListener('scroll', function () {
-                const hero = document.querySelector('.hero-image');
-                const scrollPosition = window.pageYOffset;
-                hero.style.transform = `translateY(${scrollPosition * 0.3}px)`;
-            });
         });
     </script>
 }
 
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css" />
-
 <style>
-    .hero-section {
-        height: 50vh;
-        min-height: 350px;
-        max-height: 500px;
-    }
-
-    .hero-image {
-        width: 100%;
-        height: 100%;
-        object-fit: cover;
-        position: absolute;
-        top: 0;
-        left: 0;
-    }
-
-    .hero-content {
-        z-index: 2;
-    }
-
-    .special-suggestions {
-        overflow-x: auto;
-        scrollbar-width: thin;
-    }
-
-    .suggestions-slider {
-        transition: transform 0.5s ease;
-    }
-
-    .suggestion-item {
-        min-width: 200px;
-        transition: transform 0.3s ease, box-shadow 0.3s ease;
-    }
-
-    .hover-scale-up:hover {
-        transform: scale(1.1);
-        box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2) !important;
-    }
-
-    .hover-shadow:hover {
-        box-shadow: 0 8px 16px rgba(0, 0, 0, 0.15) !important;
-    }
-
-    .hover-rotate:hover {
-        transform: rotate(3deg);
-        transition: transform 0.3s ease;
-    }
-
-    .hover-scale:hover {
-        transform: scale(1.05);
-    }
-
     .hover-bg-light:hover {
         background-color: #f8f9fa;
         transition: background-color 0.2s;
@@ -466,24 +339,9 @@
 
     .list-group-item {
         border-radius: 0.5rem !important;
-        transition: transform 0.2s ease;
     }
 
     .bi {
         font-size: 1.2rem;
-        transition: color 0.3s ease;
-    }
-
-        .bi:hover {
-            color: #007bff;
-        }
-
-    .special-suggestions::-webkit-scrollbar {
-        height: 8px;
-    }
-
-    .special-suggestions::-webkit-scrollbar-thumb {
-        background-color: #007bff;
-        border-radius: 10px;
     }
 </style>

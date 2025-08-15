@@ -3,6 +3,7 @@ using FE.Service.IService;
 using FE.Services;
 using Service;
 using Service.IService;
+using Service.Services;
 
 
 var builder = WebApplication.CreateBuilder(args);
@@ -19,9 +20,15 @@ builder.Services.AddScoped<IHoaDonChiTietService, HoaDonChiTietService>();
 builder.Services.AddScoped<IHoaDonChiTietThueService, HoaDonChiTietThueService>();
 builder.Services.AddScoped<INhanVienService, NhanVienService>();
 builder.Services.AddScoped<IKhachHangService, KhachHangService>();
+
 builder.Services.AddScoped<IVaiTroService, VaiTroService>();
 builder.Services.AddScoped<ITaiKhoanVaiTroService, TaiKhoanVaiTroService>();
 builder.Services.AddScoped<ITaiKhoanService, TaiKhoanService>();
+
+builder.Services.AddScoped<ICartService, CartService>();
+
+
+
 
 var baseApiUrl = "https://localhost:7081/";
 //Đăng ký các Service dùng Dependency Injection
@@ -175,7 +182,8 @@ app.UseAuthorization();
 
 app.MapControllerRoute(
     name: "default",
-    pattern: "{controller=Account}/{action=login}/{id?}");
+    pattern: "{controller=home}/{action=index}/{id?}");
+
 
 
 app.Run();

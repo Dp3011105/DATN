@@ -1,61 +1,150 @@
-﻿@{
+﻿@model SanPham
+@{
     Layout = "~/Views/Shared/_AdminLayout.cshtml";
 }
-@model SanPham
-<h2>Chi tiết sản phẩm</h2>
-<div>
-    <h4>@Model.Ten_San_Pham</h4>
-    <hr />
-    <dl class="row">
-        <dt class="col-sm-2">ID</dt>
-        <dd class="col-sm-10">@Model.ID_San_Pham</dd>
-        <dt class="col-sm-2">Giá</dt>
-        <dd class="col-sm-10">@Model.Gia</dd>
-        <dt class="col-sm-2">Số lượng</dt>
-        <dd class="col-sm-10">@Model.So_Luong</dd>
-        <dt class="col-sm-2">Hình ảnh</dt>
-        <dd class="col-sm-10"><img src="@("https://localhost:7169" + Model.Hinh_Anh)" alt="Hình ảnh sản phẩm" width="200" /></dd>
-        <dt class="col-sm-2">Mô tả</dt>
-        <dd class="col-sm-10">@Model.Mo_Ta</dd>
-        <dt class="col-sm-2">Trạng thái</dt>
-        <dd class="col-sm-10">@(Model.Trang_Thai ? "Hoạt động" : "Không hoạt động")</dd>
-        <dt class="col-sm-2">Kích thước</dt>
-        <dd class="col-sm-10">
-            @foreach (var size in Model.Sizes)
-            {
-                <span>@size.SizeName (@(size.Trang_Thai ? "Hoạt động" : "Không hoạt động"))</span>
-            
-                <br />
-            }
-        </dd>
-        <dt class="col-sm-2">Lượng đá</dt>
-        <dd class="col-sm-10">
-            @foreach (var luongDa in Model.LuongDas)
-            {
-                <span>@luongDa.Ten_LuongDa (@(luongDa.Trang_Thai ? "Hoạt động" : "Không hoạt động"))</span>
-            
-                <br />
-            }
-        </dd>
-        <dt class="col-sm-2">Độ ngọt</dt>
-        <dd class="col-sm-10">
-            @foreach (var doNgot in Model.DoNgots)
-            {
-                <span>@doNgot.Muc_Do (@(doNgot.Trang_Thai ? "Hoạt động" : "Không hoạt động"))</span>
-            
-                <br />
-            }
-        </dd>
-        <dt class="col-sm-2">Topping</dt>
-        <dd class="col-sm-10">
-            @foreach (var topping in Model.Toppings)
-            {
-                <span>@topping.Ten (Giá: @topping.Gia, Số lượng: @topping.So_Luong, @(topping.Trang_Thai ? "Hoạt động" : "Không hoạt động"))</span>
-            
-                <br />
-            }
-        </dd>
-    </dl>
+
+<div class="container-fluid my-5">
+    <!-- Notifications -->
+    @if (TempData["Success"] != null)
+    {
+        <div class="alert alert-success alert-dismissible fade show animate__animated animate__fadeInDown" role="alert">
+            @TempData["Success"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    }
+    @if (TempData["Error"] != null)
+    {
+        <div class="alert alert-danger alert-dismissible fade show animate__animated animate__fadeInDown" role="alert">
+            @TempData["Error"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    }
+
+    <!-- Product Details -->
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card shadow-lg border-0 rounded animate__animated animate__fadeInUp">
+                <div class="card-body p-5">
+                    <h2 class="text-center mb-4 fw-bold text-primary">@Model.Ten_San_Pham</h2>
+                    <hr />
+                    <dl class="row">
+                        <dt class="col-sm-3 fw-bold">ID</dt>
+                        <dd class="col-sm-9">@Model.ID_San_Pham</dd>
+
+                        <dt class="col-sm-3 fw-bold">Giá</dt>
+                        <dd class="col-sm-9">@string.Format("{0:N0} đ", Model.Gia)</dd>
+
+                        <dt class="col-sm-3 fw-bold">Số lượng</dt>
+                        <dd class="col-sm-9">@Model.So_Luong</dd>
+
+                        <dt class="col-sm-3 fw-bold">Hình ảnh</dt>
+                        <dd class="col-sm-9">
+                            <img src="@("https://localhost:7169" + Model.Hinh_Anh)" alt="@Model.Ten_San_Pham" class="img-fluid rounded shadow hover-scale" style="max-width: 200px; aspect-ratio: 4/3; object-fit: cover;" />
+                        </dd>
+
+                        <dt class="col-sm-3 fw-bold">Mô tả</dt>
+                        <dd class="col-sm-9">@Model.Mo_Ta</dd>
+
+                        <dt class="col-sm-3 fw-bold">Trạng thái</dt>
+                        <dd class="col-sm-9">
+                            <span class="badge bg-@(Model.Trang_Thai ? "success" : "danger")">
+                                @(Model.Trang_Thai ? "Hoạt động" : "Không hoạt động")
+                            </span>
+                        </dd>
+
+                        <dt class="col-sm-3 fw-bold">Kích thước</dt>
+                        <dd class="col-sm-9">
+                            @if (Model.Sizes.Any())
+                            {
+                                foreach (var size in Model.Sizes)
+                                {
+                                    <span class="badge bg-primary me-1 mb-1">@size.SizeName (@(size.Trang_Thai ? "Hoạt động" : "Không hoạt động"))</span>
+                                }
+                            }
+                            else
+                            {
+                                <span>Không có kích thước</span>
+                            }
+                        </dd>
+
+                        <dt class="col-sm-3 fw-bold">Lượng đá</dt>
+                        <dd class="col-sm-9">
+                            @if (Model.LuongDas.Any())
+                            {
+                                foreach (var luongDa in Model.LuongDas)
+                                {
+                                    <span class="badge bg-primary me-1 mb-1">@luongDa.Ten_LuongDa (@(luongDa.Trang_Thai ? "Hoạt động" : "Không hoạt động"))</span>
+                                }
+                            }
+                            else
+                            {
+                                <span>Không có lượng đá</span>
+                            }
+                        </dd>
+
+                        <dt class="col-sm-3 fw-bold">Độ ngọt</dt>
+                        <dd class="col-sm-9">
+                            @if (Model.DoNgots.Any())
+                            {
+                                foreach (var doNgot in Model.DoNgots)
+                                {
+                                    <span class="badge bg-primary me-1 mb-1">@doNgot.Muc_Do (@(doNgot.Trang_Thai ? "Hoạt động" : "Không hoạt động"))</span>
+                                }
+                            }
+                            else
+                            {
+                                <span>Không có độ ngọt</span>
+                            }
+                        </dd>
+
+                        <dt class="col-sm-3 fw-bold">Topping</dt>
+                        <dd class="col-sm-9">
+                            @if (Model.Toppings.Any())
+                            {
+                                foreach (var topping in Model.Toppings)
+                                {
+                                    <span class="badge bg-primary me-1 mb-1">@topping.Ten (Giá: @string.Format("{0:N0} đ", topping.Gia), Số lượng: @topping.So_Luong, @(topping.Trang_Thai ? "Hoạt động" : "Không hoạt động"))</span>
+                                }
+                            }
+                            else
+                            {
+                                <span>Không có topping</span>
+                            }
+                        </dd>
+                    </dl>
+                    <div class="d-flex justify-content-between mt-4">
+                        <a asp-action="EditProduct" asp-route-id="@Model.ID_San_Pham" class="btn btn-outline-warning rounded-pill">
+                            <i class="bi bi-pencil me-2"></i>Sửa
+                        </a>
+                        <a asp-action="Index" class="btn btn-outline-secondary rounded-pill">
+                            <i class="bi bi-arrow-left me-2"></i>Quay lại
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
 </div>
-<a asp-action="EditProduct" asp-route-id="@Model.ID_San_Pham">Sửa</a> |
-<a asp-action="Index">Quay lại</a>
+
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css" />
+
+<style>
+    .hover-scale:hover {
+        transform: scale(1.1);
+        transition: transform 0.3s ease;
+    }
+
+    .btn-outline-warning:hover, .btn-outline-secondary:hover {
+        transform: scale(1.05);
+        transition: transform 0.3s ease;
+    }
+
+    .badge {
+        font-size: 0.9rem;
+        padding: 0.5em 1em;
+    }
+
+    dl dt {
+        color: #007bff;
+    }
+</style>
