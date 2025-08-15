@@ -1,7 +1,8 @@
 using BE.models;
 
-namespace Repository.IRepository
+public interface IHoaDonRepository
 {
+
     public interface IHoaDonRepository
     {
         Task<IEnumerable<HoaDon>> GetAllAsync();

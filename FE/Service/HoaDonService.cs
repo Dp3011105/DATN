@@ -1,15 +1,9 @@
-﻿
-using BE.DTOs;
-using BE.models;
-using Service.IService;
-using System.Collections.Generic;
-using System.Net.Http;
-using System.Net.Http.Json;
-using System.Threading.Tasks;
+﻿using BE.models;
 
 public class HoaDonService : IHoaDonService
 {
     private readonly HttpClient _httpClient;
+
     public HoaDonService(IHttpClientFactory httpClient)
     {
         _httpClient = httpClient.CreateClient();

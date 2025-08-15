@@ -1,0 +1,23 @@
+﻿<!-- Views/Account/Login.cshtml -->
+@model FE.Models.LoginModel
+
+@{
+    ViewData["Title"] = "Đăng nhập";
+}
+
+<h1>Đăng nhập</h1>
+
+<form asp-action="Login" method="post">
+    <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+    <div class="form-group">
+        <label asp-for="Ten_Nguoi_Dung"></label>
+        <input asp-for="Ten_Nguoi_Dung" class="form-control" />
+        <span asp-validation-for="Ten_Nguoi_Dung" class="text-danger"></span>
+    </div>
+    <div class="form-group">
+        <label asp-for="Mat_Khau"></label>
+        <input asp-for="Mat_Khau" class="form-control" type="password" />
+        <span asp-validation-for="Mat_Khau" class="text-danger"></span>
+    </div>
+    <button type="submit" class="btn btn-primary">Đăng nhập</button>
+</form>

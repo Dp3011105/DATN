@@ -1,0 +1,309 @@
+﻿@model IEnumerable<BE.models.HoaDon>
+
+
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Thống Kê Bán Trà Sữa</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="~/css/thongke.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+    <div class="dashboard-container">
+        <header>
+            <h1>Thống Kê Hệ Thống Trà Sữa</h1>
+        </header>
+
+        <!-- Thông số tổng quan -->
+        <section class="summary-cards">
+            <div class="card">
+                <h2>Tổng số hóa đơn</h2>
+                <p id="totalOrders">@(Model?.Count() ?? 0)</p>
+            </div>
+            <div class="card">
+                <h2>Tổng doanh thu</h2>
+                <p id="totalRevenue">@(Model?.Sum(x => x.Tong_Tien).ToString("C0", new System.Globalization.CultureInfo("vi-VN")) ?? "₫0")</p>
+            </div>
+            <div class="card">
+                <h2>Doanh thu trung bình</h2>
+                <p id="avgRevenue">@(Model?.Any() == true ? Model.Average(x => x.Tong_Tien).ToString("C0", new System.Globalization.CultureInfo("vi-VN")) : "₫0")</p>
+            </div>
+            <div class="card">
+                <h2>Hóa đơn hôm nay</h2>
+                <p id="todayOrders">@(Model?.Where(x => x.Ngay_Tao.Date == DateTime.Today).Count() ?? 0)</p>
+            </div>
+            <div class="card">
+                <h2>Doanh thu hôm nay</h2>
+                <p id="todayRevenue">@(Model?.Where(x => x.Ngay_Tao.Date == DateTime.Today).Sum(x => x.Tong_Tien).ToString("C0", new System.Globalization.CultureInfo("vi-VN")) ?? "₫0")</p>
+            </div>
+            <div class="card">
+                <h2>Trạng thái đơn hàng</h2>
+                <p id="statusCount">@(Model?.GroupBy(x => x.Trang_Thai).Count() ?? 0) loại</p>
+            </div>
+        </section>
+
+        <!-- Biểu đồ -->
+        <section class="charts">
+            <div class="chart-box">
+                <h3>Doanh thu 7 ngày qua</h3>
+                <canvas id="revenueChart"></canvas>
+            </div>
+
+            <div class="chart-box">
+                <h3>Phân bố theo trạng thái</h3>
+                <canvas id="statusChart"></canvas>
+            </div>
+
+            <div class="chart-box">
+                <h3>Xu hướng đơn hàng theo ngày</h3>
+                <canvas id="orderTrendChart"></canvas>
+            </div>
+
+            <div class="chart-box">
+                <h3>Top 10 hóa đơn cao nhất</h3>
+                <canvas id="topOrdersChart"></canvas>
+            </div>
+        </section>
+
+        <!-- Bảng đơn hàng mới -->
+        <section class="order-table">
+            <h3>Danh sách hóa đơn mới nhất</h3>
+            @if (Model != null && Model.Any())
+            {
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Mã hóa đơn</th>
+                            <th>Ngày tạo</th>
+                            <th>Tổng tiền</th>
+                            <th>Trạng thái</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var hoaDon in Model.OrderByDescending(x => x.Ngay_Tao).Take(10))
+                        {
+                            <tr>
+                                <td>@hoaDon.Ma_Hoa_Don</td>
+                                <td>@hoaDon.Ngay_Tao.ToString("dd/MM/yyyy HH:mm")</td>
+                                <td>@hoaDon.Tong_Tien.ToString("C0", new System.Globalization.CultureInfo("vi-VN"))</td>
+                                <td>
+                                    <span style="padding: 5px 10px; border-radius: 15px; font-size: 0.8rem;
+                            background: @(hoaDon.Trang_Thai == "Hoan_Thanh" ? "#d4edda" :
+                                                                            hoaDon.Trang_Thai == "Huy_Don" ? "#f8d7da" :
+                                                                            hoaDon.Trang_Thai == "Dang_Giao_Hang" ? "#fff3cd" : "#d1ecf1");
+                    color: @(hoaDon.Trang_Thai == "Hoan_Thanh" ? "#155724" :
+                                                               hoaDon.Trang_Thai == "Huy_Don" ? "#721c24" :
+                                                               hoaDon.Trang_Thai == "Dang_Giao_Hang" ? "#856404" : "#0c5460");">
+                                @switch (hoaDon.Trang_Thai)
+                                        {
+                                            case "Chua_Xac_Nhan":
+                                                @:Chưa xác nhận
+                                                break;
+                                            case "Da_Xac_Nhan":
+                                                @:Đã xác nhận
+                                                break;
+                                            case "Dang_Giao_Hang":
+                                                @:Đang giao hàng
+                                                break;
+                                            case "Hoan_Thanh":
+                                                @:Hoàn thành
+                                                break;
+                                            case "Do_Hang_Co_Van_De":
+                                                @:Có vấn đề
+                                                break;
+                                            case "Huy_Don":
+                                                @:Hủy đơn
+                                                break;
+                                            default:
+                                                @hoaDon.Trang_Thai
+                                                break;
+                                        }
+                                    </span>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            }
+            else
+            {
+                <div class="loading">
+                    <p>Không có dữ liệu hóa đơn</p>
+                </div>
+            }
+        </section>
+    </div>
+
+    <script>
+        // Lấy dữ liệu từ server
+        const hoaDonData = @Html.Raw(Json.Serialize(Model));
+
+
+        // Xử lý dữ liệu cho biểu đồ doanh thu 7 ngày qua
+        function createRevenueChart() {
+          const last7Days = [];
+          const revenueData = [];
+
+          for (let i = 6; i >= 0; i--) {
+            const date = new Date();
+            date.setDate(date.getDate() - i);
+            const dateStr = date.toISOString().split('T')[0];
+            last7Days.push(date.toLocaleDateString('vi-VN', { weekday: 'short' }));
+
+            const dayRevenue = hoaDonData
+              .filter(h => h.ngay_Tao.startsWith(dateStr))
+              .reduce((sum, h) => sum + h.tong_Tien, 0);
+            revenueData.push(dayRevenue);
+          }
+
+          new Chart(document.getElementById('revenueChart'), {
+            type: 'line',
+            data: {
+              labels: last7Days,
+              datasets: [{
+                label: 'Doanh thu',
+                data: revenueData,
+                borderColor: '#4bc0c0',
+                backgroundColor: 'rgba(75,192,192,0.1)',
+                fill: true,
+                tension: 0.3
+              }]
+            },
+            options: {
+              responsive: true,
+              plugins: { legend: { display: false } },
+              scales: {
+                y: {
+                  beginAtZero: true,
+                  ticks: {
+                    callback: function(value) {
+                      return new Intl.NumberFormat('vi-VN', {
+                        style: 'currency',
+                        currency: 'VND'
+                      }).format(value);
+                    }
+                  }
+                }
+              }
+            }
+          });
+        }
+
+        // Biểu đồ trạng thái
+        function createStatusChart() {
+          const statusCount = {};
+          hoaDonData.forEach(h => {
+            statusCount[h.trang_Thai] = (statusCount[h.trang_Thai] || 0) + 1;
+          });
+
+          const statusLabels = {
+            'Chua_Xac_Nhan': 'Chưa xác nhận',
+            'Da_Xac_Nhan': 'Đã xác nhận',
+            'Dang_Giao_Hang': 'Đang giao hàng',
+            'Hoan_Thanh': 'Hoàn thành',
+            'Do_Hang_Co_Van_De': 'Có vấn đề',
+            'Huy_Don': 'Hủy đơn'
+          };
+
+          // Kiểm tra nếu không có dữ liệu
+          const hasData = Object.keys(statusCount).length > 0;
+
+          new Chart(document.getElementById('statusChart'), {
+            type: 'doughnut',
+            data: {
+              labels: hasData ? Object.keys(statusCount).map(k => statusLabels[k] || k) : ['Không có dữ liệu'],
+              datasets: [{
+                data: hasData ? Object.values(statusCount) : [1],
+                backgroundColor: hasData ? ['#36a2eb', '#4bc0c0', '#ffcd56', '#ff6384', '#ff9f40', '#9966ff'] : ['#e0e0e0']
+              }]
+            },
+            options: {
+              responsive: true,
+              plugins: {
+                legend: {
+                  position: 'bottom',
+                  display: hasData // Ẩn legend nếu không có dữ liệu
+                }
+              }
+            }
+          });
+        }
+
+        // Biểu đồ xu hướng đơn hàng
+        function createOrderTrendChart() {
+          const ordersByDate = {};
+          hoaDonData.forEach(h => {
+            const date = new Date(h.ngay_Tao).toLocaleDateString('vi-VN');
+            ordersByDate[date] = (ordersByDate[date] || 0) + 1;
+          });
+
+          const sortedDates = Object.keys(ordersByDate).sort();
+          const orderCounts = sortedDates.map(date => ordersByDate[date]);
+
+          new Chart(document.getElementById('orderTrendChart'), {
+            type: 'bar',
+            data: {
+              labels: sortedDates.slice(-10), // 10 ngày gần nhất
+              datasets: [{
+                label: 'Số đơn hàng',
+                data: orderCounts.slice(-10),
+                backgroundColor: '#4bc0c0'
+              }]
+            },
+            options: {
+              responsive: true,
+              scales: { y: { beginAtZero: true } }
+            }
+          });
+        }
+
+        // Biểu đồ top hóa đơn
+        function createTopOrdersChart() {
+          const topOrders = hoaDonData
+            .sort((a, b) => b.tong_Tien - a.tong_Tien)
+            .slice(0, 10);
+
+          new Chart(document.getElementById('topOrdersChart'), {
+            type: 'bar',
+            data: {
+              labels: topOrders.map(h => h.ma_Hoa_Don || `HD-${h.iD_Hoa_Don}`),
+              datasets: [{
+                label: 'Giá trị đơn hàng',
+                data: topOrders.map(h => h.tong_Tien),
+                backgroundColor: '#ff6384'
+              }]
+            },
+            options: {
+              responsive: true,
+              scales: {
+                y: {
+                  beginAtZero: true,
+                  ticks: {
+                    callback: function(value) {
+                      return new Intl.NumberFormat('vi-VN', {
+                        style: 'currency',
+                        currency: 'VND'
+                      }).format(value);
+                    }
+                  }
+                }
+              }
+            }
+          });
+        }
+
+        // Khởi tạo tất cả biểu đồ
+        document.addEventListener('DOMContentLoaded', function() {
+          if (hoaDonData && hoaDonData.length > 0) {
+            createRevenueChart();
+            createStatusChart();
+            createOrderTrendChart();
+            createTopOrdersChart();
+          }
+        });
+    </script>
+</body>
+</html>

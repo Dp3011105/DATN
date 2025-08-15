@@ -149,6 +149,13 @@ builder.Services.AddHttpClient<IVoucherService, VoucherService>(client =>
 {
     client.BaseAddress = new Uri(baseApiUrl);
 });
+builder.Services.AddHttpClient<IAuthService, AuthService>(client =>
+{
+    client.BaseAddress = new Uri(baseApiUrl);
+});
+
+
+// ĐĂNG KÝ CHO AUTH SERVICE CHỨC NĂNG ĐĂNG NHẬP đăng ký 
 
 
 var app = builder.Build();
@@ -168,7 +175,7 @@ app.UseAuthorization();
 
 app.MapControllerRoute(
     name: "default",
-    pattern: "{controller=Product}/{action=Index}/{id?}");
+    pattern: "{controller=Account}/{action=login}/{id?}");
 
 
 app.Run();
