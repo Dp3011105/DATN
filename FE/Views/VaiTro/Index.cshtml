@@ -1,0 +1,184 @@
+﻿@model IEnumerable<BE.models.VaiTro>
+@{
+    ViewData["Title"] = "Quản lý Vai trò";
+    Layout = "_AdminLayout";
+}
+
+<link rel="stylesheet" href="https://cdn.datatables.net/1.13.1/css/dataTables.bootstrap5.min.css" />
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script src="https://cdn.datatables.net/1.13.1/js/jquery.dataTables.min.js"></script>
+<script src="https://cdn.datatables.net/1.13.1/js/dataTables.bootstrap5.min.js"></script>
+
+<style>
+    /* Gradient VIP cho buttons */
+    .btn-gradient {
+        background: linear-gradient(45deg, #4facfe, #00f2fe);
+        color: white;
+        border: none;
+        transition: all 0.3s ease-in-out;
+        box-shadow: 0 4px 10px rgba(0, 150, 255, 0.3);
+    }
+
+        .btn-gradient:hover {
+            background: linear-gradient(45deg, #00f2fe, #4facfe);
+            transform: translateY(-2px);
+            box-shadow: 0 6px 15px rgba(0, 150, 255, 0.5);
+        }
+
+        .btn-gradient:active {
+            transform: scale(0.95);
+            box-shadow: 0 3px 6px rgba(0, 150, 255, 0.4);
+        }
+
+    .btn-warning-gradient {
+        background: linear-gradient(45deg, #ffc107, #ffca2c);
+        color: white;
+        border: none;
+        transition: all 0.3s ease;
+    }
+
+        .btn-warning-gradient:hover {
+            background: linear-gradient(45deg, #ffca2c, #ffc107);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 10px rgba(255, 193, 7, 0.3);
+        }
+
+        .btn-warning-gradient:active {
+            transform: scale(0.95);
+        }
+
+    .btn-danger-gradient {
+        background: linear-gradient(45deg, #dc3545, #ff6b6b);
+        color: white;
+        border: none;
+        transition: all 0.3s ease;
+    }
+
+        .btn-danger-gradient:hover {
+            background: linear-gradient(45deg, #ff6b6b, #dc3545);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 10px rgba(220, 53, 69, 0.3);
+        }
+
+        .btn-danger-gradient:active {
+            transform: scale(0.95);
+        }
+
+    /* Card VIP */
+    .card {
+        border-radius: 20px;
+        background: #ffffff;
+        box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+        transition: transform 0.3s ease;
+    }
+
+        .card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 30px rgba(0,0,0,0.12);
+        }
+
+    /* Card header gradient */
+    .card-header {
+        background: linear-gradient(45deg, #007bff, #0056b3);
+        color: white;
+    }
+
+    /* Table pro */
+    .table-hover tbody tr:hover {
+        background: linear-gradient(45deg, #f8f9fa, #e9ecef);
+        transition: background 0.3s ease;
+    }
+
+    .table thead th {
+        background: linear-gradient(45deg, #007bff, #0056b3);
+        color: white;
+    }
+
+    /* Icons màu */
+    .icon-primary {
+        color: #007bff;
+    }
+
+    .icon-danger {
+        color: #dc3545;
+    }
+
+    .icon-warning {
+        color: #ffc107;
+    }
+
+    .icon-success {
+        color: #28a745;
+    }
+</style>
+
+<div class="content-wrapper">
+    <section class="content">
+        <div class="card shadow border-0">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h4 class="mb-0"><i class="fas fa-user-shield icon-primary me-2"></i> Quản lý Vai trò</h4>
+                <a asp-action="Create" class="btn btn-gradient btn-sm rounded-pill px-4">
+                    <i class="fas fa-plus-circle icon-success me-1"></i> Thêm vai trò
+                </a>
+            </div>
+            <div class="card-body">
+                <table id="vaiTroTable" class="table table-hover table-bordered table-striped align-middle">
+                    <thead>
+                        <tr>
+                            <th style="width: 10%"><i class="fas fa-id-badge icon-primary"></i> ID</th>
+                            <th><i class="fas fa-tag icon-primary"></i> Tên vai trò</th>
+                            <th style="width: 20%" class="text-center"><i class="fas fa-cog icon-primary"></i> Thao tác</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @if (!Model.Any())
+                        {
+                            <tr>
+                                <td colspan="3" class="text-center text-muted">Không có dữ liệu</td>
+                            </tr>
+                        }
+                        else
+                        {
+                            foreach (var item in Model)
+                            {
+                                <tr>
+                                    <td>@item.ID_Vai_Tro</td>
+                                    <td>@item.Ten_Vai_Tro</td>
+                                    <td class="text-center">
+                                        <a asp-action="Edit" asp-route-id="@item.ID_Vai_Tro" class="btn btn-warning-gradient btn-sm rounded-pill me-1">
+                                            <i class="fas fa-edit"></i>
+                                        </a>
+                                        <form asp-action="Delete" asp-route-id="@item.ID_Vai_Tro" method="post" class="d-inline"
+                                              onsubmit="return confirm('Bạn có chắc muốn xóa vai trò này?');">
+                                            <button type="submit" class="btn btn-danger-gradient btn-sm rounded-pill">
+                                                <i class="fas fa-trash"></i>
+                                            </button>
+                                        </form>
+                                    </td>
+                                </tr>
+                            }
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </section>
+</div>
+
+<script>
+    $(document).ready(function () {
+        $('#vaiTroTable').DataTable({
+            "paging": true,
+            "lengthChange": false,
+            "searching": true,
+            "ordering": true,
+            "info": true,
+            "autoWidth": false,
+            "language": {
+                "search": "Tìm kiếm:",
+                "info": "Hiển thị _START_ đến _END_ của _TOTAL_ bản ghi",
+                "emptyTable": "Không có dữ liệu để hiển thị"
+            }
+        });
+    });
+</script>

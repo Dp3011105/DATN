@@ -1,40 +1,50 @@
 using System.Net.Http;
 using System.Net.Http.Json;
-using System.Threading.Tasks;
-using System.Collections.Generic;
 using Service.IService;
 using BE.models;
+using BE.DTOs;
 
 public class TaiKhoanVaiTroService : ITaiKhoanVaiTroService
 {
     private readonly HttpClient _httpClient;
-    public TaiKhoanVaiTroService(HttpClient httpClient)
+    public TaiKhoanVaiTroService(IHttpClientFactory httpClient)
     {
-        _httpClient = httpClient;
+        _httpClient = httpClient.CreateClient();
+        _httpClient.BaseAddress = new Uri("https://localhost:7169/");
     }
 
-    public async Task<IEnumerable<TaiKhoanVaiTro>> GetAllAsync()
+    public async Task CreateTaiKhoanVaiTroAsync(TaiKhoanVaiTro taiKhoanVaiTro)
     {
-        return await _httpClient.GetFromJsonAsync<IEnumerable<TaiKhoanVaiTro>>("api/TaiKhoanVaiTro");
+        await _httpClient.PostAsJsonAsync("api/TaiKhoanVaiTro", taiKhoanVaiTro);
     }
 
-    public async Task<TaiKhoanVaiTro?> GetByIdAsync(int id)
+    public async Task DeleteTaiKhoanVaiTroAsync(int idTaiKhoan, int idVaiTro)
     {
-        return await _httpClient.GetFromJsonAsync<TaiKhoanVaiTro>($"api/TaiKhoanVaiTro/{id}");
+        await _httpClient.DeleteAsync($"api/TaiKhoanVaiTro/{idTaiKhoan}/{idVaiTro}");
     }
 
-    public async Task AddAsync(TaiKhoanVaiTro entity)
+    public async Task<IEnumerable<TaiKhoan>> GetAllTaiKhoanNhanVienAsync()
     {
-        await _httpClient.PostAsJsonAsync("api/TaiKhoanVaiTro", entity);
+        return await _httpClient.GetFromJsonAsync<IEnumerable<TaiKhoan>>("api/TaiKhoan");
     }
 
-    public async Task UpdateAsync(TaiKhoanVaiTro entity)
+    public async Task<IEnumerable<TaiKhoanVaiTroDTO>> GetAllTaiKhoanVaiTroAsync()
     {
-        await _httpClient.PutAsJsonAsync("api/TaiKhoanVaiTro", entity);
+        return await _httpClient.GetFromJsonAsync<IEnumerable<TaiKhoanVaiTroDTO>>("api/TaiKhoanVaiTro");
     }
 
-    public async Task DeleteAsync(int id)
+    public async Task<IEnumerable<VaiTro>> GetAllVaiTroAsync()
     {
-        await _httpClient.DeleteAsync($"api/TaiKhoanVaiTro/{id}");
+        return await _httpClient.GetFromJsonAsync<IEnumerable<VaiTro>>("api/VaiTro");
+    }
+
+    public async Task<TaiKhoanVaiTroDTO> GetTaiKhoanVaiTroByIdAsync(int idTaiKhoan, int idVaiTro)
+    {
+        return await _httpClient.GetFromJsonAsync<TaiKhoanVaiTroDTO>($"api/TaiKhoanVaiTro/{idTaiKhoan}/{idVaiTro}");
+    }
+
+    public async Task UpdateTaiKhoanVaiTroAsync(TaiKhoanVaiTro taiKhoanVaiTro)
+    {
+        await _httpClient.PutAsJsonAsync($"api/TaiKhoanVaiTro/{taiKhoanVaiTro.ID_Tai_Khoan}/{taiKhoanVaiTro.ID_Vai_Tro}", taiKhoanVaiTro);
     }
 }

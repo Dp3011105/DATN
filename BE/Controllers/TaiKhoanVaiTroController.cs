@@ -1,6 +1,8 @@
+﻿using BE.DTOs;
 using BE.models;
 using Microsoft.AspNetCore.Mvc;
 using Repository.IRepository;
+using System.Net;
 
 namespace BE.Controllers
 {
@@ -14,40 +16,52 @@ namespace BE.Controllers
         {
             _repository = repository;
         }
-
         [HttpGet]
-        public async Task<IActionResult> GetAll()
+        public async Task<ActionResult<IEnumerable<TaiKhoanVaiTroDTO>>> GetAllTaiKhoanVaiTro()
         {
-            var result = await _repository.GetAllAsync();
+            var result = await _repository.GetAllTaiKhoanVaiTroAsync();
             return Ok(result);
         }
-
-        [HttpGet("{id}")]
-        public async Task<IActionResult> GetById(int id)
+        [HttpGet("{idTaiKhoan}/{idVaiTro}")]
+        public async Task<ActionResult<TaiKhoanVaiTroDTO>> GetTaiKhoanVaiTroById(int idTaiKhoan, int idVaiTro)
         {
-            var result = await _repository.GetByIdAsync(id);
-            return result == null ? NotFound() : Ok(result);
+            var result = await _repository.GetTaiKhoanVaiTroByIdAsync(idTaiKhoan, idVaiTro);
+            if (result == null)
+            {
+                return NotFound();
+            }
+            return Ok(result);
         }
-
         [HttpPost]
-        public async Task<IActionResult> Create(TaiKhoanVaiTro model)
+        public async Task<ActionResult> CreateTaiKhoanVaiTro([FromBody] TaiKhoanVaiTro taiKhoanVaiTro)
         {
-            await _repository.AddAsync(model);
-            return Ok();
+            if (taiKhoanVaiTro == null)
+            {
+                return BadRequest("Invalid data.");
+            }
+            await _repository.CreateTaiKhoanVaiTroAsync(taiKhoanVaiTro);
+            return StatusCode((int)HttpStatusCode.Created);
         }
-
-        [HttpPut]
-        public async Task<IActionResult> Update(TaiKhoanVaiTro model)
+        [HttpPut("{idTaiKhoan}/{idVaiTro}")]
+        public async Task<ActionResult> UpdateTaiKhoanVaiTro(int idTaiKhoan, int idVaiTro, [FromBody] TaiKhoanVaiTro taiKhoanVaiTro)
         {
-            await _repository.UpdateAsync(model);
-            return Ok();
+            if (taiKhoanVaiTro == null)
+            {
+                return BadRequest("Invalid data.");
+            }
+            await _repository.UpdateTaiKhoanVaiTroAsync(taiKhoanVaiTro);
+            return NoContent();
         }
-
-        [HttpDelete("{id}")]
-        public async Task<IActionResult> Delete(int id)
+        [HttpDelete("{idTaiKhoan}/{idVaiTro}")]
+        public async Task<ActionResult> DeleteTaiKhoanVaiTro(int idTaiKhoan, int idVaiTro)
         {
-            await _repository.DeleteAsync(id);
-            return Ok();
+            var taiKhoanVaiTro = await _repository.GetTaiKhoanVaiTroByIdAsync(idTaiKhoan, idVaiTro);
+            if (taiKhoanVaiTro == null)
+            {
+                return NotFound();
+            }
+            await _repository.DeleteTaiKhoanVaiTroAsync(idTaiKhoan, idVaiTro);
+            return NoContent();
         }
     }
 }

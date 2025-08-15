@@ -20,6 +20,11 @@ builder.Services.AddScoped<IHoaDonChiTietService, HoaDonChiTietService>();
 builder.Services.AddScoped<IHoaDonChiTietThueService, HoaDonChiTietThueService>();
 builder.Services.AddScoped<INhanVienService, NhanVienService>();
 builder.Services.AddScoped<IKhachHangService, KhachHangService>();
+
+builder.Services.AddScoped<IVaiTroService, VaiTroService>();
+builder.Services.AddScoped<ITaiKhoanVaiTroService, TaiKhoanVaiTroService>();
+builder.Services.AddScoped<ITaiKhoanService, TaiKhoanService>();
+
 builder.Services.AddScoped<ICartService, CartService>();
 
 
@@ -137,27 +142,12 @@ builder.Services.AddHttpClient<ISizeService, SizeService>(client =>
     client.BaseAddress = new Uri(baseApiUrl);
 });
 
-builder.Services.AddHttpClient<ITaiKhoanService, TaiKhoanService>(client =>
-{
-    client.BaseAddress = new Uri(baseApiUrl);
-});
-
-builder.Services.AddHttpClient<ITaiKhoanVaiTroService, TaiKhoanVaiTroService>(client =>
-{
-    client.BaseAddress = new Uri(baseApiUrl);
-});
-
 builder.Services.AddHttpClient<IThueService, ThueService>(client =>
 {
     client.BaseAddress = new Uri(baseApiUrl);
 });
 
 builder.Services.AddHttpClient<IToppingService, ToppingService>(client =>
-{
-    client.BaseAddress = new Uri(baseApiUrl);
-});
-
-builder.Services.AddHttpClient<IVaiTroService, VaiTroService>(client =>
 {
     client.BaseAddress = new Uri(baseApiUrl);
 });

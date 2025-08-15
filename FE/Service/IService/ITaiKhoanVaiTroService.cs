@@ -1,15 +1,16 @@
-using System.Collections.Generic;
-using System.Threading.Tasks;
+using BE.DTOs;
 using BE.models;
 
 namespace Service.IService
 {
     public interface ITaiKhoanVaiTroService
     {
-        Task<IEnumerable<TaiKhoanVaiTro>> GetAllAsync();
-        Task<TaiKhoanVaiTro?> GetByIdAsync(int id);
-        Task AddAsync(TaiKhoanVaiTro entity);
-        Task UpdateAsync(TaiKhoanVaiTro entity);
-        Task DeleteAsync(int id);
+        Task<IEnumerable<TaiKhoanVaiTroDTO>> GetAllTaiKhoanVaiTroAsync();
+        Task<TaiKhoanVaiTroDTO> GetTaiKhoanVaiTroByIdAsync(int idTaiKhoan, int idVaiTro);
+        Task CreateTaiKhoanVaiTroAsync(TaiKhoanVaiTro taiKhoanVaiTro);
+        Task UpdateTaiKhoanVaiTroAsync(TaiKhoanVaiTro taiKhoanVaiTro);
+        Task DeleteTaiKhoanVaiTroAsync(int idTaiKhoan, int idVaiTro);
+        Task<IEnumerable<TaiKhoan>> GetAllTaiKhoanNhanVienAsync();
+        Task<IEnumerable<VaiTro>> GetAllVaiTroAsync();
     }
 }

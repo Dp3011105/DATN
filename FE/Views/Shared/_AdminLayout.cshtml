@@ -106,13 +106,13 @@
             <ul class="navbar-nav flex-column">
                 <li class="nav-item">
                     <a href="@Url.Action("Index", "Admintrangchu")" class="nav-link" title="Trang chủ">
-                        <i class="fas fa-home nav-icon"></i>
+                        <i class="fas fa-house nav-icon"></i>
                         <span class="sidebar-text">Trang chủ</span>
                     </a>
                 </li>
                 <li class="nav-item">
-                    <a href="@Url.Action("index", "product")" class="nav-link" title="Quản lý sản phẩm">
-                        <i class="fas fa-boxes nav-icon"></i>
+                    <a href="@Url.Action("Index", "Product")" class="nav-link" title="Quản lý sản phẩm">
+                        <i class="fas fa-box-open nav-icon"></i>
                         <span class="sidebar-text">Quản lý sản phẩm</span>
                     </a>
                 </li>
@@ -123,53 +123,61 @@
                     </a>
                 </li>
                 <li class="nav-item">
-                    <a href="@Url.Action("Index", "KhachHang")" class="nav-link" title="Quản lý Khách hàng">
+                    <a href="@Url.Action("Index", "KhachHang")" class="nav-link" title="Quản lý khách hàng">
                         <i class="fas fa-users nav-icon"></i>
-                        <span class="sidebar-text">Quản lý Khách hàng</span>
+                        <span class="sidebar-text">Quản lý khách hàng</span>
                     </a>
                 </li>
                 <li class="nav-item">
-                    <a href="@Url.Action("index", "AdminQuanLyVoucher")" class="nav-link" title="Quản lý Voucher Khách Hàng">
-                        <i class="fas fa-ticket-alt nav-icon"></i>
-                        <span class="sidebar-text">Quản lý Voucher Khách Hàng</span>
+                    <a href="@Url.Action("Index", "AdminQuanLyVoucher")" class="nav-link" title="Quản lý voucher khách hàng">
+                        <i class="fas fa-ticket nav-icon"></i>
+                        <span class="sidebar-text">Quản lý voucher</span>
                     </a>
                 </li>
                 <li class="nav-item">
+
                     <a href="@Url.Action("index", "Thongke")" class="nav-link" title="Quản lý Thống kê">
                         <i class="fas fa-chart-bar nav-icon"></i>
                         <span class="sidebar-text">Quản lý Thống kê</span>
                     </a>
                 </li>
                 <li class="nav-item">
-                    <a href="@Url.Action("index", "AdminQuanLyTaiKhoan")" class="nav-link" title="Quản lý Tài khoản">
-                        <i class="fas fa-user-cog nav-icon"></i>
-                        <span class="sidebar-text">Quản lý Tài khoản</span>
+                    <a href="@Url.Action("Index", "TaiKhoan")" class="nav-link" title="Quản lý tài khoản">
+                        <i class="fas fa-id-card nav-icon"></i>
+                        <span class="sidebar-text">Quản lý tài khoản</span>
                     </a>
                 </li>
                 <li class="nav-item">
-                    <a href="@Url.Action("FinancialCategory", "Admin")" class="nav-link" title="Quản lý danh mục tài chính">
-                        <i class="fas fa-wallet nav-icon"></i>
-                        <span class="sidebar-text">Quản lý danh mục tài chính</span>
+                    <a href="@Url.Action("Index", "VaiTro")" class="nav-link" title="Quản lý vai trò">
+                        <i class="fas fa-user-shield nav-icon"></i>
+                        <span class="sidebar-text">Quản lý vai trò</span>
                     </a>
                 </li>
                 <li class="nav-item">
-                    <a href="@Url.Action("OnlineOrders", "Admin")" class="nav-link" title="Quản lý Đơn hàng online">
-                        <i class="fas fa-shopping-bag nav-icon"></i>
-                        <span class="sidebar-text">Quản lý Đơn hàng online</span>
+                    <a href="@Url.Action("Index", "TaiKhoanVaiTro")" class="nav-link" title="Quản lý phân quyền">
+                        <i class="fas fa-lock nav-icon"></i>
+                        <span class="sidebar-text">Quản lý phân quyền</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="@Url.Action("OnlineOrders", "Admin")" class="nav-link" title="Đơn hàng online">
+                        <i class="fas fa-shopping-cart nav-icon"></i>
+                        <span class="sidebar-text">Đơn hàng online</span>
                     </a>
                 </li>
                 <li class="nav-item">
                     <a href="@Url.Action("DirectSales", "Admin")" class="nav-link" title="Bán hàng trực tiếp">
-                        <i class="fas fa-cash-register nav-icon"></i>
+                        <i class="fas fa-store nav-icon"></i>
                         <span class="sidebar-text">Bán hàng trực tiếp</span>
                     </a>
                 </li>
                 <li class="nav-item">
                     <a href="@Url.Action("CustomerFeedback", "Admin")" class="nav-link" title="Phản hồi khách hàng">
-                        <i class="fas fa-comments nav-icon"></i>
+                        <i class="fas fa-comment-dots nav-icon"></i>
                         <span class="sidebar-text">Phản hồi khách hàng</span>
                     </a>
                 </li>
+
                 <li class="nav-item mt-4">
                     <form asp-controller="Auth" asp-action="Logout" method="post">
                         <button type="submit" class="btn btn-danger w-100" title="Đăng xuất">

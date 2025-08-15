@@ -14,40 +14,92 @@ namespace BE.Controllers
         {
             _repository = repository;
         }
-
         [HttpGet]
-        public async Task<IActionResult> GetAll()
+        public async Task<ActionResult<IEnumerable<VaiTro>>> GetAllVt()
         {
-            var result = await _repository.GetAllAsync();
-            return Ok(result);
+            try
+            {
+                var result = await _repository.GetAllAsync();
+                return Ok(result);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, $"Internal server error: {ex.Message}");
+            }
         }
-
         [HttpGet("{id}")]
-        public async Task<IActionResult> GetById(int id)
+        public async Task<ActionResult<VaiTro>> GetVtById(int id)
         {
-            var result = await _repository.GetByIdAsync(id);
-            return result == null ? NotFound() : Ok(result);
+            try
+            {
+                var vaiTro = await _repository.GetByIdAsync(id);
+                if (vaiTro == null)
+                {
+                    return NotFound($"Role with ID {id} not found.");
+                }
+                return Ok(vaiTro);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, $"Internal server error: {ex.Message}");
+            }
         }
-
         [HttpPost]
-        public async Task<IActionResult> Create(VaiTro model)
+        public async Task<ActionResult> AddVaiTro([FromBody] VaiTro vaiTro)
         {
-            await _repository.AddAsync(model);
-            return Ok();
-        }
+            if (vaiTro == null)
+            {
+                return BadRequest("Role data is null.");
+            }
 
-        [HttpPut]
-        public async Task<IActionResult> Update(VaiTro model)
+            try
+            {
+                await _repository.AddAsync(vaiTro);
+                return CreatedAtAction(nameof(GetVtById), new { id = vaiTro.ID_Vai_Tro }, vaiTro);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, $"Internal server error: {ex.Message}");
+            }
+        }
+        [HttpPut("{id}")]
+        public async Task<ActionResult> UpdateVaiTro(int id, [FromBody] VaiTro vaiTro)
         {
-            await _repository.UpdateAsync(model);
-            return Ok();
-        }
+            if (vaiTro == null || vaiTro.ID_Vai_Tro != id)
+            {
+                return BadRequest("Role data is null or ID mismatch.");
+            }
 
+            try
+            {
+                await _repository.UpdateAsync(id, vaiTro);
+                return NoContent();
+            }
+            catch (KeyNotFoundException)
+            {
+                return NotFound($"Role with ID {id} not found.");
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, $"Internal server error: {ex.Message}");
+            }
+        }
         [HttpDelete("{id}")]
-        public async Task<IActionResult> Delete(int id)
+        public async Task<ActionResult> DeleteVaiTro(int id)
         {
-            await _repository.DeleteAsync(id);
-            return Ok();
+            try
+            {
+                await _repository.DeleteAsync(id);
+                return NoContent();
+            }
+            catch (KeyNotFoundException)
+            {
+                return NotFound($"Role with ID {id} not found.");
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, $"Internal server error: {ex.Message}");
+            }
         }
     }
 }
