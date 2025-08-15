@@ -5,10 +5,10 @@ namespace BE.models
 {
     public class KhachHangVoucher
     {
-        [Key, Column(Order = 0)]
-        public int ID_Khach_Hang { get; set; }
+        [Key]
+        public int ID { get; set; }  // Khóa chính mới, Identity
 
-        [Key, Column(Order = 1)]
+        public int ID_Khach_Hang { get; set; }
         public int ID_Voucher { get; set; }
 
         [StringLength(255)]
