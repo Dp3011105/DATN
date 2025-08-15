@@ -10,11 +10,20 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="~/css/thongke.css">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 </head>
 <body>
     <div class="dashboard-container">
         <header>
             <h1>Thống Kê Hệ Thống Trà Sữa</h1>
+            <header style="display:flex;justify-content:space-between;align-items:center;gap:12px;">
+                <h1>Thống Kê Hệ Thống Trà Sữa</h1>
+                <button id="exportPDF" style="padding:8px 12px;border:0;border-radius:8px;cursor:pointer;background:#4bc0c0;color:#fff;">
+                    📄 Xuất PDF
+                </button>
+            </header>
+
         </header>
 
         <!-- Thông số tổng quan -->
@@ -303,6 +312,58 @@
             createOrderTrendChart();
             createTopOrdersChart();
           }
+        });
+              async function addElementAsPages(pdf, el, margin = 10) {
+          const canvas = await html2canvas(el, { scale: 2, useCORS: true });
+          const imgWidthMM = pdf.internal.pageSize.getWidth() - margin * 2;
+          const pageHeightMM = pdf.internal.pageSize.getHeight() - margin * 2;
+
+          // px trên mỗi mm theo chiều rộng
+          const pxPerMM = canvas.width / imgWidthMM;
+          const sliceHeightPx = pageHeightMM * pxPerMM;
+
+          let renderedHeight = 0;
+          let firstPage = true;
+
+          while (renderedHeight < canvas.height) {
+            const sliceCanvas = document.createElement('canvas');
+            sliceCanvas.width = canvas.width;
+            sliceCanvas.height = Math.min(sliceHeightPx, canvas.height - renderedHeight);
+            const ctx = sliceCanvas.getContext('2d');
+
+            ctx.drawImage(
+              canvas,
+              0, renderedHeight,                   // vùng nguồn Y
+              canvas.width, sliceCanvas.height,    // kích thước vùng nguồn
+              0, 0,                                // vị trí đích
+              canvas.width, sliceCanvas.height     // kích thước đích
+            );
+
+            const imgData = sliceCanvas.toDataURL('image/png');
+
+            if (!firstPage) pdf.addPage();
+            firstPage = false;
+
+            const sliceHeightMM = sliceCanvas.height / pxPerMM;
+            pdf.addImage(imgData, 'PNG', margin, margin, imgWidthMM, sliceHeightMM);
+
+            renderedHeight += sliceHeightPx;
+          }
+        }
+
+        // Nút xuất toàn bộ dashboard (biểu đồ + bảng + summary)
+        document.getElementById('exportPDF')?.addEventListener('click', async () => {
+          const { jsPDF } = window.jspdf;
+          const pdf = new jsPDF('p', 'mm', 'a4');
+
+          const container = document.querySelector('.dashboard-container');
+          if (!container) {
+            alert('Không tìm thấy phần dashboard để xuất.');
+            return;
+          }
+
+          await addElementAsPages(pdf, container, 8);
+          pdf.save('ThongKe_TraSua.pdf');
         });
     </script>
 </body>
