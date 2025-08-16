@@ -1,8 +1,8 @@
-using BE.models;
+﻿using BE.models;
 using Microsoft.AspNetCore.Mvc;
 using Repository.IRepository;
 
-namespace BE.Controllers
+namespace BE.Controllers// Hưng Repository cho tài khoản người dùng
 {
     [Route("api/[controller]")]
     [ApiController]

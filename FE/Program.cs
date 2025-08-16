@@ -26,6 +26,7 @@ builder.Services.AddScoped<ITaiKhoanVaiTroService, TaiKhoanVaiTroService>();
 builder.Services.AddScoped<ITaiKhoanService, TaiKhoanService>();
 
 builder.Services.AddScoped<ICartService, CartService>();
+builder.Services.AddScoped<IQuanLyVaiTroService, QuanLyVaiTroService>();
 
 
 

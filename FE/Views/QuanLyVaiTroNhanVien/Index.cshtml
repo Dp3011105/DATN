@@ -1,0 +1,446 @@
+﻿@{
+    Layout = "~/Views/Shared/_AdminLayout.cshtml";
+}
+@model FE.Models.QuanLyVaiTroViewModel
+@{
+    ViewData["Title"] = "Quản Lý Phân Quyền Vai Trò";
+}
+
+<link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+<link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500&display=swap" rel="stylesheet">
+
+<style>
+    .container {
+        font-family: 'Roboto', sans-serif;
+        max-width: 1400px;
+        margin-top: 20px;
+        background: rgba(255, 255, 255, 0.95); /* Nền trắng mờ để hòa hợp với gradient của layout */
+        border-radius: 10px;
+        padding: 20px;
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+        color: #1e3a8a; /* Chữ xanh đậm để tương phản */
+    }
+
+    h1, h2 {
+        color: #1e3a8a;
+        text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+    }
+
+    .nav-tabs .nav-link {
+        background: linear-gradient(180deg, #1e3a8a, #3b82f6); /* Gradient giống layout */
+        color: #ffffff;
+        border: none;
+        border-radius: 5px 5px 0 0;
+        transition: background 0.3s;
+    }
+
+        .nav-tabs .nav-link:hover {
+            background: linear-gradient(180deg, #2b4db9, #60a5fa); /* Gradient sáng hơn khi hover */
+            color: #ffffff;
+        }
+
+        .nav-tabs .nav-link.active {
+            background: #ffffff;
+            color: #1e3a8a;
+            border-bottom: 3px solid #3b82f6;
+        }
+
+    .table {
+        background-color: #ffffff;
+        border-radius: 8px;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    }
+
+        .table thead {
+            background: linear-gradient(180deg, #1e3a8a, #3b82f6);
+            color: #ffffff;
+        }
+
+        .table tbody tr:hover {
+            background-color: #e6f0ff; /* Màu hover nhẹ */
+        }
+
+    .btn-primary {
+        background: linear-gradient(180deg, #1e3a8a, #3b82f6);
+        border: none;
+        transition: background 0.3s;
+    }
+
+        .btn-primary:hover {
+            background: linear-gradient(180deg, #2b4db9, #60a5fa);
+        }
+
+    .btn-success {
+        background-color: #4caf50;
+        border-color: #4caf50;
+        transition: background-color 0.3s;
+    }
+
+        .btn-success:hover {
+            background-color: #43a047;
+            border-color: #43a047;
+        }
+
+    .btn-warning {
+        background-color: #ffb300;
+        border-color: #ffb300;
+        color: #ffffff;
+        transition: background-color 0.3s;
+    }
+
+        .btn-warning:hover {
+            background-color: #ffa000;
+            border-color: #ffa000;
+        }
+
+    .btn-secondary {
+        background-color: #6c757d;
+        border-color: #6c757d;
+        transition: background-color 0.3s;
+    }
+
+        .btn-secondary:hover {
+            background-color: #5a6268;
+            border-color: #5a6268;
+        }
+
+    .modal-content {
+        border-radius: 8px;
+        border: 1px solid #3b82f6;
+    }
+
+    .modal-header {
+        background: linear-gradient(180deg, #1e3a8a, #3b82f6);
+        color: #ffffff;
+        border-bottom: 1px solid #3b82f6;
+    }
+
+    .alert-info, .alert-danger {
+        border-radius: 8px;
+        margin-bottom: 20px;
+    }
+
+    .alert-info {
+        background-color: #e6f0ff;
+        border-color: #3b82f6;
+        color: #1e3a8a;
+    }
+
+    .alert-danger {
+        background-color: #ffebee;
+        border-color: #ef5350;
+        color: #b71c1c;
+    }
+
+    pre {
+        background-color: #f5f6f5;
+        padding: 10px;
+        border-radius: 5px;
+        color: #1e3a8a;
+        font-size: 0.9rem;
+    }
+
+    .search-container {
+        margin-bottom: 20px;
+    }
+
+        .search-container input {
+            border-radius: 5px;
+            border: 1px solid #3b82f6;
+            padding: 8px;
+            width: 100%;
+            max-width: 400px;
+            font-size: 0.95rem;
+        }
+
+            .search-container input:focus {
+                outline: none;
+                border-color: #1e3a8a;
+                box-shadow: 0 0 5px rgba(30, 58, 138, 0.5);
+            }
+
+    .no-results {
+        color: #b71c1c;
+        font-style: italic;
+    }
+</style>
+
+<div class="container">
+    <h1 class="text-center mb-4">Quản Lý Phân Quyền Vai Trò Người Dùng</h1>
+
+    <!-- Hiển thị thông báo lỗi hoặc log JSON -->
+    @if (ViewBag.ErrorMessage != null)
+    {
+        <div class="alert alert-danger" role="alert">
+            <strong>Lỗi:</strong> @ViewBag.ErrorMessage
+        </div>
+    }
+    @if (ViewBag.RequestLog != null)
+    {
+        <div class="alert alert-info" role="alert">
+            <strong>JSON gửi đi:</strong>
+            <pre>@ViewBag.RequestLog</pre>
+        </div>
+    }
+
+    <ul class="nav nav-tabs" id="myTab" role="tablist">
+        <li class="nav-item" role="presentation">
+            <a class="nav-link active" id="khong-vai-tro-tab" data-toggle="tab" href="#khong-vai-tro" role="tab" aria-controls="khong-vai-tro" aria-selected="true">Nhân Viên Chưa Có Vai Trò</a>
+        </li>
+        <li class="nav-item" role="presentation">
+            <a class="nav-link" id="co-vai-tro-tab" data-toggle="tab" href="#co-vai-tro" role="tab" aria-controls="co-vai-tro" aria-selected="false">Nhân Viên Đã Có Vai Trò</a>
+        </li>
+    </ul>
+
+    <div class="tab-content" id="myTabContent">
+        <div class="tab-pane fade show active" id="khong-vai-tro" role="tabpanel" aria-labelledby="khong-vai-tro-tab">
+            <h2 class="mt-4">Danh Sách Nhân Viên Chưa Có Vai Trò</h2>
+            <div class="search-container">
+                <input type="text" id="searchKhongVaiTro" class="form-control" placeholder="Tìm kiếm theo Tên Đăng Nhập, Email hoặc Họ Tên..." />
+            </div>
+            <table class="table table-striped table-bordered" id="tableKhongVaiTro">
+                <thead>
+                    <tr>
+                        <th>ID Tài Khoản</th>
+                        <th>Tên Đăng Nhập</th>
+                        <th>Email</th>
+                        <th>Họ Tên</th>
+                        <th>Số Điện Thoại</th>
+                        <th>Địa Chỉ</th>
+                        <th>Năm Sinh</th>
+                        <th>CCCD</th>
+                        <th>Hành Động</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @if (Model.NhanVienKhongVaiTro != null && Model.NhanVienKhongVaiTro.Any())
+                    {
+                        @foreach (var nv in Model.NhanVienKhongVaiTro)
+                        {
+                            <tr data-search="@nv.Ten_Dang_Nhap.ToLower() @nv.Email.ToLower() @nv.Ho_Ten.ToLower()">
+                                <td>@nv.ID_Tai_Khoan</td>
+                                <td>@nv.Ten_Dang_Nhap</td>
+                                <td>@nv.Email</td>
+                                <td>@nv.Ho_Ten</td>
+                                <td>@nv.So_Dien_Thoai</td>
+                                <td>@nv.Dia_Chi</td>
+                                <td>@nv.Nam_Sinh.ToString("dd/MM/yyyy")</td>
+                                <td>@nv.CCCD</td>
+                                <td>
+                                    <button class="btn btn-primary btn-sm" data-toggle="modal" data-target="#themVaiTroModal" onclick="loadThemVaiTro(@nv.ID_Tai_Khoan)">Thêm Vai Trò</button>
+                                </td>
+                            </tr>
+                        }
+                    }
+                    else
+                    {
+                        <tr><td colspan="9" class="text-center no-results">Không có dữ liệu</td></tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+        <div class="tab-pane fade" id="co-vai-tro" role="tabpanel" aria-labelledby="co-vai-tro-tab">
+            <h2 class="mt-4">Danh Sách Nhân Viên Đã Có Vai Trò</h2>
+            <div class="search-container">
+                <input type="text" id="searchCoVaiTro" class="form-control" placeholder="Tìm kiếm theo Tên Đăng Nhập, Email hoặc Họ Tên..." />
+            </div>
+            <table class="table table-striped table-bordered" id="tableCoVaiTro">
+                <thead>
+                    <tr>
+                        <th>ID Tài Khoản</th>
+                        <th>Tên Đăng Nhập</th>
+                        <th>Email</th>
+                        <th>Họ Tên</th>
+                        <th>Số Điện Thoại</th>
+                        <th>Địa Chỉ</th>
+                        <th>Năm Sinh</th>
+                        <th>CCCD</th>
+                        <th>Vai Trò Hiện Tại</th>
+                        <th>Hành Động</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @if (Model.NhanVienCoVaiTro != null && Model.NhanVienCoVaiTro.Any())
+                    {
+                        @foreach (var nv in Model.NhanVienCoVaiTro)
+                        {
+                            <tr data-search="@nv.Ten_Dang_Nhap.ToLower() @nv.Email.ToLower() @nv.Ho_Ten.ToLower()">
+                                <td>@nv.ID_Tai_Khoan</td>
+                                <td>@nv.Ten_Dang_Nhap</td>
+                                <td>@nv.Email</td>
+                                <td>@nv.Ho_Ten</td>
+                                <td>@nv.So_Dien_Thoai</td>
+                                <td>@nv.Dia_Chi</td>
+                                <td>@nv.Nam_Sinh.ToString("dd/MM/yyyy")</td>
+                                <td>@nv.CCCD</td>
+                                <td>
+                                    @if (nv.Vai_Tros != null && nv.Vai_Tros.Any())
+                                    {
+                                        @string.Join(", ", nv.Vai_Tros.Select(v => v.Ten_Vai_Tro))
+                                    }
+                                    else
+                                    {
+                                        <span class="text-muted">Không có vai trò</span>
+                                    }
+                                </td>
+                                <td>
+                                    <button class="btn btn-warning btn-sm"
+                                            data-toggle="modal"
+                                            data-target="#capNhatVaiTroModal"
+                                            onclick="loadCapNhatVaiTro(@nv.ID_Tai_Khoan, '@(nv.Vai_Tros != null && nv.Vai_Tros.Any() ? string.Join(",", nv.Vai_Tros.Select(v => v.ID_Vai_Tro)) : "")')">
+                                        Sửa Vai Trò
+                                    </button>
+                                </td>
+                            </tr>
+                        }
+                    }
+                    else
+                    {
+                        <tr><td colspan="10" class="text-center no-results">Không có dữ liệu</td></tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Modal Thêm Vai Trò -->
+    <div class="modal fade" id="themVaiTroModal" tabindex="-1" role="dialog" aria-labelledby="themVaiTroModalLabel" aria-hidden="true">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="themVaiTroModalLabel">Thêm Vai Trò Cho Nhân Viên</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <form asp-action="GanVaiTro" method="post">
+                        <input type="hidden" id="idTaiKhoanThem" name="idTaiKhoan" />
+                        <div class="form-group">
+                            <label class="font-weight-bold">Chọn Vai Trò:</label>
+                            @if (Model.VaiTros != null && Model.VaiTros.Any())
+                            {
+                                @foreach (var vt in Model.VaiTros)
+                                {
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="checkbox" name="danhSachVaiTro" value="@vt.ID_Vai_Tro" id="vt_them_@vt.ID_Vai_Tro" />
+                                        <label class="form-check-label" for="vt_them_@vt.ID_Vai_Tro">@vt.Ten_Vai_Tro</label>
+                                    </div>
+                                }
+                            }
+                            else
+                            {
+                                <p class="text-danger">Không có vai trò để chọn</p>
+                            }
+                        </div>
+                        <div class="text-right">
+                            <button type="button" class="btn btn-secondary btn-sm" data-dismiss="modal">Hủy</button>
+                            <button type="submit" class="btn btn-success btn-sm">Thêm</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Cập Nhật Vai Trò -->
+    <div class="modal fade" id="capNhatVaiTroModal" tabindex="-1" role="dialog" aria-labelledby="capNhatVaiTroModalLabel" aria-hidden="true">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="capNhatVaiTroModalLabel">Cập Nhật Vai Trò Cho Nhân Viên</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <form asp-action="CapNhatVaiTro" method="post">
+                        <input type="hidden" id="idTaiKhoanCapNhat" name="idTaiKhoan" />
+                        <div class="form-group">
+                            <label class="font-weight-bold">Chọn Vai Trò (Chọn để giữ/gán, bỏ chọn để hủy):</label>
+                            @if (Model.VaiTros != null && Model.VaiTros.Any())
+                            {
+                                @foreach (var vt in Model.VaiTros)
+                                {
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="checkbox" name="danhSachVaiTro" value="@vt.ID_Vai_Tro" id="vt_capnhat_@vt.ID_Vai_Tro" />
+                                        <label class="form-check-label" for="vt_capnhat_@vt.ID_Vai_Tro">@vt.Ten_Vai_Tro</label>
+                                    </div>
+                                }
+                            }
+                            else
+                            {
+                                <p class="text-danger">Không có vai trò để chọn</p>
+                            }
+                        </div>
+                        <div class="text-right">
+                            <button type="button" class="btn btn-secondary btn-sm" data-dismiss="modal">Hủy</button>
+                            <button type="submit" class="btn btn-success btn-sm">Cập Nhật</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@4.5.3/dist/js/bootstrap.bundle.min.js"></script>
+
+<script>
+    function loadThemVaiTro(id) {
+        document.getElementById('idTaiKhoanThem').value = id;
+        document.querySelectorAll('#themVaiTroModal input[type="checkbox"]').forEach(cb => cb.checked = false);
+    }
+
+    function loadCapNhatVaiTro(id, currentVaiTroIds) {
+        document.getElementById('idTaiKhoanCapNhat').value = id;
+        var ids = currentVaiTroIds ? currentVaiTroIds.split(',').filter(id => id !== '') : [];
+        document.querySelectorAll('#capNhatVaiTroModal input[type="checkbox"]').forEach(function (cb) {
+            cb.checked = ids.includes(cb.value);
+        });
+    }
+
+    // Tìm kiếm client-side
+    document.getElementById('searchKhongVaiTro').addEventListener('input', function () {
+        var searchTerm = this.value.toLowerCase();
+        var rows = document.querySelectorAll('#tableKhongVaiTro tbody tr');
+        var noResultsRow = document.querySelector('#tableKhongVaiTro .no-results');
+        var hasResults = false;
+
+        rows.forEach(function (row) {
+            var searchData = row.getAttribute('data-search');
+            if (searchData.includes(searchTerm)) {
+                row.style.display = '';
+                hasResults = true;
+            } else {
+                row.style.display = 'none';
+            }
+        });
+
+        if (noResultsRow) {
+            noResultsRow.style.display = hasResults ? 'none' : '';
+        }
+    });
+
+    document.getElementById('searchCoVaiTro').addEventListener('input', function () {
+        var searchTerm = this.value.toLowerCase();
+        var rows = document.querySelectorAll('#tableCoVaiTro tbody tr');
+        var noResultsRow = document.querySelector('#tableCoVaiTro .no-results');
+        var hasResults = false;
+
+        rows.forEach(function (row) {
+            var searchData = row.getAttribute('data-search');
+            if (searchData.includes(searchTerm)) {
+                row.style.display = '';
+                hasResults = true;
+            } else {
+                row.style.display = 'none';
+            }
+        });
+
+        if (noResultsRow) {
+            noResultsRow.style.display = hasResults ? 'none' : '';
+        }
+    });
+</script>
