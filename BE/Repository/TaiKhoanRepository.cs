@@ -1,11 +1,11 @@
-using BE.models;
+﻿using BE.models;
 using BE.Data;
 using Microsoft.EntityFrameworkCore;
 using Repository.IRepository;
 
 namespace Repository
 {
-    public class TaiKhoanRepository : ITaiKhoanRepository
+    public class TaiKhoanRepository : ITaiKhoanRepository// Hưng Repository cho tài khoản người dùng
     {
         private readonly MyDbContext _context;
 

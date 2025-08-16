@@ -116,8 +116,8 @@ namespace BE.Controllers
                 return BadRequest("Tên người dùng hoặc mật khẩu không đúng.");
             }
 
-            // Kiểm tra trạng thái tài khoản
-            if (!taiKhoan.Trang_Thai.GetValueOrDefault())
+            // Kiểm tra trạng thái tài khoản    
+            if (!taiKhoan.Trang_Thai)
             {
                 return BadRequest("Tài khoản đã bị khóa.");
             }

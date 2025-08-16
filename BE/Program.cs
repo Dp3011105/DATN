@@ -58,6 +58,8 @@ builder.Services.AddScoped<ISanPhamRepository, SanPhamRepository>();
 // Register Repositories chức năng đăng ký tài khoản 
 builder.Services.AddScoped<ICustomerRepository, CustomerRepository>();
 builder.Services.AddScoped<IAccountRepository, AccountRepository>();
+// Register chức năng ghép Tài khoản và Vai trò của nhân viên với nhau
+builder.Services.AddScoped<IQuanLyPhanQuyenNhanVienRepository, QuanLyPhanQuyenNhanVienRepository>();
 // Đăng ký EmailService
 builder.Services.AddSingleton<EmailService>();
 
