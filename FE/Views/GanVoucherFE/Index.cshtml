@@ -1,0 +1,796 @@
+﻿@model FE.Models.GanVoucherViewModel
+
+@{
+    Layout = "~/Views/Shared/_AdminLayout.cshtml";
+    ViewData["Title"] = "Gán Voucher Cho Khách Hàng";
+}
+
+<div class="container-fluid">
+    <div class="row">
+        <!-- Cột chính -->
+        <div class="col-md-8">
+            <div class="card">
+                <div class="card-header">
+                    <h3 class="card-title">@ViewData["Title"]</h3>
+                </div>
+
+                <!-- Hiển thị thông báo -->
+                @if (TempData["Result"] != null)
+                {
+                    <div class="alert alert-success alert-dismissible fade show" role="alert">
+                        <div class="d-flex align-items-start">
+                            <i class="fas fa-check-circle me-2 mt-1 text-success"></i>
+                            <div class="flex-grow-1">
+                                <strong>🎉 Kết quả gán voucher:</strong>
+                                <div class="result-content mt-2">
+                                    <pre style="white-space: pre-line; margin: 0; background: rgba(255,255,255,0.2); padding: 12px; border-radius: 6px; font-size: 14px; border-left: 4px solid #28a745;">@TempData["Result"]</pre>
+                                </div>
+                            </div>
+                        </div>
+                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                    </div>
+                }
+
+                @if (TempData["Warning"] != null)
+                {
+                    <div class="alert alert-warning alert-dismissible fade show" role="alert">
+                        <div class="d-flex align-items-start">
+                            <i class="fas fa-exclamation-triangle me-2 mt-1 text-warning"></i>
+                            <div class="flex-grow-1">
+                                <strong>⚠️ Cảnh báo:</strong>
+                                <div class="warning-content mt-2">
+                                    <pre style="white-space: pre-line; margin: 0; background: rgba(255,255,255,0.2); padding: 12px; border-radius: 6px; font-size: 14px; border-left: 4px solid #ffc107;">@TempData["Warning"]</pre>
+                                </div>
+                            </div>
+                        </div>
+                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                    </div>
+                }
+
+                @if (TempData["Error"] != null)
+                {
+                    <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                        <div class="d-flex align-items-start">
+                            <i class="fas fa-exclamation-triangle me-2 mt-1 text-danger"></i>
+                            <div class="flex-grow-1">
+                                <strong>❌ Có lỗi xảy ra:</strong>
+                                <div class="error-content mt-2">
+                                    <div class="error-message bg-white bg-opacity-25 p-3 rounded border-start border-danger border-4">
+                                        @{
+                                            var errorMessage = TempData["Error"].ToString();
+                                            if (errorMessage.Contains("An error occurred while saving the entity changes"))
+                                            {
+                                                <div class="mb-2">
+                                                    <strong>🔧 Lỗi lưu dữ liệu:</strong>
+                                                    <p class="mb-1 text-dark">Có lỗi xảy ra khi lưu thông tin gán voucher vào cơ sở dữ liệu.</p>
+                                                </div>
+                                                <details class="mt-2">
+                                                    <summary class="btn btn-sm btn-outline-secondary">📋 Chi tiết lỗi kỹ thuật</summary>
+                                                    <div class="mt-2 p-2 bg-light rounded">
+                                                        <code class="text-danger small">@errorMessage</code>
+                                                    </div>
+                                                </details>
+                                                <div class="mt-3">
+                                                    <strong>💡 Gợi ý khắc phục:</strong>
+                                                    <ul class="mb-0 small text-dark">
+                                                        <li>Kiểm tra kết nối cơ sở dữ liệu</li>
+                                                        <li>Đảm bảo voucher còn đủ số lượng</li>
+                                                        <li>Kiểm tra khách hàng có tồn tại không</li>
+                                                        <li>Thử lại với số lượng ít hơn</li>
+                                                    </ul>
+                                                </div>
+                                            }
+                                            else
+                                            {
+                                                <pre style="white-space: pre-line; margin: 0; font-size: 14px;">@errorMessage</pre>
+                                            }
+                                        }
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                    </div>
+                }
+
+                <div class="card-body">
+                    <form asp-action="GanVoucher" method="post" id="ganVoucherForm">
+                        <div class="row">
+                            <!-- Chọn khách hàng -->
+                            <div class="col-md-6">
+                                <div class="form-group mb-3">
+                                    <label for="ID_Khach_Hang">
+                                        <strong>Chọn Khách Hàng:</strong>
+                                        <small class="text-muted">(Ctrl+Click để chọn nhiều)</small>
+                                    </label>
+
+                                    <!-- Tìm kiếm khách hàng -->
+                                    <input type="text" id="searchCustomer" class="form-control mb-2"
+                                           placeholder="🔍 Tìm kiếm theo tên hoặc email..." />
+
+                                    <select asp-for="ID_Khach_Hang" id="customerSelect" class="form-control" multiple size="8" required>
+                                        @foreach (var kh in Model.KhachHangs)
+                                        {
+                                            <option value="@kh.ID_Khach_Hang" data-name="@(kh.Ho_Ten?.ToLower() ?? "")" data-email="@(kh.Email?.ToLower() ?? "")">
+                                                @kh.Ho_Ten (@(kh.Email ?? "Chưa có email"))
+                                            </option>
+                                        }
+                                    </select>
+                                    <small class="text-muted">
+                                        Đã chọn: <span id="selectedCustomers">0</span> khách hàng
+                                    </small>
+                                    <span asp-validation-for="ID_Khach_Hang" class="text-danger"></span>
+                                </div>
+                            </div>
+
+                            <!-- Chọn voucher -->
+                            <div class="col-md-6">
+                                <div class="form-group mb-3">
+                                    <label for="ID_Voucher">
+                                        <strong>Chọn Voucher:</strong>
+                                        <small class="text-muted">(Ctrl+Click để chọn nhiều)</small>
+                                    </label>
+
+                                    <!-- Tìm kiếm voucher -->
+                                    <input type="text" id="searchVoucher" class="form-control mb-2"
+                                           placeholder="🔍 Tìm kiếm voucher theo tên..." />
+
+                                    <select asp-for="ID_Voucher" id="voucherSelect" class="form-control" multiple size="8" required>
+                                        @foreach (var voucher in Model.Vouchers)
+                                        {
+                                            <option value="@voucher.ID_Voucher" data-name="@(voucher.Ten?.ToLower() ?? "")" data-quantity="@voucher.So_Luong">
+                                                @voucher.Ten - Còn: @voucher.So_Luong
+                                            </option>
+                                        }
+                                    </select>
+                                    <small class="text-muted">
+                                        Đã chọn: <span id="selectedVouchers">0</span> voucher
+                                    </small>
+                                    <span asp-validation-for="ID_Voucher" class="text-danger"></span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <!-- Số lượng -->
+                            <div class="col-md-6">
+                                <div class="form-group mb-3">
+                                    <label asp-for="SoLuong"><strong>Số Lượng:</strong></label>
+                                    <input asp-for="SoLuong" type="number" class="form-control"
+                                           min="1" max="1000" value="1" required />
+                                    <span asp-validation-for="SoLuong" class="text-danger"></span>
+                                </div>
+                            </div>
+
+                            <!-- Ghi chú -->
+                            <div class="col-md-6">
+                                <div class="form-group mb-3">
+                                    <label asp-for="GhiChu"><strong>Ghi Chú:</strong></label>
+                                    <textarea asp-for="GhiChu" class="form-control" rows="3"
+                                              placeholder="Nhập ghi chú (bắt buộc)" maxlength="500" required></textarea>
+                                    <span asp-validation-for="GhiChu" class="text-danger"></span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Nút thực hiện -->
+                        <div class="row">
+                            <div class="col-12">
+                                <div class="form-group text-center mb-3">
+                                    <button type="submit" class="btn btn-primary btn-lg me-2" id="btnSubmit">
+                                        <i class="fas fa-gift"></i> Gán Voucher
+                                    </button>
+                                    <button type="button" class="btn btn-secondary btn-lg" onclick="clearForm()">
+                                        <i class="fas fa-sync-alt"></i> Làm mới
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Thông tin tóm tắt -->
+                        <div class="row mt-3">
+                            <div class="col-12">
+                                <div class="alert alert-info">
+                                    <strong>Tóm tắt:</strong>
+                                    <ul class="mb-0">
+                                        <li>Số khách hàng được chọn: <span id="summaryCustomers">0</span></li>
+                                        <li>Số voucher được chọn: <span id="summaryVouchers">0</span></li>
+                                        <li>Tổng số lượt gán dự kiến: <span id="totalAssignments">0</span></li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- Cột Top 10 VIP -->
+        <div class="col-md-4">
+            <div class="card">
+                <div class="card-header bg-success text-white">
+                    <h4><i class="fas fa-crown"></i> Top 10 KH VIP</h4>
+                    <small>Nhiều đơn hoàn thành trong tuần</small>
+                </div>
+                <div class="card-body p-0">
+                    <!-- Nút chọn tất cả VIP -->
+                    <div class="p-3 border-bottom bg-light">
+                        <div class="d-flex gap-2">
+                            <button type="button" class="btn btn-sm btn-success flex-fill" onclick="selectAllVipCustomers()">
+                                <i class="fas fa-check-double"></i> Chọn tất cả VIP
+                            </button>
+                            <button type="button" class="btn btn-sm btn-outline-secondary flex-fill" onclick="clearVipSelection()">
+                                <i class="fas fa-times"></i> Bỏ chọn
+                            </button>
+                        </div>
+                    </div>
+
+                    @if (Model.TopVipKhachHangs != null && Model.TopVipKhachHangs.Any())
+                    {
+                        <div class="list-group list-group-flush">
+                            @for (int i = 0; i < Model.TopVipKhachHangs.Count; i++)
+                            {
+                                var kh = Model.TopVipKhachHangs[i];
+                                var rank = i + 1;
+                                var medal = rank == 1 ? "🥇" : rank == 2 ? "🥈" : rank == 3 ? "🥉" : $"#{rank}";
+
+                                <div class="list-group-item d-flex justify-content-between align-items-center vip-customer-item" data-customer-id="@kh.ID_Khach_Hang">
+                                    <div class="flex-grow-1">
+                                        <span class="me-2">@medal</span>
+                                        <strong>@(kh.Ho_Ten ?? "Chưa cập nhật")</strong>
+                                        <br>
+                                        <small class="text-muted">@(kh.Email ?? "Chưa có email")</small>
+                                    </div>
+                                    <div class="d-flex gap-1">
+                                        <button type="button" class="btn btn-sm btn-primary toggle-customer-btn"
+                                                onclick="toggleCustomerSelection(@kh.ID_Khach_Hang, '@kh.Ho_Ten')">
+                                            <i class="fas fa-plus"></i>
+                                        </button>
+                                    </div>
+                                </div>
+                            }
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="text-center p-3">
+                            <p class="text-muted">Không có dữ liệu KH VIP</p>
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script>
+    // Khai báo global function để có thể gọi từ onclick
+    var updateSelection;
+
+    $(document).ready(function() {
+        // Reset button về trạng thái ban đầu khi trang load
+        resetSubmitButton();
+
+        // Hàm reset button về trạng thái ban đầu
+        function resetSubmitButton() {
+            $('#btnSubmit').prop('disabled', false)
+                .html('<i class="fas fa-gift"></i> Gán Voucher');
+        }
+
+        // Hàm cập nhật số lượng đã chọn
+        updateSelection = function() {
+            var selectedCustomers = $('#customerSelect option:selected').length;
+            var selectedVouchers = $('#voucherSelect option:selected').length;
+
+            $('#selectedCustomers, #summaryCustomers').text(selectedCustomers);
+            $('#selectedVouchers, #summaryVouchers').text(selectedVouchers);
+            $('#totalAssignments').text(selectedCustomers * selectedVouchers);
+
+            // Cập nhật trạng thái button VIP
+            updateVipButtonStates();
+        };
+
+        // Cập nhật trạng thái các button VIP
+        function updateVipButtonStates() {
+            $('.vip-customer-item').each(function() {
+                var customerId = $(this).data('customer-id');
+                var $button = $(this).find('.toggle-customer-btn');
+                var isSelected = $('#customerSelect option[value="' + customerId + '"]').prop('selected');
+
+                if (isSelected) {
+                    $button.removeClass('btn-primary').addClass('btn-warning')
+                        .html('<i class="fas fa-check"></i>');
+                    $(this).addClass('bg-light');
+                } else {
+                    $button.removeClass('btn-warning').addClass('btn-primary')
+                        .html('<i class="fas fa-plus"></i>');
+                    $(this).removeClass('bg-light');
+                }
+            });
+        }
+
+        // Theo dõi thay đổi selection
+        $('#customerSelect, #voucherSelect').change(function() {
+            updateSelection();
+        });
+
+        // Khởi tạo ban đầu
+        updateSelection();
+
+        // Tìm kiếm khách hàng (real-time search)
+        $('#searchCustomer').on('input', function() {
+            var searchTerm = $(this).val().toLowerCase().trim();
+            var $customerSelect = $('#customerSelect');
+
+            if (searchTerm === '') {
+                $customerSelect.find('option').show();
+            } else {
+                $customerSelect.find('option').each(function() {
+                    var $option = $(this);
+                    var name = $option.data('name') || '';
+                    var email = $option.data('email') || '';
+
+                    if (name.includes(searchTerm) || email.includes(searchTerm)) {
+                        $option.show();
+                    } else {
+                        $option.hide();
+                    }
+                });
+            }
+            updateSelection();
+        });
+
+        // Tìm kiếm voucher theo tên (real-time search)
+        $('#searchVoucher').on('input', function() {
+            var searchTerm = $(this).val().toLowerCase().trim();
+            var $voucherSelect = $('#voucherSelect');
+
+            if (searchTerm === '') {
+                $voucherSelect.find('option').show();
+            } else {
+                $voucherSelect.find('option').each(function() {
+                    var $option = $(this);
+                    var name = $option.data('name') || '';
+
+                    if (name.includes(searchTerm)) {
+                        $option.show();
+                    } else {
+                        $option.hide();
+                    }
+                });
+            }
+            updateSelection();
+        });
+
+        // Select all text khi focus vào search box
+        $('#searchCustomer, #searchVoucher').on('focus', function() {
+            $(this).select();
+        });
+
+        // Xác nhận trước khi submit với validation tốt hơn
+        $('#ganVoucherForm').submit(function(e) {
+            var customerCount = $('#customerSelect option:selected').length;
+            var voucherCount = $('#voucherSelect option:selected').length;
+            var totalAssignments = customerCount * voucherCount;
+            var ghiChu = $('#GhiChu').val().trim();
+            var soLuong = parseInt($('#SoLuong').val()) || 1;
+
+            // Reset button trước khi validate
+            resetSubmitButton();
+
+            // Validation phía client với thông báo đẹp hơn
+            if (customerCount === 0) {
+                showToast('❌ Vui lòng chọn ít nhất một khách hàng!', 'error');
+                e.preventDefault();
+                return false;
+            }
+
+            if (voucherCount === 0) {
+                showToast('❌ Vui lòng chọn ít nhất một voucher!', 'error');
+                e.preventDefault();
+                return false;
+            }
+
+            if (ghiChu === '' || ghiChu.length < 5) {
+                showToast('❌ Ghi chú phải có ít nhất 5 ký tự!', 'error');
+                $('#GhiChu').focus();
+                e.preventDefault();
+                return false;
+            }
+
+            if (soLuong <= 0 || soLuong > 1000) {
+                showToast('❌ Số lượng phải từ 1 đến 1000!', 'error');
+                $('#SoLuong').focus();
+                e.preventDefault();
+                return false;
+            }
+
+            // Kiểm tra số lượng voucher có đủ không
+            var hasInsufficientStock = false;
+            $('#voucherSelect option:selected').each(function() {
+                var availableQuantity = parseInt($(this).data('quantity')) || 0;
+                var neededQuantity = customerCount * soLuong;
+
+                if (availableQuantity < neededQuantity) {
+                    hasInsufficientStock = true;
+                    showToast(`❌ Voucher "${$(this).text()}" không đủ số lượng! Còn: ${availableQuantity}, cần: ${neededQuantity}`, 'error');
+                }
+            });
+
+            if (hasInsufficientStock) {
+                e.preventDefault();
+                return false;
+            }
+
+            // Cảnh báo khi số lượng gán lớn
+            var totalOperations = totalAssignments * soLuong;
+            if (totalOperations > 100) {
+                if (!confirm(`⚠️ CẢNH BÁO: Bạn sắp thực hiện ${totalOperations} lượt gán voucher!\n\n• ${customerCount} khách hàng\n• ${voucherCount} loại voucher\n• ${soLuong} voucher/người\n• Tổng: ${totalOperations} voucher\n\n⏱️ Quá trình này có thể mất vài phút.\nBạn có chắc chắn muốn tiếp tục?`)) {
+                    e.preventDefault();
+                    return false;
+                }
+            } else if (totalOperations > 50) {
+                if (!confirm(`⚠️ Bạn sắp gán ${totalOperations} voucher.\n\nBạn có chắc chắn muốn tiếp tục?`)) {
+                    e.preventDefault();
+                    return false;
+                }
+            }
+
+            // Disable button và hiện loading với timeout
+            $('#btnSubmit').prop('disabled', true)
+                .html('<i class="fas fa-spinner fa-spin"></i> Đang xử lý... <span id="loading-counter">0</span>s');
+
+            // Counter cho thời gian loading
+            var loadingCounter = 0;
+            var loadingInterval = setInterval(function() {
+                loadingCounter++;
+                $('#loading-counter').text(loadingCounter);
+
+                if (loadingCounter >= 30) {
+                    showToast('⚠️ Quá trình đang mất nhiều thời gian hơn bình thường...', 'warning');
+                }
+
+                if (loadingCounter >= 60) {
+                    clearInterval(loadingInterval);
+                    showToast('❌ Timeout: Quá trình mất quá nhiều thời gian. Vui lòng kiểm tra kết quả và thử lại nếu cần.', 'error');
+                }
+            }, 1000);
+
+            $(this).data('loadingInterval', loadingInterval);
+
+            showToast(`🚀 Bắt đầu gán ${totalOperations} voucher...`, 'info');
+            return true;
+        });
+
+        // Reset button nếu có lỗi từ server
+    @if (TempData["Error"] != null || TempData["Warning"] != null)
+    {
+        <text>
+                setTimeout(function() {
+                    resetSubmitButton();
+                }, 100);
+        </text>
+    }
+    });
+
+    // Toggle chọn/bỏ chọn khách hàng từ VIP list
+    function toggleCustomerSelection(customerId, customerName) {
+        var $customerSelect = $('#customerSelect');
+        var $option = $customerSelect.find(`option[value="${customerId}"]`);
+
+        if ($option.length > 0) {
+            var isCurrentlySelected = $option.prop('selected');
+
+            // Toggle selection
+            $option.prop('selected', !isCurrentlySelected);
+
+            // Trigger change event để update counters
+            $customerSelect.trigger('change');
+
+            // Show notification
+            var message = isCurrentlySelected
+                ? `✅ Đã bỏ chọn: ${customerName}`
+                : `✅ Đã chọn: ${customerName}`;
+
+            showToast(message);
+        } else {
+            showToast(`❌ Không tìm thấy khách hàng: ${customerName}`, 'error');
+        }
+    }
+
+    // Chọn tất cả khách hàng VIP
+    function selectAllVipCustomers() {
+        var selectedCount = 0;
+        var totalVip = 0;
+
+        $('.vip-customer-item').each(function() {
+            var customerId = $(this).data('customer-id');
+            var $option = $('#customerSelect option[value="' + customerId + '"]');
+
+            if ($option.length > 0) {
+                totalVip++;
+                if (!$option.prop('selected')) {
+                    $option.prop('selected', true);
+                    selectedCount++;
+                }
+            }
+        });
+
+        // Trigger change event
+        $('#customerSelect').trigger('change');
+
+        if (selectedCount > 0) {
+            showToast(`✅ Đã chọn ${selectedCount}/${totalVip} khách hàng VIP`, 'success');
+        } else {
+            showToast(`ℹ️ Tất cả ${totalVip} khách hàng VIP đã được chọn`, 'info');
+        }
+    }
+
+    // Bỏ chọn tất cả khách hàng VIP
+    function clearVipSelection() {
+        var deselectedCount = 0;
+
+        $('.vip-customer-item').each(function() {
+            var customerId = $(this).data('customer-id');
+            var $option = $('#customerSelect option[value="' + customerId + '"]');
+
+            if ($option.length > 0 && $option.prop('selected')) {
+                $option.prop('selected', false);
+                deselectedCount++;
+            }
+        });
+
+        // Trigger change event
+        $('#customerSelect').trigger('change');
+
+        if (deselectedCount > 0) {
+            showToast(`✅ Đã bỏ chọn ${deselectedCount} khách hàng VIP`, 'success');
+        } else {
+            showToast('ℹ️ Không có khách hàng VIP nào được chọn', 'info');
+        }
+    }
+
+    // Hàm làm mới form - Reset tất cả (Global function)
+    function clearForm() {
+        // Bỏ chọn tất cả selections
+        $('#customerSelect').val([]);
+        $('#voucherSelect').val([]);
+
+        // Reset form inputs
+        $('#SoLuong').val(1);
+        $('#GhiChu').val('');
+
+        // Clear search boxes
+        $('#searchCustomer').val('');
+        $('#searchVoucher').val('');
+
+        // Hiện lại tất cả options (remove filter)
+        $('#customerSelect option, #voucherSelect option').show();
+
+        // Cập nhật counters
+        if (typeof updateSelection === 'function') {
+            updateSelection();
+        }
+
+        // Re-enable submit button nếu đang disabled
+        $('#btnSubmit').prop('disabled', false)
+            .html('<i class="fas fa-gift"></i> Gán Voucher');
+
+        showToast('✅ Form đã được làm mới!', 'success');
+    }
+
+    // Hàm hiển thị toast notification
+    function showToast(message, type = 'success') {
+        // Remove existing toasts
+        $('.custom-toast').remove();
+
+        var alertClass = 'alert-success';
+        if (type === 'error') alertClass = 'alert-danger';
+        else if (type === 'info') alertClass = 'alert-info';
+        else if (type === 'warning') alertClass = 'alert-warning';
+
+        var toast = $(`
+            <div class="alert ${alertClass} alert-dismissible fade show custom-toast" role="alert" style="position: fixed; top: 20px; right: 20px; z-index: 9999; min-width: 300px;">
+                ${message}
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+        `);
+
+        $('body').append(toast);
+
+        // Auto remove after 3 seconds
+        setTimeout(function() {
+            toast.fadeOut('slow', function() {
+                $(this).remove();
+            });
+        }, 3000);
+    }
+
+    // Auto dismiss alerts sau 10 giây
+    setTimeout(function() {
+        $('.alert').not('.custom-toast').fadeOut('slow');
+    }, 10000);
+</script>
+
+<style>
+    .form-control[multiple] {
+        height: auto;
+    }
+
+    /* Improved alert styling */
+    .alert {
+        border-radius: 12px;
+        border: none;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        margin-bottom: 20px;
+    }
+
+    .alert-success {
+        background: linear-gradient(135deg, #d4edda 0%, #c3e6cb 100%);
+        border-left: 5px solid #28a745;
+    }
+
+    .alert-warning {
+        background: linear-gradient(135deg, #fff3cd 0%, #ffeeba 100%);
+        border-left: 5px solid #ffc107;
+    }
+
+    .alert-danger {
+        background: linear-gradient(135deg, #f8d7da 0%, #f5c6cb 100%);
+        border-left: 5px solid #dc3545;
+    }
+
+    .alert .fas {
+        font-size: 1.2em;
+    }
+
+    .error-content, .result-content, .warning-content {
+        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    }
+
+    details summary {
+        cursor: pointer;
+        user-select: none;
+    }
+
+        details summary:hover {
+            background-color: rgba(0,0,0,0.05);
+        }
+
+    .result-content pre, .warning-content pre {
+        font-family: 'Courier New', Consolas, monospace;
+        line-height: 1.4;
+    }
+
+    .result-content pre {
+        color: #155724;
+    }
+
+    .warning-content pre {
+        color: #856404;
+    }
+
+    .error-message {
+        line-height: 1.5;
+    }
+
+        .error-message code {
+            word-break: break-all;
+            white-space: pre-wrap;
+        }
+
+    .card-header {
+        background: linear-gradient(45deg, #007bff, #0056b3);
+        color: white;
+    }
+
+    select[multiple] option:hover {
+        background-color: #007bff !important;
+        color: white !important;
+    }
+
+    select[multiple] option:hidden,
+    select[multiple] option[style*="display: none"] {
+        display: none !important;
+    }
+
+    #searchCustomer, #searchVoucher {
+        border: 2px solid #e9ecef;
+        transition: all 0.3s ease;
+        font-size: 14px;
+    }
+
+        #searchCustomer:focus, #searchVoucher:focus {
+            border-color: #007bff;
+            box-shadow: 0 0 0 0.2rem rgba(0,123,255,.25);
+            outline: none;
+        }
+
+        #searchCustomer::placeholder, #searchVoucher::placeholder {
+            color: #6c757d;
+            font-style: italic;
+        }
+
+    .btn-lg {
+        padding: 10px 20px;
+        font-size: 16px;
+        border-radius: 8px;
+        transition: all 0.3s ease;
+    }
+
+    .btn-primary:hover {
+        background-color: #0056b3;
+        transform: translateY(-2px);
+    }
+
+    .btn-secondary:hover {
+        background-color: #5a6268;
+        transform: translateY(-2px);
+    }
+
+    .list-group-item:hover {
+        background-color: #f8f9fa;
+    }
+
+    select[multiple] {
+        height: 200px;
+    }
+
+    /* VIP Customer styling */
+    .vip-customer-item {
+        transition: all 0.3s ease;
+    }
+
+        .vip-customer-item.bg-light {
+            background-color: #e7f3ff !important;
+            border-left: 4px solid #007bff;
+        }
+
+    .toggle-customer-btn {
+        transition: all 0.2s ease;
+        min-width: 35px;
+    }
+
+        .toggle-customer-btn:hover {
+            transform: scale(1.1);
+        }
+
+    /* Custom toast styling */
+    .custom-toast {
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        border-radius: 8px;
+    }
+
+    /* Responsive cho mobile */
+    @@media (max-width: 768px) {
+        .col-md-6
+
+    {
+        width: 100%;
+        margin-bottom: 10px;
+    }
+
+    select[multiple] {
+        height: 150px !important;
+    }
+
+    .custom-toast {
+        position: fixed !important;
+        top: 10px !important;
+        left: 10px !important;
+        right: 10px !important;
+        min-width: auto !important;
+    }
+
+    .d-flex.gap-2 {
+        flex-direction: column;
+        gap: 0.5rem !important;
+    }
+
+    .flex-fill {
+        width: 100% !important;
+    }
+
+    }
+</style>
