@@ -1,398 +1,217 @@
 ﻿@using FE.Controllers
 @model QuanLyDonHangViewModel
+@{
+    ViewData["Title"] = "Quản lý đơn hàng";
+}
 
-<link href="~/css/HoaDon.css" rel="stylesheet" />
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" />
+<style>
+    .search-row { display:flex; gap:.5rem; align-items:center; margin-bottom:1rem; }
+    .tab-filter .btn { margin-right:.5rem; margin-bottom:.5rem; }
+    .badge-status { font-weight:600; }
+    .badge.Chờ\ xác\ nhận { background:#fff3cd; color:#664d03; } /* yellow */
+    .badge.Chờ\ giao { background:#cfe2ff; color:#084298; }     /* blue */
+    .badge.Vận\ chuyển { background:#cff4fc; color:#055160; }  /* cyan */
+    .badge.Hoàn\ thành { background:#d1e7dd; color:#0f5132; }  /* green */
+    .badge.Đã\ huỷ { background:#f8d7da; color:#842029; }      /* red */
+    .table thead th { white-space:nowrap; }
+</style>
 
-<div class="container-fluid">
-    <h2 class="text-xl font-semibold mb-4">Quản lý đơn hàng</h2>
+<div class="container-fluid py-3">
+    <h3 class="mb-3">Quản lý đơn hàng</h3>
 
-    <!-- Ô tìm kiếm và nút tải lại -->
     <div class="search-row">
-        <input id="tuKhoa" type="text" placeholder="Tìm kiếm theo tên khách hàng hoặc mã đơn..." value="@Model.TuKhoa" />
-        <button id="btnTaiLai" onclick="taiLai()">Tải lại</button>
+        <input id="tuKhoa" class="form-control" style="max-width:360px" placeholder="Tìm theo mã đơn hoặc tên khách..." value="@Model.TuKhoa" />
+        <button class="btn btn-secondary" onclick="taiLai()">Tải lại</button>
     </div>
 
-    <!-- Tabs lọc theo trạng thái -->
-    <div class="tabs">
-        @foreach (var trangThaiItem in Model.TrangThaiList)
+    <div class="tab-filter mb-2">
+        @foreach (var t in Model.TrangThaiList)
         {
-            <button class="tab-btn @(Model.TrangThai == trangThaiItem ? "active" : "")"
-                    onclick="locTheoTrangThai('@trangThaiItem')">
-                @trangThaiItem
-            </button>
+            var active = (t == Model.TrangThai) ? "btn-primary" : "btn-outline-primary";
+            <button class="btn @active" onclick="chonTrangThai('@t')">@t</button>
         }
     </div>
 
-    <!-- Loading indicator -->
-    <div id="loading" class="text-center py-4" style="display: none;">
-        <div class="spinner-border" role="status">
-            <span class="sr-only">Đang tải...</span>
-        </div>
-    </div>
-
-    <!-- Bảng danh sách hóa đơn -->
     <div class="table-responsive">
-        <table class="table table-auto w-full text-sm">
+        <table class="table table-hover align-middle">
             <thead>
-                <tr class="bg-gray-100">
-                    <th class="p-2">#</th>
-                    <th class="p-2">Mã đơn</th>
-                    <th class="p-2">Tổng tiền</th>
-                    <th class="p-2">Khách hàng</th>
-                    <th class="p-2">Ngày tạo</th>
-                    <th class="p-2">Hình thức TT</th>
-                    <th class="p-2">Trạng thái</th>
-                    <th class="p-2">Hành động</th>
+                <tr>
+                    <th>Mã đơn</th>
+                    <th>Khách hàng</th>
+                    <th>Ngày tạo</th>
+                    <th>Thanh toán</th>
+                    <th>Tổng tiền</th>
+                    <th>Trạng thái</th>
+                    <th style="width:220px">Thao tác</th>
                 </tr>
             </thead>
-            <tbody id="tableBody">
-                @if (Model.DanhSachHoaDon?.Any() == true)
-                {
-                    var stt = 1;
-                    foreach (var hoaDon in Model.DanhSachHoaDon)
-                    {
-                        <tr class="border-b">
-                            <td class="p-2">@stt</td>
-                            <td class="p-2">@(hoaDon.Ma_Hoa_Don ?? hoaDon.ID_Hoa_Don.ToString().Substring(0, Math.Min(8, hoaDon.ID_Hoa_Don.ToString().Length)))</td>
-                            <td class="p-2">@hoaDon.Tong_Tien.ToString("N0") đ</td>
-                            <td class="p-2">@(string.IsNullOrWhiteSpace(hoaDon.KhachHang?.Ho_Ten) ? "Khách lẻ" : hoaDon.KhachHang.Ho_Ten)</td>
-                            <td class="p-2">@hoaDon.Ngay_Tao.ToString("dd/MM/yyyy HH:mm")</td>
-                            <td class="p-2">@(hoaDon.HinhThucThanhToan?.Phuong_Thuc_Thanh_Toan ?? "N/A")</td>
-                            <td class="p-2">
-                                <span class="badge @(GetBadgeClass(hoaDon.Trang_Thai))">
-                                    @GetDisplayStatus(hoaDon.Trang_Thai)
-                                </span>
-                            </td>
-                            <td class="p-2 space-x-1">
-                                @{
-                                    var displayStatus = GetDisplayStatus(hoaDon.Trang_Thai);
-                                }
-                                @if (displayStatus == "Chờ xác nhận")
-                                {
-                                    <button onclick="capNhatTrangThai(@hoaDon.ID_Hoa_Don, 'Chờ giao')" class="btn-action">Xác nhận</button>
-                                    <button onclick="huyDon(@hoaDon.ID_Hoa_Don)" class="btn-danger">Huỷ đơn</button>
-                                }
-                                else if (displayStatus == "Chờ giao")
-                                {
-                                    <button onclick="capNhatTrangThai(@hoaDon.ID_Hoa_Don, 'Vận chuyển')" class="btn-action">Giao hàng</button>
-                                    <button onclick="huyDon(@hoaDon.ID_Hoa_Don)" class="btn-danger">Huỷ đơn</button>
-                                }
-                                else if (displayStatus == "Vận chuyển")
-                                {
-                                    <button onclick="capNhatTrangThai(@hoaDon.ID_Hoa_Don, 'Đã giao')" class="btn-action">Đã giao</button>
-                                }
-                                else if (displayStatus == "Đã giao")
-                                {
-                                    <button onclick="capNhatTrangThai(@hoaDon.ID_Hoa_Don, 'Đã thanh toán')" class="btn-action">Thanh toán</button>
-                                }
-                                else if (displayStatus == "Đã thanh toán")
-                                {
-                                    <button onclick="capNhatTrangThai(@hoaDon.ID_Hoa_Don, 'Hoàn thành')" class="btn-action">Hoàn thành</button>
-                                }
-                                else if (displayStatus == "Hoàn thành")
-                                {
-                                    <a href="@Url.Action("ChiTiet", new { id = hoaDon.ID_Hoa_Don })" class="btn-view">Xem</a>
-                                }
-                                else if (displayStatus == "Đã huỷ")
-                                {
-                                    <span class="text-red-500 italic">Đã huỷ</span>
-                                }
-                                else
-                                {
-                                    <span class="text-gray-400 italic">---</span>
-                                }
-                            </td>
-                        </tr>
-                        stt++;
-                    }
-                }
-                else
-                {
-                    <tr>
-                        <td colspan="8" class="text-center text-gray-500 p-4">Chưa có dữ liệu</td>
-                    </tr>
-                }
+            <tbody id="tbody-ds">
+                <!-- JS fill -->
             </tbody>
         </table>
     </div>
 </div>
 
-<!-- Modal xác nhận hủy đơn -->
-<div class="modal fade" id="huyDonModal" tabindex="-1">
+<!-- Modal nhập lý do hủy -->
+<div class="modal fade" id="modalHuy" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog">
         <div class="modal-content">
             <div class="modal-header">
-                <h5 class="modal-title">Xác nhận hủy đơn</h5>
+                <h5 class="modal-title">Hủy đơn hàng</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
             <div class="modal-body">
-                <p>Bạn có chắc muốn hủy đơn hàng này không?</p>
-                <div class="mb-3">
-                    <label class="form-label">Lý do hủy:</label>
-                    <textarea id="lyDoHuy" class="form-control" rows="3" placeholder="Nhập lý do hủy đơn..."></textarea>
+                <input type="hidden" id="huy-id" />
+                <div class="mb-2">
+                    <label class="form-label">Lý do hủy</label>
+                    <textarea class="form-control" id="huy-lydo" rows="3" placeholder="Nhập lý do hủy (tuỳ chọn)"></textarea>
                 </div>
+                <div class="text-muted small">Hệ thống sẽ ghi nhận lý do (nếu có) kèm lịch sử trạng thái.</div>
             </div>
             <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
-                <button type="button" class="btn btn-danger" onclick="xacNhanHuyDon()">Xác nhận hủy</button>
+                <button class="btn btn-secondary" data-bs-dismiss="modal">Đóng</button>
+                <button class="btn btn-danger" onclick="xacNhanHuy()">Xác nhận hủy</button>
             </div>
         </div>
     </div>
 </div>
 
-@functions {
-    private string GetBadgeClass(string status)
-    {
-        return status switch
-        {
-            "Hoan_Thanh" => "badge-purple",
-            "Chua_Xac_Nhan" => "badge-blue",
-            "Da_Xac_Nhan" => "badge-orange",
-            "Dang_Giao_Hang" => "badge-blue",
-            "Do_Hang_Co_Van_De" => "badge-yellow",
-            "Huy_Don" => "badge-red",
-            _ => "badge-gray"
-        };
-    }
-
-    private string GetDisplayStatus(string status)
-    {
-        return status switch
-        {
-            "Chua_Xac_Nhan" => "Chờ xác nhận",
-            "Da_Xac_Nhan" => "Chờ giao",
-            "Dang_Giao_Hang" => "Vận chuyển",
-            "Hoan_Thanh" => "Hoàn thành",
-            "Do_Hang_Co_Van_De" => "Có vấn đề",
-            "Huy_Don" => "Đã huỷ",
-            _ => status
-        };
-    }
-}
-
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 <script>
-    let currentHoaDonId = null;
-    let currentTrangThai = '@Model.TrangThai';
+    const apiListUrl = '/QuanLyDonHang/GetDanhSach';
+    const apiUpdateUrl = '/QuanLyDonHang/CapNhatTrangThaiLight';
+    const apiCancelUrl = '/QuanLyDonHang/HuyDonLight';
 
-    // Debounce function cho search
-    function debounce(func, wait) {
-        let timeout;
-        return function executedFunction(...args) {
-            const later = () => {
-                clearTimeout(timeout);
-                func(...args);
-            };
-            clearTimeout(timeout);
-            timeout = setTimeout(later, wait);
-        };
+    function getTrangThai() {
+        const active = document.querySelector('.tab-filter .btn.btn-primary');
+        return active ? active.textContent.trim() : 'TẤT CẢ';
     }
 
-    // Tìm kiếm với debounce
-    const debouncedSearch = debounce(() => {
-        taiLai();
-    }, 500);
-
-    // Event listener cho ô tìm kiếm
-    document.getElementById('tuKhoa').addEventListener('input', debouncedSearch);
-
-    // Tải lại dữ liệu
-    async function taiLai() {
-        const tuKhoa = document.getElementById('tuKhoa').value;
-        showLoading(true);
-
-        try {
-            const response = await fetch(`@Url.Action("GetDanhSach")?tuKhoa=${encodeURIComponent(tuKhoa)}&trangThai=${encodeURIComponent(currentTrangThai)}`);
-            const result = await response.json();
-
-            if (result.success) {
-                renderTable(result.data);
-            } else {
-                showNotification('Lỗi khi tải dữ liệu: ' + result.message, 'error');
-            }
-        } catch (error) {
-            showNotification('Lỗi kết nối: ' + error.message, 'error');
-        } finally {
-            showLoading(false);
-        }
-    }
-
-    // Lọc theo trạng thái
-    async function locTheoTrangThai(trangThai) {
-        currentTrangThai = trangThai;
-
-        // Cập nhật active tab
-        document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
-        event.target.classList.add('active');
-
-        await taiLai();
-    }
-
-    // Render bảng
-    function renderTable(data) {
-        const tableBody = document.getElementById('tableBody');
-
-        if (!data || data.length === 0) {
-            tableBody.innerHTML = `
-                <tr>
-                    <td colspan="8" class="text-center text-gray-500 p-4">Chưa có dữ liệu</td>
-                </tr>
-            `;
-            return;
-        }
-
-        let html = '';
-        data.forEach((hoaDon, index) => {
-            const actionButtons = getActionButtons(hoaDon);
-            html += `
-                <tr class="border-b">
-                    <td class="p-2">${index + 1}</td>
-                    <td class="p-2">${hoaDon.ma_Hoa_Don || hoaDon.iD_Hoa_Don.toString().substring(0, 8)}</td>
-                    <td class="p-2">${Number(hoaDon.tong_Tien).toLocaleString()} đ</td>
-                    <td class="p-2">${hoaDon.khachHang || 'Khách lẻ'}</td>
-                    <td class="p-2">${hoaDon.ngay_Tao}</td>
-                    <td class="p-2">${hoaDon.hinhThucThanhToan || 'N/A'}</td>
-                    <td class="p-2">
-                        <span class="badge ${getBadgeClass(hoaDon.trang_Thai)}">${hoaDon.trangThaiHienThi}</span>
-                    </td>
-                    <td class="p-2 space-x-1">${actionButtons}</td>
-                </tr>
-            `;
+    function chonTrangThai(tt) {
+        document.querySelectorAll('.tab-filter .btn').forEach(b => b.classList.remove('btn-primary','btn-outline-primary'));
+        document.querySelectorAll('.tab-filter .btn').forEach(b => {
+            if (b.textContent.trim() === tt) b.classList.add('btn-primary');
+            else b.classList.add('btn-outline-primary');
         });
-
-        tableBody.innerHTML = html;
+        loadData();
     }
 
-    // Lấy buttons action theo trạng thái
-    function getActionButtons(hoaDon) {
-        const status = hoaDon.trangThaiHienThi;
-        const id = hoaDon.iD_Hoa_Don;
-
-        switch (status) {
-            case 'Chờ xác nhận':
-                return `
-                    <button onclick="capNhatTrangThai(${id}, 'Chờ giao')" class="btn-action">Xác nhận</button>
-                    <button onclick="huyDon(${id})" class="btn-danger">Huỷ đơn</button>
-                `;
-            case 'Chờ giao':
-                return `
-                    <button onclick="capNhatTrangThai(${id}, 'Vận chuyển')" class="btn-action">Giao hàng</button>
-                    <button onclick="huyDon(${id})" class="btn-danger">Huỷ đơn</button>
-                `;
-            case 'Vận chuyển':
-                return `<button onclick="capNhatTrangThai(${id}, 'Đã giao')" class="btn-action">Đã giao</button>`;
-            case 'Đã giao':
-                return `<button onclick="capNhatTrangThai(${id}, 'Đã thanh toán')" class="btn-action">Thanh toán</button>`;
-            case 'Đã thanh toán':
-                return `<button onclick="capNhatTrangThai(${id}, 'Hoàn thành')" class="btn-action">Hoàn thành</button>`;
-            case 'Hoàn thành':
-                return `<a href="@Url.Action("ChiTiet")/${id}" class="btn-view">Xem</a>`;
-            case 'Đã huỷ':
-                return `<span class="text-red-500 italic">Đã huỷ</span>`;
-            default:
-                return `<span class="text-gray-400 italic">---</span>`;
-        }
+    function taiLai() {
+        document.getElementById('tuKhoa').value = '';
+        chonTrangThai('TẤT CẢ');
     }
 
-    // Lấy class badge
-    function getBadgeClass(status) {
-        switch (status) {
-            case 'Hoan_Thanh': return 'badge-purple';
-            case 'Chua_Xac_Nhan': return 'badge-blue';
-            case 'Da_Xac_Nhan': return 'badge-orange';
-            case 'Dang_Giao_Hang': return 'badge-blue';
-            case 'Do_Hang_Co_Van_De': return 'badge-yellow';
-            case 'Huy_Don': return 'badge-red';
-            default: return 'badge-gray';
-        }
-    }
-
-    // Cập nhật trạng thái
-    async function capNhatTrangThai(hoaDonId, trangThaiMoi) {
-        if (!confirm(`Bạn có chắc muốn chuyển trạng thái thành "${trangThaiMoi}"?`)) {
+    async function loadData() {
+        const tuKhoa = document.getElementById('tuKhoa').value || '';
+        const trangThai = getTrangThai();
+        const url = `${apiListUrl}?tuKhoa=${encodeURIComponent(tuKhoa)}&trangThai=${encodeURIComponent(trangThai)}`;
+        const res = await fetch(url);
+        const js = await res.json();
+        const tbody = document.getElementById('tbody-ds');
+        tbody.innerHTML = '';
+        if (!js.success) {
+            tbody.innerHTML = `<tr><td colspan="7" class="text-danger">${js.message || 'Không tải được dữ liệu'}</td></tr>`;
             return;
         }
-
-        try {
-            const response = await fetch('@Url.Action("CapNhatTrangThai")', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({
-                    hoaDonId: hoaDonId,
-                    trangThaiMoi: trangThaiMoi
-                })
-            });
-
-            const result = await response.json();
-
-            if (result.success) {
-                showNotification('Cập nhật trạng thái thành công!', 'success');
-                await taiLai();
-            } else {
-                showNotification('Lỗi: ' + result.message, 'error');
-            }
-        } catch (error) {
-            showNotification('Lỗi kết nối: ' + error.message, 'error');
+        if (!js.data || js.data.length === 0) {
+            tbody.innerHTML = `<tr><td colspan="7" class="text-muted">Không có dữ liệu</td></tr>`;
+            return;
         }
+        js.data.forEach(row => {
+            const tr = document.createElement('tr');
+
+            const badge = `<span class="badge badge-status ${row.TrangThaiHienThi}">${row.TrangThaiHienThi}</span>`;
+            const detailUrl = `/QuanLyDonHang/ChiTiet/${row.ID_Hoa_Don}`;
+
+            // Gợi ý action theo trạng thái
+            const actions = buildActions(row);
+
+            tr.innerHTML = `
+                <td><a href="${detailUrl}" class="text-decoration-none fw-semibold">${row.Ma_Hoa_Don}</a></td>
+                <td>${row.KhachHang}</td>
+                <td>${row.Ngay_Tao}</td>
+                <td>${row.HinhThucThanhToan}</td>
+                <td>${formatVND(row.Tong_Tien)}</td>
+                <td>${badge}</td>
+                <td>${actions}</td>
+            `;
+            tbody.appendChild(tr);
+        });
     }
 
-    // Hủy đơn
-    function huyDon(hoaDonId) {
-        currentHoaDonId = hoaDonId;
-        $('#huyDonModal').modal('show');
-    }
+    function buildActions(row) {
+        const id = row.ID_Hoa_Don;
+        const detailBtn = `<a class="btn btn-sm btn-outline-secondary me-1" href="/QuanLyDonHang/ChiTiet/${id}">Chi tiết</a>`;
+        let confirmBtn = '';
+        let shipBtn = '';
+        let doneBtn = '';
 
-    // Xác nhận hủy đơn
-    async function xacNhanHuyDon() {
-        const lyDoHuy = document.getElementById('lyDoHuy').value;
-
-        try {
-            const response = await fetch('@Url.Action("HuyDon")', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({
-                    hoaDonId: currentHoaDonId,
-                    lyDoHuy: lyDoHuy
-                })
-            });
-
-            const result = await response.json();
-
-            if (result.success) {
-                showNotification('Hủy đơn thành công!', 'success');
-                $('#huyDonModal').modal('hide');
-                document.getElementById('lyDoHuy').value = '';
-                await taiLai();
-            } else {
-                showNotification('Lỗi: ' + result.message, 'error');
-            }
-        } catch (error) {
-            showNotification('Lỗi kết nối: ' + error.message, 'error');
+        // chuyển máy trạng thái "nhẹ": Chờ xác nhận -> Chờ giao -> Vận chuyển -> Hoàn thành
+        if (row.TrangThaiHienThi === 'Chờ xác nhận') {
+            confirmBtn = `<button class="btn btn-sm btn-primary me-1" onclick="capNhat(${id}, 'Chờ giao')">Xác nhận</button>`;
         }
+        if (row.TrangThaiHienThi === 'Chờ giao') {
+            shipBtn = `<button class="btn btn-sm btn-info me-1" onclick="capNhat(${id}, 'Vận chuyển')">Giao hàng</button>`;
+        }
+        if (row.TrangThaiHienThi === 'Vận chuyển') {
+            doneBtn = `<button class="btn btn-sm btn-success me-1" onclick="capNhat(${id}, 'Hoàn thành')">Hoàn thành</button>`;
+        }
+
+        const cancelBtn = (row.TrangThaiHienThi === 'Hoàn thành' || row.TrangThaiHienThi === 'Đã huỷ')
+            ? ''
+            : `<button class="btn btn-sm btn-outline-danger" onclick="openHuy(${id})">Hủy</button>`;
+
+        return detailBtn + confirmBtn + shipBtn + doneBtn + cancelBtn;
     }
 
-    // Hiển thị loading
-    function showLoading(show) {
-        document.getElementById('loading').style.display = show ? 'block' : 'none';
-    }
-
-    // Hiển thị thông báo
-    function showNotification(message, type = 'info') {
-        // Implement notification system (toast, alert, etc.)
-        if (type === 'success') {
-            alert('✓ ' + message);
-        } else if (type === 'error') {
-            alert('✗ ' + message);
+    async function capNhat(id, trangThaiMoi) {
+        const res = await fetch(apiUpdateUrl, {
+            method: 'POST',
+            headers: { 'Content-Type':'application/json' },
+            body: JSON.stringify({ HoaDonId: id, TrangThaiMoi: trangThaiMoi })
+        });
+        const js = await res.json();
+        if (js.success) {
+            loadData();
         } else {
-            alert(message);
+            alert(js.message || 'Cập nhật thất bại');
         }
     }
 
-    // Load dữ liệu khi trang được tải
-    document.addEventListener('DOMContentLoaded', function() {
-        // Tải lại dữ liệu nếu cần
+    function openHuy(id) {
+        document.getElementById('huy-id').value = id;
+        document.getElementById('huy-lydo').value = '';
+        const m = new bootstrap.Modal(document.getElementById('modalHuy'));
+        m.show();
+    }
+
+    async function xacNhanHuy() {
+        const id = parseInt(document.getElementById('huy-id').value);
+        const lydo = document.getElementById('huy-lydo').value || null;
+        const res = await fetch(apiCancelUrl, {
+            method: 'POST',
+            headers: { 'Content-Type':'application/json' },
+            body: JSON.stringify({ HoaDonId: id, LyDoHuy: lydo })
+        });
+        const js = await res.json();
+        if (js.success) {
+            bootstrap.Modal.getInstance(document.getElementById('modalHuy')).hide();
+            loadData();
+        } else {
+            alert(js.message || 'Hủy đơn thất bại');
+        }
+    }
+
+    function formatVND(n) {
+        try { return (n || 0).toLocaleString('vi-VN', {style:'currency', currency:'VND'}); }
+        catch { return n; }
+    }
+
+    document.getElementById('tuKhoa').addEventListener('keyup', (e) => {
+        if (e.key === 'Enter') loadData();
     });
+
+    // init
+    loadData();
 </script>
