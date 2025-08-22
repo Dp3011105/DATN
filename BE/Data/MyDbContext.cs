@@ -40,6 +40,8 @@ namespace BE.Data
         public DbSet<Message> Message { get; set; }
         public DbSet<SanPhamDoNgot> SanPham_DoNgot { get; set; }
         public DbSet<HoaDonVoucher> HoaDonVouchers { get; set; }
+        public DbSet<SanPhamKhuyenMai> SanPhamKhuyenMai { get; set; }
+        public DbSet<KhuyenMai> KhuyenMai { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {

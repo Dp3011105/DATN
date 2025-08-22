@@ -1,74 +1,81 @@
-﻿using BE.models;
-using BE.Data;
+﻿using BE.Data;
+using BE.models;
+using BE.Repository.IRepository;
 using Microsoft.EntityFrameworkCore;
-using Repository.IRepository;
 
-namespace Repository
+namespace BE.Repository
 {
-    public class Gio_HangRepository : IGio_HangRepository  // cái này dùng cho chức năng lấy danh sách dữ liệu giỏ hàng của khách hàng (Phước)
+    public class Gio_HangRepository : IGio_HangRepository
     {
-        private readonly MyDbContext _context;
+        private readonly MyDbContext _context; // Thay YourDbContext bằng tên DbContext của bạn
 
         public Gio_HangRepository(MyDbContext context)
         {
             _context = context;
         }
 
-        public async Task<Gio_Hang> GetGioHangByKhachHangIdAsync(int idKhachHang)
+        public async Task<Gio_Hang> GetCartByCustomerIdAsync(int idKhachHang)
         {
             return await _context.Gio_Hang
                 .Include(gh => gh.GioHang_ChiTiets)
-                    .ThenInclude(ct => ct.San_Pham)
+                    .ThenInclude(ghct => ghct.San_Pham)
                 .Include(gh => gh.GioHang_ChiTiets)
-                    .ThenInclude(ct => ct.Size)
+                    .ThenInclude(ghct => ghct.Size)
                 .Include(gh => gh.GioHang_ChiTiets)
-                    .ThenInclude(ct => ct.DoNgot)
+                    .ThenInclude(ghct => ghct.DoNgot)
                 .Include(gh => gh.GioHang_ChiTiets)
-                    .ThenInclude(ct => ct.LuongDa)
+                    .ThenInclude(ghct => ghct.LuongDa)
                 .Include(gh => gh.GioHang_ChiTiets)
-                    .ThenInclude(ct => ct.GioHangChiTiet_Toppings)
-                        .ThenInclude(t => t.Topping)
+                    .ThenInclude(ghct => ghct.GioHangChiTiet_Toppings)
+                    .ThenInclude(ghctt => ghctt.Topping)
                 .FirstOrDefaultAsync(gh => gh.ID_Khach_Hang == idKhachHang && gh.Trang_Thai);
         }
 
-        public async Task CreateGioHangAsync(Gio_Hang gioHang)
+        public async Task<SanPhamKhuyenMai> GetActivePromotionForProductAsync(int idSanPham, DateTime currentDate)
         {
-            _context.Gio_Hang.Add(gioHang);
+            return await _context.SanPhamKhuyenMai
+                .Include(spkm => spkm.BangKhuyenMai)
+                .Where(spkm => spkm.ID_San_Pham == idSanPham
+                    && spkm.BangKhuyenMai.Trang_Thai
+                    && spkm.BangKhuyenMai.Ngay_Bat_Dau <= currentDate
+                    && spkm.BangKhuyenMai.Ngay_Ket_Thuc >= currentDate)
+                .FirstOrDefaultAsync();
+        }
+
+        public async Task AddCartAsync(Gio_Hang gioHang)
+        {
+            await _context.Gio_Hang.AddAsync(gioHang);
             await _context.SaveChangesAsync();
         }
 
-
-
-        public async Task AddGioHangChiTietAsync(GioHang_ChiTiet gioHangChiTiet)
+        public async Task UpdateCartAsync(Gio_Hang gioHang)
         {
-            _context.GioHang_ChiTiet.Add(gioHangChiTiet);
+            _context.Gio_Hang.Update(gioHang);
             await _context.SaveChangesAsync();
         }
 
+        public async Task AddCartDetailAsync(GioHang_ChiTiet gioHangChiTiet)
+        {
+            await _context.GioHang_ChiTiet.AddAsync(gioHangChiTiet);
+            await _context.SaveChangesAsync();
+        }
 
-
-        public async Task<bool> DeleteGioHangChiTietAsync(int idGioHangChiTiet, int idKhachHang)
+        public async Task<bool> DeleteCartDetailAsync(int idGioHangChiTiet)
         {
             var gioHangChiTiet = await _context.GioHang_ChiTiet
-                .Include(ct => ct.GioHangChiTiet_Toppings)
-                .FirstOrDefaultAsync(ct => ct.ID_GioHang_ChiTiet == idGioHangChiTiet && ct.Gio_Hang.ID_Khach_Hang == idKhachHang);
+                .Include(ghct => ghct.GioHangChiTiet_Toppings)
+                .FirstOrDefaultAsync(ghct => ghct.ID_GioHang_ChiTiet == idGioHangChiTiet);
 
             if (gioHangChiTiet == null)
             {
-                return false; // Không tìm thấy chi tiết giỏ hàng hoặc không thuộc khách hàng
+                return false;
             }
 
-            // Xóa các topping liên quan
             _context.GioHangChiTiet_Topping.RemoveRange(gioHangChiTiet.GioHangChiTiet_Toppings);
-
-            // Xóa chi tiết giỏ hàng
             _context.GioHang_ChiTiet.Remove(gioHangChiTiet);
-
             await _context.SaveChangesAsync();
+
             return true;
         }
-
-
-
     }
 }

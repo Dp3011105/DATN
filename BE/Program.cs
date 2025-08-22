@@ -26,7 +26,6 @@ builder.Services.AddScoped<IDiaChiRepository, DiaChiRepository>();
 builder.Services.AddScoped<IDiemDanhRepository, DiemDanhRepository>();
 builder.Services.AddScoped<IGioHang_ChiTietRepository, GioHang_ChiTietRepository>();
 builder.Services.AddScoped<IGioHangChiTiet_ToppingRepository, GioHangChiTiet_ToppingRepository>();
-builder.Services.AddScoped<IGio_HangRepository, Gio_HangRepository>();
 builder.Services.AddScoped<IHinhThucThanhToanRepository, HinhThucThanhToanRepository>();
 builder.Services.AddScoped<IHoaDonRepository, HoaDonRepository>();
 builder.Services.AddScoped<IHoaDonChiTietRepository, HoaDonChiTietRepository>();
@@ -55,11 +54,14 @@ builder.Services.AddScoped<IDoNgotRepository, DoNgotRepository>();
 builder.Services.AddScoped<IToppingRepository, ToppingRepository>();
 builder.Services.AddScoped<ISanPhamLuongDaRepository, SanPhamLuongDaRepository>();
 builder.Services.AddScoped<ISanPhamRepository, SanPhamRepository>();
+builder.Services.AddScoped<IGio_HangRepository, Gio_HangRepository>();
 // Register Repositories chức năng đăng ký tài khoản 
 builder.Services.AddScoped<ICustomerRepository, CustomerRepository>();
 builder.Services.AddScoped<IAccountRepository, AccountRepository>();
 // Register chức năng ghép Tài khoản và Vai trò của nhân viên với nhau
 builder.Services.AddScoped<IQuanLyPhanQuyenNhanVienRepository, QuanLyPhanQuyenNhanVienRepository>();
+builder.Services.AddScoped<IKhuyenMaiSanPhamRepository, KhuyenMaiSanPhamRepository>();
+builder.Services.AddScoped<IKhuyenMaiRepository, KhuyenMaiRepository>();
 // Đăng ký EmailService
 builder.Services.AddSingleton<EmailService>();
 

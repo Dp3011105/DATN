@@ -1,0 +1,227 @@
+﻿@{
+    Layout = "~/Views/Shared/_AdminLayout.cshtml";
+}
+@{
+    ViewData["Title"] = "Quản lý Khuyến mãi Sản phẩm";
+    var promotions = ViewBag.Promotions as List<Promotion>;
+}
+
+<div class="container">
+    <h2>Quản lý Khuyến mãi Sản phẩm</h2>
+
+    <div class="row">
+        <!-- Danh sách Khuyến mãi (Bên trái) -->
+        <div class="col-md-6">
+            <h4>Danh sách Khuyến mãi</h4>
+            <div class="form-group">
+                <label>Chọn Khuyến mãi:</label>
+                <select class="form-control" id="selectedPromotionId">
+                    <option value="">-- Chọn Khuyến mãi --</option>
+                    @if (promotions != null && promotions.Any())
+                    {
+                        @foreach (var promotion in promotions)
+                        {
+                            <option value="@promotion.ID_Promotion">@promotion.PromotionName</option>
+                        }
+                    }
+                    else
+                    {
+                        <option value="">Không có khuyến mãi nào</option>
+                    }
+                </select>
+                <div id="promotionError" class="text-danger" style="display: none;">Vui lòng chọn khuyến mãi!</div>
+            </div>
+            <div class="form-group">
+                <label>Phần trăm giảm giá (%):</label>
+                <input type="number" class="form-control" id="discountPercentage" min="1" max="60" step="1" required />
+                <div id="discountError" class="text-danger" style="display: none;">Phần trăm giảm giá phải từ 1 đến 60.</div>
+            </div>
+        </div>
+
+        <!-- Danh sách Sản phẩm (Bên phải) -->
+        <div class="col-md-6">
+            <h4>Danh sách Sản phẩm</h4>
+            <table class="table table-bordered">
+                <thead>
+                    <tr>
+                        <th><input type="checkbox" id="selectAll" /></th>
+                        <th>Tên Sản phẩm</th>
+                        <th>Giá</th>
+                        <th>Số lượng</th>
+                    </tr>
+                </thead>
+                <tbody id="productTableBody">
+                    <tr>
+                        <td colspan="4">Đang tải sản phẩm...</td>
+                    </tr>
+                </tbody>
+            </table>
+            <div id="productError" class="text-danger" style="display: none;">Vui lòng chọn ít nhất một sản phẩm!</div>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-md-12">
+            <button id="applyPromotion" class="btn btn-primary">Áp dụng Khuyến mãi</button>
+            <a href="@Url.Action("CancelPromotion", "KhuyenMaiSanPham")" class="btn btn-secondary">Hủy áp dụng Khuyến mãi</a>
+        </div>
+    </div>
+
+    <div id="successMessage" class="alert alert-success" style="display: none;"></div>
+    <div id="errorMessage" class="alert alert-danger" style="display: none;"></div>
+
+    @if (TempData["Success"] != null)
+    {
+        <div class="alert alert-success">@TempData["Success"]</div>
+    }
+    @if (TempData["Error"] != null)
+    {
+        <div class="alert alert-danger">@TempData["Error"]</div>
+    }
+</div>
+
+@section Scripts {
+    <script>
+        // Hàm định dạng số tiền
+        function formatPrice(price) {
+            return price.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+        }
+
+        // Gọi API sản phẩm và hiển thị
+        async function loadProducts() {
+            try {
+                const response = await fetch("https://localhost:7169/api/KhuyenMaiSanPham", {
+                    method: "GET",
+                    headers: {
+                        "Accept": "application/json"
+                    }
+                });
+
+                if (!response.ok) {
+                    throw new Error(`API trả về lỗi: Status ${response.status}`);
+                }
+
+                const products = await response.json();
+                const filteredProducts = products.filter(p => !p.sanPhamKhuyenMai);
+
+                // Cập nhật bảng sản phẩm
+                const tableBody = document.getElementById("productTableBody");
+                if (filteredProducts.length > 0) {
+                    tableBody.innerHTML = filteredProducts.map(p => `
+                        <tr>
+                            <td><input type="checkbox" name="selectedProductIds" value="${p.iD_San_Pham}" /></td>
+                            <td>${p.ten_San_Pham}</td>
+                            <td>${formatPrice(p.gia)}</td>
+                            <td>${p.so_Luong}</td>
+                        </tr>
+                    `).join('');
+                } else {
+                    tableBody.innerHTML = `<tr><td colspan="4">Không có sản phẩm nào để hiển thị</td></tr>`;
+                }
+            } catch (error) {
+                document.getElementById("errorMessage").textContent = "Lỗi khi tải sản phẩm: " + error.message;
+                document.getElementById("errorMessage").style.display = "block";
+                document.getElementById("productTableBody").innerHTML = `<tr><td colspan="4">Lỗi khi tải sản phẩm: ${error.message}</td></tr>`;
+            }
+        }
+
+        // Gọi hàm loadProducts khi trang tải
+        document.addEventListener("DOMContentLoaded", () => {
+            loadProducts();
+        });
+
+        // Validation phần trăm giảm giá
+        document.getElementById('discountPercentage').addEventListener('input', function() {
+            const value = parseInt(this.value);
+            const errorElement = document.getElementById('discountError');
+            if (isNaN(value) || value < 1 || value > 60) {
+                errorElement.style.display = 'block';
+                this.setCustomValidity("Phần trăm giảm giá phải từ 1 đến 60.");
+            } else {
+                errorElement.style.display = 'none';
+                this.setCustomValidity('');
+            }
+        });
+
+        // Xử lý chọn tất cả sản phẩm
+        document.getElementById('selectAll').addEventListener('change', function() {
+            const checkboxes = document.getElementsByName('selectedProductIds');
+            checkboxes.forEach(checkbox => {
+                checkbox.checked = this.checked;
+            });
+        });
+
+        // Xử lý gửi dữ liệu tới API
+        document.getElementById('applyPromotion').addEventListener('click', async function() {
+            const selectedPromotionId = document.getElementById('selectedPromotionId').value;
+            const discountPercentage = parseInt(document.getElementById('discountPercentage').value);
+            const selectedProductIds = Array.from(document.getElementsByName('selectedProductIds'))
+                .filter(cb => cb.checked)
+                .map(cb => parseInt(cb.value));
+
+            // Ẩn thông báo trước đó
+            document.getElementById('successMessage').style.display = 'none';
+            document.getElementById('errorMessage').style.display = 'none';
+            document.getElementById('promotionError').style.display = 'none';
+            document.getElementById('productError').style.display = 'none';
+
+            // Validation
+            let isValid = true;
+            if (!selectedPromotionId) {
+                document.getElementById('promotionError').style.display = 'block';
+                isValid = false;
+            }
+            if (!selectedProductIds.length) {
+                document.getElementById('productError').style.display = 'block';
+                isValid = false;
+            }
+            if (isNaN(discountPercentage) || discountPercentage < 1 || discountPercentage > 60) {
+                document.getElementById('discountError').style.display = 'block';
+                isValid = false;
+            }
+
+            if (!isValid) {
+                return;
+            }
+
+            // Tạo dữ liệu JSON
+            const requestData = {
+                iD_Khuyen_Mai: parseInt(selectedPromotionId),
+                iD_San_Phams: selectedProductIds,
+                phan_Tram_Giam: discountPercentage
+            };
+
+            // Log dữ liệu JSON gửi đi
+            console.log('[API] Gửi dữ liệu tới https://localhost:7169/api/KhuyenMaiSanPham/assign:', JSON.stringify(requestData, null, 2));
+
+            try {
+                const response = await fetch("https://localhost:7169/api/KhuyenMaiSanPham/assign", {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json",
+                        "Accept": "application/json"
+                    },
+                    body: JSON.stringify(requestData)
+                });
+
+                if (!response.ok) {
+                    const errorContent = await response.text();
+                    console.error('[API] Lỗi khi gọi API assign:', { status: response.status, content: errorContent });
+                    document.getElementById('errorMessage').textContent = `Lỗi khi áp dụng khuyến mãi: Status ${response.status}`;
+                    document.getElementById('errorMessage').style.display = 'block';
+                    return;
+                }
+
+                document.getElementById('successMessage').textContent = 'Áp dụng khuyến mãi thành công!';
+                document.getElementById('successMessage').style.display = 'block';
+
+                // Tải lại sản phẩm sau khi áp dụng khuyến mãi
+                await loadProducts();
+            } catch (error) {
+                console.error('[API] Lỗi khi gọi API assign:', error.message);
+                document.getElementById('errorMessage').textContent = 'Lỗi khi áp dụng khuyến mãi: ' + error.message;
+                document.getElementById('errorMessage').style.display = 'block';
+            }
+        });
+    </script>
+}

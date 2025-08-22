@@ -1,94 +1,132 @@
-﻿@model List<SanPham>
+﻿@model List<FE.Models.SanPham>
 @{
     Layout = "~/Views/Shared/_AdminLayout.cshtml";
 
     // Sort products by ID in descending order (newest first)
     var sortedProducts = Model.OrderByDescending(p => p.ID_San_Pham).ToList();
-
     var activeProducts = sortedProducts.Where(p => p.Trang_Thai).ToList();
     var inactiveProducts = sortedProducts.Where(p => !p.Trang_Thai).ToList();
+
+    // Get current date in Vietnam time zone
+    TimeZoneInfo vnTimeZone;
+    try
+    {
+        vnTimeZone = TimeZoneInfo.FindSystemTimeZoneById("SE Asia Standard Time");
+    }
+    catch
+    {
+        vnTimeZone = TimeZoneInfo.FindSystemTimeZoneById("Asia/Ho_Chi_Minh");
+    }
+    var currentDate = TimeZoneInfo.ConvertTimeFromUtc(DateTime.UtcNow, vnTimeZone);
 }
 
-<div class="container-fluid my-5">
+<div class="container-fluid my-4">
     <!-- Notifications -->
     @if (TempData["Success"] != null)
     {
-        <div class="alert alert-success alert-dismissible fade show animate__animated animate__fadeInDown" role="alert">
-            @TempData["Success"]
+        <div class="alert alert-success alert-dismissible fade show" role="alert">
+            <i class="bi bi-check-circle-fill me-2"></i>@TempData["Success"]
             <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
         </div>
     }
     @if (TempData["Error"] != null)
     {
-        <div class="alert alert-danger alert-dismissible fade show animate__animated animate__fadeInDown" role="alert">
-            @TempData["Error"]
+        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+            <i class="bi bi-exclamation-circle-fill me-2"></i>@TempData["Error"]
             <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
         </div>
     }
 
     <!-- Search Bar -->
     <div class="mb-4">
-        <div class="input-group">
-            <span class="input-group-text bg-primary text-white rounded-pill rounded-end-0"><i class="bi bi-search"></i></span>
-            <input type="text" id="searchInput" class="form-control shadow-sm" placeholder="Tìm kiếm sản phẩm theo tên..." aria-label="Search" style="font-size: 1.1rem; padding: 0.75rem;">
-            <button class="btn btn-primary ms-2 rounded-pill shadow-sm" type="button" id="searchButton">Tìm kiếm</button>
+        <div class="input-group shadow-sm">
+            <span class="input-group-text bg-gray-100 border-gray-300"><i class="bi bi-search"></i></span>
+            <input type="text" id="searchInput" class="form-control border-gray-300" placeholder="Tìm kiếm sản phẩm theo tên..." aria-label="Search" style="font-size: 1rem; padding: 0.75rem;">
+            <button class="btn btn-primary ms-2" type="button" id="searchButton">Tìm kiếm</button>
         </div>
     </div>
 
-  
-
     <!-- Toggle Buttons -->
     <div class="mb-4 d-flex justify-content-center gap-3">
-        <button id="showActive" class="btn btn-primary rounded-pill shadow-sm active">Sản Phẩm Hoạt Động</button>
-        <button id="showInactive" class="btn btn-outline-primary rounded-pill shadow-sm">Sản Phẩm Ngừng Hoạt Động</button>
+        <button id="showActive" class="btn btn-primary active">Sản Phẩm Hoạt Động</button>
+        <button id="showInactive" class="btn btn-outline-primary">Sản Phẩm Ngừng Hoạt Động</button>
     </div>
 
-    <div class="mt-3 text-center">
-        <a asp-controller="ProductDetails" asp-action="Index" class="btn btn-outline-primary animate__animated animate__pulse">
+    <div class="mb-4 text-center">
+        <a asp-controller="ProductDetails" asp-action="Index" class="btn btn-outline-primary">
             <i class="bi bi-arrow-right-circle me-2"></i>Đến Trang Chi Tiết Sản Phẩm
         </a>
     </div>
 
     <!-- Active Products -->
-    <div id="activeProducts" class="card shadow-lg border-0 rounded mb-5 animate__animated animate__fadeInUp">
+    <div id="activeProducts" class="card shadow-sm border-0 mb-4">
         <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
             <h5 class="mb-0">Sản Phẩm Hoạt Động</h5>
-            <a asp-action="AddProduct" class="btn btn-light btn-sm animate__animated animate__pulse">
+            <a asp-action="AddProduct" class="btn btn-light btn-sm">
                 <i class="bi bi-plus-circle me-2"></i>Thêm Sản Phẩm
             </a>
         </div>
         <div class="card-body p-0">
             <div class="table-responsive">
                 <table class="table table-hover table-striped align-middle" id="activeTable">
-                    <thead class="bg-light">
+                    <thead class="bg-gray-100">
                         <tr>
-                            <th>ID</th>
-                            <th>Tên Sản Phẩm</th>
-                            <th>Giá</th>
-                            <th>Số Lượng</th>
-                            <th>Hình Ảnh</th>
-                            <th>Mô Tả</th>
-                            <th>Trạng Thái</th>
-                            <th>Hành Động</th>
+                            <th class="py-3 px-4">ID</th>
+                            <th class="py-3 px-4">Tên Sản Phẩm</th>
+                            <th class="py-3 px-4">Giá</th>
+                            <th class="py-3 px-4">Số Lượng</th>
+                            <th class="py-3 px-4">Hình Ảnh</th>
+                            <th class="py-3 px-4">Mô Tả</th>
+                            <th class="py-3 px-4">Trạng Thái</th>
+                            <th class="py-3 px-4">Hành Động</th>
                         </tr>
                     </thead>
                     <tbody>
                         @foreach (var product in activeProducts)
                         {
-                            <tr class="product-row animate__animated animate__fadeIn" data-name="@product.Ten_San_Pham.ToLower()">
-                                <td>@product.ID_San_Pham</td>
-                                <td>@product.Ten_San_Pham</td>
-                                <td>@string.Format("{0:N0} đ", product.Gia)</td>
-                                <td>@product.So_Luong</td>
-                                <td>
-                                    <img src="@("https://localhost:7169" + product.Hinh_Anh)" alt="@product.Ten_San_Pham" class="img-fluid rounded hover-scale" style="max-width: 100px; aspect-ratio: 4/3; object-fit: cover;" />
+                            bool hasActivePromotion = false;
+                            decimal basePrice = product.Gia;
+                            string promotionName = "";
+
+                            if (product.KhuyenMais != null && product.KhuyenMais.Any())
+                            {
+                                foreach (var km in product.KhuyenMais)
+                                {
+                                    if (currentDate >= km.Ngay_Bat_Dau && currentDate <= km.Ngay_Ket_Thuc)
+                                    {
+                                        hasActivePromotion = true;
+                                        basePrice = km.Gia_Giam ?? product.Gia;
+                                        promotionName = km.Ten_Khuyen_Mai;
+                                        break;
+                                    }
+                                }
+                            }
+
+                            <tr class="product-row" data-name="@(product.Ten_San_Pham?.ToLower() ?? "")" data-json="@Newtonsoft.Json.JsonConvert.SerializeObject(product, new Newtonsoft.Json.JsonSerializerSettings { ReferenceLoopHandling = Newtonsoft.Json.ReferenceLoopHandling.Ignore })">
+                                <td class="py-3 px-4">@product.ID_San_Pham</td>
+                                <td class="py-3 px-4">@(product.Ten_San_Pham ?? "Không có tên")</td>
+                                <td class="py-3 px-4">
+                                    @if (hasActivePromotion)
+                                    {
+                                        <span class="text-muted text-decoration-line-through me-2">@string.Format("{0:N0} đ", product.Gia)</span>
+                                        <span class="text-danger font-weight-bold">@string.Format("{0:N0} đ", basePrice)</span>
+                                        <span class="badge bg-warning text-dark ms-2">@promotionName</span>
+                                    }
+                                    else
+                                    {
+                                        <span class="text-primary font-weight-bold">@string.Format("{0:N0} đ", product.Gia)</span>
+                                    }
                                 </td>
-                                <td class="text-truncate" style="max-width: 200px;">@product.Mo_Ta</td>
-                                <td>
+                                <td class="py-3 px-4">@product.So_Luong</td>
+                                <td class="py-3 px-4">
+                                    <img src="@("https://localhost:7169" + (product.Hinh_Anh ?? "/images/placeholder.jpg"))" alt="@(product.Ten_San_Pham ?? "Sản phẩm")" class="img-fluid rounded" style="max-width: 80px; aspect-ratio: 4/3; object-fit: cover;" />
+                                </td>
+                                <td class="py-3 px-4 text-truncate" style="max-width: 250px;">@(product.Mo_Ta ?? "Không có mô tả")</td>
+                                <td class="py-3 px-4">
                                     <span class="badge bg-success">Hoạt động</span>
                                 </td>
-                                <td>
-                                    <a asp-action="Details" asp-route-id="@product.ID_San_Pham" class="btn btn-outline-primary btn-sm">
+                                <td class="py-3 px-4">
+                                    <a asp-action="Details" asp-route-id="@product.ID_San_Pham" class="btn btn-outline-primary btn-sm me-2">
                                         <i class="bi bi-eye"></i> Chi tiết
                                     </a>
                                     <a asp-action="EditProduct" asp-route-id="@product.ID_San_Pham" class="btn btn-outline-primary btn-sm">
@@ -104,42 +142,71 @@
     </div>
 
     <!-- Inactive Products -->
-    <div id="inactiveProducts" class="card shadow-lg border-0 rounded mb-5 animate__animated animate__fadeInUp d-none">
+    <div id="inactiveProducts" class="card shadow-sm border-0 mb-4 d-none">
         <div class="card-header bg-secondary text-white d-flex justify-content-between align-items-center">
             <h5 class="mb-0">Sản Phẩm Ngừng Hoạt Động</h5>
         </div>
         <div class="card-body p-0">
             <div class="table-responsive">
                 <table class="table table-hover table-striped align-middle" id="inactiveTable">
-                    <thead class="bg-light">
+                    <thead class="bg-gray-100">
                         <tr>
-                            <th>ID</th>
-                            <th>Tên Sản Phẩm</th>
-                            <th>Giá</th>
-                            <th>Số Lượng</th>
-                            <th>Hình Ảnh</th>
-                            <th>Mô Tả</th>
-                            <th>Trạng Thái</th>
-                            <th>Hành Động</th>
+                            <th class="py-3 px-4">ID</th>
+                            <th class="py-3 px-4">Tên Sản Phẩm</th>
+                            <th class="py-3 px-4">Giá</th>
+                            <th class="py-3 px-4">Số Lượng</th>
+                            <th class="py-3 px-4">Hình Ảnh</th>
+                            <th class="py-3 px-4">Mô Tả</th>
+                            <th class="py-3 px-4">Trạng Thái</th>
+                            <th class="py-3 px-4">Hành Động</th>
                         </tr>
                     </thead>
                     <tbody>
                         @foreach (var product in inactiveProducts)
                         {
-                            <tr class="product-row animate__animated animate__fadeIn" data-name="@product.Ten_San_Pham.ToLower()">
-                                <td>@product.ID_San_Pham</td>
-                                <td>@product.Ten_San_Pham</td>
-                                <td>@string.Format("{0:N0} đ", product.Gia)</td>
-                                <td>@product.So_Luong</td>
-                                <td>
-                                    <img src="@("https://localhost:7169" + product.Hinh_Anh)" alt="@product.Ten_San_Pham" class="img-fluid rounded hover-scale" style="max-width: 100px; aspect-ratio: 4/3; object-fit: cover;" />
+                            bool hasActivePromotion = false;
+                            decimal basePrice = product.Gia;
+                            string promotionName = "";
+
+                            if (product.KhuyenMais != null && product.KhuyenMais.Any())
+                            {
+                                foreach (var km in product.KhuyenMais)
+                                {
+                                    if (currentDate >= km.Ngay_Bat_Dau && currentDate <= km.Ngay_Ket_Thuc)
+                                    {
+                                        hasActivePromotion = true;
+                                        basePrice = km.Gia_Giam ?? product.Gia;
+                                        promotionName = km.Ten_Khuyen_Mai;
+                                        break;
+                                    }
+                                }
+                            }
+
+                            <tr class="product-row" data-name="@(product.Ten_San_Pham?.ToLower() ?? "")" data-json="@Newtonsoft.Json.JsonConvert.SerializeObject(product, new Newtonsoft.Json.JsonSerializerSettings { ReferenceLoopHandling = Newtonsoft.Json.ReferenceLoopHandling.Ignore })">
+                                <td class="py-3 px-4">@product.ID_San_Pham</td>
+                                <td class="py-3 px-4">@(product.Ten_San_Pham ?? "Không có tên")</td>
+                                <td class="py-3 px-4">
+                                    @if (hasActivePromotion)
+                                    {
+                                        <span class="text-muted text-decoration-line-through me-2">@string.Format("{0:N0} đ", product.Gia)</span>
+                                        <span class="text-danger font-weight-bold">@string.Format("{0:N0} đ", basePrice)</span>
+                                        <span class="badge bg-warning text-dark ms-2">@promotionName</span>
+                                    }
+                                    else
+                                    {
+                                        <span class="text-primary font-weight-bold">@string.Format("{0:N0} đ", product.Gia)</span>
+                                    }
                                 </td>
-                                <td class="text-truncate" style="max-width: 200px;">@product.Mo_Ta</td>
-                                <td>
+                                <td class="py-3 px-4">@product.So_Luong</td>
+                                <td class="py-3 px-4">
+                                    <img src="@("https://localhost:7169" + (product.Hinh_Anh ?? "/images/placeholder.jpg"))" alt="@(product.Ten_San_Pham ?? "Sản phẩm")" class="img-fluid rounded" style="max-width: 80px; aspect-ratio: 4/3; object-fit: cover;" />
+                                </td>
+                                <td class="py-3 px-4 text-truncate" style="max-width: 250px;">@(product.Mo_Ta ?? "Không có mô tả")</td>
+                                <td class="py-3 px-4">
                                     <span class="badge bg-danger">Không hoạt động</span>
                                 </td>
-                                <td>
-                                    <a asp-action="Details" asp-route-id="@product.ID_San_Pham" class="btn btn-outline-primary btn-sm">
+                                <td class="py-3 px-4">
+                                    <a asp-action="Details" asp-route-id="@product.ID_San_Pham" class="btn btn-outline-primary btn-sm me-2">
                                         <i class="bi bi-eye"></i> Chi tiết
                                     </a>
                                     <a asp-action="EditProduct" asp-route-id="@product.ID_San_Pham" class="btn btn-outline-primary btn-sm">
@@ -154,8 +221,8 @@
         </div>
     </div>
 
-    <div class="mt-3 text-center">
-        <a asp-controller="ProductDetails" asp-action="Index" class="btn btn-outline-primary animate__animated animate__pulse">
+    <div class="mb-4 text-center">
+        <a asp-controller="ProductDetails" asp-action="Index" class="btn btn-outline-primary">
             <i class="bi bi-arrow-right-circle me-2"></i>Đến Trang Chi Tiết Sản Phẩm
         </a>
     </div>
@@ -173,14 +240,13 @@
             const tables = [document.getElementById('activeTable'), document.getElementById('inactiveTable')];
 
             function filterProducts() {
-                const searchTerm = searchInput.value.toLowerCase();
+                const searchTerm = searchInput.value.toLowerCase().trim();
                 tables.forEach(table => {
                     const rows = table.querySelectorAll('.product-row');
                     rows.forEach(row => {
-                        const name = row.getAttribute('data-name');
+                        const name = row.getAttribute('data-name') || '';
                         if (name.includes(searchTerm)) {
                             row.style.display = 'table-row';
-                            row.classList.add('animate__fadeIn');
                         } else {
                             row.style.display = 'none';
                         }
@@ -210,44 +276,168 @@
                 showActive.classList.add('btn-outline-primary');
                 showActive.classList.remove('btn-primary', 'active');
             });
+
+            // Debug promotion data
+            document.querySelectorAll('.product-row').forEach(row => {
+                try {
+                    const rawJson = row.getAttribute('data-json');
+                    console.log('Raw product data:', rawJson);
+                    const product = JSON.parse(rawJson);
+                    console.log('Parsed product:', product);
+                    if (product.khuyenMais && product.khuyenMais.length > 0) {
+                        console.log('Promotions for', product.ten_San_Pham, ':', product.khuyenMais);
+                    } else {
+                        console.log('No promotions for', product.ten_San_Pham);
+                    }
+                } catch (error) {
+                    console.error('Error parsing product JSON:', error);
+                }
+            });
         });
     </script>
 }
 
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css" />
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css">
 
 <style>
-    .table th, .table td {
-        vertical-align: middle;
+    body {
+        font-family: 'Inter', sans-serif;
+        background-color: #f8f9fa;
     }
 
-    .hover-scale:hover {
-        transform: scale(1.1);
-        transition: transform 0.3s ease;
+    .container-fluid {
+        max-width: 1400px;
     }
 
-    .btn-outline-primary:hover, .btn-primary:hover {
-        transform: scale(1.05);
-        transition: transform 0.3s ease;
-    }
-
-    .table-responsive {
-        border-radius: 0.5rem;
+    .card {
+        border-radius: 4px;
         overflow: hidden;
     }
 
-    .badge {
-        font-size: 0.9rem;
-        padding: 0.5em 1em;
+    .card-header {
+        padding: 1rem 1.5rem;
+        border-bottom: 1px solid #dee2e6;
+    }
+
+    .table {
+        margin-bottom: 0;
+        border-collapse: separate;
+        border-spacing: 0;
+    }
+
+        .table th, .table td {
+            vertical-align: middle;
+            border-top: 1px solid #dee2e6;
+            border-bottom: 1px solid #dee2e6;
+        }
+
+        .table thead th {
+            font-weight: 600;
+            color: #1a1a1a;
+            background-color: #e9ecef;
+        }
+
+        .table tbody tr:hover {
+            background-color: #f1f3f5;
+        }
+
+    .table-responsive {
+        border-radius: 4px;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+    }
+
+    .btn {
+        border-radius: 4px;
+        padding: 0.5rem 1rem;
+        font-weight: 500;
+        transition: all 0.2s ease;
+    }
+
+    .btn-primary {
+        background-color: #0052cc;
+        border-color: #0052cc;
+    }
+
+        .btn-primary:hover {
+            background-color: #003d99;
+            border-color: #003d99;
+            transform: translateY(-1px);
+        }
+
+    .btn-outline-primary {
+        border-color: #0052cc;
+        color: #0052cc;
+    }
+
+        .btn-outline-primary:hover {
+            background-color: #0052cc;
+            color: white;
+            transform: translateY(-1px);
+        }
+
+    .btn.active {
+        background-color: #003d99 !important;
+        border-color: #003d99 !important;
+        color: white !important;
     }
 
     .input-group-text {
-        border-top-right-radius: 0 !important;
-        border-bottom-right-radius: 0 !important;
+        border-radius: 4px 0 0 4px;
+        background-color: #e9ecef;
+        border-color: #ced4da;
     }
 
-    .btn.active {
-        background-color: #007bff !important;
-        color: white !important;
+    .form-control {
+        border-radius: 0 4px 4px 0;
+        border-color: #ced4da;
+        box-shadow: none;
+    }
+
+        .form-control:focus {
+            border-color: #0052cc;
+            box-shadow: 0 0 0 3px rgba(0, 82, 204, 0.1);
+        }
+
+    .badge {
+        font-size: 0.85rem;
+        padding: 0.4rem 0.8rem;
+        border-radius: 4px;
+    }
+
+    .alert {
+        border-radius: 4px;
+        border-left: 4px solid;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+    }
+
+    .alert-success {
+        border-color: #28a745;
+    }
+
+    .alert-danger {
+        border-color: #dc3545;
+    }
+
+    .img-fluid.rounded {
+        border-radius: 4px;
+        transition: transform 0.2s ease;
+    }
+
+        .img-fluid.rounded:hover {
+            transform: scale(1.05);
+        }
+
+    .text-danger {
+        color: #dc3545 !important;
+    }
+
+    .text-primary {
+        color: #0052cc !important;
+    }
+
+    .text-muted {
+        color: #6c757d !important;
     }
 </style>
