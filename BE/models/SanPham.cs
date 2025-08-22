@@ -29,5 +29,7 @@ namespace BE.models
         public virtual ICollection<GioHang_ChiTiet> GioHang_ChiTiets { get; set; } = new List<GioHang_ChiTiet>();
         public virtual ICollection<HoaDonChiTiet> HoaDonChiTiets { get; set; } = new List<HoaDonChiTiet>();
         public virtual ICollection<SanPhamDoNgot> SanPhamDoNgots { get; set; } = new List<SanPhamDoNgot>();
+        public virtual ICollection<SanPhamKhuyenMai> SanPhamKhuyenMais { get; set; } = new List<SanPhamKhuyenMai>();
+
     }
 }

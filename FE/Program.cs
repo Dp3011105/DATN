@@ -25,8 +25,11 @@ builder.Services.AddScoped<IVaiTroService, VaiTroService>();
 builder.Services.AddScoped<ITaiKhoanVaiTroService, TaiKhoanVaiTroService>();
 builder.Services.AddScoped<ITaiKhoanService, TaiKhoanService>();
 
-builder.Services.AddScoped<ICartService, CartService>();
 builder.Services.AddScoped<IQuanLyVaiTroService, QuanLyVaiTroService>();
+builder.Services.AddScoped<IGanVoucherService, GanVoucherService>();
+builder.Services.AddScoped<IKhuyenMaiService, KhuyenMaiService>();
+builder.Services.AddScoped<IPromotionService, PromotionService>();
+
 
 
 

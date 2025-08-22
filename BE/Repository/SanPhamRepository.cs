@@ -14,6 +14,148 @@ namespace BE.Repository
         {
             _context = context;
         }
+        //public async Task<List<SanPham>> GetAllWithDetailsAsync()
+        //{
+        //    return await _context.San_Pham
+        //        .Include(sp => sp.SanPhamSizes)
+        //            .ThenInclude(sps => sps.Size)
+        //        .Include(sp => sp.SanPhamLuongDas)
+        //            .ThenInclude(spld => spld.LuongDa)
+        //        .Include(sp => sp.SanPhamDoNgots)
+        //            .ThenInclude(spdn => spdn.DoNgot)
+        //        .Include(sp => sp.SanPhamToppings)
+        //            .ThenInclude(spt => spt.Topping)
+        //        .Select(sp => new SanPham
+        //        {
+        //            ID_San_Pham = sp.ID_San_Pham,
+        //            Ten_San_Pham = sp.Ten_San_Pham,
+        //            Gia = sp.Gia,
+        //            So_Luong = sp.So_Luong,
+        //            Hinh_Anh = sp.Hinh_Anh,
+        //            Mo_Ta = sp.Mo_Ta,
+        //            Trang_Thai = sp.Trang_Thai,
+        //            SanPhamSizes = sp.SanPhamSizes.Select(sps => new SanPhamSize
+        //            {
+        //                ID_Size = sps.ID_Size,
+        //                ID_San_Pham = sps.ID_San_Pham,
+        //                Size = new Size
+        //                {
+        //                    ID_Size = sps.Size.ID_Size,
+        //                    SizeName = sps.Size.SizeName,
+        //                    Trang_Thai = sps.Size.Trang_Thai
+        //                }
+        //            }).ToList(),
+        //            SanPhamLuongDas = sp.SanPhamLuongDas.Select(spld => new SanPhamLuongDa
+        //            {
+        //                ID_LuongDa = spld.ID_LuongDa,
+        //                ID_San_Pham = spld.ID_San_Pham,
+        //                LuongDa = new LuongDa
+        //                {
+        //                    ID_LuongDa = spld.LuongDa.ID_LuongDa,
+        //                    Ten_LuongDa = spld.LuongDa.Ten_LuongDa,
+        //                    Trang_Thai = spld.LuongDa.Trang_Thai
+        //                }
+        //            }).ToList(),
+        //            SanPhamDoNgots = sp.SanPhamDoNgots.Select(spdn => new SanPhamDoNgot
+        //            {
+        //                ID_DoNgot = spdn.ID_DoNgot,
+        //                ID_San_Pham = spdn.ID_San_Pham,
+        //                DoNgot = new DoNgot
+        //                {
+        //                    ID_DoNgot = spdn.DoNgot.ID_DoNgot,
+        //                    Muc_Do = spdn.DoNgot.Muc_Do,
+        //                    Trang_Thai = spdn.DoNgot.Trang_Thai
+        //                }
+        //            }).ToList(),
+        //            SanPhamToppings = sp.SanPhamToppings.Select(spt => new SanPhamTopping
+        //            {
+        //                ID_Topping = spt.ID_Topping,
+        //                ID_San_Pham = spt.ID_San_Pham,
+        //                Topping = new Topping
+        //                {
+        //                    ID_Topping = spt.Topping.ID_Topping,
+        //                    Ten = spt.Topping.Ten,
+        //                    So_Luong = spt.Topping.So_Luong,
+        //                    Gia = spt.Topping.Gia,
+        //                    Trang_Thai = spt.Topping.Trang_Thai
+        //                }
+        //            }).ToList()
+        //        })
+        //        .ToListAsync();
+        //}
+
+        //public async Task<SanPham> GetByIdWithDetailsAsync(int id)
+        //{
+        //    return await _context.San_Pham
+        //        .Where(sp => sp.ID_San_Pham == id)
+        //        .Include(sp => sp.SanPhamSizes)
+        //            .ThenInclude(sps => sps.Size)
+        //        .Include(sp => sp.SanPhamLuongDas)
+        //            .ThenInclude(spld => spld.LuongDa)
+        //        .Include(sp => sp.SanPhamDoNgots)
+        //            .ThenInclude(spdn => spdn.DoNgot)
+        //        .Include(sp => sp.SanPhamToppings)
+        //            .ThenInclude(spt => spt.Topping)
+        //        .Select(sp => new SanPham
+        //        {
+        //            ID_San_Pham = sp.ID_San_Pham,
+        //            Ten_San_Pham = sp.Ten_San_Pham,
+        //            Gia = sp.Gia,
+        //            So_Luong = sp.So_Luong,
+        //            Hinh_Anh = sp.Hinh_Anh,
+        //            Mo_Ta = sp.Mo_Ta,
+        //            Trang_Thai = sp.Trang_Thai,
+        //            SanPhamSizes = sp.SanPhamSizes.Select(sps => new SanPhamSize
+        //            {
+        //                ID_Size = sps.ID_Size,
+        //                ID_San_Pham = sps.ID_San_Pham,
+        //                Size = new Size
+        //                {
+        //                    ID_Size = sps.Size.ID_Size,
+        //                    SizeName = sps.Size.SizeName,
+        //                    Trang_Thai = sps.Size.Trang_Thai
+        //                }
+        //            }).ToList(),
+        //            SanPhamLuongDas = sp.SanPhamLuongDas.Select(spld => new SanPhamLuongDa
+        //            {
+        //                ID_LuongDa = spld.ID_LuongDa,
+        //                ID_San_Pham = spld.ID_San_Pham,
+        //                LuongDa = new LuongDa
+        //                {
+        //                    ID_LuongDa = spld.LuongDa.ID_LuongDa,
+        //                    Ten_LuongDa = spld.LuongDa.Ten_LuongDa,
+        //                    Trang_Thai = spld.LuongDa.Trang_Thai
+        //                }
+        //            }).ToList(),
+        //            SanPhamDoNgots = sp.SanPhamDoNgots.Select(spdn => new SanPhamDoNgot
+        //            {
+        //                ID_DoNgot = spdn.ID_DoNgot,
+        //                ID_San_Pham = spdn.ID_San_Pham,
+        //                DoNgot = new DoNgot
+        //                {
+        //                    ID_DoNgot = spdn.DoNgot.ID_DoNgot,
+        //                    Muc_Do = spdn.DoNgot.Muc_Do,
+        //                    Trang_Thai = spdn.DoNgot.Trang_Thai
+        //                }
+        //            }).ToList(),
+        //            SanPhamToppings = sp.SanPhamToppings.Select(spt => new SanPhamTopping
+        //            {
+        //                ID_Topping = spt.ID_Topping,
+        //                ID_San_Pham = spt.ID_San_Pham,
+        //                Topping = new Topping
+        //                {
+        //                    ID_Topping = spt.Topping.ID_Topping,
+        //                    Ten = spt.Topping.Ten,
+        //                    So_Luong = spt.Topping.So_Luong,
+        //                    Gia = spt.Topping.Gia,
+        //                    Trang_Thai = spt.Topping.Trang_Thai
+        //                }
+        //            }).ToList()
+        //        })
+        //        .FirstOrDefaultAsync();
+        //}
+
+
         public async Task<List<SanPham>> GetAllWithDetailsAsync()
         {
             return await _context.San_Pham
@@ -25,6 +167,8 @@ namespace BE.Repository
                     .ThenInclude(spdn => spdn.DoNgot)
                 .Include(sp => sp.SanPhamToppings)
                     .ThenInclude(spt => spt.Topping)
+                .Include(sp => sp.SanPhamKhuyenMais)
+                    .ThenInclude(spkm => spkm.BangKhuyenMai)
                 .Select(sp => new SanPham
                 {
                     ID_San_Pham = sp.ID_San_Pham,
@@ -78,6 +222,23 @@ namespace BE.Repository
                             So_Luong = spt.Topping.So_Luong,
                             Gia = spt.Topping.Gia,
                             Trang_Thai = spt.Topping.Trang_Thai
+                        }
+                    }).ToList(),
+                    SanPhamKhuyenMais = sp.SanPhamKhuyenMais.Select(spkm => new SanPhamKhuyenMai
+                    {
+                        ID_San_Pham_Khuyen_Mai = spkm.ID_San_Pham_Khuyen_Mai,
+                        ID_San_Pham = spkm.ID_San_Pham,
+                        ID_Khuyen_Mai = spkm.ID_Khuyen_Mai,
+                        Phan_Tram_Giam = spkm.Phan_Tram_Giam,
+                        Gia_Giam = spkm.Gia_Giam,
+                        BangKhuyenMai = new KhuyenMai
+                        {
+                            ID_Khuyen_Mai = spkm.BangKhuyenMai.ID_Khuyen_Mai,
+                            Ten_Khuyen_Mai = spkm.BangKhuyenMai.Ten_Khuyen_Mai,
+                            Ngay_Bat_Dau = spkm.BangKhuyenMai.Ngay_Bat_Dau,
+                            Ngay_Ket_Thuc = spkm.BangKhuyenMai.Ngay_Ket_Thuc,
+                            Mo_Ta = spkm.BangKhuyenMai.Mo_Ta,
+                            Trang_Thai = spkm.BangKhuyenMai.Trang_Thai
                         }
                     }).ToList()
                 })
@@ -96,6 +257,8 @@ namespace BE.Repository
                     .ThenInclude(spdn => spdn.DoNgot)
                 .Include(sp => sp.SanPhamToppings)
                     .ThenInclude(spt => spt.Topping)
+                .Include(sp => sp.SanPhamKhuyenMais)
+                    .ThenInclude(spkm => spkm.BangKhuyenMai)
                 .Select(sp => new SanPham
                 {
                     ID_San_Pham = sp.ID_San_Pham,
@@ -150,10 +313,28 @@ namespace BE.Repository
                             Gia = spt.Topping.Gia,
                             Trang_Thai = spt.Topping.Trang_Thai
                         }
+                    }).ToList(),
+                    SanPhamKhuyenMais = sp.SanPhamKhuyenMais.Select(spkm => new SanPhamKhuyenMai
+                    {
+                        ID_San_Pham_Khuyen_Mai = spkm.ID_San_Pham_Khuyen_Mai,
+                        ID_San_Pham = spkm.ID_San_Pham,
+                        ID_Khuyen_Mai = spkm.ID_Khuyen_Mai,
+                        Phan_Tram_Giam = spkm.Phan_Tram_Giam,
+                        Gia_Giam = spkm.Gia_Giam,
+                        BangKhuyenMai = new KhuyenMai
+                        {
+                            ID_Khuyen_Mai = spkm.BangKhuyenMai.ID_Khuyen_Mai,
+                            Ten_Khuyen_Mai = spkm.BangKhuyenMai.Ten_Khuyen_Mai,
+                            Ngay_Bat_Dau = spkm.BangKhuyenMai.Ngay_Bat_Dau,
+                            Ngay_Ket_Thuc = spkm.BangKhuyenMai.Ngay_Ket_Thuc,
+                            Mo_Ta = spkm.BangKhuyenMai.Mo_Ta,
+                            Trang_Thai = spkm.BangKhuyenMai.Trang_Thai
+                        }
                     }).ToList()
                 })
                 .FirstOrDefaultAsync();
         }
+
 
         public async Task<SanPhamDTO> CreateSanPhamAsync(SanPhamDTO sanPhamDTO, string imagePath)
         {

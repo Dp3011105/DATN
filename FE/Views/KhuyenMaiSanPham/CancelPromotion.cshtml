@@ -1,0 +1,171 @@
+﻿@{
+    Layout = "~/Views/Shared/_AdminLayout.cshtml";
+}
+@{
+    ViewData["Title"] = "Hủy áp dụng Khuyến mãi";
+    var promotions = ViewBag.Promotions as List<Promotion>;
+}
+
+<div class="container">
+    <h2>Hủy áp dụng Khuyến mãi</h2>
+
+    <div class="row">
+        <!-- Danh sách Khuyến mãi (Bên trái) -->
+        <div class="col-md-6">
+            <h4>Danh sách Khuyến mãi</h4>
+            <div class="form-group">
+                <label>Chọn Khuyến mãi:</label>
+                <select class="form-control" id="selectedPromotionId">
+                    <option value="">-- Chọn Khuyến mãi --</option>
+                    @if (promotions != null && promotions.Any())
+                    {
+                        @foreach (var promotion in promotions)
+                        {
+                            <option value="@promotion.ID_Promotion">@promotion.PromotionName</option>
+                        }
+                    }
+                    else
+                    {
+                        <option value="">Không có khuyến mãi nào</option>
+                    }
+                </select>
+                <div id="promotionError" class="text-danger" style="display: none;">Vui lòng chọn khuyến mãi!</div>
+            </div>
+        </div>
+
+        <!-- Danh sách Sản phẩm (Bên phải) -->
+        <div class="col-md-6">
+            <h4>Danh sách Sản phẩm</h4>
+            <table class="table table-bordered">
+                <thead>
+                    <tr>
+                        <th>Tên Sản phẩm</th>
+                        <th>Giá</th>
+                        <th>Số lượng</th>
+                        <th>Khuyến mãi</th>
+                        <th>Hành động</th>
+                    </tr>
+                </thead>
+                <tbody id="productTableBody">
+                    <tr>
+                        <td colspan="5">Vui lòng chọn khuyến mãi để hiển thị sản phẩm.</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-md-12">
+            <a href="@Url.Action("Index", "KhuyenMaiSanPham")" class="btn btn-secondary">Quay lại Áp dụng Khuyến mãi</a>
+        </div>
+    </div>
+
+    <div id="successMessage" class="alert alert-success" style="display: none;"></div>
+    <div id="errorMessage" class="alert alert-danger" style="display: none;"></div>
+</div>
+
+@section Scripts {
+    <script>
+        // Hàm định dạng số tiền
+        function formatPrice(price) {
+            return price.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+        }
+
+        // Gọi API sản phẩm theo iD_Khuyen_Mai
+        async function loadProducts(promotionId) {
+            try {
+                const response = await fetch(`https://localhost:7169/api/KhuyenMaiSanPham/${promotionId}`, {
+                    method: "GET",
+                    headers: {
+                        "Accept": "application/json"
+                    }
+                });
+
+                if (!response.ok) {
+                    throw new Error(`API trả về lỗi: Status ${response.status}`);
+                }
+
+                const products = await response.json();
+                console.log('[API] Dữ liệu sản phẩm từ https://localhost:7169/api/KhuyenMaiSanPham/' + promotionId + ':', JSON.stringify(products, null, 2));
+
+                // Cập nhật bảng sản phẩm
+                const tableBody = document.getElementById("productTableBody");
+                if (products.length > 0) {
+                    tableBody.innerHTML = products.map(p => `
+                        <tr>
+                            <td>${p.ten_San_Pham}</td>
+                            <td>${formatPrice(p.gia)}</td>
+                            <td>${p.so_Luong}</td>
+                            <td>${p.sanPhamKhuyenMai ? p.sanPhamKhuyenMai.khuyenMai.ten_Khuyen_Mai : 'Không có'}</td>
+                            <td>
+                                <button class="btn btn-danger btn-sm cancel-promotion" data-product-id="${p.iD_San_Pham}" data-promotion-id="${promotionId}">Dừng áp dụng</button>
+                            </td>
+                        </tr>
+                    `).join('');
+                } else {
+                    tableBody.innerHTML = `<tr><td colspan="5">Không có sản phẩm nào cho khuyến mãi này.</td></tr>`;
+                }
+
+                // Thêm sự kiện cho nút Dừng áp dụng
+                document.querySelectorAll('.cancel-promotion').forEach(button => {
+                    button.addEventListener('click', async function() {
+                        const productId = this.getAttribute('data-product-id');
+                        const promotionId = this.getAttribute('data-promotion-id');
+
+                        // Log dữ liệu gửi đi
+                        console.log('[API] Gửi yêu cầu DELETE tới https://localhost:7169/api/KhuyenMaiSanPham/' + productId + '/' + promotionId);
+
+                        try {
+                            const response = await fetch(`https://localhost:7169/api/KhuyenMaiSanPham/${productId}/${promotionId}`, {
+                                method: "DELETE",
+                                headers: {
+                                    "Accept": "application/json"
+                                }
+                            });
+
+                            if (!response.ok) {
+                                const errorContent = await response.text();
+                                console.error('[API] Lỗi khi gọi API DELETE:', { status: response.status, content: errorContent });
+                                document.getElementById('errorMessage').textContent = `Lỗi khi hủy khuyến mãi: Status ${response.status}`;
+                                document.getElementById('errorMessage').style.display = 'block';
+                                return;
+                            }
+
+                            document.getElementById('successMessage').textContent = `Hủy khuyến mãi thành công cho sản phẩm ID ${productId}!`;
+                            document.getElementById('successMessage').style.display = 'block';
+
+                            // Tải lại sản phẩm
+                            await loadProducts(promotionId);
+                        } catch (error) {
+                            console.error('[API] Lỗi khi gọi API DELETE:', error.message);
+                            document.getElementById('errorMessage').textContent = 'Lỗi khi hủy khuyến mãi: ' + error.message;
+                            document.getElementById('errorMessage').style.display = 'block';
+                        }
+                    });
+                });
+            } catch (error) {
+                console.error('[API] Lỗi khi gọi API sản phẩm:', error.message);
+                document.getElementById('errorMessage').textContent = 'Lỗi khi tải sản phẩm: ' + error.message;
+                document.getElementById('errorMessage').style.display = 'block';
+                document.getElementById('productTableBody').innerHTML = `<tr><td colspan="5">Lỗi khi tải sản phẩm: ${error.message}</td></tr>`;
+            }
+        }
+
+        // Xử lý khi chọn khuyến mãi
+        document.getElementById('selectedPromotionId').addEventListener('change', function() {
+            const promotionId = this.value;
+            document.getElementById('successMessage').style.display = 'none';
+            document.getElementById('errorMessage').style.display = 'none';
+            document.getElementById('promotionError').style.display = 'none';
+
+            if (!promotionId) {
+                document.getElementById('promotionError').style.display = 'block';
+                document.getElementById('productTableBody').innerHTML = `<tr><td colspan="5">Vui lòng chọn khuyến mãi để hiển thị sản phẩm.</td></tr>`;
+                return;
+            }
+
+            loadProducts(promotionId);
+        });
+    </script>
+}
