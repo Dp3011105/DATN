@@ -622,6 +622,16 @@ namespace BE.Data
             modelBuilder.Entity<HoaDonVoucher>()
                 .Property(hdv => hdv.Gia_Tri_Giam)
                 .HasPrecision(18, 2);
+
+
+            // 33. SanPhamKhuyenMais 
+            modelBuilder.Entity<SanPhamKhuyenMai>()
+            .Property(p => p.Gia_Giam)
+            .HasColumnType("decimal(18,2)"); // Chỉ định kiểu dữ liệu cho Gia_Giam
+
+            modelBuilder.Entity<SanPhamKhuyenMai>()
+                .Property(p => p.Phan_Tram_Giam)
+                .HasColumnType("decimal(5,2)"); // Chỉ định kiểu dữ liệu cho Phan_Tram_Giam
         }
     }
 }
