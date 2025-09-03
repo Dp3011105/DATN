@@ -268,6 +268,9 @@ namespace BE.Data
             modelBuilder.Entity<Topping>()
                 .Property(t => t.Ghi_Chu)
                 .IsRequired(false);
+            modelBuilder.Entity<Topping>()
+                .Property(t => t.Hinh_Anh)
+                .HasMaxLength(255); // Hoặc chiều dài tối đa khác nếu cần
 
             // 15. SanPham_Topping
             modelBuilder.Entity<SanPhamTopping>()
