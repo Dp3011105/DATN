@@ -12,5 +12,7 @@ namespace BE.Repository.IRepository
         Task AddAsync(HoaDon entity);
         Task UpdateAsync(int id, HoaDon entity);
         Task DeleteAsync(int id);
+        Task<bool> UpdateTrangThaiAsync(int id, string trangThai, string? lyDoHuy);
+
     }
 }

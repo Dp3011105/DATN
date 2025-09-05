@@ -1,37 +1,60 @@
-﻿@using FE.Controllers
-@model QuanLyDonHangViewModel
+﻿@model FE.Controllers.QuanLyDonHangViewModel
+@using System.Globalization
 @{
     ViewData["Title"] = "Quản lý đơn hàng";
+    var vi = new CultureInfo("vi-VN");
 }
 
 <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" />
-<style>
-    .search-row { display:flex; gap:.5rem; align-items:center; margin-bottom:1rem; }
-    .tab-filter .btn { margin-right:.5rem; margin-bottom:.5rem; }
-    .badge-status { font-weight:600; }
-    .badge.Chờ\ xác\ nhận { background:#fff3cd; color:#664d03; } /* yellow */
-    .badge.Chờ\ giao { background:#cfe2ff; color:#084298; }     /* blue */
-    .badge.Vận\ chuyển { background:#cff4fc; color:#055160; }  /* cyan */
-    .badge.Hoàn\ thành { background:#d1e7dd; color:#0f5132; }  /* green */
-    .badge.Đã\ huỷ { background:#f8d7da; color:#842029; }      /* red */
-    .table thead th { white-space:nowrap; }
-</style>
+
+@functions {
+    string MapTrangThaiFromDb(string db) => db switch
+    {
+        "Chua_Xac_Nhan" or "Dang_Xu_Ly" => "Chờ xác nhận",
+        "Da_Xac_Nhan" => "Chờ giao",
+        "Dang_Giao_Hang" => "Vận chuyển",
+        "Hoan_Thanh" => "Hoàn thành",
+        "Huy_Don" => "Đã huỷ",
+        _ => db ?? ""
+    };
+
+    string BadgeClass(string human) => human switch
+    {
+        "Chờ xác nhận" => "text-bg-warning",
+        "Chờ giao" => "text-bg-primary",
+        "Vận chuyển" => "text-bg-info",
+        "Hoàn thành" => "text-bg-success",
+        "Đã huỷ" => "text-bg-danger",
+        _ => "text-bg-secondary"
+    };
+
+    string VND(decimal n) => string.Format(new CultureInfo("vi-VN"), "{0:c0}", n);
+}
 
 <div class="container-fluid py-3">
     <h3 class="mb-3">Quản lý đơn hàng</h3>
 
-    <div class="search-row">
-        <input id="tuKhoa" class="form-control" style="max-width:360px" placeholder="Tìm theo mã đơn hoặc tên khách..." value="@Model.TuKhoa" />
-        <button class="btn btn-secondary" onclick="taiLai()">Tải lại</button>
-    </div>
+    @if (TempData["msg"] is string msg && !string.IsNullOrWhiteSpace(msg))
+    {
+        <div class="alert alert-info py-2">@msg</div>
+    }
 
-    <div class="tab-filter mb-2">
-        @foreach (var t in Model.TrangThaiList)
-        {
-            var active = (t == Model.TrangThai) ? "btn-primary" : "btn-outline-primary";
-            <button class="btn @active" onclick="chonTrangThai('@t')">@t</button>
-        }
-    </div>
+    <!-- Filter GET -->
+    <form method="get" class="d-flex align-items-center gap-2 mb-3">
+        <input name="tuKhoa" id="tuKhoa" class="form-control" style="max-width:360px"
+               value="@Model.TuKhoa" placeholder="Tìm theo mã / tên khách..." />
+
+        <select name="trangThai" id="selTrangThai" class="form-select" style="max-width:160px">
+            @foreach (var t in Model.TrangThaiList)
+            {
+                <option value="@t" selected="@(t == Model.TrangThai)">
+                    @t
+                </option>
+            }
+        </select>
+
+        <button class="btn btn-secondary" type="submit">Tải lại</button>
+    </form>
 
     <div class="table-responsive">
         <table class="table table-hover align-middle">
@@ -41,177 +64,70 @@
                     <th>Khách hàng</th>
                     <th>Ngày tạo</th>
                     <th>Thanh toán</th>
-                    <th>Tổng tiền</th>
+                    <th>Loại HD</th>
+                    <th class="text-end">Tổng tiền</th>
                     <th>Trạng thái</th>
-                    <th style="width:220px">Thao tác</th>
+                    <th class="text-end" style="width:240px">Thao tác</th>
                 </tr>
             </thead>
-            <tbody id="tbody-ds">
-                <!-- JS fill -->
+            <tbody>
+                @if (Model.DanhSachHoaDon == null || Model.DanhSachHoaDon.Count == 0)
+                {
+                    <tr>
+                        <td colspan="8" class="text-muted">Không có dữ liệu</td>
+                    </tr>
+                }
+                else
+                {
+                    foreach (var hd in Model.DanhSachHoaDon)
+                    {
+                        var human = MapTrangThaiFromDb(hd.Trang_Thai ?? "");
+                        <tr>
+                            <td>
+                                <a class="text-decoration-none fw-semibold"
+                                   href="@Url.Action("ChiTiet", "QuanLyDonHang", new { id = hd.ID_Hoa_Don })">
+                                    @hd.Ma_Hoa_Don
+                                </a>
+                            </td>
+                            <td>@(hd.KhachHang?.Ho_Ten ?? "Khách lẻ")</td>
+                            <td>@hd.Ngay_Tao.ToString("dd/MM/yyyy HH:mm")</td>
+                            <td>@(hd.HinhThucThanhToan?.Phuong_Thuc_Thanh_Toan ?? "N/A")</td>
+                            <td>@(string.IsNullOrWhiteSpace(hd.Loai_Hoa_Don) ? "—" : hd.Loai_Hoa_Don)</td>
+                            <td class="text-end">@VND(hd.Tong_Tien)</td>
+                            <td>
+                                <span class="badge @BadgeClass(human)">@human</span>
+                            </td>
+                            <td class="text-end">
+                                <a class="btn btn-sm btn-outline-secondary me-1"
+                                   href="@Url.Action("ChiTiet", "QuanLyDonHang", new { id = hd.ID_Hoa_Don })">Chi tiết</a>
+
+                                @* Hiển thị nút Xác nhận nếu đang "Chờ xác nhận" *@
+                                @if (string.Equals(hd.Trang_Thai, "Chua_Xac_Nhan", StringComparison.OrdinalIgnoreCase))
+                                {
+                                    <form method="post" class="d-inline" action="@Url.Action("XacNhan","QuanLyDonHang")">
+                                        @Html.AntiForgeryToken()
+                                        <input type="hidden" name="id" value="@hd.ID_Hoa_Don" />
+                                        <button class="btn btn-sm btn-primary me-1" type="submit">Xác nhận</button>
+                                    </form>
+                                }
+
+                                @* Không cho hủy nếu đã hoàn thành hoặc đã hủy *@
+                                @if (!string.Equals(hd.Trang_Thai, "Hoan_Thanh", StringComparison.OrdinalIgnoreCase)
+                                                        && !string.Equals(hd.Trang_Thai, "Huy_Don", StringComparison.OrdinalIgnoreCase))
+                                {
+                                    <form method="post" class="d-inline"
+                                          action="@Url.Action("Huy","QuanLyDonHang")"
+                                          onsubmit="return confirm('Bạn chắc chắn muốn hủy đơn này?');">
+                                        @Html.AntiForgeryToken()
+                                        <input type="hidden" name="id" value="@hd.ID_Hoa_Don" />
+                                        <button class="btn btn-sm btn-outline-danger" type="submit">Hủy</button>
+                                    </form>
+                                }
+                            </td>
+                        </tr>
+                    }
+                }
             </tbody>
         </table>
     </div>
 </div>
-
-<!-- Modal nhập lý do hủy -->
-<div class="modal fade" id="modalHuy" tabindex="-1" aria-hidden="true">
-    <div class="modal-dialog">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title">Hủy đơn hàng</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-            </div>
-            <div class="modal-body">
-                <input type="hidden" id="huy-id" />
-                <div class="mb-2">
-                    <label class="form-label">Lý do hủy</label>
-                    <textarea class="form-control" id="huy-lydo" rows="3" placeholder="Nhập lý do hủy (tuỳ chọn)"></textarea>
-                </div>
-                <div class="text-muted small">Hệ thống sẽ ghi nhận lý do (nếu có) kèm lịch sử trạng thái.</div>
-            </div>
-            <div class="modal-footer">
-                <button class="btn btn-secondary" data-bs-dismiss="modal">Đóng</button>
-                <button class="btn btn-danger" onclick="xacNhanHuy()">Xác nhận hủy</button>
-            </div>
-        </div>
-    </div>
-</div>
-
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
-<script>
-    const apiListUrl = '/QuanLyDonHang/GetDanhSach';
-    const apiUpdateUrl = '/QuanLyDonHang/CapNhatTrangThaiLight';
-    const apiCancelUrl = '/QuanLyDonHang/HuyDonLight';
-
-    function getTrangThai() {
-        const active = document.querySelector('.tab-filter .btn.btn-primary');
-        return active ? active.textContent.trim() : 'TẤT CẢ';
-    }
-
-    function chonTrangThai(tt) {
-        document.querySelectorAll('.tab-filter .btn').forEach(b => b.classList.remove('btn-primary','btn-outline-primary'));
-        document.querySelectorAll('.tab-filter .btn').forEach(b => {
-            if (b.textContent.trim() === tt) b.classList.add('btn-primary');
-            else b.classList.add('btn-outline-primary');
-        });
-        loadData();
-    }
-
-    function taiLai() {
-        document.getElementById('tuKhoa').value = '';
-        chonTrangThai('TẤT CẢ');
-    }
-
-    async function loadData() {
-        const tuKhoa = document.getElementById('tuKhoa').value || '';
-        const trangThai = getTrangThai();
-        const url = `${apiListUrl}?tuKhoa=${encodeURIComponent(tuKhoa)}&trangThai=${encodeURIComponent(trangThai)}`;
-        const res = await fetch(url);
-        const js = await res.json();
-        const tbody = document.getElementById('tbody-ds');
-        tbody.innerHTML = '';
-        if (!js.success) {
-            tbody.innerHTML = `<tr><td colspan="7" class="text-danger">${js.message || 'Không tải được dữ liệu'}</td></tr>`;
-            return;
-        }
-        if (!js.data || js.data.length === 0) {
-            tbody.innerHTML = `<tr><td colspan="7" class="text-muted">Không có dữ liệu</td></tr>`;
-            return;
-        }
-        js.data.forEach(row => {
-            const tr = document.createElement('tr');
-
-            const badge = `<span class="badge badge-status ${row.TrangThaiHienThi}">${row.TrangThaiHienThi}</span>`;
-            const detailUrl = `/QuanLyDonHang/ChiTiet/${row.ID_Hoa_Don}`;
-
-            // Gợi ý action theo trạng thái
-            const actions = buildActions(row);
-
-            tr.innerHTML = `
-                <td><a href="${detailUrl}" class="text-decoration-none fw-semibold">${row.Ma_Hoa_Don}</a></td>
-                <td>${row.KhachHang}</td>
-                <td>${row.Ngay_Tao}</td>
-                <td>${row.HinhThucThanhToan}</td>
-                <td>${formatVND(row.Tong_Tien)}</td>
-                <td>${badge}</td>
-                <td>${actions}</td>
-            `;
-            tbody.appendChild(tr);
-        });
-    }
-
-    function buildActions(row) {
-        const id = row.ID_Hoa_Don;
-        const detailBtn = `<a class="btn btn-sm btn-outline-secondary me-1" href="/QuanLyDonHang/ChiTiet/${id}">Chi tiết</a>`;
-        let confirmBtn = '';
-        let shipBtn = '';
-        let doneBtn = '';
-
-        // chuyển máy trạng thái "nhẹ": Chờ xác nhận -> Chờ giao -> Vận chuyển -> Hoàn thành
-        if (row.TrangThaiHienThi === 'Chờ xác nhận') {
-            confirmBtn = `<button class="btn btn-sm btn-primary me-1" onclick="capNhat(${id}, 'Chờ giao')">Xác nhận</button>`;
-        }
-        if (row.TrangThaiHienThi === 'Chờ giao') {
-            shipBtn = `<button class="btn btn-sm btn-info me-1" onclick="capNhat(${id}, 'Vận chuyển')">Giao hàng</button>`;
-        }
-        if (row.TrangThaiHienThi === 'Vận chuyển') {
-            doneBtn = `<button class="btn btn-sm btn-success me-1" onclick="capNhat(${id}, 'Hoàn thành')">Hoàn thành</button>`;
-        }
-
-        const cancelBtn = (row.TrangThaiHienThi === 'Hoàn thành' || row.TrangThaiHienThi === 'Đã huỷ')
-            ? ''
-            : `<button class="btn btn-sm btn-outline-danger" onclick="openHuy(${id})">Hủy</button>`;
-
-        return detailBtn + confirmBtn + shipBtn + doneBtn + cancelBtn;
-    }
-
-    async function capNhat(id, trangThaiMoi) {
-        const res = await fetch(apiUpdateUrl, {
-            method: 'POST',
-            headers: { 'Content-Type':'application/json' },
-            body: JSON.stringify({ HoaDonId: id, TrangThaiMoi: trangThaiMoi })
-        });
-        const js = await res.json();
-        if (js.success) {
-            loadData();
-        } else {
-            alert(js.message || 'Cập nhật thất bại');
-        }
-    }
-
-    function openHuy(id) {
-        document.getElementById('huy-id').value = id;
-        document.getElementById('huy-lydo').value = '';
-        const m = new bootstrap.Modal(document.getElementById('modalHuy'));
-        m.show();
-    }
-
-    async function xacNhanHuy() {
-        const id = parseInt(document.getElementById('huy-id').value);
-        const lydo = document.getElementById('huy-lydo').value || null;
-        const res = await fetch(apiCancelUrl, {
-            method: 'POST',
-            headers: { 'Content-Type':'application/json' },
-            body: JSON.stringify({ HoaDonId: id, LyDoHuy: lydo })
-        });
-        const js = await res.json();
-        if (js.success) {
-            bootstrap.Modal.getInstance(document.getElementById('modalHuy')).hide();
-            loadData();
-        } else {
-            alert(js.message || 'Hủy đơn thất bại');
-        }
-    }
-
-    function formatVND(n) {
-        try { return (n || 0).toLocaleString('vi-VN', {style:'currency', currency:'VND'}); }
-        catch { return n; }
-    }
-
-    document.getElementById('tuKhoa').addEventListener('keyup', (e) => {
-        if (e.key === 'Enter') loadData();
-    });
-
-    // init
-    loadData();
-</script>
