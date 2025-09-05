@@ -47,9 +47,7 @@
         <select name="trangThai" id="selTrangThai" class="form-select" style="max-width:160px">
             @foreach (var t in Model.TrangThaiList)
             {
-                <option value="@t" selected="@(t == Model.TrangThai)">
-                    @t
-                </option>
+                <option value="@t" selected="@(t == Model.TrangThai)">@t</option>
             }
         </select>
 
@@ -67,15 +65,13 @@
                     <th>Loại HD</th>
                     <th class="text-end">Tổng tiền</th>
                     <th>Trạng thái</th>
-                    <th class="text-end" style="width:240px">Thao tác</th>
+                    <th class="text-end" style="width:300px">Thao tác</th>
                 </tr>
             </thead>
             <tbody>
                 @if (Model.DanhSachHoaDon == null || Model.DanhSachHoaDon.Count == 0)
                 {
-                    <tr>
-                        <td colspan="8" class="text-muted">Không có dữ liệu</td>
-                    </tr>
+                    <tr><td colspan="8" class="text-muted">Không có dữ liệu</td></tr>
                 }
                 else
                 {
@@ -94,14 +90,13 @@
                             <td>@(hd.HinhThucThanhToan?.Phuong_Thuc_Thanh_Toan ?? "N/A")</td>
                             <td>@(string.IsNullOrWhiteSpace(hd.Loai_Hoa_Don) ? "—" : hd.Loai_Hoa_Don)</td>
                             <td class="text-end">@VND(hd.Tong_Tien)</td>
-                            <td>
-                                <span class="badge @BadgeClass(human)">@human</span>
-                            </td>
+                            <td><span class="badge @BadgeClass(human)">@human</span></td>
                             <td class="text-end">
+
                                 <a class="btn btn-sm btn-outline-secondary me-1"
                                    href="@Url.Action("ChiTiet", "QuanLyDonHang", new { id = hd.ID_Hoa_Don })">Chi tiết</a>
 
-                                @* Hiển thị nút Xác nhận nếu đang "Chờ xác nhận" *@
+                                @* B1: Xác nhận (từ Chờ xác nhận -> Đang giao hàng) *@
                                 @if (string.Equals(hd.Trang_Thai, "Chua_Xac_Nhan", StringComparison.OrdinalIgnoreCase))
                                 {
                                     <form method="post" class="d-inline" action="@Url.Action("XacNhan","QuanLyDonHang")">
@@ -111,7 +106,17 @@
                                     </form>
                                 }
 
-                                @* Không cho hủy nếu đã hoàn thành hoặc đã hủy *@
+                                @* B2: Khi đang giao hàng -> cho phép hoàn tất *@
+                                @if (string.Equals(hd.Trang_Thai, "Dang_Giao_Hang", StringComparison.OrdinalIgnoreCase))
+                                {
+                                    <form method="post" class="d-inline" action="@Url.Action("GiaoHangThanhCong","QuanLyDonHang")">
+                                        @Html.AntiForgeryToken()
+                                        <input type="hidden" name="id" value="@hd.ID_Hoa_Don" />
+                                        <button class="btn btn-sm btn-success me-1" type="submit">Giao hàng thành công</button>
+                                    </form>
+                                }
+
+                                @* Hủy: ẩn nếu đã hoàn thành hoặc đã hủy *@
                                 @if (!string.Equals(hd.Trang_Thai, "Hoan_Thanh", StringComparison.OrdinalIgnoreCase)
                                                         && !string.Equals(hd.Trang_Thai, "Huy_Don", StringComparison.OrdinalIgnoreCase))
                                 {

@@ -87,68 +87,31 @@ namespace FE.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> XacNhan(int id)
         {
-            try
-            {
-                var hd = await _hoaDonService.GetByIdAsync(id);
-                if (hd == null)
-                {
-                    TempData["msg"] = "Không tìm thấy hóa đơn.";
-                    return RedirectToAction(nameof(Index));
-                }
-
-                // chỉ xác nhận nếu đang chờ
-                if (string.Equals(hd.Trang_Thai, "Chua_Xac_Nhan", StringComparison.OrdinalIgnoreCase))
-                {
-                    hd.Trang_Thai = "Da_Xac_Nhan";
-                    await _hoaDonService.UpdateAsync(hd.ID_Hoa_Don, hd);
-                    TempData["msg"] = $"Đã xác nhận đơn {hd.Ma_Hoa_Don}.";
-                }
-                else
-                {
-                    TempData["msg"] = "Đơn không ở trạng thái Chờ xác nhận.";
-                }
-            }
-            catch (Exception ex)
-            {
-                TempData["msg"] = $"Lỗi xác nhận: {ex.Message}";
-            }
-
+            var ok = await _hoaDonService.UpdateTrangThaiAsync(id, "Dang_Giao_Hang", null);
+            TempData["msg"] = ok ? "Đã chuyển đơn sang trạng thái: Đang giao hàng." : "Cập nhật thất bại.";
             return RedirectToAction(nameof(Index));
         }
 
-        // ===== HỦY ĐƠN: đặt Trang_Thai = Huy_Don =====
+        // HỦY
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Huy(int id)
         {
-            try
-            {
-                var hd = await _hoaDonService.GetByIdAsync(id);
-                if (hd == null)
-                {
-                    TempData["msg"] = "Không tìm thấy hóa đơn.";
-                    return RedirectToAction(nameof(Index));
-                }
-
-                if (!string.Equals(hd.Trang_Thai, "Hoan_Thanh", StringComparison.OrdinalIgnoreCase) &&
-                    !string.Equals(hd.Trang_Thai, "Huy_Don", StringComparison.OrdinalIgnoreCase))
-                {
-                    hd.Trang_Thai = "Huy_Don";
-                    await _hoaDonService.UpdateAsync(hd.ID_Hoa_Don, hd);
-                    TempData["msg"] = $"Đã hủy đơn {hd.Ma_Hoa_Don}.";
-                }
-                else
-                {
-                    TempData["msg"] = "Đơn đã hoàn thành hoặc đã hủy.";
-                }
-            }
-            catch (Exception ex)
-            {
-                TempData["msg"] = $"Lỗi hủy đơn: {ex.Message}";
-            }
-
+            var ok = await _hoaDonService.UpdateTrangThaiAsync(id, "Huy_Don", "Hủy trên màn hình quản lý");
+            TempData["msg"] = ok ? "Đã hủy đơn." : "Hủy đơn thất bại.";
             return RedirectToAction(nameof(Index));
         }
+
+        // GIAO HÀNG THÀNH CÔNG -> HOÀN THÀNH
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> GiaoHangThanhCong(int id)
+        {
+            var ok = await _hoaDonService.UpdateTrangThaiAsync(id, "Hoan_Thanh", null);
+            TempData["msg"] = ok ? "Đã xác nhận giao hàng thành công." : "Cập nhật thất bại.";
+            return RedirectToAction(nameof(Index));
+        }
+
         // ---- Helpers ----
         private static bool IsTatCa(string s) =>
             string.IsNullOrWhiteSpace(s) ||
@@ -166,6 +129,8 @@ namespace FE.Controllers
             _ => string.IsNullOrWhiteSpace(hienThi) ? "" : hienThi
         };
     }
+
+
 
     // ===== ViewModels =====
     public class QuanLyDonHangViewModel
