@@ -32,8 +32,23 @@
         public async Task<HoaDon> GetByIdAsync(int id)
         {
             return await _context.Hoa_Don
+                .AsNoTracking()
+                .Include(hd => hd.KhachHang)
+                .Include(hd => hd.HinhThucThanhToan)
+
+                // CHI TIẾT + các navigation cần thiết
                 .Include(hd => hd.HoaDonChiTiets)
-                .ThenInclude(cthd => cthd.SanPham)
+                    .ThenInclude(ct => ct.SanPham)
+                .Include(hd => hd.HoaDonChiTiets)
+                    .ThenInclude(ct => ct.Size)
+                .Include(hd => hd.HoaDonChiTiets)
+                    .ThenInclude(ct => ct.DoNgot)
+                .Include(hd => hd.HoaDonChiTiets)
+                    .ThenInclude(ct => ct.LuongDa)
+                .Include(hd => hd.HoaDonChiTiets)
+                    .ThenInclude(ct => ct.HoaDonChiTietToppings)
+                        .ThenInclude(ctt => ctt.Topping)
+
                 .FirstOrDefaultAsync(hd => hd.ID_Hoa_Don == id);
         }
 
@@ -67,6 +82,18 @@
 
             _context.Hoa_Don.Remove(existing);
             await _context.SaveChangesAsync();
+        }
+        public async Task<bool> UpdateTrangThaiAsync(int id, string trangThai, string? lyDoHuy)
+        {
+            var hd = await _context.Hoa_Don.FirstOrDefaultAsync(x => x.ID_Hoa_Don == id);
+            if (hd == null) return false;
+
+            hd.Trang_Thai = trangThai;
+            if (!string.IsNullOrWhiteSpace(lyDoHuy) && trangThai == "Huy_Don")
+                hd.LyDoHuyDon = lyDoHuy;
+
+            await _context.SaveChangesAsync();
+            return true;
         }
     }
 }
