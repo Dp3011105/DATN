@@ -1,7 +1,6 @@
 ﻿@using System.Globalization
 @model FE.Controllers.ChiTietHoaDonViewModel
 @{
-    ViewData["Title"] = "Chi tiết hoá đơn";
     string VND(decimal d) => string.Format(new CultureInfo("vi-VN"), "{0:#,0} đ", d);
     string Badge(string db) => db switch
     {
@@ -65,6 +64,7 @@
                             <th>Size</th>
                             <th>Ngọt</th>
                             <th>Đá</th>
+                            <th>Topping</th>
                             <th class="text-end">Đơn giá</th>
                             <th class="text-end">SL</th>
                             <th class="text-end">Thành tiền</th>
@@ -73,23 +73,29 @@
                     <tbody>
                         @if (Model.ChiTiets?.Any() != true)
                         {
-                            <tr><td colspan="7" class="text-muted">Không có chi tiết.</td></tr>
+                            <tr><td colspan="8" class="text-muted">Không có chi tiết.</td></tr>
                         }
                         else
                         {
                             foreach (var ct in Model.ChiTiets)
                             {
                                 var tenSp = ct.SanPham?.Ten_San_Pham ?? $"SP#{ct.ID_San_Pham}";
-                                var size = ct.Size?.SizeName ?? ct.Size?.SizeName ?? "-";
-                                var ngot = ct.DoNgot?.Muc_Do ?? "-";
-                                var da = ct.LuongDa?.Ten_LuongDa ?? "-";
+                                var sizeTxt = ct.Size?.SizeName ?? ct.Size?.SizeName ?? (ct.ID_Size.HasValue ? $"#{ct.ID_Size}" : "-");
+                                var ngotTxt = ct.DoNgot?.Muc_Do ?? "-";
+                                var daTxt = ct.LuongDa?.Ten_LuongDa ?? ct.LuongDa?.Ten_LuongDa ?? (ct.ID_LuongDa.HasValue ? $"#{ct.ID_LuongDa}" : "-");
+
+                                var tops = (ct.HoaDonChiTietToppings ?? new List<BE.models.HoaDonChiTietTopping>())
+                                .Select(t => t.Topping?.Ten ?? $"T#{t.ID_Topping}");
+                                var topTxt = tops.Any() ? string.Join(", ", tops) : "-";
+
                                 var donGia = ct.Gia_San_Pham + ct.Gia_Them_Size;
 
                                 <tr>
                                     <td>@tenSp</td>
-                                    <td>@size</td>
-                                    <td>@ngot</td>
-                                    <td>@da</td>
+                                    <td>@sizeTxt</td>
+                                    <td>@ngotTxt</td>
+                                    <td>@daTxt</td>
+                                    <td>@topTxt</td>
                                     <td class="text-end">@VND(donGia)</td>
                                     <td class="text-end">@ct.So_Luong</td>
                                     <td class="text-end">@VND(ct.Tong_Tien)</td>

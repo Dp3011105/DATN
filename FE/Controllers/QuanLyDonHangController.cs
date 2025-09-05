@@ -1,4 +1,5 @@
 ﻿using BE.models;
+using FE.Service.IService;
 using Microsoft.AspNetCore.Mvc;
 using Service.IService;
 using System;
@@ -11,12 +12,13 @@ namespace FE.Controllers
     public class QuanLyDonHangController : Controller
     {
         private readonly IHoaDonService _hoaDonService;
+        private readonly IProductService _productService;   // <— thêm
 
-        public QuanLyDonHangController(IHoaDonService hoaDonService)
+        public QuanLyDonHangController(IHoaDonService hoaDonService, IProductService productService)
         {
             _hoaDonService = hoaDonService;
+            _productService = productService;
         }
-
         // ====== DANH SÁCH (server render) ======
         [HttpGet]
         public async Task<IActionResult> Index(string tuKhoa = "", string trangThai = "TẤT CẢ")

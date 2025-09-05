@@ -32,8 +32,11 @@
         public async Task<HoaDon> GetByIdAsync(int id)
         {
             return await _context.Hoa_Don
+                .AsNoTracking()
                 .Include(hd => hd.KhachHang)
                 .Include(hd => hd.HinhThucThanhToan)
+
+                // CHI TIẾT + các navigation cần thiết
                 .Include(hd => hd.HoaDonChiTiets)
                     .ThenInclude(ct => ct.SanPham)
                 .Include(hd => hd.HoaDonChiTiets)
@@ -44,7 +47,8 @@
                     .ThenInclude(ct => ct.LuongDa)
                 .Include(hd => hd.HoaDonChiTiets)
                     .ThenInclude(ct => ct.HoaDonChiTietToppings)
-                        .ThenInclude(t => t.Topping)
+                        .ThenInclude(ctt => ctt.Topping)
+
                 .FirstOrDefaultAsync(hd => hd.ID_Hoa_Don == id);
         }
 
