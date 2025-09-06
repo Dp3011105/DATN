@@ -1,5 +1,7 @@
-﻿using System.Threading.Tasks;
+﻿using System.Collections.Generic;
+using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
+using BE.DTOs;
 using BE.models;
 using BE.Repository.IRepository;
 
@@ -12,12 +14,17 @@ namespace BE.Controllers
         private readonly IHoaDonRepository _repository;
         public HoaDonController(IHoaDonRepository repository) => _repository = repository;
 
-        // GET api/HoaDon  (trả DTO gọn)
+        // GET api/HoaDon  -> trả DTO (màn danh sách)
         [HttpGet]
-        public async Task<IActionResult> GetAll()
+        public async Task<ActionResult<IEnumerable<HoaDonDTO>>> GetAll()
             => Ok(await _repository.GetAllAsync());
 
-        // GET api/HoaDon/5  (trả entity + include chi tiết trong repository)
+        // GET api/HoaDon/entities -> trả entity (giữ tương thích code FE cũ)
+        [HttpGet("entities")]
+        public async Task<ActionResult<IEnumerable<HoaDon>>> GetAllEntities()
+            => Ok(await _repository.GetAllEntitiesAsync());
+
+        // GET api/HoaDon/5
         [HttpGet("{id:int}")]
         public async Task<IActionResult> GetById(int id)
         {
@@ -42,9 +49,6 @@ namespace BE.Controllers
             if (hoaDon == null || id != hoaDon.ID_Hoa_Don)
                 return BadRequest("Invalid HoaDon data.");
 
-            var existing = await _repository.GetByIdAsync(id);
-            if (existing == null) return NotFound();
-
             await _repository.UpdateAsync(id, hoaDon);
             return NoContent();
         }
@@ -53,9 +57,6 @@ namespace BE.Controllers
         [HttpDelete("{id:int}")]
         public async Task<IActionResult> Delete(int id)
         {
-            var existing = await _repository.GetByIdAsync(id);
-            if (existing == null) return NotFound();
-
             await _repository.DeleteAsync(id);
             return NoContent();
         }
