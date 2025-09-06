@@ -95,6 +95,22 @@
         padding: 0 .4rem
     }
 
+    .stock-badge {
+        position: absolute;
+        top: 8px;
+        right: 8px;
+        background: #111827;
+        color: #fff;
+        font-size: .75rem;
+        padding: .25rem .5rem;
+        border-radius: .5rem;
+        opacity: .9
+    }
+
+    .out-of-stock {
+        opacity: .5;
+        pointer-events: none;
+    }
     /* ===== Styles cho hóa đơn in/pdf ===== */
     .invoice {
         font-family: system-ui, -apple-system, Segoe UI, Roboto, 'Helvetica Neue', Arial, 'Noto Sans', 'Liberation Sans', sans-serif;
@@ -263,6 +279,7 @@
                 <div class="mb-2">
                     <label class="form-label">Số lượng</label>
                     <input id="mdlQty" type="number" min="1" class="form-control" />
+                    <small class="text-muted" id="mdlQtyHint"></small>
                 </div>
                 <div class="text-end">
                     <div>Đơn giá: <span class="money" id="mdlDonGia">0</span></div>
@@ -320,9 +337,7 @@
             <div class="modal-body">
                 <p class="mb-3">Bạn có muốn in/tải hoá đơn không?</p>
                 <!-- Khung xem trước PDF -->
-                <div id="invoicePreview" class="border rounded p-3 bg-white">
-                    <!-- Nội dung hóa đơn sẽ được render bằng JS -->
-                </div>
+                <div id="invoicePreview" class="border rounded p-3 bg-white"></div>
             </div>
             <div class="modal-footer">
                 <button class="btn btn-outline-secondary" data-bs-dismiss="modal">Để sau</button>
@@ -359,8 +374,17 @@
 
     // ===== STATE
     let PAGE=1, PAGE_SIZE=12, TOTAL=0;
-    let SOURCE   = window.__DATA.products || [];
+    // Chuẩn hoá tồn kho từ nhiều tên field khác nhau
+     const pickStock = p => {
+      const cands = [p.SoLuongTon, p.So_Luong, p.So_Luong_Ton, p.SoLuong, p.Stock, p.TonKho, p.Ton_kho];
+      const v = cands.find(x => Number.isFinite(Number(x)));
+      return Math.max(0, Number(v ?? 0));
+    };
+
+    // Bổ sung tồn kho vào SOURCE để kiểm tra nhanh
+    let SOURCE   = (window.__DATA.products || []).map(p => ({...p, __Stock: pickStock(p)}));
     let FILTERED = SOURCE.slice();
+
     const OPTIONS = {
       doNgots : window.__DATA.doNgots  || [],
       luongDas: window.__DATA.luongDas || [],
@@ -375,7 +399,7 @@
     const prevPage = ()=>{ if(PAGE>1) searchProducts(PAGE-1) };
     const nextPage = ()=>{ if(PAGE<Math.ceil(TOTAL/PAGE_SIZE)) searchProducts(PAGE+1) };
 
-    // ===== KM: inclusive theo ngày, lấy KM đầu tiên thỏa điều kiện
+    // KM
     const parseD = v => { if (!v) return null; const d = new Date(v); return isNaN(d.getTime()) ? null : d; };
     function getActivePromotion(p, now = new Date()) {
       const list = p?.KhuyenMais || p?.KhuyenMai || [];
@@ -395,6 +419,9 @@
       return result;
     }
     const calcOffPct = (orig, promo) => { if (!orig || orig <= 0) return null; if (!promo || promo >= orig) return null; const pct = Math.round((1 - (promo / orig)) * 100); return pct>0 ? pct : null; };
+
+    // Tính tổng đã đặt trong giỏ theo sản phẩm
+    const cartQtyOf = productId => CART.filter(x=>x.sanPhamId==productId).reduce((s,x)=>s+x.soLuong,0);
 
     // ===== GRID
     function searchProducts(page){
@@ -420,10 +447,12 @@
         const giaHienThi = promo.has ? promo.price : giaGoc;
         const pct = calcOffPct(giaGoc, giaHienThi);
 
+        const disabled = (p.__Stock ?? 0) <= 0;
         const col = document.createElement('div'); col.className='col-6 col-md-4 col-lg-3';
         col.innerHTML = `
-          <div class="product-card" onclick='addToCart(${JSON.stringify(p.ID_San_Pham)},${JSON.stringify(p.Ten_San_Pham)},${JSON.stringify(giaHienThi)})'>
+          <div class="product-card ${disabled?'out-of-stock':''}" ${disabled?'':'onclick=\'addToCart('+JSON.stringify(p.ID_San_Pham)+','+JSON.stringify(p.Ten_San_Pham)+','+JSON.stringify(giaHienThi)+')\''}>
             ${promo.has ? `<div class="promo-badge" title="${promo.name}">${promo.name}</div>` : ``}
+            <div class="stock-badge" title="Tồn kho còn lại">Tồn: ${p.__Stock ?? 0}</div>
             <img class="product-img" src="${img}" onerror="this.src='https://placehold.co/400x400?text=Drink';" />
             <div class="mt-1 fw-semibold">${p.Ten_San_Pham||''}</div>
             <div class="text-muted small">${ma}</div>
@@ -438,20 +467,59 @@
       document.getElementById('lblPage').textContent = `Trang ${PAGE} / ${Math.max(1, Math.ceil(TOTAL/PAGE_SIZE))}`;
     }
 
-    // ===== CART
+    // ===== CART (giới hạn không vượt tồn kho)
+    function ensureNotOverStock(productId, wantedDelta){
+      const prod = SOURCE.find(x=>x.ID_San_Pham==productId);
+      const stock = prod ? (prod.__Stock||0) : 0;
+      const inCart = cartQtyOf(productId);
+      if (inCart + wantedDelta > stock) {
+        const remain = Math.max(0, stock - inCart);
+        alert(`Số lượng vượt tồn kho. Bạn chỉ có thể thêm tối đa ${remain} sản phẩm nữa.`);
+        return false;
+      }
+      return true;
+    }
+
     function addToCart(id, name, price){
+      if(!ensureNotOverStock(id, 1)) return;
       CART.push({ sanPhamId:id, ten:name, donGia:Number(price)||0, soLuong:1, doNgotId:null, luongDaId:null, toppingIds:[], tienTopping:0 });
       renderCart();
     }
     const removeItem = i => { CART.splice(i,1); renderCart(); };
     const decQty = i => { if(CART[i].soLuong>1){ CART[i].soLuong--; renderCart(); } };
-    const incQty = i => { CART[i].soLuong++; renderCart(); };
-    const setQty = (i,val) => { let v=parseInt(val)||1; if(v<1)v=1; CART[i].soLuong=v; renderCart(); };
+    const incQty = i => {
+      const it = CART[i];
+      if(!ensureNotOverStock(it.sanPhamId, 1)) return;
+      it.soLuong++; renderCart();
+    };
+    const setQty = (i,val) => {
+      let v=parseInt(val)||1; if(v<1)v=1;
+      const it = CART[i];
+      const current = it.soLuong;
+      const delta = v - current;
+      if (delta>0 && !ensureNotOverStock(it.sanPhamId, delta)) {
+        // ép về tối đa có thể
+        const prod = SOURCE.find(x=>x.ID_San_Pham==it.sanPhamId);
+        const stock = prod ? (prod.__Stock||0) : 0;
+        const can = Math.max(1, stock - (cartQtyOf(it.sanPhamId) - current));
+        it.soLuong = can;
+      } else {
+        it.soLuong = v;
+      }
+      renderCart();
+    };
 
     function openConfig(idx){
       const it = CART[idx];
       document.getElementById('mdlIndex').value = idx;
       document.getElementById('mdlTitle').textContent = it.ten;
+
+      // gợi ý tối đa theo tồn
+      const prod = SOURCE.find(x=>x.ID_San_Pham==it.sanPhamId);
+      const stock = prod ? (prod.__Stock||0) : 0;
+      const othersInCart = cartQtyOf(it.sanPhamId) - it.soLuong;
+      const maxAllow = Math.max(1, stock - othersInCart);
+      document.getElementById('mdlQtyHint').textContent = `Số lượng tối đa có thể chọn: ${maxAllow}`;
 
       // Độ ngọt
       const selSweet = document.getElementById('mdlDoNgot');
@@ -503,6 +571,19 @@
     function saveItemConfig(){
       const idx = +document.getElementById('mdlIndex').value;
       const it  = CART[idx];
+
+      // Chặn vượt tồn khi đổi số lượng trong modal
+      const prod = SOURCE.find(x=>x.ID_San_Pham==it.sanPhamId);
+      const stock = prod ? (prod.__Stock||0) : 0;
+      const othersInCart = cartQtyOf(it.sanPhamId) - it.soLuong;
+      const maxAllow = Math.max(1, stock - othersInCart);
+
+      let newQty = parseInt(document.getElementById('mdlQty').value)||1;
+      if (newQty > maxAllow) {
+        alert(`Số lượng vượt tồn. Tối đa: ${maxAllow}`);
+        newQty = maxAllow;
+      }
+
       it.doNgotId  = parseInt(document.getElementById('mdlDoNgot').value)||null;
       it.luongDaId = parseInt(document.getElementById('mdlLuongDa').value)||null;
 
@@ -511,7 +592,7 @@
         if(ch.checked){ topIds.push(parseInt(ch.value)); topMoney += parseFloat(ch.getAttribute('data-price')||'0'); }
       });
       it.toppingIds = topIds; it.tienTopping = topMoney;
-      it.soLuong = parseInt(document.getElementById('mdlQty').value)||1;
+      it.soLuong = newQty;
 
       bootstrap.Modal.getInstance(document.getElementById('modalItem')).hide();
       renderCart();
@@ -524,12 +605,9 @@
 
     // ===== VIETQR CONFIG
     const VIETQR_BASE = "https://img.vietqr.io/image/mbbank-0834119666-compact2.jpg";
-    let PAYABLE = 0; // tổng thanh toán hiện tại (số)
+    let PAYABLE = 0;
 
-    // Lấy tổng thanh toán hiện tại
     const getPayable = () => Math.max(0, Math.floor(PAYABLE));
-
-    // Tạo addInfo
     function buildAddInfo() {
       const phone = (document.getElementById('txtPhone')?.value || '').trim();
       const note  = (document.getElementById('txtNote')?.value  || '').trim();
@@ -539,28 +617,19 @@
       const pad = n => String(n).padStart(2,'0');
       return `POS-${now.getFullYear()}${pad(now.getMonth()+1)}${pad(now.getDate())}${pad(now.getHours())}${pad(now.getMinutes())}${pad(now.getSeconds())}`;
     }
-
-    // Build URL VietQR
     function buildVietQRUrl(amount, addInfo) {
       const enc = encodeURIComponent;
       return `${VIETQR_BASE}?amount=${amount}&addInfo=${enc(addInfo)}&accountName=${enc('NGUYEN DUC PHUOC')}`;
     }
-
-    // Mở modal QR khi thanh toán = chuyển khoản
     function openQRModal() {
       const amount = getPayable();
       const addInfo = buildAddInfo();
       const url = buildVietQRUrl(amount, addInfo);
-
       document.getElementById('qrModalImg').src = url;
       document.getElementById('qrModalAmount').textContent = fmtVND(amount);
       document.getElementById('qrModalAddInfo').textContent = addInfo;
-
-      const mdl = new bootstrap.Modal(document.getElementById('modalQR'));
-      mdl.show();
+      new bootstrap.Modal(document.getElementById('modalQR')).show();
     }
-
-    // Sau khi người dùng xác nhận đã chuyển khoản → POST
     async function confirmTransferThenCreate() {
       bootstrap.Modal.getInstance(document.getElementById('modalQR'))?.hide();
       await reallyCreateHoaDon();
@@ -608,9 +677,7 @@
       const tam = CART.reduce((s,it)=> s + (it.donGia + it.tienTopping)*it.soLuong, 0);
       let giam = Math.min(DISCOUNT, tam*0.5);
       const pay = Math.max(0, tam - giam);
-
-      PAYABLE = pay; // lưu tổng để build QR
-
+      PAYABLE = pay;
       document.getElementById('lblTamTinh').textContent   = fmtVND(tam);
       document.getElementById('lblGiam').textContent      = `- ${fmtVND(giam)}`;
       document.getElementById('lblThanhToan').textContent = fmtVND(pay);
@@ -642,12 +709,7 @@
     }
 
     // ====== INVOICE (preview + export PDF)
-    const fmtDateTime = (d) => {
-      try {
-        const dt = (d instanceof Date) ? d : new Date(d);
-        return dt.toLocaleString('vi-VN');
-      } catch { return d || ''; }
-    }
+    const fmtDateTime = (d) => { try { const dt = (d instanceof Date) ? d : new Date(d); return dt.toLocaleString('vi-VN'); } catch { return d || ''; } }
 
     function renderInvoicePreview(inv) {
       const lines = inv.Items?.map((it, i) => {
@@ -673,11 +735,7 @@
           </tr>`;
       }).join('') || '';
 
-      const payName = (id=>{
-        if(id===1) return 'Tiền mặt';
-        if(id===3) return 'Chuyển khoản';
-        return 'Khác';
-      })(inv.HinhThucThanhToanId||1);
+      const payName = (id=>{ if(id===1) return 'Tiền mặt'; if(id===3) return 'Chuyển khoản'; return 'Khác'; })(inv.HinhThucThanhToanId||1);
 
       const ship = inv.LoaiHoaDon==='GiaoHang' ? `
         <div><span class="badge">Giao hàng</span></div>
@@ -719,9 +777,7 @@
                 <th class="text-end">Thành tiền</th>
               </tr>
             </thead>
-            <tbody>
-              ${lines}
-            </tbody>
+            <tbody>${lines}</tbody>
           </table>
 
           <div class="row" style="margin-top:12px">
@@ -738,24 +794,13 @@
           <div class="muted" style="margin-top:16px">Cảm ơn Quý khách. Hẹn gặp lại!</div>
         </div>
       `;
-
       document.getElementById('invoicePreview').innerHTML = html;
     }
 
-    function openPrintModal(inv) {
-      renderInvoicePreview(inv);
-      new bootstrap.Modal(document.getElementById('modalPrint')).show();
-    }
-
+    function openPrintModal(inv) { renderInvoicePreview(inv); new bootstrap.Modal(document.getElementById('modalPrint')).show(); }
     function downloadInvoicePDF() {
       const el = document.getElementById('invoicePreview');
-      const opt = {
-        margin:       [10, 10, 10, 10],
-        filename:     `HoaDon_${new Date().toISOString().slice(0,19).replace(/[:T]/g,'-')}.pdf`,
-        image:        { type: 'jpeg', quality: 0.98 },
-        html2canvas:  { scale: 2, useCORS: true },
-        jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' }
-      };
+      const opt = { margin:[10,10,10,10], filename:`HoaDon_${new Date().toISOString().slice(0,19).replace(/[:T]/g,'-')}.pdf`, image:{ type:'jpeg', quality:0.98 }, html2canvas:{ scale: 2, useCORS: true }, jsPDF:{ unit:'mm', format:'a4', orientation:'portrait' } };
       html2pdf().from(el).set(opt).save();
     }
 
@@ -763,16 +808,23 @@
     async function taoHoaDon(){
       if(CART.length===0){ alert('Giỏ hàng trống.'); return; }
 
-      const method = parseInt(document.getElementById('selPay').value, 10) || 1;
-      if (method === 3) { // Chuyển khoản → hiển thị QR modal
-        openQRModal();
-        return;
+      // Kiểm tra lần nữa trước khi POST (chống vượt tồn do race)
+      for (const it of CART) {
+        const prod = SOURCE.find(x=>x.ID_San_Pham==it.sanPhamId);
+        if (!prod) { alert('Không tìm thấy sản phẩm trong danh sách.'); return; }
+        const stock = prod.__Stock||0;
+        if (it.soLuong > stock) {
+          alert(`"${it.ten}" đã vượt tồn.\nTồn: ${stock}, bạn đang đặt: ${it.soLuong}`);
+          return;
+        }
       }
 
+      const method = parseInt(document.getElementById('selPay').value, 10) || 1;
+      if (method === 3) { openQRModal(); return; }
       await reallyCreateHoaDon();
     }
 
-    // ===== SỬA HÀM reallyCreateHoaDon: sau khi tạo xong -> hỏi in + build dữ liệu
+    // Sau khi tạo xong -> hỏi in + trừ tồn UI + gọi BE trừ tồn
     async function reallyCreateHoaDon(){
       const tam  = CART.reduce((s,it)=> s + (it.donGia + it.tienTopping)*it.soLuong, 0);
       const giam = Math.min(DISCOUNT, tam*0.5);
@@ -794,23 +846,11 @@
         TongTien: tam,
         TienGiam: giam,
         DiaChiTuNhap: loai === 'GiaoHang' ? shipAddr : null,
-        Items: CART.map(it=>({
-          SanPhamId: it.sanPhamId,
-          SoLuong: it.soLuong,
-          DonGia: it.donGia,
-          DoNgotId: it.doNgotId,
-          LuongDaId: it.luongDaId,
-          ToppingIds: it.toppingIds
-        }))
+        Items: CART.map(it=>({ SanPhamId: it.sanPhamId, SoLuong: it.soLuong, DonGia: it.donGia, DoNgotId: it.doNgotId, LuongDaId: it.luongDaId, ToppingIds: it.toppingIds }))
       };
 
       try{
-        const res = await fetch('/BanHangTaiQuay/TaoHoaDonTaiQuay', {
-          method:'POST',
-          headers:{'Content-Type':'application/json'},
-          body: JSON.stringify(payload)
-        });
-
+        const res = await fetch('/BanHangTaiQuay/TaoHoaDonTaiQuay', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(payload) });
         const text = await res.text();
         let data; try{ data = JSON.parse(text) } catch { data = { success:false, message:text } }
 
@@ -819,44 +859,43 @@
           return;
         }
 
-        // ----> Tạo dữ liệu hiển thị hóa đơn cho modal in
-        const hd = data.hoaDon || data.data || data.invoice || null;
-
+        // Dữ liệu hiển thị hóa đơn
         const inv = {
-          ID: hd?.ID || hd?.MaHD || data?.maHoaDon || data?.id || null,
-          MaHD: hd?.MaHD || hd?.Code || null,
-          NgayLap: hd?.NgayLap || new Date(),
-          KhachHang_SDT: payload.KhachHang_SDT,
-          LoaiHoaDon: payload.LoaiHoaDon,
-          DiaChi: payload.DiaChiTuNhap,
-          HinhThucThanhToanId: payload.HinhThucThanhToanId,
-          GhiChu: payload.GhiChu,
-          VoucherCode: (VOUCHER?.code || hd?.VoucherCode || null),
-          Tong: payload.TongTien,
-          Giam: payload.TienGiam,
-          ThanhToan: payload.TongTien - payload.TienGiam,
-          Items: CART.map(it=>{
-            return {
-              Ten: it.ten,
-              DonGia: it.donGia,
-              SoLuong: it.soLuong,
-              TienTopping: it.tienTopping||0,
-              DoNgotName: findName(OPTIONS.doNgots,'ID_DoNgot','Muc_Do',it.doNgotId),
-              LuongDaName: findName(OPTIONS.luongDas,'ID_LuongDa','Ten_LuongDa',it.luongDaId) || findName(OPTIONS.luongDas,'ID_LuongDa','Muc_Da',it.luongDaId),
-              ToppingNames: (it.toppingIds||[]).map(id=>{
-                const o=(OPTIONS.toppings||[]).find(t=>t.ID_Topping==id);
-                return o ? (o.Ten || o.Ten_Topping || ('Topping #' + id)) : ('Topping #' + id);
-              })
-            }
-          })
+          ID: null, MaHD: null, NgayLap: new Date(),
+          KhachHang_SDT: payload.KhachHang_SDT, LoaiHoaDon: payload.LoaiHoaDon, DiaChi: payload.DiaChiTuNhap,
+          HinhThucThanhToanId: payload.HinhThucThanhToanId, GhiChu: payload.GhiChu, VoucherCode: (VOUCHER?.code || null),
+          Tong: payload.TongTien, Giam: payload.TienGiam, ThanhToan: payload.TongTien - payload.TienGiam,
+          Items: CART.map(it=>({
+            Ten: it.ten, DonGia: it.donGia, SoLuong: it.soLuong, TienTopping: it.tienTopping||0,
+            DoNgotName: findName(OPTIONS.doNgots,'ID_DoNgot','Muc_Do',it.doNgotId),
+            LuongDaName: findName(OPTIONS.luongDas,'ID_LuongDa','Ten_LuongDa',it.luongDaId) || findName(OPTIONS.luongDas,'ID_LuongDa','Muc_Da',it.luongDaId),
+            ToppingNames: (it.toppingIds||[]).map(id=>{ const o=(OPTIONS.toppings||[]).find(t=>t.ID_Topping==id); return o ? (o.Ten || o.Ten_Topping || ('Topping #' + id)) : ('Topping #' + id); })
+          }))
         };
 
-        // Clear UI như cũ…
+        // ---- TRỪ TỒN UI NGAY LẬP TỨC ----
+        CART.forEach(it=>{
+          const prod = SOURCE.find(p=>p.ID_San_Pham==it.sanPhamId);
+          if (prod) { prod.__Stock = Math.max(0, (prod.__Stock||0) - it.soLuong); }
+        });
+        // render lại grid để thấy tồn mới
+        searchProducts(PAGE);
+
+        // ---- Gọi BE để trừ tồn kho (fallback nhiều endpoint) ----
+        try {
+          const adjust = CART.map(it=>({ ID_San_Pham: it.sanPhamId, SoLuongTru: it.soLuong }));
+          await fetch('/BanHangTaiQuay/TruTonKhoSauThanhToan', {
+            method:'POST', headers:{'Content-Type':'application/json'},
+            body: JSON.stringify(adjust)
+          });
+        } catch { /* ignore UI warning */ }
+
+        // Clear form
         clearCart();
-        if (document.getElementById('txtShipAddress')) document.getElementById('txtShipAddress').value='';
+        const addr = document.getElementById('txtShipAddress'); if (addr) addr.value='';
         onLoaiChange();
 
-        // ----> Mở modal hỏi in (và hiển thị preview)
+        // Mở modal in
         openPrintModal(inv);
 
       }catch(e){
