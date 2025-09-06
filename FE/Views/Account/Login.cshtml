@@ -1,57 +1,21 @@
-﻿@* <!-- Views/Account/Login.cshtml -->
-@model FE.Models.LoginModel
+﻿@model FE.Models.LoginModel
 
 @{
     ViewData["Title"] = "Đăng nhập";
 }
-
-<h1>Đăng nhập</h1>
-
-<form asp-action="Login" method="post">
-    <div asp-validation-summary="ModelOnly" class="text-danger"></div>
-    <div class="form-group">
-        <label asp-for="Ten_Nguoi_Dung"></label>
-        <input asp-for="Ten_Nguoi_Dung" class="form-control" />
-        <span asp-validation-for="Ten_Nguoi_Dung" class="text-danger"></span>
-    </div>
-    <div class="form-group">
-        <label asp-for="Mat_Khau"></label>
-        <input asp-for="Mat_Khau" class="form-control" type="password" />
-        <span asp-validation-for="Mat_Khau" class="text-danger"></span>
-    </div>
-    <button type="submit" class="btn btn-primary">Đăng nhập</button>
-</form> *@
-
-
-
-@model FE.Models.LoginModel
-
-@{
-    ViewData["Title"] = "Đăng nhập";
-}
-
-<!-- Hero Section -->
-<header class="hero-section position-relative overflow-hidden text-center bg-dark text-white animate__animated animate__fadeIn">
-    <img src="/Logo/bia.jpg" alt="Ảnh bìa trà sữa" class="hero-image" />
-    <div class="hero-overlay position-absolute top-0 start-0 w-100 h-100 bg-dark opacity-50"></div>
-    <div class="hero-content position-absolute top-50 start-50 translate-middle">
-        <h1 class="display-4 fw-bold mb-3 animate__animated animate__zoomIn">Đăng Nhập</h1>
-        <p class="lead mb-4 animate__animated animate__fadeInUp animate__delay-1s">Đăng nhập để thưởng thức trà sữa ngon!</p>
-    </div>
-</header>
 
 <div class="container my-5">
     <!-- Success/Error Notifications -->
     @if (TempData["Success"] != null)
     {
-        <div class="alert alert-success alert-dismissible fade show animate__animated animate__fadeInDown" role="alert">
+        <div class="alert alert-success alert-dismissible fade show" role="alert">
             @TempData["Success"]
             <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
         </div>
     }
     @if (TempData["Error"] != null)
     {
-        <div class="alert alert-danger alert-dismissible fade show animate__animated animate__fadeInDown" role="alert">
+        <div class="alert alert-danger alert-dismissible fade show" role="alert">
             @TempData["Error"]
             <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
         </div>
@@ -59,23 +23,29 @@
 
     <!-- Login Form -->
     <div class="row justify-content-center">
-        <div class="col-md-6">
-            <div class="card shadow-lg border-0 rounded animate__animated animate__fadeInUp">
-                <div class="card-body p-5">
-                    <h2 class="text-center mb-4 fw-bold text-primary">Đăng Nhập</h2>
+        <div class="col-md-6 col-lg-4">
+            <div class="card shadow-sm border-0">
+                <div class="card-body p-4">
+                    <h2 class="text-center mb-4 fw-bold text-dark">Đăng Nhập</h2>
                     <form asp-action="Login" method="post">
                         <div asp-validation-summary="ModelOnly" class="text-danger mb-3 text-center"></div>
-                        <div class="form-floating mb-3">
-                            <input asp-for="Ten_Nguoi_Dung" class="form-control rounded-pill shadow-sm" id="username" placeholder="Tên người dùng" required />
-                            <label asp-for="Ten_Nguoi_Dung" class="form-label">Tên người dùng</label>
+                        <div class="mb-3">
+                            <label asp-for="Ten_Nguoi_Dung" class="form-label">Tên Đăng Nhập</label>
+                            <input asp-for="Ten_Nguoi_Dung" class="form-control shadow-sm" id="username"
+                                   placeholder="Ví dụ: user123, john_doe"
+                                   title="Tên đăng nhập chỉ chứa chữ cái, số, dấu chấm (.) hoặc dấu gạch dưới (_), không chứa dấu."
+                                   required />
                             <span asp-validation-for="Ten_Nguoi_Dung" class="text-danger small"></span>
                         </div>
-                        <div class="form-floating mb-3">
-                            <input asp-for="Mat_Khau" class="form-control rounded-pill shadow-sm" type="password" id="password" placeholder="Mật khẩu" required />
+                        <div class="mb-3">
                             <label asp-for="Mat_Khau" class="form-label">Mật khẩu</label>
+                            <input asp-for="Mat_Khau" class="form-control shadow-sm" type="password"
+                                   id="password" placeholder="Nhập mật khẩu"
+                                   title="Mật khẩu phải từ 6 đến 100 ký tự."
+                                   required />
                             <span asp-validation-for="Mat_Khau" class="text-danger small"></span>
                         </div>
-                        <button type="submit" class="btn btn-primary btn-lg w-100 rounded-pill shadow-sm animate__animated animate__pulse animate__infinite">
+                        <button type="submit" class="btn btn-primary btn-lg w-100">
                             <i class="bi bi-box-arrow-in-right me-2"></i>Đăng nhập
                         </button>
                     </form>
@@ -93,7 +63,12 @@
     <script src="~/lib/jquery-validation-unobtrusive/jquery.validate.unobtrusive.min.js"></script>
     <script>
         $(document).ready(function () {
-            // Custom validation styling
+            // Add custom validation method for username
+            $.validator.addMethod("usernameFormat", function (value, element) {
+                return this.optional(element) || /^[a-zA-Z0-9_.]+$/.test(value);
+            }, "Tên đăng nhập chỉ được chứa chữ cái, số, dấu chấm (.) hoặc dấu gạch dưới (_), không chứa dấu hoặc ký tự đặc biệt.");
+
+            // Apply validation to the form
             $("form").validate({
                 errorClass: "text-danger",
                 highlight: function (element) {
@@ -104,51 +79,102 @@
                 },
                 errorPlacement: function (error, element) {
                     error.insertAfter(element);
+                },
+                rules: {
+                    Ten_Nguoi_Dung: {
+                        required: true,
+                        usernameFormat: true,
+                        minlength: 3,
+                        maxlength: 50
+                    },
+                    Mat_Khau: {
+                        required: true,
+                        minlength: 6,
+                        maxlength: 100
+                    }
+                },
+                messages: {
+                    Ten_Nguoi_Dung: {
+                        required: "Tên đăng nhập là bắt buộc.",
+                        minlength: "Tên đăng nhập phải từ 3 ký tự trở lên.",
+                        maxlength: "Tên đăng nhập không được vượt quá 50 ký tự."
+                    },
+                    Mat_Khau: {
+                        required: "Mật khẩu là bắt buộc.",
+                        minlength: "Mật khẩu phải từ 6 ký tự trở lên.",
+                        maxlength: "Mật khẩu không được vượt quá 100 ký tự."
+                    }
                 }
             });
         });
     </script>
 }
 
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css" />
-
 <style>
-    .hero-section {
-        height: 50vh;
-        min-height: 350px;
-        max-height: 500px;
+    body {
+        background-color: #f8f9fa;
     }
 
-    .hero-image {
-        width: 100%;
-        height: 100%;
-        object-fit: cover;
-        position: absolute;
-        top: 0;
-        left: 0;
+    .card {
+        border-radius: 8px;
+        background-color: #ffffff;
+        transition: transform 0.3s ease, box-shadow 0.3s ease;
     }
 
-    .hero-content {
-        z-index: 2;
+        .card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1) !important;
+        }
+
+    .form-control {
+        border-radius: 6px;
+        border: 1px solid #ced4da;
+        padding: 10px;
+        font-size: 1rem;
+        transition: border-color 0.3s ease, box-shadow 0.3s ease;
     }
 
-    .form-control.is-invalid {
-        border-color: #dc3545;
-        box-shadow: 0 0 5px rgba(220, 53, 69, 0.5);
+        .form-control:focus {
+            border-color: #007bff;
+            box-shadow: 0 0 5px rgba(0, 123, 255, 0.3);
+            outline: none;
+        }
+
+        .form-control.is-invalid {
+            border-color: #dc3545;
+            box-shadow: 0 0 5px rgba(220, 53, 69, 0.3);
+        }
+
+        .form-control.is-valid {
+            border-color: #28a745;
+            box-shadow: 0 0 5px rgba(40, 167, 69, 0.3);
+        }
+
+    .btn-primary {
+        border-radius: 6px;
+        background-color: #007bff;
+        border: none;
+        padding: 12px;
+        font-size: 1.1rem;
+        transition: background-color 0.3s ease, transform 0.2s ease;
     }
 
-    .form-control.is-valid {
-        border-color: #28a745;
-        box-shadow: 0 0 5px rgba(40, 167, 69, 0.5);
+        .btn-primary:hover {
+            background-color: #0056b3;
+            transform: scale(1.02);
+        }
+
+    .alert {
+        border-radius: 6px;
+        margin-bottom: 1.5rem;
     }
 
-    .form-floating label {
+    .text-primary {
+        color: #007bff !important;
+    }
+
+    .form-label {
+        font-weight: 500;
         color: #495057;
-    }
-
-    .btn-primary:hover {
-        background-color: #0056b3;
-        transform: scale(1.05);
-        transition: all 0.3s ease;
     }
 </style>
