@@ -56,9 +56,10 @@ namespace FE.Controllers
                 }
 
                 vm.DanhSachHoaDon = list
-                    .OrderByDescending(h => h.Ngay_Tao)
-                    .ToList();
-            }
+                     .OrderBy(h => string.Equals(h.Trang_Thai, "Chua_Xac_Nhan", StringComparison.OrdinalIgnoreCase) ? 0 : 1)
+                     .ThenByDescending(h => h.Ngay_Tao)
+                     .ToList();
+                            }
             catch
             {
                 vm.DanhSachHoaDon = new();

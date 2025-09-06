@@ -156,16 +156,21 @@ namespace FE.Controllers
                 var now = DateTime.Now;
                 var ma = string.IsNullOrWhiteSpace(req.MaHoaDon) ? ("POS" + now.ToString("yyMMddHHmmss")) : req.MaHoaDon;
 
-                // 1/2/3 đã có sẵn trong DB
                 int ptttId = req.HinhThucThanhToanId ?? 1;
 
-                // Loại hoá đơn: lấy từ FE; nếu FE không gửi thì để default "TaiQuay"
                 var loai = (req.LoaiHoaDon ?? "TaiQuay").Trim();
-                // Nếu muốn whitelist:
                 var allow = new HashSet<string>(StringComparer.OrdinalIgnoreCase) { "TaiQuay", "Online", "GiaoHang" };
                 if (!allow.Contains(loai)) loai = "TaiQuay";
 
-                // Chi tiết: dùng đúng key theo model BE
+                // Set trạng thái theo yêu cầu
+                string trangThai;
+                if (loai.Equals("TaiQuay", StringComparison.OrdinalIgnoreCase))
+                    trangThai = "Hoan_Thanh";
+                else if (loai.Equals("Online", StringComparison.OrdinalIgnoreCase))
+                    trangThai = "Chua_Xac_Nhan";
+                else
+                    trangThai = "Chua_Xac_Nhan"; // GiaoHang
+
                 var chiTiets = req.Items.Select((it, idx) => new
                 {
                     ID_HoaDon_ChiTiet = 0,
@@ -191,11 +196,11 @@ namespace FE.Controllers
                     ID_Dia_Chi = (int?)null,
                     ID_Phi_Ship = (int?)null,
 
-                    Dia_Chi_Tu_Nhap = "",
+                    Dia_Chi_Tu_Nhap = loai.Equals("GiaoHang", StringComparison.OrdinalIgnoreCase) ? (req.DiaChiTuNhap ?? "") : "",
                     Ngay_Tao = now,
                     Tong_Tien = Math.Max(0, req.TongTien - req.TienGiam),
                     Phi_Ship = 0m,
-                    Trang_Thai = "Chua_Xac_Nhan",
+                    Trang_Thai = trangThai,      // map theo Loại hoá đơn
                     Ghi_Chu = req.GhiChu ?? "",
                     Ma_Hoa_Don = ma,
                     Loai_Hoa_Don = loai,
@@ -238,12 +243,13 @@ namespace FE.Controllers
     {
         public string? MaHoaDon { get; set; }
         public int? HinhThucThanhToanId { get; set; }  // 1/2/3
-        public string? LoaiHoaDon { get; set; }        // <— thêm mới: "TaiQuay" | "Online" | "GiaoHang"
+        public string? LoaiHoaDon { get; set; }        // "TaiQuay" | "Online" | "GiaoHang"
         public string? KhachHang_SDT { get; set; }
         public string? GhiChu { get; set; }
         public int? VoucherId { get; set; }
         public decimal TongTien { get; set; }
         public decimal TienGiam { get; set; }
+        public string? DiaChiTuNhap { get; set; }      // địa chỉ khi Giao hàng
         public List<TaoHoaDonTaiQuayItem> Items { get; set; } = new();
     }
 

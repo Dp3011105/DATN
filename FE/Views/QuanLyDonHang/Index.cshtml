@@ -1,5 +1,6 @@
 ﻿@model FE.Controllers.QuanLyDonHangViewModel
 @using System.Globalization
+@using System.Linq
 @{
     ViewData["Title"] = "Quản lý đơn hàng";
     var vi = new CultureInfo("vi-VN");
@@ -29,6 +30,10 @@
     };
 
     string VND(decimal n) => string.Format(new CultureInfo("vi-VN"), "{0:c0}", n);
+
+    // Ghép các phần địa chỉ nhưng bỏ trống các phần null/empty
+    string JoinNonEmpty(params string[] parts)
+        => string.Join(", ", parts.Where(s => !string.IsNullOrWhiteSpace(s)));
 }
 
 <div class="container-fluid py-3">
@@ -63,6 +68,7 @@
                     <th>Ngày tạo</th>
                     <th>Thanh toán</th>
                     <th>Loại HD</th>
+                    <th>Địa chỉ</th> <!-- thêm cột -->
                     <th class="text-end">Tổng tiền</th>
                     <th>Trạng thái</th>
                     <th class="text-end" style="width:300px">Thao tác</th>
@@ -71,13 +77,39 @@
             <tbody>
                 @if (Model.DanhSachHoaDon == null || Model.DanhSachHoaDon.Count == 0)
                 {
-                    <tr><td colspan="8" class="text-muted">Không có dữ liệu</td></tr>
+                    <tr><td colspan="9" class="text-muted">Không có dữ liệu</td></tr> <!-- sửa colspan = 9 -->
                 }
                 else
                 {
                     foreach (var hd in Model.DanhSachHoaDon)
                     {
                         var human = MapTrangThaiFromDb(hd.Trang_Thai ?? "");
+
+                        // Tính địa chỉ hiển thị theo yêu cầu
+                        string diaChiHienThi;
+                        if (string.Equals(hd.Loai_Hoa_Don, "TaiQuay", StringComparison.OrdinalIgnoreCase))
+                        {
+                            diaChiHienThi = "Tại quầy";
+                        }
+                        else
+                        {
+                            // Ưu tiên địa chỉ tự nhập
+                            var fromText = hd.Dia_Chi_Tu_Nhap;
+                            // Fallback địa chỉ từ DB (nếu có navigation DiaChi)
+                            string fromDb = null;
+                            try
+                            {
+                                fromDb = (hd.DiaChi != null)
+                                    ? JoinNonEmpty(hd.DiaChi.Dia_Chi, hd.DiaChi.Tinh_Thanh)
+                                    : null;
+                            }
+                            catch { /* tránh null-ref nếu model không có DiaChi */ }
+
+                            diaChiHienThi = !string.IsNullOrWhiteSpace(fromText)
+                                ? fromText
+                                : (!string.IsNullOrWhiteSpace(fromDb) ? fromDb : "—");
+                        }
+
                         <tr>
                             <td>
                                 <a class="text-decoration-none fw-semibold"
@@ -89,6 +121,7 @@
                             <td>@hd.Ngay_Tao.ToString("dd/MM/yyyy HH:mm")</td>
                             <td>@(hd.HinhThucThanhToan?.Phuong_Thuc_Thanh_Toan ?? "N/A")</td>
                             <td>@(string.IsNullOrWhiteSpace(hd.Loai_Hoa_Don) ? "—" : hd.Loai_Hoa_Don)</td>
+                            <td>@diaChiHienThi</td> <!-- cell địa chỉ -->
                             <td class="text-end">@VND(hd.Tong_Tien)</td>
                             <td><span class="badge @BadgeClass(human)">@human</span></td>
                             <td class="text-end">
