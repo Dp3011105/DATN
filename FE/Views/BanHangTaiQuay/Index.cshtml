@@ -111,6 +111,7 @@
         opacity: .5;
         pointer-events: none;
     }
+
     /* ===== Styles cho hóa đơn in/pdf ===== */
     .invoice {
         font-family: system-ui, -apple-system, Segoe UI, Roboto, 'Helvetica Neue', Arial, 'Noto Sans', 'Liberation Sans', sans-serif;
@@ -295,7 +296,7 @@
     </div>
 </div>
 
-<!-- Modal QR VietQR chỉ hiện khi bấm Tạo hoá đơn & chọn Chuyển khoản -->
+<!-- Modal QR VietQR -->
 <div class="modal fade" id="modalQR" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered modal-lg">
         <div class="modal-content">
@@ -336,7 +337,6 @@
             </div>
             <div class="modal-body">
                 <p class="mb-3">Bạn có muốn in/tải hoá đơn không?</p>
-                <!-- Khung xem trước PDF -->
                 <div id="invoicePreview" class="border rounded p-3 bg-white"></div>
             </div>
             <div class="modal-footer">
@@ -358,7 +358,6 @@
 </script>
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
-<!-- Thư viện xuất PDF -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js" referrerpolicy="no-referrer"></script>
 
 <script>
@@ -374,15 +373,101 @@
 
     // ===== STATE
     let PAGE=1, PAGE_SIZE=12, TOTAL=0;
+
+    // Parse số an toàn (kể cả "14.122.222", "14,122,222", "14 122 222")
+      const toNumber = v => {
+      if (typeof v === 'number') return Number.isFinite(v) ? v : 0;
+      if (v == null) return 0;
+      const s = String(v).replace(/[^\d\-]/g,''); // bỏ dấu . , khoảng trắng
+      const n = parseInt(s,10);
+      return Number.isFinite(n) ? n : 0;
+    };
     // Chuẩn hoá tồn kho từ nhiều tên field khác nhau
-     const pickStock = p => {
-      const cands = [p.SoLuongTon, p.So_Luong, p.So_Luong_Ton, p.SoLuong, p.Stock, p.TonKho, p.Ton_kho];
-      const v = cands.find(x => Number.isFinite(Number(x)));
-      return Math.max(0, Number(v ?? 0));
+    const pickStock = (p) => {
+      const keys = ['SoLuongTon','So_Luong','So_Luong_Ton','SoLuong','Stock','TonKho','Ton_kho'];
+      for (const k of keys) {
+        const raw = p && p[k];
+        // bỏ qua null/undefined/chuỗi rỗng
+        if (raw !== undefined && raw !== null && String(raw).trim() !== '') {
+          const n = toNumber(raw);
+          if (!Number.isNaN(n)) return Math.max(0, n);
+        }
+      }
+      return 0;
     };
 
-    // Bổ sung tồn kho vào SOURCE để kiểm tra nhanh
-    let SOURCE   = (window.__DATA.products || []).map(p => ({...p, __Stock: pickStock(p)}));
+    /* ===== KM helpers (ăn chắc nhiều format) ===== */
+    // const CURRENT_DATE = new Date('@DateTime.Now.ToString("yyyy-MM-ddTHH:mm:ss")');
+    const CURRENT_DATE = new Date();
+
+    // Lấy danh sách KM từ nhiều tên thuộc tính có thể có
+    const promoListOf = p => {
+      const cands = [p?.KhuyenMais, p?.KhuyenMai, p?.DanhSachKhuyenMai, p?.dsKhuyenMai];
+      for (const x of cands) if (Array.isArray(x) && x.length) return x;
+      return [];
+    };
+
+    // parse nhiều định dạng ngày: ISO, /Date(x)/, dd/MM/yyyy[ HH:mm:ss], yyyy-MM-dd[THH:mm:ss]
+    function parseD(v){
+      if (!v) return null;
+      if (v instanceof Date && !isNaN(+v)) return v;
+
+      // .NET ticks: /Date(1715731200000)/
+      const m = String(v).match(/\/Date\((\d+)\)\//);
+      if (m) {
+        const d = new Date(Number(m[1]));
+        return isNaN(+d) ? null : d;
+      }
+
+      // dd/MM/yyyy hoặc dd-MM-yyyy (có thể có HH:mm:ss)
+      const m2 = String(v).match(/^(\d{1,2})[\/-](\d{1,2})[\/-](\d{4})(?:[ T](\d{1,2}):(\d{1,2})(?::(\d{1,2}))?)?$/);
+      if (m2){
+        const [_, dd, mm, yyyy, HH='0', MM='0', SS='0'] = m2;
+        const d = new Date(Number(yyyy), Number(mm)-1, Number(dd), Number(HH), Number(MM), Number(SS));
+        return isNaN(+d) ? null : d;
+      }
+
+      // ISO chuẩn, hoặc yyyy-MM-dd HH:mm:ss
+      const iso = new Date(v);
+      return isNaN(+iso) ? null : iso;
+    }
+
+    // logic KM giống bản cũ – inclusive theo ngày, dùng Gia_Giam là GIÁ CUỐI
+    function getActivePromotion(p, now = CURRENT_DATE) {
+      const list = promoListOf(p);
+      const origin = toNumber(p?.Gia ?? 0);
+      let result = { has:false, price:origin, name:null, start:null, end:null };
+      if (!list.length) return result;
+
+      for (const km of list) {
+        const s = parseD(km?.Ngay_Bat_Dau);
+        const e = parseD(km?.Ngay_Ket_Thuc);
+        if (!s || !e) continue;
+        if (now >= s && now <= e) {
+          const promoPrice = toNumber(km?.Gia_Giam ?? origin); // GIÁ CUỐI
+          result = {
+            has: true,
+            price: Number.isFinite(promoPrice) ? promoPrice : origin,
+            name: km?.Ten_Khuyen_Mai || "Khuyến mãi",
+            start: s, end: e
+          };
+          break;
+        }
+      }
+      return result;
+    }
+
+    // Bổ sung tồn kho + giá sau KM vào SOURCE để hiển thị nhanh
+        let SOURCE = (window.__DATA.products || []).map(p => {
+      const promo = getActivePromotion(p, CURRENT_DATE);
+      return {
+        ...p,
+        __Stock: pickStock(p), // <-- sẽ đúng
+        __HasPromo: promo.has,
+        __PriceAfterPromo: Number.isFinite(promo.price) ? promo.price : toNumber(p?.Gia ?? 0),
+        __PromoName: promo.name || null
+      };
+    });
     let FILTERED = SOURCE.slice();
 
     const OPTIONS = {
@@ -394,31 +479,19 @@
     let VOUCHER=null, DISCOUNT=0;
 
     // ===== UTILS
-    const fmtVND = n => { try { return (n||0).toLocaleString('vi-VN',{style:'currency',currency:'VND'}) } catch { return n } };
+    const fmtVND = n => { try { return (toNumber(n)||0).toLocaleString('vi-VN',{style:'currency',currency:'VND'}) } catch { return n } };
     const resetSearch = ()=>{ document.getElementById('txtSearch').value=''; searchProducts(1); };
     const prevPage = ()=>{ if(PAGE>1) searchProducts(PAGE-1) };
     const nextPage = ()=>{ if(PAGE<Math.ceil(TOTAL/PAGE_SIZE)) searchProducts(PAGE+1) };
 
-    // KM
-    const parseD = v => { if (!v) return null; const d = new Date(v); return isNaN(d.getTime()) ? null : d; };
-    function getActivePromotion(p, now = new Date()) {
-      const list = p?.KhuyenMais || p?.KhuyenMai || [];
-      const origin = Number(p?.Gia ?? 0);
-      let result = { has:false, price:origin, name:null, start:null, end:null };
-      if (!Array.isArray(list) || list.length===0) return result;
-      for (const km of list) {
-        const s = parseD(km?.Ngay_Bat_Dau);
-        const e = parseD(km?.Ngay_Ket_Thuc);
-        if (!s || !e) continue;
-        if (now >= s && now <= e) {
-          const promoPrice = Number(km?.Gia_Giam ?? origin); // Gia_Giam là giá cuối
-          result = { has: true, price: isFinite(promoPrice) ? promoPrice : origin, name: km?.Ten_Khuyen_Mai || "Khuyến mãi", start: s, end: e };
-          break;
-        }
-      }
-      return result;
-    }
-    const calcOffPct = (orig, promo) => { if (!orig || orig <= 0) return null; if (!promo || promo >= orig) return null; const pct = Math.round((1 - (promo / orig)) * 100); return pct>0 ? pct : null; };
+    // % giảm
+    const calcOffPct = (orig, promo) => {
+      const o = toNumber(orig), p = toNumber(promo);
+      if (!o || o <= 0) return null;
+      if (!p || p >= o) return null;
+      const pct = Math.round((1 - (p / o)) * 100);
+      return pct>0 ? pct : null;
+    };
 
     // Tính tổng đã đặt trong giỏ theo sản phẩm
     const cartQtyOf = productId => CART.filter(x=>x.sanPhamId==productId).reduce((s,x)=>s+x.soLuong,0);
@@ -442,22 +515,21 @@
       FILTERED.slice(start,start+PAGE_SIZE).forEach(p=>{
         const ma   = p.Ma_San_Pham || ('SP' + p.ID_San_Pham);
         const img  = imgUrl(p.Hinh_Anh || p.Hinh || p.ImageUrl);
-        const giaGoc = Number(p.Gia ?? 0);
-        const promo = getActivePromotion(p);
-        const giaHienThi = promo.has ? promo.price : giaGoc;
+        const giaGoc = toNumber(p.Gia ?? 0);
+        const giaHienThi = toNumber(p.__PriceAfterPromo ?? giaGoc);
         const pct = calcOffPct(giaGoc, giaHienThi);
 
         const disabled = (p.__Stock ?? 0) <= 0;
         const col = document.createElement('div'); col.className='col-6 col-md-4 col-lg-3';
         col.innerHTML = `
-          <div class="product-card ${disabled?'out-of-stock':''}" ${disabled?'':'onclick=\'addToCart('+JSON.stringify(p.ID_San_Pham)+','+JSON.stringify(p.Ten_San_Pham)+','+JSON.stringify(giaHienThi)+')\''}>
-            ${promo.has ? `<div class="promo-badge" title="${promo.name}">${promo.name}</div>` : ``}
+          <div class="product-card ${disabled?'out-of-stock':''}" ${disabled?'':'onclick=\'addToCart('+JSON.stringify(p.ID_San_Pham)+','+JSON.stringify(p.Ten_San_Pham)+')\''}>
+            ${p.__HasPromo ? `<div class="promo-badge" title="${p.__PromoName||''}">${p.__PromoName||'Khuyến mãi'}</div>` : ``}
             <div class="stock-badge" title="Tồn kho còn lại">Tồn: ${p.__Stock ?? 0}</div>
             <img class="product-img" src="${img}" onerror="this.src='https://placehold.co/400x400?text=Drink';" />
             <div class="mt-1 fw-semibold">${p.Ten_San_Pham||''}</div>
             <div class="text-muted small">${ma}</div>
             <div class="price-line mt-1">
-              ${promo.has ? `<span class="money">${fmtVND(giaHienThi)}</span><span class="old-price">${fmtVND(giaGoc)}</span>` : `<span class="money">${fmtVND(giaGoc)}</span>`}
+              ${p.__HasPromo ? `<span class="money">${fmtVND(giaHienThi)}</span><span class="old-price">${fmtVND(giaGoc)}</span>` : `<span class="money">${fmtVND(giaGoc)}</span>`}
               ${pct ? `<span class="off-tag">-${pct}%</span>` : ``}
             </div>
           </div>`;
@@ -480,9 +552,14 @@
       return true;
     }
 
-    function addToCart(id, name, price){
+    function addToCart(id, name){
+      // Lấy giá hiện tại theo KM (ngay lúc click)
+      const prod = SOURCE.find(x => x.ID_San_Pham == id);
+      const promo = getActivePromotion(prod, CURRENT_DATE);
+      const finalPrice = Number.isFinite(promo.price) ? promo.price : toNumber(prod?.Gia ?? 0);
+
       if(!ensureNotOverStock(id, 1)) return;
-      CART.push({ sanPhamId:id, ten:name, donGia:Number(price)||0, soLuong:1, doNgotId:null, luongDaId:null, toppingIds:[], tienTopping:0 });
+      CART.push({ sanPhamId:id, ten:name, donGia:toNumber(finalPrice)||0, soLuong:1, doNgotId:null, luongDaId:null, toppingIds:[], tienTopping:0 });
       renderCart();
     }
     const removeItem = i => { CART.splice(i,1); renderCart(); };
@@ -498,7 +575,6 @@
       const current = it.soLuong;
       const delta = v - current;
       if (delta>0 && !ensureNotOverStock(it.sanPhamId, delta)) {
-        // ép về tối đa có thể
         const prod = SOURCE.find(x=>x.ID_San_Pham==it.sanPhamId);
         const stock = prod ? (prod.__Stock||0) : 0;
         const can = Math.max(1, stock - (cartQtyOf(it.sanPhamId) - current));
@@ -536,7 +612,7 @@
       const topWrap = document.getElementById('mdlToppings');
       topWrap.innerHTML = '';
       (OPTIONS.toppings||[]).forEach(t=>{
-        const gia = t.Gia ?? t.Gia_Topping ?? 0;
+        const gia = toNumber(t.Gia ?? t.Gia_Topping ?? 0);
         const name= t.Ten ?? t.Ten_Topping ?? '';
         const div = document.createElement('div');
         div.innerHTML = `
@@ -558,7 +634,7 @@
       const qty = +document.getElementById('mdlQty').value || 1;
       let top = 0;
       document.querySelectorAll('#mdlToppings input[type="checkbox"]').forEach(ch=>{
-        if(ch.checked){ top += parseFloat(ch.getAttribute('data-price')||'0'); }
+        if(ch.checked){ top += toNumber(ch.getAttribute('data-price')||'0'); }
       });
       document.getElementById('mdlDonGia').textContent  = fmtVND(it.donGia);
       document.getElementById('mdlTienTop').textContent = fmtVND(top);
@@ -589,7 +665,7 @@
 
       const topIds=[]; let topMoney=0;
       document.querySelectorAll('#mdlToppings input[type="checkbox"]').forEach(ch=>{
-        if(ch.checked){ topIds.push(parseInt(ch.value)); topMoney += parseFloat(ch.getAttribute('data-price')||'0'); }
+        if(ch.checked){ topIds.push(parseInt(ch.value)); topMoney += toNumber(ch.getAttribute('data-price')||'0'); }
       });
       it.toppingIds = topIds; it.tienTopping = topMoney;
       it.soLuong = newQty;
@@ -606,7 +682,6 @@
     // ===== VIETQR CONFIG
     const VIETQR_BASE = "https://img.vietqr.io/image/mbbank-0834119666-compact2.jpg";
     let PAYABLE = 0;
-
     const getPayable = () => Math.max(0, Math.floor(PAYABLE));
     function buildAddInfo() {
       const phone = (document.getElementById('txtPhone')?.value || '').trim();
@@ -808,7 +883,7 @@
     async function taoHoaDon(){
       if(CART.length===0){ alert('Giỏ hàng trống.'); return; }
 
-      // Kiểm tra lần nữa trước khi POST (chống vượt tồn do race)
+      // Kiểm tra vượt tồn lần cuối
       for (const it of CART) {
         const prod = SOURCE.find(x=>x.ID_San_Pham==it.sanPhamId);
         if (!prod) { alert('Không tìm thấy sản phẩm trong danh sách.'); return; }
@@ -824,7 +899,7 @@
       await reallyCreateHoaDon();
     }
 
-    // Sau khi tạo xong -> hỏi in + trừ tồn UI + gọi BE trừ tồn
+    // Sau khi tạo xong -> hỏi in + trừ tồn UI + (optional) gọi BE trừ tồn
     async function reallyCreateHoaDon(){
       const tam  = CART.reduce((s,it)=> s + (it.donGia + it.tienTopping)*it.soLuong, 0);
       const giam = Math.min(DISCOUNT, tam*0.5);
@@ -881,14 +956,14 @@
         // render lại grid để thấy tồn mới
         searchProducts(PAGE);
 
-        // ---- Gọi BE để trừ tồn kho (fallback nhiều endpoint) ----
+        // ---- (Tuỳ chọn) Gọi BE để trừ tồn kho sau thanh toán ----
         try {
           const adjust = CART.map(it=>({ ID_San_Pham: it.sanPhamId, SoLuongTru: it.soLuong }));
           await fetch('/BanHangTaiQuay/TruTonKhoSauThanhToan', {
             method:'POST', headers:{'Content-Type':'application/json'},
             body: JSON.stringify(adjust)
           });
-        } catch { /* ignore UI warning */ }
+        } catch { /* ignore */ }
 
         // Clear form
         clearCart();

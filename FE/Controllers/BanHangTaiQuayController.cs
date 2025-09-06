@@ -16,7 +16,6 @@ namespace FE.Controllers
         // ===== CONFIG =====
         private const string BeBaseUrl = "https://localhost:7169";
 
-        // Endpoint tạo hóa đơn (nếu BE bạn có nhiều đường dẫn thì giữ mảng này, còn không có 1 cái thì chỉnh lại)
         private static readonly string[] HoaDonEndpoints =
         {
             "/api/HoaDon",
@@ -25,10 +24,9 @@ namespace FE.Controllers
             "/api/hoa-don/create"
         };
 
-        // DÙNG DUY NHẤT 1 ENDPOINT TRỪ TỒN KHO (theo BE bạn đã thêm)
         private const string AdjustStockEndpoint = "/api/SanPham/tru-ton";
 
-        // IDs mặc định (đổi cho đúng hệ thống của bạn)
+        // IDs mặc định (đổi theo hệ thống của bạn)
         private const int DEFAULT_KHACH_LE_ID = 1;
         private const int DEFAULT_NHAN_VIEN_ID = 1;
         private const int DEFAULT_SIZE_ID = 1;
@@ -42,27 +40,17 @@ namespace FE.Controllers
         [HttpGet]
         public async Task<IActionResult> Index()
         {
+            // >>> QUAN TRỌNG: TRẢ THẲNG SẢN PHẨM KHÔNG PROJECT
             var products = await _productService.GetAllProductsAsync() ?? new List<SanPham>();
-            var shapedProducts = products.Select(sp => new
-            {
-                sp.ID_San_Pham,
-                sp.Ten_San_Pham,
-                Gia = sp.Gia,
-                sp.Hinh_Anh,
-                sp.Mo_Ta,
-                sp.Trang_Thai,
-                SoLuongTon = sp.So_Luong
-                // KHÔNG có Ma_San_Pham
-            }).ToList();
 
-            ViewBag.Products = shapedProducts;
+            ViewBag.Products = products; // giữ nguyên KhuyenMais, Ma_San_Pham, v.v…
             ViewBag.DoNgots = await _productService.GetDoNgotsAsync() ?? new List<DoNgot>();
             ViewBag.LuongDas = await _productService.GetLuongDasAsync() ?? new List<LuongDa>();
             ViewBag.Toppings = await _productService.GetToppingsAsync() ?? new List<Topping>();
             return View();
         }
 
-        // ===== API: SẢN PHẨM (server trả về có kèm tồn kho) =====
+        // ===== API: SẢN PHẨM (có thể dùng cho lazy load/search) =====
         [HttpGet]
         [Produces("application/json")]
         public async Task<IActionResult> GetSanPham(string tuKhoa = "", int page = 1, int pageSize = 12)
@@ -76,13 +64,13 @@ namespace FE.Controllers
                     var kw = tuKhoa.Trim();
                     all = all.Where(sp =>
                         (sp.Ten_San_Pham ?? "").Contains(kw, StringComparison.OrdinalIgnoreCase)
-                        || ((sp as dynamic)?.Ma_San_Pham ?? $"SP{sp.ID_San_Pham}")
-                               .ToString().Contains(kw, StringComparison.OrdinalIgnoreCase)
+                      
                     ).ToList();
                 }
 
                 var total = all.Count;
 
+                // Trả về đủ các field view có thể cần (đặc biệt KHÔNG bỏ KhuyenMais)
                 var items = all
                     .OrderBy(sp => sp.Ten_San_Pham)
                     .Skip((page - 1) * pageSize)
@@ -90,16 +78,23 @@ namespace FE.Controllers
                     .Select(sp => new
                     {
                         sp.ID_San_Pham,
-                        Ten_San_Pham = sp.Ten_San_Pham ?? "",
-                        Gia = sp.Gia,
-                        Hinh_Anh = sp.Hinh_Anh ?? "",
-                        SoLuongTon = sp.So_Luong
+                        sp.Ten_San_Pham,
+                     
+                        sp.Gia,
+                        sp.Hinh_Anh,
+                        sp.Mo_Ta,
+                        sp.Trang_Thai,
+                        SoLuongTon = sp.So_Luong,
+                        sp.KhuyenMais // giữ nguyên để FE tính khuyến mãi
                     })
                     .ToList();
 
                 return Json(new { success = true, data = items, total, page, pageSize });
             }
-            catch (Exception ex) { return Json(new { success = false, message = ex.Message }); }
+            catch (Exception ex)
+            {
+                return Json(new { success = false, message = ex.Message });
+            }
         }
 
         // ===== API: OPTIONS =====
@@ -135,7 +130,7 @@ namespace FE.Controllers
             ma = ma.Trim().ToUpperInvariant();
             decimal giam = 0;
 
-            if (ma.StartsWith("SALE") && ma.Length >= 6 && decimal.TryParse(ma.Substring(4), out var pct) && pct <= 100)
+            if (ma.StartsWith("SALE") && ma.Length >= 6 && decimal.TryParse(ma[4..], out var pct) && pct <= 100)
                 giam = tongTien * (pct / 100m);
             else if (ma == "SALE100")
                 giam = 100_000m;
@@ -154,7 +149,7 @@ namespace FE.Controllers
             });
         }
 
-        // ===== API: TẠO HÓA ĐƠN (có kiểm tra tồn kho + gọi trừ tồn kho duy nhất 1 endpoint) =====
+        // ===== API: TẠO HÓA ĐƠN + TRỪ TỒN =====
         [HttpPost]
         [Produces("application/json")]
         public async Task<IActionResult> TaoHoaDonTaiQuay([FromBody] TaoHoaDonTaiQuayRequest req)
@@ -242,6 +237,11 @@ namespace FE.Controllers
                     LichSuHoaDons = Array.Empty<object>()
                 };
 
+                // Nếu bạn gặp lỗi SSL self-signed khi gọi https://localhost:7169,
+                // mở comment đoạn handler dưới đây:
+                // var handler = new HttpClientHandler { ServerCertificateCustomValidationCallback = (_, __, ___, ____) => true };
+                // using var http = new HttpClient(handler) { BaseAddress = new Uri(BeBaseUrl), Timeout = TimeSpan.FromSeconds(25) };
+
                 using var http = new HttpClient { BaseAddress = new Uri(BeBaseUrl), Timeout = TimeSpan.FromSeconds(25) };
                 HttpResponseMessage? resp = null;
                 string bodyText = "";
@@ -258,30 +258,41 @@ namespace FE.Controllers
                     catch (Exception exTry) { bodyText = exTry.Message; }
                 }
 
-                if (resp == null) return Json(new { success = false, message = "Không kết nối được BE." });
-                if (!resp.IsSuccessStatusCode) return Json(new { success = false, message = $"BE {(int)resp.StatusCode}: {bodyText}" });
+                if (resp == null)
+                    return Json(new { success = false, message = "Không kết nối được BE." });
+                if (!resp.IsSuccessStatusCode)
+                    return Json(new { success = false, message = $"BE {(int)resp.StatusCode}: {bodyText}" });
 
-                // ====== TRỪ TỒN KHO TRÊN BE SAU KHI TẠO HÓA ĐƠN ======
-                var adjustBody = req.Items.Select(it => new { ID_San_Pham = it.SanPhamId, SoLuongTru = it.SoLuong }).ToList();
-
-                var stockResp = await http.PostAsJsonAsync(AdjustStockEndpoint, adjustBody);
-                var stockRespText = await stockResp.Content.ReadAsStringAsync();
-                if (!stockResp.IsSuccessStatusCode)
+                // ====== TRỪ TỒN KHO SAU KHI TẠO HÓA ĐƠN ======
+                try
                 {
-                    // Có thể chọn rollback hoá đơn tùy nghiệp vụ, ở đây mình trả cảnh báo để bạn xử lý
+                    var adjustBody = req.Items.Select(it => new { ID_San_Pham = it.SanPhamId, SoLuongTru = it.SoLuong }).ToList();
+                    var stockResp = await http.PostAsJsonAsync(AdjustStockEndpoint, adjustBody);
+                    var stockRespText = await stockResp.Content.ReadAsStringAsync();
+
+                    if (!stockResp.IsSuccessStatusCode)
+                    {
+                        return Json(new
+                        {
+                            success = true,
+                            message = "Tạo hoá đơn thành công, nhưng trừ tồn kho thất bại.",
+                            be = new { status = (int)resp.StatusCode, createBody = bodyText, adjustStatus = (int)stockResp.StatusCode, adjustBody = stockRespText }
+                        });
+                    }
+                }
+                catch (Exception exAdj)
+                {
                     return Json(new
                     {
                         success = true,
-                        message = "Tạo hoá đơn thành công, nhưng trừ tồn kho thất bại.",
-                        be = new { status = (int)resp.StatusCode, createBody = bodyText, adjustStatus = (int)stockResp.StatusCode, adjustBody = stockRespText }
+                        message = "Tạo hoá đơn thành công, nhưng gặp lỗi khi trừ tồn kho: " + exAdj.Message
                     });
                 }
 
                 return Json(new
                 {
                     success = true,
-                    message = "Tạo hoá đơn & trừ tồn thành công.",
-                    be = new { status = (int)resp.StatusCode, createBody = bodyText, adjust = stockRespText }
+                    message = "Tạo hoá đơn & trừ tồn thành công."
                 });
             }
             catch (Exception ex) { return Json(new { success = false, message = ex.Message }); }
