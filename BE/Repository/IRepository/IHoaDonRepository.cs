@@ -1,4 +1,4 @@
-namespace BE.Repository.IRepository
+﻿namespace BE.Repository.IRepository
 {
     using System.Collections.Generic;
     using System.Threading.Tasks;
@@ -7,12 +7,20 @@ namespace BE.Repository.IRepository
 
     public interface IHoaDonRepository
     {
-        Task<IEnumerable<HoaDonDTO>> GetAllAsync();
+        // --- GIỮ NGUYÊN ---
         Task<HoaDon> GetByIdAsync(int id);
         Task AddAsync(HoaDon entity);
         Task UpdateAsync(int id, HoaDon entity);
         Task DeleteAsync(int id);
-        Task<bool> UpdateTrangThaiAsync(int id, string trangThai, string? lyDoHuy);
 
+        // --- THÊM MỚI ---
+        // 1) Danh sách dạng DTO (cho màn list)
+        Task<IEnumerable<HoaDonDTO>> GetAllAsync();
+
+        // 2) Danh sách entity đầy đủ (để giữ tương thích các màn FE cũ)
+        Task<IEnumerable<HoaDon>> GetAllEntitiesAsync();
+
+        // 3) Cập nhật trạng thái + lý do hủy
+        Task<bool> UpdateTrangThaiAsync(int id, string trangThai, string? lyDoHuy);
     }
 }

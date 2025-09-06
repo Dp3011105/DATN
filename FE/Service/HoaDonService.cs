@@ -1,10 +1,14 @@
-﻿using BE.models;
-using Service.IService;
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
 using System.Net.Http;
 using System.Net.Http.Json;
-using static System.Net.WebRequestMethods;
+using System.Threading.Tasks;
+using BE.models;
+using BE.DTOs;
+using Service.IService;
 
-namespace Service.Services // hoặc namespace của bạn cho layer Service
+namespace Service.Services // namespace của bạn
 {
     public class HoaDonService : IHoaDonService
     {
@@ -13,10 +17,12 @@ namespace Service.Services // hoặc namespace của bạn cho layer Service
         public HoaDonService(IHttpClientFactory httpFactory)
         {
             _http = httpFactory.CreateClient();
-            _http.BaseAddress = new Uri("https://localhost:7169/");
+            _http.BaseAddress = new Uri("https://localhost:7169/"); // chỉnh theo API của bạn
         }
+
+        // ====== GIỮ NGUYÊN (trả entity) ======
         public async Task<IEnumerable<HoaDon>> GetAllAsync()
-            => await _http.GetFromJsonAsync<IEnumerable<HoaDon>>("api/HoaDon");
+            => await _http.GetFromJsonAsync<IEnumerable<HoaDon>>("api/HoaDon/entities");
 
         public async Task<HoaDon> GetByIdAsync(int id)
             => await _http.GetFromJsonAsync<HoaDon>($"api/HoaDon/{id}");
@@ -38,23 +44,20 @@ namespace Service.Services // hoặc namespace của bạn cho layer Service
             var res = await _http.DeleteAsync($"api/HoaDon/{id}");
             res.EnsureSuccessStatusCode();
         }
+
+        // ====== THÊM MỚI (trả DTO cho danh sách) ======
+        public async Task<IEnumerable<HoaDonDTO>> GetAllListAsync()
+        {
+            var data = await _http.GetFromJsonAsync<IEnumerable<HoaDonDTO>>("api/HoaDon");
+            return data ?? Enumerable.Empty<HoaDonDTO>();
+        }
+
+        // ====== THÊM MỚI (cập nhật trạng thái + lý do hủy) ======
         public async Task<bool> UpdateTrangThaiAsync(int hoaDonId, string trangThaiDb, string? lyDoHuy)
         {
-            var payload = new
-            {
-                HoaDonId = hoaDonId,
-                TrangThai = trangThaiDb,
-                LyDoHuy = lyDoHuy
-            };
-
-            // ví dụ BE có endpoint: PATCH api/HoaDon/{id}/TrangThai
+            var payload = new { TrangThai = trangThaiDb, LyDoHuy = lyDoHuy };
             var resp = await _http.PatchAsJsonAsync($"api/HoaDon/{hoaDonId}/TrangThai", payload);
-            if (resp.IsSuccessStatusCode) return true;
-
-            // fallback: nếu chưa có PATCH, dùng POST tạm 1 endpoint bạn tự tạo
-            // var resp = await _http.PostAsJsonAsync("api/HoaDon/CapNhatTrangThai", payload);
-
-            return false;
+            return resp.IsSuccessStatusCode;
         }
     }
 }
