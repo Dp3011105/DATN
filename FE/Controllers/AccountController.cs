@@ -23,6 +23,7 @@ namespace FE.Controllers
         [HttpPost]
         public async Task<IActionResult> Register(RegisterModel model)
         {
+
             if (ModelState.IsValid)
             {
                 var success = await _authService.RegisterAsync(model);
@@ -60,7 +61,7 @@ namespace FE.Controllers
                             Expires = DateTimeOffset.UtcNow.AddHours(24) // Thời gian hết hạn, ví dụ 24 giờ
                         });
 
-                        return RedirectToAction("Index", "Home");
+                        return RedirectToAction("Index", "HomeKhachHang");
                     }
                     else
                     {

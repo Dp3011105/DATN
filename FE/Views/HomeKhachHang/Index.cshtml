@@ -1,5 +1,4 @@
-﻿
-@model List<FE.Models.SanPham>
+﻿@model List<FE.Models.SanPham>
 @{
     var activeProducts = Model.Where(p => p.Trang_Thai).OrderByDescending(p => p.ID_San_Pham).ToList();
     // Xử lý múi giờ
@@ -451,7 +450,7 @@
         }
 
         /* Responsive adjustments */
-       
+
 
         {
             grid-template-columns: 1fr !important;
@@ -464,7 +463,7 @@
 
         }
 
-      
+
 
         {
             padding: 0.75rem;
@@ -514,7 +513,7 @@
 
         <!-- Header with search -->
         <div class="text-center mb-6">
-            <h1 class="text-2xl md:text-3xl font-bold text-gray-800 mb-3">Hưng sẽ code phần này nhé , Bạn có thể thêm chức năng check nếu người dùng đăng nhập rồi sẽ tự động chuyển hướng về trang /HomeKhachHang </h1>
+            <h1 class="text-2xl md:text-3xl font-bold text-gray-800 mb-3">Thực Đơn</h1>
             <p class="text-gray-600 text-sm max-w-xl mx-auto">Khám phá đồ uống tươi ngon</p>
 
             <!-- Search Bar -->
@@ -701,21 +700,21 @@
             let userId = null;
             @if (Context.Request.Cookies["UserData"] != null)
             {
-                    <text>
-                    try {
-                        const userData = JSON.parse('@Html.Raw(Context.Request.Cookies["UserData"])');
-                        userId = userData.ID_Khach_Hang;
-                        console.log('Parsed userId from UserData cookie:', userId);
-                    } catch (e) {
-                        console.error('Error parsing UserData cookie:', e);
-                    }
-                    </text>
+                        <text>
+                        try {
+                            const userData = JSON.parse('@Html.Raw(Context.Request.Cookies["UserData"])');
+                            userId = userData.ID_Khach_Hang;
+                            console.log('Parsed userId from UserData cookie:', userId);
+                        } catch (e) {
+                            console.error('Error parsing UserData cookie:', e);
+                        }
+                        </text>
             }
             else
             {
-                    <text>
-                    console.log('No UserData cookie found');
-                    </text>
+                        <text>
+                        console.log('No UserData cookie found');
+                        </text>
             }
 
             // View details buttons
