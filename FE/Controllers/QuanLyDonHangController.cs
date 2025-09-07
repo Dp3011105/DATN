@@ -1,5 +1,6 @@
 ﻿using BE.models;
 using FE.Service.IService;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Service.IService;
 using System;
@@ -9,15 +10,29 @@ using System.Threading.Tasks;
 
 namespace FE.Controllers
 {
+    //[Authorize(Roles = "Admin,Sales")] // tuỳ hệ thống role của bạn
     public class QuanLyDonHangController : Controller
     {
         private readonly IHoaDonService _hoaDonService;
         private readonly IProductService _productService;
 
+        // Trạng thái lưu trong DB
         private static readonly string[] DbStatuses = new[]
         {
             "Chua_Xac_Nhan","Da_Xac_Nhan","Dang_Xu_Ly","Dang_Giao_Hang","Hoan_Thanh","Huy_Don"
         };
+
+        // Cho phép chuyển trạng thái từ -> đến
+        private static readonly Dictionary<string, string[]> AllowedTransitions =
+            new(StringComparer.OrdinalIgnoreCase)
+            {
+                ["Chua_Xac_Nhan"] = new[] { "Da_Xac_Nhan", "Huy_Don" },
+                ["Da_Xac_Nhan"] = new[] { "Dang_Xu_Ly", "Huy_Don" },
+                ["Dang_Xu_Ly"] = new[] { "Dang_Giao_Hang", "Huy_Don" },
+                ["Dang_Giao_Hang"] = new[] { "Hoan_Thanh" },
+                ["Hoan_Thanh"] = Array.Empty<string>(),
+                ["Huy_Don"] = Array.Empty<string>()
+            };
 
         public QuanLyDonHangController(IHoaDonService hoaDonService, IProductService productService)
         {
@@ -25,6 +40,7 @@ namespace FE.Controllers
             _productService = productService;
         }
 
+        // ============== LIST ==============
         [HttpGet]
         public async Task<IActionResult> Index(string tuKhoa = "", string trangThai = "TẤT CẢ")
         {
@@ -37,15 +53,17 @@ namespace FE.Controllers
 
             try
             {
+                // NOTE: nếu có paging/filter phía service thì dùng thay vì GetAllAsync()
                 var list = (await _hoaDonService.GetAllAsync())?.ToList() ?? new();
 
                 if (!string.IsNullOrWhiteSpace(vm.TuKhoa))
                 {
                     var kw = vm.TuKhoa;
                     list = list.Where(hd =>
-                           (hd.Ma_Hoa_Don?.Contains(kw, StringComparison.OrdinalIgnoreCase) == true)
-                        || (hd.KhachHang?.Ho_Ten?.Contains(kw, StringComparison.OrdinalIgnoreCase) == true)
-                    ).ToList();
+                               (hd.Ma_Hoa_Don?.Contains(kw, StringComparison.OrdinalIgnoreCase) == true)
+                            || (hd.KhachHang?.Ho_Ten?.Contains(kw, StringComparison.OrdinalIgnoreCase) == true)
+                            || (hd.KhachHang?.So_Dien_Thoai?.Contains(kw, StringComparison.OrdinalIgnoreCase) == true)
+                        ).ToList();
                 }
 
                 if (!vm.TrangThai.Equals("TẤT CẢ", StringComparison.OrdinalIgnoreCase))
@@ -58,16 +76,21 @@ namespace FE.Controllers
                     .ThenByDescending(h => h.Ngay_Tao)
                     .ToList();
             }
-            catch { vm.DanhSachHoaDon = new(); }
+            catch
+            {
+                vm.DanhSachHoaDon = new();
+            }
 
             return View(vm);
         }
 
+        // ============== DETAIL ==============
         [HttpGet]
         public async Task<IActionResult> ChiTiet(int id)
         {
             var hd = await _hoaDonService.GetByIdAsync(id);
             if (hd == null) return NotFound();
+
             var vm = new ChiTietHoaDonViewModel
             {
                 HoaDon = hd,
@@ -76,7 +99,7 @@ namespace FE.Controllers
             return View(vm);
         }
 
-        // ================= JSON CHO MODAL HỦY (KHÔNG ĐỤNG MODEL, DÙNG REFLECTION) =================
+        // ============== JSON cho modal hủy ==============
         [HttpGet]
         public async Task<IActionResult> ChiTietJson(int id)
         {
@@ -86,12 +109,19 @@ namespace FE.Controllers
 
             var items = (hd.HoaDonChiTiets ?? new List<HoaDonChiTiet>())
                 .OrderBy(ct => ct.ID_HoaDon_ChiTiet)
-                .Select(ct => new
+                .Select(ct =>
                 {
-                    id = ct.ID_HoaDon_ChiTiet,
-                    ten = BuildTenSp(ct),       // <<== dùng helper reflection
-                    soLuong = ct.So_Luong,
-                    daLam = false               // nếu có cờ ở chi tiết, set thật tại đây
+                    // cố gắng lấy cờ "đã làm" từ các thuộc tính có thể có
+                    bool daLam = GetFlag(ct, "Da_Lam", "IsPrepared", "IsDone", "DaLam") ||
+                                 string.Equals(GetStringProp(ct, "Trang_Thai_Chi_Tiet", "TrangThaiChiTiet"), "Da_Lam", StringComparison.OrdinalIgnoreCase);
+
+                    return new
+                    {
+                        id = ct.ID_HoaDon_ChiTiet,
+                        ten = BuildTenSp(ct),
+                        soLuong = ct.So_Luong,
+                        daLam
+                    };
                 })
                 .ToList();
 
@@ -113,15 +143,26 @@ namespace FE.Controllers
             return null;
         }
 
+        private static bool GetFlag(object? obj, params string[] candidates)
+        {
+            if (obj == null || candidates == null || candidates.Length == 0) return false;
+            var t = obj.GetType();
+            foreach (var name in candidates)
+            {
+                var pi = t.GetProperty(name);
+                if (pi == null) continue;
+                var val = pi.GetValue(obj);
+                if (val is bool b) return b;
+                if (val is int i) return i != 0;
+            }
+            return false;
+        }
+
         private static string BuildTenSp(HoaDonChiTiet ct)
         {
-            // SanPham: thử các tên khả dĩ
             var tenSp = GetStringProp(ct.SanPham, "Ten_San_Pham", "Ten", "Name") ?? "Sản phẩm";
-
-            // Size
             var sizeName = GetStringProp(ct.Size, "SizeName", "Ten_Size", "Ten", "Name");
 
-            // Toppings
             var toppingNames = new List<string>();
             var listTp = ct.HoaDonChiTietToppings;
             if (listTp != null)
@@ -138,14 +179,26 @@ namespace FE.Controllers
             if (toppingNames.Count > 0) tenSp += $" (Topping: {string.Join(", ", toppingNames)})";
             return tenSp;
         }
-        // ===========================================================================================
 
+        // ============== STATE TRANSITIONS ==============
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> XacNhan(int id)
         {
-            var ok = await _hoaDonService.UpdateTrangThaiAsync(id, "Dang_Giao_Hang", null);
-            TempData["msg"] = ok ? "Đã chuyển đơn sang trạng thái: Đang giao hàng." : "Cập nhật thất bại.";
+            var hd = await _hoaDonService.GetByIdAsync(id);
+            if (hd == null) return NotFound();
+
+            var curr = hd.Trang_Thai ?? "";
+            var next = "Da_Xac_Nhan"; // bước đúng tiếp theo từ "Chua_Xac_Nhan"
+
+            if (!AllowedTransitions.TryGetValue(curr, out var allows) || !allows.Contains(next, StringComparer.OrdinalIgnoreCase))
+            {
+                TempData["msg"] = "Trạng thái hiện tại không cho phép xác nhận.";
+                return RedirectToAction(nameof(Index));
+            }
+
+            var ok = await _hoaDonService.UpdateTrangThaiAsync(id, next, null);
+            TempData["msg"] = ok ? "Đã xác nhận đơn." : "Cập nhật thất bại.";
             return RedirectToAction(nameof(Index));
         }
 
@@ -153,12 +206,24 @@ namespace FE.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> GiaoHangThanhCong(int id)
         {
-            var ok = await _hoaDonService.UpdateTrangThaiAsync(id, "Hoan_Thanh", null);
+            var hd = await _hoaDonService.GetByIdAsync(id);
+            if (hd == null) return NotFound();
+
+            var curr = hd.Trang_Thai ?? "";
+            var next = "Hoan_Thanh";
+
+            if (!AllowedTransitions.TryGetValue(curr, out var allows) || !allows.Contains(next, StringComparer.OrdinalIgnoreCase))
+            {
+                TempData["msg"] = "Chỉ có thể hoàn thành khi đơn đang ở trạng thái Đang giao hàng.";
+                return RedirectToAction(nameof(Index));
+            }
+
+            var ok = await _hoaDonService.UpdateTrangThaiAsync(id, next, null);
             TempData["msg"] = ok ? "Đã xác nhận giao hàng thành công." : "Cập nhật thất bại.";
             return RedirectToAction(nameof(Index));
         }
 
-        // ====== HỦY + RESTOCK: NHẬN selections VÀ GỌI API MỚI ======
+        // ============== HỦY + KHÔI PHỤC TỒN ==============
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Huy(int id, string lyDo, int[] khoiPhucIds, int[] khoiPhucQtys)
@@ -169,6 +234,20 @@ namespace FE.Controllers
                 return RedirectToAction(nameof(Index));
             }
 
+            var hd = await _hoaDonService.GetByIdAsync(id);
+            if (hd == null) return NotFound();
+
+            // Không cho hủy khi đã hoàn thành/đã huỷ
+            if (string.Equals(hd.Trang_Thai, "Hoan_Thanh", StringComparison.OrdinalIgnoreCase) ||
+                string.Equals(hd.Trang_Thai, "Huy_Don", StringComparison.OrdinalIgnoreCase))
+            {
+                TempData["msg"] = "Đơn đã hoàn tất hoặc đã huỷ. Không thể huỷ.";
+                return RedirectToAction(nameof(Index));
+            }
+
+            var mapCt = (hd.HoaDonChiTiets ?? new List<HoaDonChiTiet>())
+                        .ToDictionary(x => x.ID_HoaDon_ChiTiet, x => x);
+
             var selections = new List<(int chiTietId, int soLuong)>();
             if (khoiPhucIds != null && khoiPhucQtys != null && khoiPhucIds.Length == khoiPhucQtys.Length)
             {
@@ -176,11 +255,18 @@ namespace FE.Controllers
                 {
                     var cid = khoiPhucIds[i];
                     var q = Math.Max(0, khoiPhucQtys[i]);
-                    if (cid > 0 && q > 0) selections.Add((cid, q));
+                    if (cid <= 0 || q <= 0) continue;
+
+                    if (!mapCt.TryGetValue(cid, out var ct)) continue; // không thuộc đơn
+
+                    var max = Math.Max(0, ct.So_Luong);
+                    if (q > max) q = max; // clamp
+                    selections.Add((cid, q));
                 }
             }
 
-            var ok = await _hoaDonService.CancelWithRestockAsync(id, lyDo, selections);
+            // CancelWithRestockAsync nên thực hiện transaction (update trạng thái + cộng tồn)
+            var ok = await _hoaDonService.CancelWithRestockAsync(id, lyDo.Trim(), selections);
 
             TempData["msg"] = ok
                 ? "Đã hủy đơn và khôi phục tồn kho cho các cốc được chọn."
@@ -190,6 +276,7 @@ namespace FE.Controllers
         }
     }
 
+    // ============== ViewModels ==============
     public class QuanLyDonHangViewModel
     {
         public List<HoaDon> DanhSachHoaDon { get; set; } = new();

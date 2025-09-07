@@ -55,7 +55,7 @@
 
     <form method="get" class="d-flex flex-wrap align-items-center gap-2 mb-3">
         <input name="tuKhoa" id="tuKhoa" class="form-control" style="max-width:360px"
-               value="@Model.TuKhoa" placeholder="Tìm theo mã / tên khách..." />
+               value="@Model.TuKhoa" placeholder="Tìm theo mã / tên khách / SĐT..." />
 
         <select name="trangThai" id="selTrangThai" class="form-select" style="max-width:220px">
             @foreach (var t in Model.TrangThaiList)
@@ -120,6 +120,7 @@
                                 <a class="btn btn-sm btn-outline-secondary me-1"
                                    href="@Url.Action("ChiTiet", "QuanLyDonHang", new { id = hd.ID_Hoa_Don })">Chi tiết</a>
 
+                                @* Bước xác nhận từ Chua_Xac_Nhan -> Da_Xac_Nhan *@
                         @if (string.Equals(dbStatus, "Chua_Xac_Nhan", StringComparison.OrdinalIgnoreCase))
                                 {
                                     <form method="post" class="d-inline" action="@Url.Action("XacNhan","QuanLyDonHang")">
@@ -129,6 +130,7 @@
                                     </form>
                                 }
 
+                                @* Giao hàng thành công chỉ khi đang giao *@
                                 @if (string.Equals(dbStatus, "Dang_Giao_Hang", StringComparison.OrdinalIgnoreCase))
                                 {
                                     <form method="post" class="d-inline" action="@Url.Action("GiaoHangThanhCong","QuanLyDonHang")">
@@ -161,7 +163,6 @@
 <!-- Modal Hủy đơn -->
 <div class="modal fade" id="modalHuyDon" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-lg">
-        @* rộng hơn để chứa bảng *@
         <form method="post" asp-action="Huy" id="form-huy-don">
             @Html.AntiForgeryToken()
             <div class="modal-content">
@@ -179,10 +180,9 @@
                     <div class="mb-3">
                         <label class="form-label">Lý do hủy <span class="text-danger">*</span></label>
                         <textarea name="lyDo" id="huy-lydo" class="form-control" rows="2"
-                                  placeholder="Nhập lý do hủy đơn..." required></textarea>
+                                  placeholder="Nhập lý do hủy đơn..." required maxlength="500"></textarea>
                     </div>
 
-                    <!-- BẢNG CHỌN CỐC KHÔI PHỤC -->
                     <div class="border rounded p-2">
                         <div class="d-flex justify-content-between align-items-center mb-2">
                             <strong>Các cốc có thể khôi phục</strong>
@@ -197,7 +197,7 @@
                                         <th>Sản phẩm</th>
                                         <th class="text-end" style="width:140px">Số lượng đặt</th>
                                         <th class="text-end" style="width:160px">Số lượng khôi phục</th>
-                                        <th style="width:80px">Đã làm?</th>
+                                        <th style="width:100px">Đã làm?</th>
                                     </tr>
                                 </thead>
                                 <tbody>
@@ -214,7 +214,7 @@
 
                 <div class="modal-footer">
                     <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Đóng</button>
-                    <button type="submit" class="btn btn-danger">Xác nhận hủy</button>
+                    <button type="submit" class="btn btn-danger" id="btn-huy">Xác nhận hủy</button>
                 </div>
             </div>
         </form>
@@ -226,7 +226,11 @@
     const modal = document.getElementById('modalHuyDon');
     const tblBody = () => document.querySelector('#tbl-kphoiphuc tbody');
 
-    // Build 1 row
+    function escapeHtml(str) {
+        return (str || '').replace(/[&<>"']/g, s => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[s]));
+    }
+
+    // Build 1 row cho bảng khôi phục
     function buildRow(item) {
         // item: { id, ten, soLuong, daLam }
         const tr = document.createElement('tr');
@@ -238,15 +242,10 @@
                 <input type="number" min="0" max="${item.soLuong}" step="1" class="form-control form-control-sm input-sl"
                        value="${item.daLam ? 0 : item.soLuong}" data-id="${item.id}">
             </td>
-            <td>${item.daLam ? '<span class="badge text-bg-warning">Có thể đã làm</span>' : '<span class="badge text-bg-success">Chưa làm</span>'}</td>
+            <td>${item.daLam ? '<span class="badge text-bg-warning">Đã làm</span>' : '<span class="badge text-bg-success">Chưa làm</span>'}</td>
         `;
-        // mặc định tick theo "chưa làm"
-        tr.querySelector('.chk-row').checked = !item.daLam && item.soLuong > 0;
+        tr.querySelector('.chk-row').checked = !item.daLam && item.soLuong > 0; // tick mặc định nếu chưa làm
         return tr;
-    }
-
-    function escapeHtml(str) {
-        return (str || '').replace(/[&<>"']/g, s => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[s]));
     }
 
     // Nạp dữ liệu khi mở modal
@@ -261,7 +260,6 @@
             const textarea = document.getElementById('huy-lydo');
             if (textarea) textarea.value = '';
 
-            // Clear table
             const body = tblBody();
             body.innerHTML = `<tr><td colspan="5" class="text-muted">Đang tải...</td></tr>`;
 
@@ -288,23 +286,32 @@
         });
     }
 
-    // Check all
+    // Chọn tất cả: tick + auto fill qty nếu đang 0
     document.addEventListener('change', function (e) {
         if (e.target?.id === 'chk-all') {
             const on = e.target.checked;
-            document.querySelectorAll('#tbl-kphoiphuc .chk-row').forEach(cb => cb.checked = on);
+            document.querySelectorAll('#tbl-kphoiphuc .chk-row').forEach(cb => {
+                cb.checked = on;
+                const tr = cb.closest('tr');
+                const inp = tr?.querySelector('.input-sl');
+                const max = parseInt(inp?.getAttribute('max') || '0');
+                if (on && parseInt(inp.value || '0') === 0 && max > 0) inp.value = String(max);
+            });
         }
     });
 
-    // Trước khi submit, bơm hidden inputs khoiPhucIds / khoiPhucQtys
+    // Trước khi submit, bơm hidden inputs khoiPhucIds / khoiPhucQtys + chống double submit
     const form = document.getElementById('form-huy-don');
     if (form) {
         form.addEventListener('submit', function (e) {
+            // Disable button để tránh double submit
+            const btn = document.getElementById('btn-huy');
+            if (btn) btn.disabled = true;
+
             // Xóa hidden cũ
             form.querySelectorAll('input[name="khoiPhucIds"], input[name="khoiPhucQtys"]').forEach(n => n.remove());
 
             const rows = document.querySelectorAll('#tbl-kphoiphuc tbody tr');
-            let anySelected = false;
 
             rows.forEach(tr => {
                 const cb = tr.querySelector('.chk-row');
@@ -319,7 +326,6 @@
                     if (q > max) q = max;
 
                     if (id > 0 && q > 0) {
-                        anySelected = true;
                         const hid1 = document.createElement('input');
                         hid1.type = 'hidden';
                         hid1.name = 'khoiPhucIds';
@@ -335,11 +341,6 @@
                     }
                 }
             });
-
-            // Không bắt buộc phải chọn, nhưng có thể cảnh báo:
-            // if (!anySelected && !confirm('Bạn chưa chọn cốc nào để khôi phục. Tiếp tục hủy đơn?')) {
-            //     e.preventDefault();
-            // }
         });
     }
 </script>
