@@ -1,7 +1,6 @@
-﻿
-@model List<FE.Models.SanPham>
+﻿@model List<FE.Models.SanPham>
 @{
-    var activeProducts = Model.Where(p => p.Trang_Thai).OrderByDescending(p => p.ID_San_Pham).ToList();
+    var activeProducts = Model.Where(p => p.Trang_Thai && p.So_Luong > 0).OrderByDescending(p => p.ID_San_Pham).ToList();
     // Xử lý múi giờ
     TimeZoneInfo vnTimeZone;
     try
@@ -118,10 +117,20 @@
                 color: white;
             }
 
-        input[type="radio"],
-        input[type="checkbox"] {
+        input[type="radio"] {
             position: absolute;
             opacity: 0;
+        }
+
+        input[type="checkbox"] {
+            margin-right: 0.5rem;
+        }
+
+        .cart-checkbox {
+            margin-right: 0.5rem;
+            width: 16px;
+            height: 16px;
+            cursor: pointer;
         }
 
         .add-to-cart-btn {
@@ -449,43 +458,6 @@
             margin-top: 0.2rem;
             display: none;
         }
-
-        /* Responsive adjustments */
-       
-
-        {
-            grid-template-columns: 1fr !important;
-        }
-
-        .cart-container {
-            margin-top: 1.5rem;
-            max-width: 100%;
-        }
-
-        }
-
-      
-
-        {
-            padding: 0.75rem;
-        }
-
-        .responsive-search-input {
-            font-size: 0.8rem;
-            padding: 0.5rem 0.75rem 0.5rem 2rem;
-        }
-
-        .responsive-search-icon {
-            left: 0.75rem;
-            font-size: 0.8rem;
-        }
-
-        .responsive-search-button {
-            padding: 0.3rem 0.75rem;
-            font-size: 0.75rem;
-        }
-
-        }
     </style>
 </head>
 <body class="min-h-screen bg-gray-50">
@@ -514,7 +486,7 @@
 
         <!-- Header with search -->
         <div class="text-center mb-6">
-            <h1 class="text-2xl md:text-3xl font-bold text-gray-800 mb-3">Hưng sẽ code phần này nhé , Bạn có thể thêm chức năng check nếu người dùng đăng nhập rồi sẽ tự động chuyển hướng về trang /HomeKhachHang </h1>
+            <h1 class="text-2xl md:text-3xl font-bold text-gray-800 mb-3">Hưng sẽ code ở trang này nhe home/index , Bạn có thể thêm chức năng check xem người dùng đã đăng nhập chưa nếu rồi thì tự động chuyển hướng đến /homekhachHang/index</h1>
             <p class="text-gray-600 text-sm max-w-xl mx-auto">Khám phá đồ uống tươi ngon</p>
 
             <!-- Search Bar -->
@@ -543,14 +515,14 @@
                                 if (currentDate >= km.Ngay_Bat_Dau && currentDate <= km.Ngay_Ket_Thuc)
                                 {
                                     hasActivePromotion = true;
-                                    basePrice = km.Gia_Giam ?? product.Gia; // Nếu km.Gia_Giam là null, sử dụng product.Gia
+                                    basePrice = km.Gia_Giam ?? product.Gia;
                                     promotionName = km.Ten_Khuyen_Mai;
                                     break;
                                 }
                             }
                         }
 
-                        <div class="product-card animate__animated animate__fadeIn" data-name="@product.Ten_San_Pham.ToLower()" data-id="@product.ID_San_Pham" data-json="@Newtonsoft.Json.JsonConvert.SerializeObject(product)">
+                        <div class="product-card animate__animated animate__fadeIn" data-name="@product.Ten_San_Pham.ToLower()" data-id="@product.ID_San_Pham">
                             <div class="product-image-container">
                                 <img src="@("https://localhost:7169" + product.Hinh_Anh)" alt="@product.Ten_San_Pham" class="product-image" />
                                 @if (hasActivePromotion)
@@ -601,7 +573,7 @@
                     </div>
                     <div id="cartItems" class="cart-items"></div>
                     <div class="cart-total" id="cartTotal">Tổng cộng: 0 đ</div>
-                    <a href="/Cart" class="cart-checkout-btn">Thanh toán</a>
+                    <button id="checkoutBtn" class="cart-checkout-btn">Thanh toán</button>
                 </div>
             </div>
         </div>
@@ -686,7 +658,8 @@
             const searchButton = document.getElementById('searchButton');
             const productCards = document.querySelectorAll('.product-card');
             const noResults = document.getElementById('noResults');
-            const modal = new bootstrap.Modal(document.getElementById('productDetailsModal'));
+            const modalElement = document.getElementById('productDetailsModal');
+            const modal = new bootstrap.Modal(modalElement);
             const cartItemsContainer = document.getElementById('cartItems');
             const cartTotalElement = document.getElementById('cartTotal');
             const quantityInput = document.getElementById('quantityInput');
@@ -696,27 +669,53 @@
             const sizeError = document.getElementById('sizeError');
             const iceError = document.getElementById('iceError');
             const sweetnessError = document.getElementById('sweetnessError');
+            const checkoutBtn = document.getElementById('checkoutBtn');
 
             // Lấy userId từ cookie giống như trong Layout
             let userId = null;
             @if (Context.Request.Cookies["UserData"] != null)
             {
-                    <text>
-                    try {
-                        const userData = JSON.parse('@Html.Raw(Context.Request.Cookies["UserData"])');
-                        userId = userData.ID_Khach_Hang;
-                        console.log('Parsed userId from UserData cookie:', userId);
-                    } catch (e) {
-                        console.error('Error parsing UserData cookie:', e);
-                    }
-                    </text>
+                        <text>
+                        try {
+                            const userData = JSON.parse('@Html.Raw(Context.Request.Cookies["UserData"])');
+                            userId = userData.ID_Khach_Hang;
+                            console.log('Parsed userId from UserData cookie:', userId);
+                        } catch (e) {
+                            console.error('Error parsing UserData cookie:', e);
+                        }
+                        </text>
             }
             else
             {
-                    <text>
-                    console.log('No UserData cookie found');
-                    </text>
+                        <text>
+                        console.log('No UserData cookie found');
+                        </text>
             }
+
+            let productsData = [];
+
+            // Fetch all products for checkout check
+            async function fetchProducts() {
+                try {
+                    const response = await fetch('https://localhost:7169/api/SanPham', {
+                        method: 'GET',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        }
+                    });
+                    if (!response.ok) {
+                        const errorText = await response.text();
+                        throw new Error(`Không thể lấy danh sách sản phẩm: ${errorText}`);
+                    }
+                    productsData = await response.json();
+                    console.log('Fetched products:', productsData);
+                } catch (error) {
+                    console.error('Lỗi fetch products:', error);
+                    showAlert('Lỗi khi lấy danh sách sản phẩm!', 'error');
+                }
+            }
+
+            fetchProducts();
 
             // View details buttons
             document.querySelectorAll('.view-details-btn').forEach((btn, index) => {
@@ -742,7 +741,6 @@
                     }
                 });
 
-                // Show/hide no results message
                 if (visibleCount === 0 && searchTerm !== '') {
                     noResults.classList.remove('hidden');
                     noResults.classList.add('animate__fadeIn');
@@ -776,7 +774,6 @@
                 document.getElementById('totalPrice').textContent = total.toLocaleString('vi-VN') + ' đ';
             }
 
-            // Hàm kiểm tra validation và cập nhật trạng thái nút Thêm vào giỏ hàng
             function validateSelections() {
                 const isSizeSelected = selectedSize !== null;
                 const isIceSelected = selectedIce !== null;
@@ -789,7 +786,6 @@
                 addToCartBtn.disabled = !(isSizeSelected && isIceSelected && isSweetnessSelected);
             }
 
-            // Hiển thị thông báo
             function showAlert(message, type) {
                 const alert = document.createElement('div');
                 alert.className = `alert-notification alert-${type} animate__animated animate__slideInRight fixed top-4 right-4 z-50 max-w-sm`;
@@ -808,7 +804,6 @@
                 }, 3000);
             }
 
-            // Lấy dữ liệu giỏ hàng từ API
             async function fetchCart() {
                 if (!userId) {
                     console.log('No userId, showing login message');
@@ -842,33 +837,36 @@
                 }
             }
 
-            // Hiển thị giỏ hàng
             function displayCart(cartData) {
+                console.log('Rendering cart items...');
                 cartItemsContainer.innerHTML = '';
                 let cartTotal = 0;
 
                 if (!cartData.chi_Tiet_Gio_Hang || cartData.chi_Tiet_Gio_Hang.length === 0) {
+                    console.log('Cart is empty');
                     cartItemsContainer.innerHTML = '<p class="cart-empty">Giỏ hàng trống.</p>';
                     cartTotalElement.textContent = 'Tổng cộng: 0 đ';
                     return;
                 }
 
                 cartData.chi_Tiet_Gio_Hang.forEach(item => {
-                    const toppingTotal = item.toppings.reduce((sum, topping) => sum + (topping.gia_Topping || 0), 0);
+                    console.log('Creating cart item:', item.ten_San_Pham);
+                    const toppingTotal = item.toppings ? item.toppings.reduce((sum, topping) => sum + (topping.gia_Topping || 0), 0) : 0;
                     const itemTotal = (item.gia_Hien_Thi + toppingTotal) * item.so_Luong;
-                    cartTotal += itemTotal;
 
                     const itemElement = document.createElement('div');
                     itemElement.className = 'cart-item';
+                    itemElement.dataset.itemData = JSON.stringify(item);
                     itemElement.innerHTML = `
-                        <img src="https://localhost:7169/images/products/${item.iD_San_Pham}.jpg" alt="${item.ten_San_Pham}" class="cart-item-image">
+                        <input type="checkbox" class="cart-checkbox" checked data-id="${item.iD_GioHang_ChiTiet}">
+                        <img src="https://localhost:7169${item.hinh_Anh || '/images/products/default.jpg'}" alt="${item.ten_San_Pham}" class="cart-item-image">
                         <div class="cart-item-details">
                             <div class="cart-item-name">${item.ten_San_Pham}</div>
                             <div class="cart-item-options">
                                 ${item.ten_Size ? `Kích thước: ${item.ten_Size}<br>` : ''}
                                 ${item.ten_LuongDa ? `Lượng đá: ${item.ten_LuongDa}<br>` : ''}
                                 ${item.ten_DoNgot ? `Độ ngọt: ${item.ten_DoNgot}<br>` : ''}
-                                ${item.toppings.length > 0 ? `Topping: ${item.toppings.map(t => `${t.ten_Topping} (+${t.gia_Topping.toLocaleString('vi-VN')} đ)`).join(', ')}<br>` : ''}
+                                ${item.toppings && item.toppings.length > 0 ? `Topping: ${item.toppings.map(t => `${t.ten_Topping} (+${t.gia_Topping.toLocaleString('vi-VN')} đ)`).join(', ')}<br>` : ''}
                                 ${item.ghi_Chu ? `Ghi chú: ${item.ghi_Chu}` : ''}
                             </div>
                             <div class="price-container">
@@ -888,9 +886,25 @@
                         </div>
                     `;
                     cartItemsContainer.appendChild(itemElement);
+
+                    cartTotal += itemTotal;
                 });
 
+                console.log('Cart items rendered, total:', cartTotal);
                 cartTotalElement.textContent = `Tổng cộng: ${cartTotal.toLocaleString('vi-VN')} đ`;
+
+                document.querySelectorAll('.cart-checkbox').forEach(checkbox => {
+                    console.log('Attaching event to checkbox:', checkbox.dataset.id);
+                    checkbox.addEventListener('change', function () {
+                        const item = JSON.parse(this.closest('.cart-item').dataset.itemData);
+                        if (this.checked) {
+                            console.log('Sản phẩm được chọn:', item);
+                        } else {
+                            console.log('Sản phẩm bị bỏ chọn:', item);
+                        }
+                        updateCartTotal();
+                    });
+                });
 
                 document.querySelectorAll('.cart-item-remove').forEach(btn => {
                     btn.addEventListener('click', async function () {
@@ -898,6 +912,21 @@
                         await removeCartItem(id);
                     });
                 });
+            }
+
+            function updateCartTotal() {
+                let cartTotal = 0;
+                document.querySelectorAll('.cart-item').forEach(item => {
+                    const checkbox = item.querySelector('.cart-checkbox');
+                    if (checkbox.checked) {
+                        const itemData = JSON.parse(item.dataset.itemData);
+                        const toppingTotal = itemData.toppings ? itemData.toppings.reduce((sum, topping) => sum + (topping.gia_Topping || 0), 0) : 0;
+                        const itemTotal = (itemData.gia_Hien_Thi + toppingTotal) * itemData.so_Luong;
+                        cartTotal += itemTotal;
+                    }
+                });
+                console.log('Updating cart total:', cartTotal);
+                cartTotalElement.textContent = `Tổng cộng: ${cartTotal.toLocaleString('vi-VN')} đ`;
             }
 
             async function removeCartItem(id) {
@@ -921,6 +950,86 @@
                     showAlert('Lỗi khi xóa sản phẩm!', 'error');
                 }
             }
+
+            async function checkCartAvailability() {
+                try {
+                    const cartResponse = await fetch(`https://localhost:7169/api/Gio_Hang/${userId}`, {
+                        method: 'GET',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        }
+                    });
+
+                    if (!cartResponse.ok) {
+                        throw new Error('Không thể lấy giỏ hàng');
+                    }
+
+                    const cartData = await cartResponse.json();
+                    if (!cartData.chi_Tiet_Gio_Hang || cartData.chi_Tiet_Gio_Hang.length === 0) {
+                        showAlert('Giỏ hàng trống, vui lòng thêm sản phẩm!', 'error');
+                        return false;
+                    }
+
+                    const checkedItems = Array.from(document.querySelectorAll('.cart-checkbox:checked')).map(checkbox => {
+                        return JSON.parse(checkbox.closest('.cart-item').dataset.itemData);
+                    });
+
+                    if (checkedItems.length === 0) {
+                        showAlert('Vui lòng chọn ít nhất một sản phẩm để thanh toán!', 'error');
+                        return false;
+                    }
+
+                    for (const item of checkedItems) {
+                        const productResponse = await fetch(`https://localhost:7169/api/SanPham/${item.iD_San_Pham}`, {
+                            method: 'GET',
+                            headers: {
+                                'Content-Type': 'application/json'
+                            }
+                        });
+
+                        if (!productResponse.ok) {
+                            throw new Error(`Không thể lấy thông tin sản phẩm ${item.ten_San_Pham}`);
+                        }
+
+                        const product = await productResponse.json();
+                        if (product.so_Luong < item.so_Luong) {
+                            showAlert(`Sản phẩm ${item.ten_San_Pham} chỉ còn ${product.so_Luong} đơn vị, không đủ số lượng ${item.so_Luong}. Vui lòng chọn lại!`, 'error');
+                            return false;
+                        }
+
+                        if (item.toppings && item.toppings.length > 0) {
+                            for (const topping of item.toppings) {
+                                const productTopping = product.toppings.find(t => t.iD_Topping === topping.iD_Topping);
+                                if (!productTopping || productTopping.so_Luong < item.so_Luong) {
+                                    showAlert(`Topping ${topping.ten_Topping} chỉ còn ${productTopping ? productTopping.so_Luong : 0} đơn vị, không đủ số lượng ${item.so_Luong}. Vui lòng chọn lại!`, 'error');
+                                    return false;
+                                }
+                            }
+                        }
+                    }
+
+                    return true;
+                } catch (error) {
+                    console.error('Lỗi khi kiểm tra giỏ hàng:', error);
+                    showAlert('Lỗi khi kiểm tra giỏ hàng, vui lòng thử lại!', 'error');
+                    return false;
+                }
+            }
+
+            checkoutBtn.addEventListener('click', async function () {
+                if (!userId) {
+                    showAlert('Vui lòng đăng nhập để thanh toán!', 'error');
+                    return;
+                }
+
+                const isAvailable = await checkCartAvailability();
+                if (isAvailable) {
+                    showAlert('Đang chuyển hướng đến trang thanh toán...', 'success');
+                    setTimeout(() => {
+                        window.location.href = '/Cart';
+                    }, 1000);
+                }
+            });
 
             document.getElementById('modalAddToCart').addEventListener('click', async function () {
                 if (!userId) {
@@ -982,172 +1091,190 @@
             fetchCart();
 
             document.querySelectorAll('.product-card').forEach(card => {
-                card.addEventListener('click', function () {
-                    const product = JSON.parse(this.getAttribute('data-json'));
-                    const currentDate = new Date('@currentDate.ToString("o")');
+                card.addEventListener('click', async function () {
+                    const productId = this.getAttribute('data-id');
+                    try {
+                        const response = await fetch(`https://localhost:7169/api/SanPham/${productId}`, {
+                            method: 'GET',
+                            headers: {
+                                'Content-Type': 'application/json'
+                            }
+                        });
 
-                    document.getElementById('modalProductName').textContent = product.Ten_San_Pham;
+                        if (!response.ok) {
+                            const errorText = await response.text();
+                            throw new Error(`Không thể lấy thông tin sản phẩm: ${errorText}`);
+                        }
 
-                    let hasActivePromotion = false;
-                    let discountedPrice = product.Gia;
-                    let promotionName = '';
+                        const product = await response.json();
+                        const currentDate = new Date('@currentDate.ToString("o")');
 
-                    if (product.KhuyenMais && product.KhuyenMais.length > 0) {
-                        for (let km of product.KhuyenMais) {
-                            if (new Date(km.Ngay_Bat_Dau) <= currentDate && new Date(km.Ngay_Ket_Thuc) >= currentDate) {
-                                hasActivePromotion = true;
-                                discountedPrice = km.Gia_Giam;
-                                promotionName = km.Ten_Khuyen_Mai;
-                                break;
+                        document.getElementById('modalProductName').textContent = product.ten_San_Pham;
+
+                        let hasActivePromotion = false;
+                        let discountedPrice = product.gia;
+                        let promotionName = '';
+
+                        if (product.khuyenMais && product.khuyenMais.length > 0) {
+                            for (let km of product.khuyenMais) {
+                                if (new Date(km.ngay_Bat_Dau) <= currentDate && new Date(km.ngay_Ket_Thuc) >= currentDate) {
+                                    hasActivePromotion = true;
+                                    discountedPrice = km.gia_Giam || product.gia;
+                                    promotionName = km.ten_Khuyen_Mai;
+                                    break;
+                                }
                             }
                         }
-                    }
 
-                    basePrice = hasActivePromotion ? discountedPrice : product.Gia;
-                    const priceElement = document.getElementById('modalProductPrice');
-                    const promotionBadge = document.getElementById('modalProductPromotionBadge');
+                        basePrice = hasActivePromotion ? discountedPrice : product.gia;
+                        const priceElement = document.getElementById('modalProductPrice');
+                        const promotionBadge = document.getElementById('modalProductPromotionBadge');
 
-                    if (hasActivePromotion) {
-                        priceElement.innerHTML = `<span class="original-price mr-1">${product.Gia.toLocaleString('vi-VN')} đ</span> ${discountedPrice.toLocaleString('vi-VN')} đ`;
-                        priceElement.className = 'discounted-price';
-                        promotionBadge.textContent = promotionName;
-                        promotionBadge.classList.remove('hidden');
-                    } else {
-                        priceElement.textContent = product.Gia.toLocaleString('vi-VN') + ' đ';
-                        priceElement.className = 'regular-price';
-                        promotionBadge.classList.add('hidden');
-                    }
+                        if (hasActivePromotion) {
+                            priceElement.innerHTML = `<span class="original-price mr-1">${product.gia.toLocaleString('vi-VN')} đ</span> ${discountedPrice.toLocaleString('vi-VN')} đ`;
+                            priceElement.className = 'discounted-price';
+                            promotionBadge.textContent = promotionName;
+                            promotionBadge.classList.remove('hidden');
+                        } else {
+                            priceElement.textContent = product.gia.toLocaleString('vi-VN') + ' đ';
+                            priceElement.className = 'regular-price';
+                            promotionBadge.classList.add('hidden');
+                        }
 
-                    maxQuantity = product.So_Luong;
-                    document.getElementById('modalProductQuantity').textContent = `Số lượng có sẵn: ${product.So_Luong}`;
-                    document.getElementById('modalProductImageSrc').src = "https://localhost:7169" + product.Hinh_Anh;
-                    document.getElementById('modalProductDescription').textContent = product.Mo_Ta;
-                    quantityInput.value = 1;
-                    quantityInput.setAttribute('max', maxQuantity);
-                    maxQuantitySpan.textContent = maxQuantity;
-                    quantityError.classList.add('hidden');
+                        maxQuantity = product.so_Luong;
+                        document.getElementById('modalProductQuantity').textContent = `Số lượng có sẵn: ${product.so_Luong}`;
+                        document.getElementById('modalProductImageSrc').src = `https://localhost:7169${product.hinh_Anh}`;
+                        document.getElementById('modalProductDescription').textContent = product.mo_Ta;
+                        quantityInput.value = 1;
+                        quantityInput.setAttribute('max', maxQuantity);
+                        maxQuantitySpan.textContent = maxQuantity;
+                        quantityError.classList.add('hidden');
 
-                    selectedSize = null;
-                    selectedIce = null;
-                    selectedSweetness = null;
-                    selectedToppings = [];
+                        selectedSize = null;
+                        selectedIce = null;
+                        selectedSweetness = null;
+                        selectedToppings = [];
 
-                    sizeError.style.display = 'none';
-                    iceError.style.display = 'none';
-                    sweetnessError.style.display = 'none';
-                    addToCartBtn.disabled = true;
+                        sizeError.style.display = 'none';
+                        iceError.style.display = 'none';
+                        sweetnessError.style.display = 'none';
+                        addToCartBtn.disabled = true;
 
-                    let sizesHtml = '';
-                    if (product.Sizes && product.Sizes.length > 0) {
-                        product.Sizes.forEach(size => {
-                            if (size.Trang_Thai) {
-                                sizesHtml += `
-                                    <label class="cursor-pointer">
-                                        <input type="radio" name="size" value="${size.SizeName}" class="sr-only" data-id="${size.ID_Size}">
-                                        <span class="option-badge">${size.SizeName}</span>
-                                    </label>`;
-                            }
-                        });
-                    } else {
-                        sizesHtml = '<span class="text-gray-500 text-xs">Không có kích thước</span>';
-                    }
-                    document.getElementById('modalProductSizes').innerHTML = sizesHtml;
-
-                    let iceLevelsHtml = '';
-                    if (product.LuongDas && product.LuongDas.length > 0) {
-                        product.LuongDas.forEach(ice => {
-                            if (ice.Trang_Thai) {
-                                iceLevelsHtml += `
-                                    <label class="cursor-pointer">
-                                        <input type="radio" name="ice" value="${ice.Ten_LuongDa}" class="sr-only" data-id="${ice.ID_LuongDa}">
-                                        <span class="option-badge">${ice.Ten_LuongDa}</span>
-                                    </label>`;
-                            }
-                        });
-                    } else {
-                        iceLevelsHtml = '<span class="text-gray-500 text-xs">Không có lượng đá</span>';
-                    }
-                    document.getElementById('modalProductIceLevels').innerHTML = iceLevelsHtml;
-
-                    let sweetnessHtml = '';
-                    if (product.DoNgots && product.DoNgots.length > 0) {
-                        product.DoNgots.forEach(sweet => {
-                            if (sweet.Trang_Thai) {
-                                sweetnessHtml += `
-                                    <label class="cursor-pointer">
-                                        <input type="radio" name="sweetness" value="${sweet.Muc_Do}" class="sr-only" data-id="${sweet.ID_DoNgot}">
-                                        <span class="option-badge">${sweet.Muc_Do}</span>
-                                    </label>`;
-                            }
-                        });
-                    } else {
-                        sweetnessHtml = '<span class="text-gray-500 text-xs">Không có độ ngọt</span>';
-                    }
-                    document.getElementById('modalProductSweetness').innerHTML = sweetnessHtml;
-
-                    let toppingsHtml = '';
-                    if (product.Toppings && product.Toppings.length > 0) {
-                        product.Toppings.forEach(topping => {
-                            if (topping.Trang_Thai) {
-                                toppingsHtml += `
-                                    <label class="cursor-pointer">
-                                        <input type="checkbox" name="topping" value="${topping.Ten}" class="sr-only" data-id="${topping.ID_Topping}" data-price="${topping.Gia}">
-                                        <span class="option-badge">${topping.Ten} (+${topping.Gia.toLocaleString('vi-VN')} đ)</span>
-                                    </label>`;
-                            }
-                        });
-                    } else {
-                        toppingsHtml = '<span class="text-gray-500 text-xs">Không có topping</span>';
-                    }
-                    document.getElementById('modalProductToppings').innerHTML = toppingsHtml;
-
-                    document.querySelectorAll('input[name="size"], input[name="ice"], input[name="sweetness"], input[name="topping"]').forEach(input => {
-                        input.addEventListener('change', function () {
-                            if (this.name === 'topping') {
-                                if (this.checked) {
-                                    selectedToppings.push({ id: this.dataset.id, price: parseFloat(this.dataset.price) });
-                                } else {
-                                    selectedToppings = selectedToppings.filter(t => t.id !== this.dataset.id);
+                        let sizesHtml = '';
+                        if (product.sizes && product.sizes.length > 0) {
+                            product.sizes.forEach(size => {
+                                if (size.trang_Thai) {
+                                    sizesHtml += `
+                                        <label class="cursor-pointer">
+                                            <input type="radio" name="size" value="${size.sizeName}" class="sr-only" data-id="${size.iD_Size}">
+                                            <span class="option-badge">${size.sizeName}</span>
+                                        </label>`;
                                 }
-                            } else {
-                                if (this.name === 'size') selectedSize = this.dataset.id;
-                                if (this.name === 'ice') selectedIce = this.dataset.id;
-                                if (this.name === 'sweetness') selectedSweetness = this.dataset.id;
+                            });
+                        } else {
+                            sizesHtml = '<span class="text-gray-500 text-xs">Không có kích thước</span>';
+                        }
+                        document.getElementById('modalProductSizes').innerHTML = sizesHtml;
 
-                                document.querySelectorAll(`input[name="${this.name}"]`).forEach(radio => {
-                                    const badge = radio.nextElementSibling;
-                                    if (radio.checked) {
+                        let iceLevelsHtml = '';
+                        if (product.luongDas && product.luongDas.length > 0) {
+                            product.luongDas.forEach(ice => {
+                                if (ice.trang_Thai) {
+                                    iceLevelsHtml += `
+                                        <label class="cursor-pointer">
+                                            <input type="radio" name="ice" value="${ice.ten_LuongDa}" class="sr-only" data-id="${ice.iD_LuongDa}">
+                                            <span class="option-badge">${ice.ten_LuongDa}</span>
+                                        </label>`;
+                                }
+                            });
+                        } else {
+                            iceLevelsHtml = '<span class="text-gray-500 text-xs">Không có lượng đá</span>';
+                        }
+                        document.getElementById('modalProductIceLevels').innerHTML = iceLevelsHtml;
+
+                        let sweetnessHtml = '';
+                        if (product.doNgots && product.doNgots.length > 0) {
+                            product.doNgots.forEach(sweet => {
+                                if (sweet.trang_Thai) {
+                                    sweetnessHtml += `
+                                        <label class="cursor-pointer">
+                                            <input type="radio" name="sweetness" value="${sweet.muc_Do}" class="sr-only" data-id="${sweet.iD_DoNgot}">
+                                            <span class="option-badge">${sweet.muc_Do}</span>
+                                        </label>`;
+                                }
+                            });
+                        } else {
+                            sweetnessHtml = '<span class="text-gray-500 text-xs">Không có độ ngọt</span>';
+                        }
+                        document.getElementById('modalProductSweetness').innerHTML = sweetnessHtml;
+
+                        let toppingsHtml = '';
+                        if (product.toppings && product.toppings.length > 0) {
+                            product.toppings.forEach(topping => {
+                                if (topping.trang_Thai && topping.so_Luong > 0) {
+                                    toppingsHtml += `
+                                        <label class="cursor-pointer">
+                                            <input type="checkbox" name="topping" value="${topping.ten}" class="sr-only" data-id="${topping.iD_Topping}" data-price="${topping.gia}">
+                                            <span class="option-badge">${topping.ten} (+${topping.gia.toLocaleString('vi-VN')} đ)</span>
+                                        </label>`;
+                                }
+                            });
+                        } else {
+                            toppingsHtml = '<span class="text-gray-500 text-xs">Không có topping</span>';
+                        }
+                        document.getElementById('modalProductToppings').innerHTML = toppingsHtml;
+
+                        document.querySelectorAll('input[name="size"], input[name="ice"], input[name="sweetness"], input[name="topping"]').forEach(input => {
+                            input.addEventListener('change', function () {
+                                if (this.name === 'topping') {
+                                    if (this.checked) {
+                                        selectedToppings.push({ id: this.dataset.id, price: parseFloat(this.dataset.price) });
+                                    } else {
+                                        selectedToppings = selectedToppings.filter(t => t.id !== this.dataset.id);
+                                    }
+                                } else {
+                                    if (this.name === 'size') selectedSize = this.dataset.id;
+                                    if (this.name === 'ice') selectedIce = this.dataset.id;
+                                    if (this.name === 'sweetness') selectedSweetness = this.dataset.id;
+
+                                    document.querySelectorAll(`input[name="${this.name}"]`).forEach(radio => {
+                                        const badge = radio.nextElementSibling;
+                                        if (radio.checked) {
+                                            badge.classList.add('bg-blue-600', 'text-white');
+                                        } else {
+                                            badge.classList.remove('bg-blue-600', 'text-white');
+                                        }
+                                    });
+                                }
+
+                                if (this.name === 'topping') {
+                                    const badge = this.nextElementSibling;
+                                    if (this.checked) {
                                         badge.classList.add('bg-blue-600', 'text-white');
                                     } else {
                                         badge.classList.remove('bg-blue-600', 'text-white');
                                     }
-                                });
-                            }
-
-                            if (this.name === 'topping') {
-                                const badge = this.nextElementSibling;
-                                if (this.checked) {
-                                    badge.classList.add('bg-blue-600', 'text-white');
-                                } else {
-                                    badge.classList.remove('bg-blue-600', 'text-white');
                                 }
-                            }
 
+                                calculateTotalPrice();
+                                validateSelections();
+                            });
+                        });
+
+                        quantityInput.addEventListener('input', function () {
                             calculateTotalPrice();
                             validateSelections();
                         });
-                    });
 
-                    quantityInput.addEventListener('input', function () {
                         calculateTotalPrice();
-                        validateSelections();
-                    });
 
-                    calculateTotalPrice();
+                        document.getElementById('modalAddToCart').setAttribute('data-id', product.iD_San_Pham);
 
-                    document.getElementById('modalAddToCart').setAttribute('data-id', product.ID_San_Pham);
-
-                    modal.show();
+                        modal.show();
+                    } catch (error) {
+                        console.error('Lỗi khi lấy thông tin sản phẩm:', error);
+                        showAlert('Lỗi khi tải thông tin sản phẩm!', 'error');
+                    }
                 });
             });
         });
