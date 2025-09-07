@@ -1,4 +1,8 @@
-﻿@using System.Globalization
+﻿@{
+
+    Layout = "_AdminLayout";
+}
+@using System.Globalization
 @model FE.Controllers.ChiTietHoaDonViewModel
 @{
     string VND(decimal d) => string.Format(new CultureInfo("vi-VN"), "{0:#,0} đ", d);

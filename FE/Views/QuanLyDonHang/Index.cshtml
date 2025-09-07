@@ -1,4 +1,7 @@
-﻿@model FE.Controllers.QuanLyDonHangViewModel
+﻿@{
+    Layout = "_AdminLayout";
+}
+@model FE.Controllers.QuanLyDonHangViewModel
 @using System.Globalization
 @using System.Linq
 @{
@@ -8,7 +11,6 @@
 <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" />
 
 @functions {
-    // Map KEY trạng thái trong DB -> nhãn tiếng Việt để hiển thị
     string HumanStatus(string db) => db switch
     {
         "Chua_Xac_Nhan" => "Chờ xác nhận",
@@ -20,7 +22,6 @@
         _ => db ?? ""
     };
 
-    // Class badge theo KEY trạng thái DB
     string BadgeClass(string db) => db switch
     {
         "Chua_Xac_Nhan" => "text-bg-warning",
@@ -32,10 +33,8 @@
         _ => "text-bg-secondary"
     };
 
-    // Định dạng tiền
     string VND(decimal n) => string.Format(new CultureInfo("vi-VN"), "{0:c0}", n);
 
-    // Map ID_Hinh_Thuc_Thanh_Toan -> text
     string PayText(int? id) => id switch
     {
         1 => "Tiền mặt",
@@ -54,7 +53,6 @@
         <div class="alert alert-info py-2">@msg</div>
     }
 
-    <!-- BỘ LỌC (GET) -->
     <form method="get" class="d-flex flex-wrap align-items-center gap-2 mb-3">
         <input name="tuKhoa" id="tuKhoa" class="form-control" style="max-width:360px"
                value="@Model.TuKhoa" placeholder="Tìm theo mã / tên khách..." />
@@ -77,9 +75,9 @@
                     <th>Mã đơn</th>
                     <th>Khách hàng</th>
                     <th>Ngày tạo</th>
-                    <th>Thanh toán</th>   <!-- từ ID_Hinh_Thuc_Thanh_Toan -->
-                    <th>Loại HD</th>      <!-- từ Loai_Hoa_Don -->
-                    <th>Địa chỉ</th>      <!-- từ Dia_Chi_Tu_Nhap | ép 'Tại quầy' nếu TaiQuay -->
+                    <th>Thanh toán</th>
+                    <th>Loại HD</th>
+                    <th>Địa chỉ</th>
                     <th class="text-end">Tổng tiền</th>
                     <th>Trạng thái</th>
                     <th class="text-end" style="width:320px">Thao tác</th>
@@ -105,16 +103,9 @@
                             </td>
 
                             <td>@(hd.KhachHang?.Ho_Ten ?? "Khách lẻ")</td>
-
                             <td>@hd.Ngay_Tao.ToString("dd/MM/yyyy HH:mm")</td>
-
-                            <!-- THANH TOÁN -->
                             <td>@PayText(hd.ID_Hinh_Thuc_Thanh_Toan)</td>
-
-                            <!-- LOẠI HÓA ĐƠN -->
                             <td>@(string.IsNullOrWhiteSpace(hd.Loai_Hoa_Don) ? "—" : hd.Loai_Hoa_Don)</td>
-
-                            <!-- ĐỊA CHỈ TỪ NHẬP (ép 'Tại quầy' nếu Loai_Hoa_Don là TaiQuay) -->
                             <td>
                                 @(
                                                         string.Equals(hd.Loai_Hoa_Don, "TaiQuay", StringComparison.OrdinalIgnoreCase)
@@ -122,16 +113,13 @@
                                                         : (string.IsNullOrWhiteSpace(hd.Dia_Chi_Tu_Nhap) ? "—" : hd.Dia_Chi_Tu_Nhap)
                                                         )
                     </td>
-
-                            <td class="text-end">@VND(hd.Tong_Tien)</td>
-
-                            <td><span class="badge @BadgeClass(dbStatus)">@HumanStatus(dbStatus)</span></td>
+                    <td class="text-end">@VND(hd.Tong_Tien)</td>
+                    <td><span class="badge @BadgeClass(dbStatus)">@HumanStatus(dbStatus)</span></td>
 
                             <td class="text-end">
                                 <a class="btn btn-sm btn-outline-secondary me-1"
                                    href="@Url.Action("ChiTiet", "QuanLyDonHang", new { id = hd.ID_Hoa_Don })">Chi tiết</a>
 
-                                @* Hành động hợp lệ theo trạng thái *@
                         @if (string.Equals(dbStatus, "Chua_Xac_Nhan", StringComparison.OrdinalIgnoreCase))
                                 {
                                     <form method="post" class="d-inline" action="@Url.Action("XacNhan","QuanLyDonHang")">
@@ -153,7 +141,6 @@
                                 @if (!string.Equals(dbStatus, "Hoan_Thanh", StringComparison.OrdinalIgnoreCase)
                                                         && !string.Equals(dbStatus, "Huy_Don", StringComparison.OrdinalIgnoreCase))
                                 {
-                                    <!-- Nút mở modal HỦY -->
                                     <button type="button" class="btn btn-sm btn-outline-danger"
                                             data-bs-toggle="modal"
                                             data-bs-target="#modalHuyDon"
@@ -173,8 +160,9 @@
 
 <!-- Modal Hủy đơn -->
 <div class="modal fade" id="modalHuyDon" tabindex="-1" aria-hidden="true">
-    <div class="modal-dialog">
-        <form method="post" asp-action="Huy">
+    <div class="modal-dialog modal-lg">
+        @* rộng hơn để chứa bảng *@
+        <form method="post" asp-action="Huy" id="form-huy-don">
             @Html.AntiForgeryToken()
             <div class="modal-content">
                 <div class="modal-header">
@@ -190,9 +178,37 @@
 
                     <div class="mb-3">
                         <label class="form-label">Lý do hủy <span class="text-danger">*</span></label>
-                        <textarea name="lyDo" id="huy-lydo" class="form-control" rows="3"
+                        <textarea name="lyDo" id="huy-lydo" class="form-control" rows="2"
                                   placeholder="Nhập lý do hủy đơn..." required></textarea>
-                        <div class="form-text">Lý do sẽ được lưu vào hệ thống.</div>
+                    </div>
+
+                    <!-- BẢNG CHỌN CỐC KHÔI PHỤC -->
+                    <div class="border rounded p-2">
+                        <div class="d-flex justify-content-between align-items-center mb-2">
+                            <strong>Các cốc có thể khôi phục</strong>
+                            <small class="text-muted">Chọn cốc và nhập số lượng muốn khôi phục (tối đa bằng số đã đặt)</small>
+                        </div>
+
+                        <div class="table-responsive">
+                            <table class="table table-sm align-middle" id="tbl-kphoiphuc">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th style="width:40px"><input type="checkbox" id="chk-all" /></th>
+                                        <th>Sản phẩm</th>
+                                        <th class="text-end" style="width:140px">Số lượng đặt</th>
+                                        <th class="text-end" style="width:160px">Số lượng khôi phục</th>
+                                        <th style="width:80px">Đã làm?</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <!-- nạp bằng JS -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <div class="form-text mt-2">
+                        Gợi ý: thường tick sẵn các cốc <em>chưa làm</em>. Nếu khách hủy muộn, bỏ chọn hoặc giảm số lượng khôi phục đối với những cốc đã làm.
                     </div>
                 </div>
 
@@ -207,17 +223,123 @@
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 <script>
-    // Gán dữ liệu vào modal khi mở
     const modal = document.getElementById('modalHuyDon');
+    const tblBody = () => document.querySelector('#tbl-kphoiphuc tbody');
+
+    // Build 1 row
+    function buildRow(item) {
+        // item: { id, ten, soLuong, daLam }
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+            <td><input type="checkbox" class="chk-row" data-id="${item.id}"></td>
+            <td>${escapeHtml(item.ten)}</td>
+            <td class="text-end"><span class="sl-dat" data-max="${item.soLuong}">${item.soLuong}</span></td>
+            <td class="text-end">
+                <input type="number" min="0" max="${item.soLuong}" step="1" class="form-control form-control-sm input-sl"
+                       value="${item.daLam ? 0 : item.soLuong}" data-id="${item.id}">
+            </td>
+            <td>${item.daLam ? '<span class="badge text-bg-warning">Có thể đã làm</span>' : '<span class="badge text-bg-success">Chưa làm</span>'}</td>
+        `;
+        // mặc định tick theo "chưa làm"
+        tr.querySelector('.chk-row').checked = !item.daLam && item.soLuong > 0;
+        return tr;
+    }
+
+    function escapeHtml(str) {
+        return (str || '').replace(/[&<>"']/g, s => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[s]));
+    }
+
+    // Nạp dữ liệu khi mở modal
     if (modal) {
-      modal.addEventListener('show.bs.modal', function (e) {
-        const btn = e.relatedTarget;
-        const id = btn?.getAttribute('data-id');
-        const ma = btn?.getAttribute('data-ma');
-        document.getElementById('huy-id').value = id || '';
-        document.getElementById('huy-mahd').textContent = ma ? `(#${ma})` : '';
-        const textarea = document.getElementById('huy-lydo');
-        if (textarea) textarea.value = '';
-      });
+        modal.addEventListener('show.bs.modal', async function (e) {
+            const btn = e.relatedTarget;
+            const id = btn?.getAttribute('data-id');
+            const ma = btn?.getAttribute('data-ma');
+
+            document.getElementById('huy-id').value = id || '';
+            document.getElementById('huy-mahd').textContent = ma ? `(#${ma})` : '';
+            const textarea = document.getElementById('huy-lydo');
+            if (textarea) textarea.value = '';
+
+            // Clear table
+            const body = tblBody();
+            body.innerHTML = `<tr><td colspan="5" class="text-muted">Đang tải...</td></tr>`;
+
+            try {
+                const url = `@Url.Action("ChiTietJson", "QuanLyDonHang")?id=${0}`.replace('0', encodeURIComponent(id));
+                const res = await fetch(url, { credentials: 'same-origin' });
+                const data = await res.json();
+
+                if (!data?.ok) {
+                    body.innerHTML = `<tr><td colspan="5" class="text-danger">Không tải được chi tiết hóa đơn.</td></tr>`;
+                    return;
+                }
+
+                if (!data.items || data.items.length === 0) {
+                    body.innerHTML = `<tr><td colspan="5" class="text-muted">Đơn hàng không có chi tiết.</td></tr>`;
+                    return;
+                }
+
+                body.innerHTML = '';
+                data.items.forEach(it => body.appendChild(buildRow(it)));
+            } catch (err) {
+                body.innerHTML = `<tr><td colspan="5" class="text-danger">Lỗi khi tải dữ liệu.</td></tr>`;
+            }
+        });
+    }
+
+    // Check all
+    document.addEventListener('change', function (e) {
+        if (e.target?.id === 'chk-all') {
+            const on = e.target.checked;
+            document.querySelectorAll('#tbl-kphoiphuc .chk-row').forEach(cb => cb.checked = on);
+        }
+    });
+
+    // Trước khi submit, bơm hidden inputs khoiPhucIds / khoiPhucQtys
+    const form = document.getElementById('form-huy-don');
+    if (form) {
+        form.addEventListener('submit', function (e) {
+            // Xóa hidden cũ
+            form.querySelectorAll('input[name="khoiPhucIds"], input[name="khoiPhucQtys"]').forEach(n => n.remove());
+
+            const rows = document.querySelectorAll('#tbl-kphoiphuc tbody tr');
+            let anySelected = false;
+
+            rows.forEach(tr => {
+                const cb = tr.querySelector('.chk-row');
+                const qtyInput = tr.querySelector('.input-sl');
+                if (!cb || !qtyInput) return;
+
+                if (cb.checked) {
+                    const id = parseInt(cb.getAttribute('data-id') || '0');
+                    let q = parseInt(qtyInput.value || '0');
+                    const max = parseInt(qtyInput.getAttribute('max') || '0');
+                    if (Number.isNaN(q) || q < 0) q = 0;
+                    if (q > max) q = max;
+
+                    if (id > 0 && q > 0) {
+                        anySelected = true;
+                        const hid1 = document.createElement('input');
+                        hid1.type = 'hidden';
+                        hid1.name = 'khoiPhucIds';
+                        hid1.value = String(id);
+
+                        const hid2 = document.createElement('input');
+                        hid2.type = 'hidden';
+                        hid2.name = 'khoiPhucQtys';
+                        hid2.value = String(q);
+
+                        form.appendChild(hid1);
+                        form.appendChild(hid2);
+                    }
+                }
+            });
+
+            // Không bắt buộc phải chọn, nhưng có thể cảnh báo:
+            // if (!anySelected && !confirm('Bạn chưa chọn cốc nào để khôi phục. Tiếp tục hủy đơn?')) {
+            //     e.preventDefault();
+            // }
+        });
     }
 </script>

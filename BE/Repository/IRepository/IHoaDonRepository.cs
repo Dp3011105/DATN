@@ -13,14 +13,22 @@
         Task UpdateAsync(int id, HoaDon entity);
         Task DeleteAsync(int id);
 
-        // --- THÊM MỚI ---
-        // 1) Danh sách dạng DTO (cho màn list)
-        Task<IEnumerable<HoaDonDTO>> GetAllAsync();
+        // --- DANH SÁCH ---
+        Task<IEnumerable<HoaDonDTO>> GetAllAsync();          // DTO cho UI list
+        Task<IEnumerable<HoaDon>> GetAllEntitiesAsync();     // Entity cho FE cũ
 
-        // 2) Danh sách entity đầy đủ (để giữ tương thích các màn FE cũ)
-        Task<IEnumerable<HoaDon>> GetAllEntitiesAsync();
-
-        // 3) Cập nhật trạng thái + lý do hủy
+        // --- CẬP NHẬT TRẠNG THÁI ---
         Task<bool> UpdateTrangThaiAsync(int id, string trangThai, string? lyDoHuy);
+
+        // --- NEW: HỦY + HOÀN TRẢ TỒN KHO ---
+        /// <summary>
+        /// Hủy đơn (đổi trạng thái sang Huy_Don, lưu lý do) và cộng trả tồn kho cho các chi tiết được chọn.
+        /// selections: (ID_HoaDon_ChiTiet, quantity_to_restock)
+        /// </summary>
+        Task<bool> CancelWithRestockAsync(
+            int hoaDonId,
+            string lyDoHuy,
+            IEnumerable<(int chiTietId, int quantity)> selections
+        );
     }
 }

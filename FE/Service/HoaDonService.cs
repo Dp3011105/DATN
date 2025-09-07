@@ -1,14 +1,12 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Net.Http;
 using System.Net.Http.Json;
 using System.Threading.Tasks;
 using BE.models;
-using BE.DTOs;
 using Service.IService;
 
-namespace Service.Services // namespace của bạn
+namespace Service.Services
 {
     public class HoaDonService : IHoaDonService
     {
@@ -17,7 +15,7 @@ namespace Service.Services // namespace của bạn
         public HoaDonService(IHttpClientFactory httpFactory)
         {
             _http = httpFactory.CreateClient();
-            _http.BaseAddress = new Uri("https://localhost:7169/"); // chỉnh theo API của bạn
+            _http.BaseAddress = new Uri("https://localhost:7169/"); // chỉnh theo API BE của bạn
         }
 
         // ====== GIỮ NGUYÊN (trả entity) ======
@@ -45,19 +43,40 @@ namespace Service.Services // namespace của bạn
             res.EnsureSuccessStatusCode();
         }
 
-        // ====== THÊM MỚI (trả DTO cho danh sách) ======
-        public async Task<IEnumerable<HoaDonDTO>> GetAllListAsync()
+        // ====== Màn list (projection/DTO) ======
+        public async Task<IEnumerable<object>> GetAllListAsync()
         {
-            var data = await _http.GetFromJsonAsync<IEnumerable<HoaDonDTO>>("api/HoaDon");
-            return data ?? Enumerable.Empty<HoaDonDTO>();
+            var data = await _http.GetFromJsonAsync<IEnumerable<object>>("api/HoaDon");
+            return data ?? Enumerable.Empty<object>();
         }
 
-        // ====== THÊM MỚI (cập nhật trạng thái + lý do hủy) ======
+        // ====== Cập nhật trạng thái + lý do ======
         public async Task<bool> UpdateTrangThaiAsync(int hoaDonId, string trangThaiDb, string? lyDoHuy)
         {
             var payload = new { TrangThai = trangThaiDb, LyDoHuy = lyDoHuy };
             var resp = await _http.PatchAsJsonAsync($"api/HoaDon/{hoaDonId}/TrangThai", payload);
             return resp.IsSuccessStatusCode;
+        }
+
+        // ====== NEW: Hủy + restock ======
+        public async Task<bool> CancelWithRestockAsync(int hoaDonId, string lyDo, List<(int chiTietId, int soLuong)> selections)
+        {
+            var payload = new
+            {
+                lyDo,
+                items = selections.Select(s => new
+                {
+                    hoaDonChiTietId = s.chiTietId,
+                    quantity = s.soLuong
+                })
+            };
+
+            var resp = await _http.PostAsJsonAsync($"api/HoaDon/{hoaDonId}/cancel-with-restock", payload);
+            if (!resp.IsSuccessStatusCode) return false;
+
+            // response: { ok: true }
+            var obj = await resp.Content.ReadFromJsonAsync<Dictionary<string, object>>();
+            return obj != null && obj.TryGetValue("ok", out var ok) && ok?.ToString() == "True";
         }
     }
 }
