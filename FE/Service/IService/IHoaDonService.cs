@@ -1,7 +1,6 @@
 ﻿using System.Collections.Generic;
 using System.Threading.Tasks;
 using BE.models;
-using BE.DTOs;
 
 namespace Service.IService
 {
@@ -14,11 +13,13 @@ namespace Service.IService
         Task UpdateAsync(int id, HoaDon entity);
         Task DeleteAsync(int id);
 
-        // --- THÊM MỚI ---
-        // Lấy danh sách cho màn list (DTO có đủ Loai_Hoa_Don, ThanhToan, DiaChi)
-        Task<IEnumerable<HoaDonDTO>> GetAllListAsync();
+        // --- Màn list (tùy bạn dùng DTO hay projection) ---
+        Task<IEnumerable<object>> GetAllListAsync();
 
         // Cập nhật trạng thái nhanh + lý do hủy
         Task<bool> UpdateTrangThaiAsync(int hoaDonId, string trangThaiDb, string? lyDoHuy);
+
+        // NEW: Hủy + restock
+        Task<bool> CancelWithRestockAsync(int hoaDonId, string lyDo, List<(int chiTietId, int soLuong)> selections);
     }
 }

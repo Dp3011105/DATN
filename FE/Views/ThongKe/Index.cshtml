@@ -1,374 +1,578 @@
 ﻿@{
-   
     Layout = "_AdminLayout";
 }
 @model IEnumerable<BE.models.HoaDon>
 
+@using System.Globalization
+@using System.Linq
+
+@functions{
+    string HumanStatus(string s) => s switch
+    {
+        "Chua_Xac_Nhan"      => "Chưa xác nhận",
+        "Da_Xac_Nhan"        => "Đã xác nhận",
+        "Dang_Xu_Ly"         => "Đang xử lý",
+        "Dang_Giao_Hang"     => "Đang giao hàng",
+        "Hoan_Thanh"         => "Hoàn thành",
+        "Do_Hang_Co_Van_De"  => "Có vấn đề",
+        "Huy_Don"            => "Hủy đơn",
+        _                    => s ?? "Khác"
+    };
+
+    string BadgeClass(string s) => s switch
+    {
+        "Hoan_Thanh"         => "bg-success",
+        "Huy_Don"            => "bg-danger",
+        "Dang_Giao_Hang"     => "bg-warning text-dark",
+        "Da_Xac_Nhan"        => "bg-info text-dark",
+        "Dang_Xu_Ly"         => "bg-secondary",
+        "Chua_Xac_Nhan"      => "bg-secondary",
+        "Do_Hang_Co_Van_De"  => "bg-dark",
+        _                    => "bg-secondary"
+    };
+}
 
 <!DOCTYPE html>
 <html lang="vi">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>Thống Kê Bán Trà Sữa</title>
+
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="~/css/thongke.css">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" />
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+
+    <style>
+        :root{
+            --bg:#f6f8fb;
+            --card:#ffffff;
+            --text:#111827;
+            --sub:#6b7280;
+            --brand:#4bc0c0;
+            --ring:rgba(75,192,192,.35);
+        }
+        *{box-sizing:border-box}
+        body{
+            font-family:"Inter",system-ui,-apple-system,Segoe UI,Roboto,"Helvetica Neue",Arial,"Noto Sans",sans-serif;
+            background:var(--bg);
+            color:var(--text);
+        }
+        .dashboard-container{max-width:1200px;margin:24px auto;padding:0 12px}
+        header h1{font-weight:700;font-size:28px;margin:0}
+        .toolbar{display:flex;justify-content:space-between;align-items:center;gap:12px;margin:10px 0 18px}
+        .btn-export{padding:8px 12px;border:0;border-radius:8px;cursor:pointer;background:var(--brand);color:#fff;box-shadow:0 10px 20px -10px var(--ring)}
+        .summary-cards{
+            display:grid;grid-template-columns:repeat(5,1fr);gap:12px;margin-bottom:18px
+        }
+        .cardx{
+            background:var(--card);border:1px solid #eef2f7;border-radius:14px;padding:14px;cursor:pointer;
+            transition:.15s transform ease, .15s box-shadow ease; min-height:92px
+        }
+        .cardx:hover{transform:translateY(-2px);box-shadow:0 10px 24px -18px rgba(0,0,0,.35)}
+        .cardx h2{font-size:13px;color:var(--sub);margin:0 0 6px}
+        .cardx p{font-size:18px;font-weight:700;margin:0}
+        .charts{
+            display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:14px
+        }
+        .chart-box{
+            background:var(--card);border:1px solid #eef2f7;border-radius:14px;padding:14px;cursor:pointer;
+            transition:.15s transform ease, .15s box-shadow ease
+        }
+        .chart-box:hover{transform:translateY(-2px);box-shadow:0 10px 24px -18px rgba(0,0,0,.35)}
+        .chart-box h3{font-size:16px;margin:0 0 8px}
+        .order-table{background:var(--card);border:1px solid #eef2f7;border-radius:14px;padding:14px;margin-bottom:40px}
+        table{width:100%}
+        thead th{font-weight:600;color:var(--sub)}
+        tbody td{vertical-align:middle}
+
+        /* Modal detail (đã fix) */
+        .modal-overlay{
+            position:fixed; top:0; left:0; width:100vw; height:100vh;
+            background:rgba(0,0,0,.35); display:none;
+            align-items:center; justify-content:center; padding:16px;
+            z-index:2147483647;  /* cực cao để không bị che */
+        }
+        .modal-overlay.show{ display:flex; }
+        .modal-card{
+            width:min(1000px,96vw);max-height:90vh;overflow:auto;background:#fff;border-radius:16px;padding:18px;border:1px solid #e5e7eb
+        }
+        .modal-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px}
+        .modal-title{font-weight:700;font-size:18px}
+        .btn-closex{border:0;background:#f3f4f6;border-radius:8px;padding:6px 10px}
+        .muted{color:var(--sub)}
+
+    
+        @@media (max-width: 1100px){
+            .summary-cards{grid-template-columns:repeat(2,1fr)}
+            .charts{grid-template-columns:1fr}
+        }
+    </style>
 </head>
 <body>
-    <div class="dashboard-container">
-        <header>
-            <h1>Thống Kê Hệ Thống Trà Sữa</h1>
-            <header style="display:flex;justify-content:space-between;align-items:center;gap:12px;">
-                <h1>Thống Kê Hệ Thống Trà Sữa</h1>
-                <button id="exportPDF" style="padding:8px 12px;border:0;border-radius:8px;cursor:pointer;background:#4bc0c0;color:#fff;">
-                    📄 Xuất PDF
-                </button>
-            </header>
-
-        </header>
-
-        <!-- Thông số tổng quan -->
-        <section class="summary-cards">
-            <div class="card">
-                <h2>Tổng số hóa đơn</h2>
-                <p id="totalOrders">@(Model?.Count() ?? 0)</p>
-            </div>
-            <div class="card">
-                <h2>Tổng doanh thu</h2>
-                <p id="totalRevenue">@(Model?.Sum(x => x.Tong_Tien).ToString("C0", new System.Globalization.CultureInfo("vi-VN")) ?? "₫0")</p>
-            </div>
-            <div class="card">
-                <h2>Doanh thu trung bình</h2>
-                <p id="avgRevenue">@(Model?.Any() == true ? Model.Average(x => x.Tong_Tien).ToString("C0", new System.Globalization.CultureInfo("vi-VN")) : "₫0")</p>
-            </div>
-            <div class="card">
-                <h2>Hóa đơn hôm nay</h2>
-                <p id="todayOrders">@(Model?.Where(x => x.Ngay_Tao.Date == DateTime.Today).Count() ?? 0)</p>
-            </div>
-            <div class="card">
-                <h2>Doanh thu hôm nay</h2>
-                <p id="todayRevenue">@(Model?.Where(x => x.Ngay_Tao.Date == DateTime.Today).Sum(x => x.Tong_Tien).ToString("C0", new System.Globalization.CultureInfo("vi-VN")) ?? "₫0")</p>
-            </div>
-            <div class="card">
-                <h2>Trạng thái đơn hàng</h2>
-                <p id="statusCount">@(Model?.GroupBy(x => x.Trang_Thai).Count() ?? 0) loại</p>
-            </div>
-        </section>
-
-        <!-- Biểu đồ -->
-        <section class="charts">
-            <div class="chart-box">
-                <h3>Doanh thu 7 ngày qua</h3>
-                <canvas id="revenueChart"></canvas>
-            </div>
-
-            <div class="chart-box">
-                <h3>Phân bố theo trạng thái</h3>
-                <canvas id="statusChart"></canvas>
-            </div>
-
-            <div class="chart-box">
-                <h3>Xu hướng đơn hàng theo ngày</h3>
-                <canvas id="orderTrendChart"></canvas>
-            </div>
-
-            <div class="chart-box">
-                <h3>Top 10 hóa đơn cao nhất</h3>
-                <canvas id="topOrdersChart"></canvas>
-            </div>
-        </section>
-
-        <!-- Bảng đơn hàng mới -->
-        <section class="order-table">
-            <h3>Danh sách hóa đơn mới nhất</h3>
-            @if (Model != null && Model.Any())
-            {
-                <table>
-                    <thead>
-                        <tr>
-                            <th>Mã hóa đơn</th>
-                            <th>Ngày tạo</th>
-                            <th>Tổng tiền</th>
-                            <th>Trạng thái</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        @foreach (var hoaDon in Model.OrderByDescending(x => x.Ngay_Tao).Take(10))
-                        {
-                            <tr>
-                                <td>@hoaDon.Ma_Hoa_Don</td>
-                                <td>@hoaDon.Ngay_Tao.ToString("dd/MM/yyyy HH:mm")</td>
-                                <td>@hoaDon.Tong_Tien.ToString("C0", new System.Globalization.CultureInfo("vi-VN"))</td>
-                                <td>
-                                    <span style="padding: 5px 10px; border-radius: 15px; font-size: 0.8rem;
-                            background: @(hoaDon.Trang_Thai == "Hoan_Thanh" ? "#d4edda" :
-                                                                            hoaDon.Trang_Thai == "Huy_Don" ? "#f8d7da" :
-                                                                            hoaDon.Trang_Thai == "Dang_Giao_Hang" ? "#fff3cd" : "#d1ecf1");
-                    color: @(hoaDon.Trang_Thai == "Hoan_Thanh" ? "#155724" :
-                                                               hoaDon.Trang_Thai == "Huy_Don" ? "#721c24" :
-                                                               hoaDon.Trang_Thai == "Dang_Giao_Hang" ? "#856404" : "#0c5460");">
-                                @switch (hoaDon.Trang_Thai)
-                                        {
-                                            case "Chua_Xac_Nhan":
-                                                @:Chưa xác nhận
-                                                break;
-                                            case "Da_Xac_Nhan":
-                                                @:Đã xác nhận
-                                                break;
-                                            case "Dang_Giao_Hang":
-                                                @:Đang giao hàng
-                                                break;
-                                            case "Hoan_Thanh":
-                                                @:Hoàn thành
-                                                break;
-                                            case "Do_Hang_Co_Van_De":
-                                                @:Có vấn đề
-                                                break;
-                                            case "Huy_Don":
-                                                @:Hủy đơn
-                                                break;
-                                            default:
-                                                @hoaDon.Trang_Thai
-                                                break;
-                                        }
-                                    </span>
-                                </td>
-                            </tr>
-                        }
-                    </tbody>
-                </table>
-            }
-            else
-            {
-                <div class="loading">
-                    <p>Không có dữ liệu hóa đơn</p>
-                </div>
-            }
-        </section>
+<div class="dashboard-container">
+    <div class="toolbar">
+        <h1>Thống Kê Hệ Thống Trà Sữa</h1>
+        <button id="exportPDF" class="btn-export">📄 Xuất PDF</button>
     </div>
 
-    <script>
-        // Lấy dữ liệu từ server
-        const hoaDonData = @Html.Raw(Json.Serialize(Model));
+    <!-- 10 ô nhỏ -->
+    <section class="summary-cards">
+        <div class="cardx" data-detail="totalOrders">
+            <h2>Tổng số hóa đơn</h2>
+            <p id="totalOrders">@((Model??Enumerable.Empty<BE.models.HoaDon>()).Count())</p>
+        </div>
+        <div class="cardx" data-detail="totalRevenue">
+            <h2>Tổng doanh thu</h2>
+            <p id="totalRevenue">@((Model??Enumerable.Empty<BE.models.HoaDon>()).Sum(x => x.Tong_Tien).ToString("C0", new CultureInfo("vi-VN")))</p>
+        </div>
+        <div class="cardx" data-detail="avgRevenue">
+            <h2>Doanh thu trung bình/đơn</h2>
+            <p id="avgRevenue">@(((Model??Enumerable.Empty<BE.models.HoaDon>()).Any() ? (Model??Enumerable.Empty<BE.models.HoaDon>()).Average(x => x.Tong_Tien) : 0).ToString("C0", new CultureInfo("vi-VN")))</p>
+        </div>
+        <div class="cardx" data-detail="todayOrders">
+            <h2>Hóa đơn hôm nay</h2>
+            <p id="todayOrders">@((Model??Enumerable.Empty<BE.models.HoaDon>()).Count(x => x.Ngay_Tao.Date == DateTime.Today))</p>
+        </div>
+        <div class="cardx" data-detail="todayRevenue">
+            <h2>Doanh thu hôm nay</h2>
+            <p id="todayRevenue">@((Model??Enumerable.Empty<BE.models.HoaDon>()).Where(x => x.Ngay_Tao.Date == DateTime.Today).Sum(x => x.Tong_Tien).ToString("C0", new CultureInfo("vi-VN")))</p>
+        </div>
+        <div class="cardx" data-detail="statusTypes">
+            <h2>Trạng thái đơn hàng</h2>
+            <p id="statusCount">@((Model??Enumerable.Empty<BE.models.HoaDon>()).GroupBy(x => x.Trang_Thai).Count()) loại</p>
+        </div>
+        <div class="cardx" data-detail="completed">
+            <h2>Đơn hoàn thành</h2>
+            <p id="doneCount">@((Model??Enumerable.Empty<BE.models.HoaDon>()).Count(x=>x.Trang_Thai=="Hoan_Thanh"))</p>
+        </div>
+        <div class="cardx" data-detail="cancelled">
+            <h2>Đơn hủy</h2>
+            <p id="cancelCount">@((Model??Enumerable.Empty<BE.models.HoaDon>()).Count(x=>x.Trang_Thai=="Huy_Don"))</p>
+        </div>
+        <div class="cardx" data-detail="maxOrder">
+            <h2>Đơn lớn nhất</h2>
+            <p id="maxOrder">@(((Model??Enumerable.Empty<BE.models.HoaDon>()).Any()? (Model??Enumerable.Empty<BE.models.HoaDon>()).Max(x=>x.Tong_Tien):0).ToString("C0", new CultureInfo("vi-VN")))</p>
+        </div>
+        <div class="cardx" data-detail="minOrder">
+            <h2>Đơn nhỏ nhất</h2>
+            <p id="minOrder">@(((Model??Enumerable.Empty<BE.models.HoaDon>()).Any()? (Model??Enumerable.Empty<BE.models.HoaDon>()).Min(x=>x.Tong_Tien):0).ToString("C0", new CultureInfo("vi-VN")))</p>
+        </div>
+    </section>
 
+    <!-- 6 ô to -->
+    <section class="charts">
+        <div class="chart-box" data-detail="revenue7">
+            <h3>Doanh thu 7 ngày qua</h3>
+            <canvas id="revenueChart"></canvas>
+        </div>
+        <div class="chart-box" data-detail="statusDist">
+            <h3>Phân bố theo trạng thái</h3>
+            <canvas id="statusChart"></canvas>
+        </div>
+        <div class="chart-box" data-detail="ordersTrend">
+            <h3>Xu hướng đơn hàng theo ngày</h3>
+            <canvas id="orderTrendChart"></canvas>
+        </div>
+        <div class="chart-box" data-detail="top10">
+            <h3>Top 10 hóa đơn cao nhất</h3>
+            <canvas id="topOrdersChart"></canvas>
+        </div>
+        <div class="chart-box" data-detail="revByStatus">
+            <h3>Doanh thu theo trạng thái</h3>
+            <canvas id="revStatusChart"></canvas>
+        </div>
+        <div class="chart-box" data-detail="revWeekday">
+            <h3>Doanh thu theo thứ trong tuần</h3>
+            <canvas id="weekdayChart"></canvas>
+        </div>
+    </section>
 
-        // Xử lý dữ liệu cho biểu đồ doanh thu 7 ngày qua
-        function createRevenueChart() {
-          const last7Days = [];
-          const revenueData = [];
-
-          for (let i = 6; i >= 0; i--) {
-            const date = new Date();
-            date.setDate(date.getDate() - i);
-            const dateStr = date.toISOString().split('T')[0];
-            last7Days.push(date.toLocaleDateString('vi-VN', { weekday: 'short' }));
-
-            const dayRevenue = hoaDonData
-              .filter(h => h.ngay_Tao.startsWith(dateStr))
-              .reduce((sum, h) => sum + h.tong_Tien, 0);
-            revenueData.push(dayRevenue);
-          }
-
-          new Chart(document.getElementById('revenueChart'), {
-            type: 'line',
-            data: {
-              labels: last7Days,
-              datasets: [{
-                label: 'Doanh thu',
-                data: revenueData,
-                borderColor: '#4bc0c0',
-                backgroundColor: 'rgba(75,192,192,0.1)',
-                fill: true,
-                tension: 0.3
-              }]
-            },
-            options: {
-              responsive: true,
-              plugins: { legend: { display: false } },
-              scales: {
-                y: {
-                  beginAtZero: true,
-                  ticks: {
-                    callback: function(value) {
-                      return new Intl.NumberFormat('vi-VN', {
-                        style: 'currency',
-                        currency: 'VND'
-                      }).format(value);
-                    }
-                  }
+    <!-- Bảng đơn hàng mới -->
+    <section class="order-table">
+        <h3>Danh sách hóa đơn mới nhất</h3>
+        @if ((Model??Enumerable.Empty<BE.models.HoaDon>()).Any())
+        {
+            <table class="table align-middle">
+                <thead>
+                <tr>
+                    <th>Mã hóa đơn</th>
+                    <th>Ngày tạo</th>
+                    <th>Tổng tiền</th>
+                    <th>Trạng thái</th>
+                </tr>
+                </thead>
+                <tbody>
+                @foreach (var hoaDon in (Model??Enumerable.Empty<BE.models.HoaDon>()).OrderByDescending(x => x.Ngay_Tao).Take(10))
+                {
+                    <tr>
+                        <td>@(string.IsNullOrWhiteSpace(hoaDon.Ma_Hoa_Don) ? $"HD-{hoaDon.ID_Hoa_Don}" : hoaDon.Ma_Hoa_Don)</td>
+                        <td>@hoaDon.Ngay_Tao.ToString("dd/MM/yyyy HH:mm")</td>
+                        <td>@hoaDon.Tong_Tien.ToString("C0", new CultureInfo("vi-VN"))</td>
+                        <td>
+                            <span class="badge @BadgeClass(hoaDon.Trang_Thai)">
+                                @HumanStatus(hoaDon.Trang_Thai)
+                            </span>
+                        </td>
+                    </tr>
                 }
-              }
-            }
-          });
+                </tbody>
+            </table>
         }
-
-        // Biểu đồ trạng thái
-        function createStatusChart() {
-          const statusCount = {};
-          hoaDonData.forEach(h => {
-            statusCount[h.trang_Thai] = (statusCount[h.trang_Thai] || 0) + 1;
-          });
-
-          const statusLabels = {
-            'Chua_Xac_Nhan': 'Chưa xác nhận',
-            'Da_Xac_Nhan': 'Đã xác nhận',
-            'Dang_Giao_Hang': 'Đang giao hàng',
-            'Hoan_Thanh': 'Hoàn thành',
-            'Do_Hang_Co_Van_De': 'Có vấn đề',
-            'Huy_Don': 'Hủy đơn'
-          };
-
-          // Kiểm tra nếu không có dữ liệu
-          const hasData = Object.keys(statusCount).length > 0;
-
-          new Chart(document.getElementById('statusChart'), {
-            type: 'doughnut',
-            data: {
-              labels: hasData ? Object.keys(statusCount).map(k => statusLabels[k] || k) : ['Không có dữ liệu'],
-              datasets: [{
-                data: hasData ? Object.values(statusCount) : [1],
-                backgroundColor: hasData ? ['#36a2eb', '#4bc0c0', '#ffcd56', '#ff6384', '#ff9f40', '#9966ff'] : ['#e0e0e0']
-              }]
-            },
-            options: {
-              responsive: true,
-              plugins: {
-                legend: {
-                  position: 'bottom',
-                  display: hasData // Ẩn legend nếu không có dữ liệu
-                }
-              }
-            }
-          });
+        else
+        {
+            <div class="text-muted">Không có dữ liệu hóa đơn</div>
         }
+    </section>
+</div>
 
-        // Biểu đồ xu hướng đơn hàng
-        function createOrderTrendChart() {
-          const ordersByDate = {};
-          hoaDonData.forEach(h => {
-            const date = new Date(h.ngay_Tao).toLocaleDateString('vi-VN');
-            ordersByDate[date] = (ordersByDate[date] || 0) + 1;
-          });
+<!-- Modal chi tiết (đặt cuối body là đúng) -->
+<div class="modal-overlay" id="detailModal" role="dialog" aria-modal="true" aria-labelledby="detailTitle">
+    <div class="modal-card">
+        <div class="modal-head">
+            <div>
+                <div class="modal-title" id="detailTitle">Chi tiết</div>
+                <div class="muted" id="detailSubtitle"></div>
+            </div>
+            <button type="button" class="btn-closex" id="closeModal">Đóng</button>
+        </div>
+        <div id="detailBody"></div>
+    </div>
+</div>
 
-          const sortedDates = Object.keys(ordersByDate).sort();
-          const orderCounts = sortedDates.map(date => ordersByDate[date]);
+<script>
+    // ======= Data từ Model =======
+    const hoaDonData = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(
+        (Model ?? Enumerable.Empty<BE.models.HoaDon>()).Select(h => new {
+            iD_Hoa_Don = h.ID_Hoa_Don,
+            ma_Hoa_Don = h.Ma_Hoa_Don,
+            ngay_Tao = h.Ngay_Tao,
+            trang_Thai = h.Trang_Thai,
+            tong_Tien = h.Tong_Tien
+        }),
+        new System.Text.Json.JsonSerializerOptions { PropertyNamingPolicy = System.Text.Json.JsonNamingPolicy.CamelCase }
+    ));
 
-          new Chart(document.getElementById('orderTrendChart'), {
-            type: 'bar',
-            data: {
-              labels: sortedDates.slice(-10), // 10 ngày gần nhất
-              datasets: [{
-                label: 'Số đơn hàng',
-                data: orderCounts.slice(-10),
-                backgroundColor: '#4bc0c0'
-              }]
-            },
-            options: {
-              responsive: true,
-              scales: { y: { beginAtZero: true } }
-            }
-          });
+    // ======= Helpers =======
+    const VND = v => new Intl.NumberFormat('vi-VN',{style:'currency',currency:'VND'}).format(v ?? 0);
+    const statusName = s => ({
+        'Chua_Xac_Nhan':'Chưa xác nhận',
+        'Da_Xac_Nhan': 'Đã xác nhận',
+        'Dang_Xu_Ly': 'Đang xử lý',
+        'Dang_Giao_Hang': 'Đang giao hàng',
+        'Hoan_Thanh': 'Hoàn thành',
+        'Do_Hang_Co_Van_De':'Có vấn đề',
+        'Huy_Don': 'Hủy đơn'
+    })[s] || s || 'Khác';
+
+    // ======= Charts =======
+    function revenue7Chart(){
+        const labels=[], data=[];
+        for(let i=6;i>=0;i--){
+            const d=new Date(); d.setDate(d.getDate()-i);
+            const ymd=d.toISOString().split('T')[0];
+            labels.push(d.toLocaleDateString('vi-VN',{weekday:'short'}));
+            data.push(hoaDonData
+                .filter(h => (typeof h.ngay_Tao === 'string' && h.ngay_Tao.startsWith?.(ymd)) || new Date(h.ngay_Tao).toISOString().startsWith(ymd))
+                .reduce((s,h)=>s+(h.tong_Tien||0),0));
         }
-
-        // Biểu đồ top hóa đơn
-        function createTopOrdersChart() {
-          const topOrders = hoaDonData
-            .sort((a, b) => b.tong_Tien - a.tong_Tien)
-            .slice(0, 10);
-
-          new Chart(document.getElementById('topOrdersChart'), {
-            type: 'bar',
-            data: {
-              labels: topOrders.map(h => h.ma_Hoa_Don || `HD-${h.iD_Hoa_Don}`),
-              datasets: [{
-                label: 'Giá trị đơn hàng',
-                data: topOrders.map(h => h.tong_Tien),
-                backgroundColor: '#ff6384'
-              }]
-            },
-            options: {
-              responsive: true,
-              scales: {
-                y: {
-                  beginAtZero: true,
-                  ticks: {
-                    callback: function(value) {
-                      return new Intl.NumberFormat('vi-VN', {
-                        style: 'currency',
-                        currency: 'VND'
-                      }).format(value);
-                    }
-                  }
-                }
-              }
-            }
-          });
-        }
-
-        // Khởi tạo tất cả biểu đồ
-        document.addEventListener('DOMContentLoaded', function() {
-          if (hoaDonData && hoaDonData.length > 0) {
-            createRevenueChart();
-            createStatusChart();
-            createOrderTrendChart();
-            createTopOrdersChart();
-          }
+        new Chart(document.getElementById('revenueChart'),{
+            type:'line',
+            data:{labels, datasets:[{label:'Doanh thu', data, borderColor:'#4bc0c0', backgroundColor:'rgba(75,192,192,.12)', fill:true, tension:.3}]},
+            options:{plugins:{legend:{display:false}}, scales:{y:{beginAtZero:true, ticks:{callback:v=>VND(v)}}}}
         });
-              async function addElementAsPages(pdf, el, margin = 10) {
-          const canvas = await html2canvas(el, { scale: 2, useCORS: true });
-          const imgWidthMM = pdf.internal.pageSize.getWidth() - margin * 2;
-          const pageHeightMM = pdf.internal.pageSize.getHeight() - margin * 2;
-
-          // px trên mỗi mm theo chiều rộng
-          const pxPerMM = canvas.width / imgWidthMM;
-          const sliceHeightPx = pageHeightMM * pxPerMM;
-
-          let renderedHeight = 0;
-          let firstPage = true;
-
-          while (renderedHeight < canvas.height) {
-            const sliceCanvas = document.createElement('canvas');
-            sliceCanvas.width = canvas.width;
-            sliceCanvas.height = Math.min(sliceHeightPx, canvas.height - renderedHeight);
-            const ctx = sliceCanvas.getContext('2d');
-
-            ctx.drawImage(
-              canvas,
-              0, renderedHeight,                   // vùng nguồn Y
-              canvas.width, sliceCanvas.height,    // kích thước vùng nguồn
-              0, 0,                                // vị trí đích
-              canvas.width, sliceCanvas.height     // kích thước đích
-            );
-
-            const imgData = sliceCanvas.toDataURL('image/png');
-
-            if (!firstPage) pdf.addPage();
-            firstPage = false;
-
-            const sliceHeightMM = sliceCanvas.height / pxPerMM;
-            pdf.addImage(imgData, 'PNG', margin, margin, imgWidthMM, sliceHeightMM);
-
-            renderedHeight += sliceHeightPx;
-          }
-        }
-
-        // Nút xuất toàn bộ dashboard (biểu đồ + bảng + summary)
-        document.getElementById('exportPDF')?.addEventListener('click', async () => {
-          const { jsPDF } = window.jspdf;
-          const pdf = new jsPDF('p', 'mm', 'a4');
-
-          const container = document.querySelector('.dashboard-container');
-          if (!container) {
-            alert('Không tìm thấy phần dashboard để xuất.');
-            return;
-          }
-
-          await addElementAsPages(pdf, container, 8);
-          pdf.save('ThongKe_TraSua.pdf');
+    }
+    function statusChart(){
+        const cnt={}; hoaDonData.forEach(h=>cnt[h.trang_Thai]=(cnt[h.trang_Thai]||0)+1);
+        const labels=Object.keys(cnt).map(statusName); const data=Object.values(cnt);
+        new Chart(document.getElementById('statusChart'),{
+            type:'doughnut',
+            data:{labels, datasets:[{data, backgroundColor:['#36a2eb','#4bc0c0','#ffcd56','#ff6384','#ff9f40','#9966ff','#a3e635']}]},
+            options:{plugins:{legend:{position:'bottom'}}}
         });
-    </script>
+    }
+    function ordersTrendChart(){
+        const byDate={};
+        hoaDonData.forEach(h=>{
+            const d=new Date(h.ngay_Tao).toLocaleDateString('vi-VN');
+            byDate[d]=(byDate[d]||0)+1;
+        });
+        const labels=Object.keys(byDate).sort().slice(-10);
+        const data=labels.map(l=>byDate[l]);
+        new Chart(document.getElementById('orderTrendChart'),{
+            type:'bar',
+            data:{labels, datasets:[{label:'Số đơn hàng', data, backgroundColor:'#4bc0c0'}]},
+            options:{scales:{y:{beginAtZero:true}}}
+        });
+    }
+    function top10Chart(){
+        const top=[...hoaDonData].sort((a,b)=>b.tong_Tien-a.tong_Tien).slice(0,10);
+        new Chart(document.getElementById('topOrdersChart'),{
+            type:'bar',
+            data:{labels:top.map(h=>h.ma_Hoa_Don || `HD-${h.iD_Hoa_Don}`),
+                  datasets:[{label:'Giá trị đơn hàng', data:top.map(h=>h.tong_Tien), backgroundColor:'#ff6384'}]},
+            options:{scales:{y:{beginAtZero:true, ticks:{callback:v=>VND(v)}}}}
+        });
+    }
+    function revenueByStatusChart(){
+        const sum={}; hoaDonData.forEach(h=>{sum[h.trang_Thai]=(sum[h.trang_Thai]||0)+(h.tong_Tien||0);});
+        const labels=Object.keys(sum).map(statusName);
+        const data=Object.values(sum);
+        new Chart(document.getElementById('revStatusChart'),{
+            type:'bar',
+            data:{labels, datasets:[{label:'Doanh thu', data}]},
+            options:{scales:{y:{beginAtZero:true, ticks:{callback:v=>VND(v)}}}, plugins:{legend:{display:false}}}
+        });
+    }
+    function revenueByWeekdayChart(){
+        const map=['CN','T2','T3','T4','T5','T6','T7'];
+        const sum=Array(7).fill(0);
+        hoaDonData.forEach(h=>{ const d=new Date(h.ngay_Tao); sum[d.getDay()]+= (h.tong_Tien||0); });
+        new Chart(document.getElementById('weekdayChart'),{
+            type:'line',
+            data:{labels:map, datasets:[{label:'Doanh thu', data:sum, borderColor:'#36a2eb', backgroundColor:'rgba(54,162,235,.12)', fill:true, tension:.3}]},
+            options:{plugins:{legend:{display:false}}, scales:{y:{beginAtZero:true, ticks:{callback:v=>VND(v)}}}}
+        });
+    }
+
+    document.addEventListener('DOMContentLoaded', ()=>{
+        if(hoaDonData?.length){
+            revenue7Chart(); statusChart(); ordersTrendChart(); top10Chart(); revenueByStatusChart(); revenueByWeekdayChart();
+        }
+    });
+
+    // ======= Modal (đã fix) =======
+    const modal   = document.getElementById('detailModal');
+    const closeBtn= document.getElementById('closeModal');
+    const bodyEl  = document.getElementById('detailBody');
+    const titleEl = document.getElementById('detailTitle');
+    const subEl   = document.getElementById('detailSubtitle');
+
+    function openModal(title, subtitle){
+        titleEl.textContent = title || 'Chi tiết';
+        subEl.textContent   = subtitle || '';
+        bodyEl.innerHTML    = '';
+        modal.classList.add('show');          // dùng class thay vì inline style
+        document.body.style.overflow = 'hidden'; // khoá scroll nền
+    }
+    function closeModal(){
+        modal.classList.remove('show');
+        document.body.style.overflow = '';
+    }
+    closeBtn?.addEventListener('click', closeModal);
+    modal.addEventListener('click', (e)=>{ if(e.target===modal) closeModal(); });
+
+    function renderOrdersTable(list){
+        const table = document.createElement('table');
+        table.className = 'table table-sm';
+        table.innerHTML = `
+          <thead><tr>
+             <th>#</th><th>Mã HĐ</th><th>Ngày</th><th>Trạng thái</th><th class="text-end">Tổng tiền</th>
+          </tr></thead>
+          <tbody></tbody>`;
+        const tb = table.querySelector('tbody');
+        list.forEach((h,i)=>{
+            const tr=document.createElement('tr');
+            tr.innerHTML = `
+              <td>${i+1}</td>
+              <td>${h.ma_Hoa_Don || 'HD-'+h.iD_Hoa_Don}</td>
+              <td>${new Date(h.ngay_Tao).toLocaleString('vi-VN')}</td>
+              <td>${statusName(h.trang_Thai)}</td>
+              <td class="text-end">${VND(h.tong_Tien)}</td>`;
+            tb.appendChild(tr);
+        });
+        bodyEl.appendChild(table);
+    }
+    function renderModalChart(type, configBuilder){
+        const wrap = document.createElement('div');
+        wrap.innerHTML = `<canvas id="modalChart" style="max-height:480px"></canvas>`;
+        bodyEl.appendChild(wrap);
+        const ctx = document.getElementById('modalChart');
+        new Chart(ctx, configBuilder());
+    }
+
+    // Cards → modal
+    document.querySelectorAll('.cardx').forEach(card=>{
+        card.addEventListener('click', ()=>{
+            const key = card.getAttribute('data-detail');
+            switch(key){
+                case 'totalOrders':
+                    openModal('Tổng số hóa đơn','Danh sách 50 đơn mới nhất');
+                    renderOrdersTable([...hoaDonData].sort((a,b)=>new Date(b.ngay_Tao)-new Date(a.ngay_Tao)).slice(0,50));
+                    break;
+                case 'totalRevenue':
+                    openModal('Tổng doanh thu','Doanh thu theo tháng');
+                    renderModalChart('bar', ()=>{
+                        const byMonth={};
+                        hoaDonData.forEach(h=>{
+                            const d=new Date(h.ngay_Tao); const k=`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`;
+                            byMonth[k]=(byMonth[k]||0)+(h.tong_Tien||0);
+                        });
+                        const labels=Object.keys(byMonth).sort();
+                        return { type:'bar', data:{labels, datasets:[{label:'Doanh thu', data:labels.map(l=>byMonth[l])}]},
+                                 options:{scales:{y:{beginAtZero:true, ticks:{callback:v=>VND(v)}}}} };
+                    });
+                    break;
+                case 'avgRevenue':
+                    openModal('Doanh thu trung bình/đơn','Phân phối giá trị đơn hàng');
+                    renderModalChart('hist', ()=>{
+                        const vals=hoaDonData.map(h=>h.tong_Tien||0).sort((a,b)=>a-b);
+                        const n=10, min=vals[0]||0, max=vals[vals.length-1]||0, step=(max-min)/n || 1;
+                        const bins=Array(n).fill(0), labels=[];
+                        for(let i=0;i<n;i++){ const a=min+i*step, b=a+step; labels.push(`${VND(a)} - ${VND(b)}`); }
+                        vals.forEach(v=>{ const idx=Math.min(n-1, Math.floor((v-min)/step)); bins[idx]++; });
+                        return { type:'bar', data:{labels, datasets:[{label:'Số đơn', data:bins}]}, options:{scales:{y:{beginAtZero:true}}} };
+                    });
+                    break;
+                case 'todayOrders':
+                    openModal('Đơn trong hôm nay');
+                    const today = new Date(); const ymd = today.toISOString().split('T')[0];
+                    renderOrdersTable(hoaDonData.filter(h=>
+                        (typeof h.ngay_Tao === 'string' && h.ngay_Tao.startsWith?.(ymd)) || new Date(h.ngay_Tao).toISOString().startsWith(ymd)
+                    ));
+                    break;
+                case 'todayRevenue':
+                    openModal('Doanh thu hôm nay');
+                    renderModalChart('pie', ()=>{
+                        const byStatus={};
+                        const t = new Date(); const k = t.toISOString().split('T')[0];
+                        hoaDonData.forEach(h=>{
+                            const m = ((typeof h.ngay_Tao === 'string' && h.ngay_Tao.startsWith?.(k)) || new Date(h.ngay_Tao).toISOString().startsWith(k));
+                            if(m){ byStatus[h.trang_Thai]=(byStatus[h.trang_Thai]||0)+(h.tong_Tien||0); }
+                        });
+                        const labels=Object.keys(byStatus).map(statusName); const datas=Object.values(byStatus);
+                        return { type:'doughnut', data:{labels, datasets:[{data:datas}]}, options:{plugins:{legend:{position:'bottom'}}}};
+                    });
+                    break;
+                case 'statusTypes':
+                    openModal('Thống kê trạng thái','Số lượng & doanh thu theo trạng thái');
+                    renderModalChart('bar', ()=>{
+                        const c={}, s={};
+                        hoaDonData.forEach(h=>{ c[h.trang_Thai]=(c[h.trang_Thai]||0)+1; s[h.trang_Thai]=(s[h.trang_Thai]||0)+(h.tong_Tien||0); });
+                        const keys=Object.keys(c);
+                        return { type:'bar',
+                            data:{ labels:keys.map(statusName),
+                                   datasets:[ {label:'Số đơn', data:keys.map(k=>c[k])},
+                                              {label:'Doanh thu', data:keys.map(k=>s[k]), yAxisID:'y1'} ] },
+                            options:{ scales:{ y:{beginAtZero:true, position:'left'}, y1:{beginAtZero:true, position:'right', ticks:{callback:v=>VND(v)}} } }
+                        };
+                    });
+                    break;
+                case 'completed':
+                    openModal('Đơn hoàn thành');
+                    renderOrdersTable(hoaDonData.filter(h=>h.trang_Thai==='Hoan_Thanh'));
+                    break;
+                case 'cancelled':
+                    openModal('Đơn hủy');
+                    renderOrdersTable(hoaDonData.filter(h=>h.trang_Thai==='Huy_Don'));
+                    break;
+                case 'maxOrder':
+                    openModal('Đơn giá trị lớn nhất');
+                    const max = [...hoaDonData].sort((a,b)=>b.tong_Tien-a.tong_Tien)[0]; renderOrdersTable(max?[max]:[]);
+                    break;
+                case 'minOrder':
+                    openModal('Đơn giá trị nhỏ nhất');
+                    const min = [...hoaDonData].sort((a,b)=>a.tong_Tien-b.tong_Tien)[0]; renderOrdersTable(min?[min]:[]);
+                    break;
+            }
+        });
+    });
+
+    // Chart boxes → modal
+    document.querySelectorAll('.chart-box').forEach(box=>{
+        box.addEventListener('click', ()=>{
+            const key = box.getAttribute('data-detail');
+            switch(key){
+                case 'revenue7':
+                    openModal('Doanh thu 7 ngày qua','Bản mở rộng');
+                    renderModalChart('line', ()=>{
+                        const labels=[], data=[];
+                        for(let i=14;i>=0;i--){
+                            const d=new Date(); d.setDate(d.getDate()-i);
+                            const ymd=d.toISOString().split('T')[0];
+                            labels.push(d.toLocaleDateString('vi-VN',{weekday:'short', day:'2-digit', month:'2-digit'}));
+                            data.push(hoaDonData
+                                .filter(h => (typeof h.ngay_Tao === 'string' && h.ngay_Tao.startsWith?.(ymd)) || new Date(h.ngay_Tao).toISOString().startsWith(ymd))
+                                .reduce((s,h)=>s+(h.tong_Tien||0),0));
+                        }
+                        return { type:'line', data:{labels, datasets:[{label:'Doanh thu', data, tension:.3}]},
+                                 options:{scales:{y:{beginAtZero:true, ticks:{callback:v=>VND(v)}}}} };
+                    });
+                    break;
+                case 'statusDist':
+                    openModal('Phân bố theo trạng thái','Chi tiết & tỷ trọng');
+                    renderModalChart('doughnut', ()=>{
+                        const cnt={}; hoaDonData.forEach(h=>cnt[h.trang_Thai]=(cnt[h.trang_Thai]||0)+1);
+                        const labels=Object.keys(cnt).map(statusName); const data=Object.values(cnt);
+                        return { type:'doughnut', data:{labels, datasets:[{data}]}, options:{plugins:{legend:{position:'bottom'}}}};
+                    });
+                    break;
+                case 'ordersTrend':
+                    openModal('Xu hướng đơn hàng theo ngày','90 ngày gần nhất');
+                    renderModalChart('bar', ()=>{
+                        const map={}; hoaDonData.forEach(h=>{ const d=new Date(h.ngay_Tao).toISOString().slice(0,10); map[d]=(map[d]||0)+1; });
+                        const labels=Object.keys(map).sort().slice(-90);
+                        return { type:'bar', data:{labels, datasets:[{label:'Số đơn', data:labels.map(l=>map[l])}]}, options:{scales:{y:{beginAtZero:true}}}};
+                    });
+                    break;
+                case 'top10':
+                    openModal('Top 20 hóa đơn cao nhất');
+                    renderOrdersTable([...hoaDonData].sort((a,b)=>b.tong_Tien-a.tong_Tien).slice(0,20));
+                    break;
+                case 'revByStatus':
+                    openModal('Doanh thu theo trạng thái','Bản chi tiết');
+                    renderModalChart('bar', ()=>{
+                        const sum={}; hoaDonData.forEach(h=>sum[h.trang_Thai]=(sum[h.trang_Thai]||0)+(h.tong_Tien||0));
+                        const labels=Object.keys(sum).map(statusName); const data=Object.values(sum);
+                        return { type:'bar', data:{labels, datasets:[{label:'Doanh thu', data}]}, options:{scales:{y:{beginAtZero:true, ticks:{callback:v=>VND(v)}}}} };
+                    });
+                    break;
+                case 'revWeekday':
+                    openModal('Doanh thu theo thứ trong tuần','So sánh theo thứ');
+                    renderModalChart('line', ()=>{
+                        const names=['CN','T2','T3','T4','T5','T6','T7'];
+                        const sum=Array(7).fill(0), cnt=Array(7).fill(0);
+                        hoaDonData.forEach(h=>{ const d=new Date(h.ngay_Tao).getDay(); sum[d]+= (h.tong_Tien||0); cnt[d]++; });
+                        return { type:'line',
+                                 data:{labels:names, datasets:[{label:'Tổng', data:sum, tension:.3},{label:'Trung bình/đơn', data:sum.map((s,i)=>cnt[i]?s/cnt[i]:0), tension:.3}]},
+                                 options:{scales:{y:{beginAtZero:true, ticks:{callback:v=>VND(v)}}}} };
+                    });
+                    break;
+            }
+        });
+    });
+
+    // ======= Xuất PDF =======
+    async function addElementAsPages(pdf, el, margin = 10) {
+        const canvas = await html2canvas(el, { scale: 2, useCORS: true });
+        const imgWidthMM = pdf.internal.pageSize.getWidth() - margin * 2;
+        const pageHeightMM = pdf.internal.pageSize.getHeight() - margin * 2;
+        const pxPerMM = canvas.width / imgWidthMM;
+        const sliceHeightPx = pageHeightMM * pxPerMM;
+
+        let rendered = 0, first = true;
+        while (rendered < canvas.height) {
+            const slice = document.createElement('canvas');
+            slice.width = canvas.width;
+            slice.height = Math.min(sliceHeightPx, canvas.height - rendered);
+            const ctx = slice.getContext('2d');
+            ctx.drawImage(canvas, 0, rendered, canvas.width, slice.height, 0, 0, canvas.width, slice.height);
+            const imgData = slice.toDataURL('image/png');
+            if (!first) pdf.addPage(); first = false;
+            const mmH = slice.height / pxPerMM;
+            pdf.addImage(imgData, 'PNG', margin, margin, imgWidthMM, mmH);
+            rendered += sliceHeightPx;
+        }
+    }
+    document.getElementById('exportPDF')?.addEventListener('click', async ()=>{
+        const { jsPDF } = window.jspdf;
+        const pdf = new jsPDF('p','mm','a4');
+        const container = document.querySelector('.dashboard-container');
+        await addElementAsPages(pdf, container, 8);
+        pdf.save('ThongKe_TraSua.pdf');
+    });
+</script>
 </body>
 </html>

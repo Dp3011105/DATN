@@ -1,7 +1,7 @@
 ﻿using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
-using BE.DTOs;
 using BE.models;
 using BE.Repository.IRepository;
 
@@ -14,10 +14,10 @@ namespace BE.Controllers
         private readonly IHoaDonRepository _repository;
         public HoaDonController(IHoaDonRepository repository) => _repository = repository;
 
-        // GET api/HoaDon  -> trả DTO (màn danh sách)
+        // GET api/HoaDon  -> (giữ nguyên: nếu bạn đang trả DTO ở repo thì giữ như cũ)
         [HttpGet]
-        public async Task<ActionResult<IEnumerable<HoaDonDTO>>> GetAll()
-            => Ok(await _repository.GetAllAsync());
+        public async Task<ActionResult<IEnumerable<object>>> GetAll()
+            => Ok(await _repository.GetAllAsync()); // có thể là DTO hoặc projection entity của bạn
 
         // GET api/HoaDon/entities -> trả entity (giữ tương thích code FE cũ)
         [HttpGet("entities")]
@@ -77,6 +77,29 @@ namespace BE.Controllers
 
             var ok = await _repository.UpdateTrangThaiAsync(id, req.TrangThai, req.LyDoHuy);
             return ok ? NoContent() : NotFound();
+        }
+
+        // -------- HỦY + RESTOCK (KHÔNG TẠO DTO FILE MỚI) --------
+        public class RestockItem
+        {
+            public int HoaDonChiTietId { get; set; }
+            public int Quantity { get; set; }
+        }
+
+        public class CancelWithRestockRequest
+        {
+            public string LyDo { get; set; } = "";
+            public List<RestockItem> Items { get; set; } = new();
+        }
+
+        // POST api/HoaDon/5/cancel-with-restock
+        [HttpPost("{id:int}/cancel-with-restock")]
+        public async Task<IActionResult> CancelWithRestock(int id, [FromBody] CancelWithRestockRequest req)
+        {
+            if (id <= 0) return BadRequest("HoaDonId invalid.");
+            var items = (req?.Items ?? new()).Select(x => (x.HoaDonChiTietId, x.Quantity));
+            var ok = await _repository.CancelWithRestockAsync(id, req?.LyDo ?? "", items);
+            return ok ? Ok(new { ok = true }) : BadRequest(new { ok = false });
         }
     }
 }
