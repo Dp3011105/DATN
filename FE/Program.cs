@@ -5,9 +5,7 @@ using Service;
 using Service.IService;
 using Service.Services;
 
-
 var builder = WebApplication.CreateBuilder(args);
-
 
 // Add services to the container.
 builder.Services.AddControllersWithViews();
@@ -29,12 +27,18 @@ builder.Services.AddScoped<IQuanLyVaiTroService, QuanLyVaiTroService>();
 builder.Services.AddScoped<IGanVoucherService, GanVoucherService>();
 builder.Services.AddScoped<IKhuyenMaiService, KhuyenMaiService>();
 builder.Services.AddScoped<IPromotionService, PromotionService>();
+builder.Services.AddScoped<IProfileService, ProfileService>();
 
+// SỬA LẠI: Base API URL phải trỏ đến BE, không phải FE
+var baseApiUrl = "https://localhost:7169/"; // Đây là port của BE
 
+// THÊM LẠI: Đăng ký GanVoucherService với HttpClient và timeout như bản cũ
+builder.Services.AddHttpClient<IGanVoucherService, GanVoucherService>(client =>
+{
+    client.BaseAddress = new Uri(baseApiUrl);
+    client.Timeout = TimeSpan.FromMinutes(2);
+});
 
-
-
-var baseApiUrl = "https://localhost:7081/";
 //Đăng ký các Service dùng Dependency Injection
 
 builder.Services.AddHttpClient<IChatSessionService, ChatSessionService>(client =>
@@ -165,9 +169,7 @@ builder.Services.AddHttpClient<IAuthService, AuthService>(client =>
     client.BaseAddress = new Uri(baseApiUrl);
 });
 
-
 // ĐĂNG KÝ CHO AUTH SERVICE CHỨC NĂNG ĐĂNG NHẬP đăng ký 
-
 
 var app = builder.Build();
 
@@ -184,10 +186,9 @@ app.UseStaticFiles();
 app.UseRouting();
 app.UseAuthorization();
 
+// SỬA LẠI: Route mặc định giống bản cũ để GanVoucher hoạt động
 app.MapControllerRoute(
     name: "default",
-    pattern: "{controller=home}/{action=index}/{id?}");
-
-
+    pattern: "{controller=Admin}/{action=Index}/{id?}");
 
 app.Run();
