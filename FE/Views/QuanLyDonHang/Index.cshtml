@@ -80,7 +80,7 @@
                     <th>Địa chỉ</th>
                     <th class="text-end">Tổng tiền</th>
                     <th>Trạng thái</th>
-                    <th class="text-end" style="width:320px">Thao tác</th>
+                    <th class="text-end" style="width:420px">Thao tác</th>
                 </tr>
             </thead>
             <tbody>
@@ -120,7 +120,7 @@
                                 <a class="btn btn-sm btn-outline-secondary me-1"
                                    href="@Url.Action("ChiTiet", "QuanLyDonHang", new { id = hd.ID_Hoa_Don })">Chi tiết</a>
 
-                                @* Bước xác nhận từ Chua_Xac_Nhan -> Da_Xac_Nhan *@
+                                @* Bước 1: Xác nhận từ Chưa xác nhận -> Đã xác nhận *@
                         @if (string.Equals(dbStatus, "Chua_Xac_Nhan", StringComparison.OrdinalIgnoreCase))
                                 {
                                     <form method="post" class="d-inline" action="@Url.Action("XacNhan","QuanLyDonHang")">
@@ -130,7 +130,27 @@
                                     </form>
                                 }
 
-                                @* Giao hàng thành công chỉ khi đang giao *@
+                                @* Bước 2: Bắt đầu xử lý từ Đã xác nhận -> Đang xử lý *@
+                                @if (string.Equals(dbStatus, "Da_Xac_Nhan", StringComparison.OrdinalIgnoreCase))
+                                {
+                                    <form method="post" class="d-inline" action="@Url.Action("BatDauXuLy","QuanLyDonHang")">
+                                        @Html.AntiForgeryToken()
+                                        <input type="hidden" name="id" value="@hd.ID_Hoa_Don" />
+                                        <button class="btn btn-sm btn-secondary me-1" type="submit">Bắt đầu xử lý</button>
+                                    </form>
+                                }
+
+                                @* Bước 3: Bắt đầu giao từ Đang xử lý -> Đang giao hàng *@
+                                @if (string.Equals(dbStatus, "Dang_Xu_Ly", StringComparison.OrdinalIgnoreCase))
+                                {
+                                    <form method="post" class="d-inline" action="@Url.Action("BatDauGiaoHang","QuanLyDonHang")">
+                                        @Html.AntiForgeryToken()
+                                        <input type="hidden" name="id" value="@hd.ID_Hoa_Don" />
+                                        <button class="btn btn-sm btn-info me-1" type="submit">Bắt đầu giao</button>
+                                    </form>
+                                }
+
+                                @* Bước 4: Hoàn tất giao từ Đang giao -> Hoàn thành *@
                                 @if (string.Equals(dbStatus, "Dang_Giao_Hang", StringComparison.OrdinalIgnoreCase))
                                 {
                                     <form method="post" class="d-inline" action="@Url.Action("GiaoHangThanhCong","QuanLyDonHang")">
@@ -140,6 +160,7 @@
                                     </form>
                                 }
 
+                                @* Hủy: cho phép khi chưa hoàn thành và chưa hủy *@
                                 @if (!string.Equals(dbStatus, "Hoan_Thanh", StringComparison.OrdinalIgnoreCase)
                                                         && !string.Equals(dbStatus, "Huy_Don", StringComparison.OrdinalIgnoreCase))
                                 {
@@ -230,9 +251,7 @@
         return (str || '').replace(/[&<>"']/g, s => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[s]));
     }
 
-    // Build 1 row cho bảng khôi phục
     function buildRow(item) {
-        // item: { id, ten, soLuong, daLam }
         const tr = document.createElement('tr');
         tr.innerHTML = `
             <td><input type="checkbox" class="chk-row" data-id="${item.id}"></td>
@@ -244,11 +263,10 @@
             </td>
             <td>${item.daLam ? '<span class="badge text-bg-warning">Đã làm</span>' : '<span class="badge text-bg-success">Chưa làm</span>'}</td>
         `;
-        tr.querySelector('.chk-row').checked = !item.daLam && item.soLuong > 0; // tick mặc định nếu chưa làm
+        tr.querySelector('.chk-row').checked = !item.daLam && item.soLuong > 0;
         return tr;
     }
 
-    // Nạp dữ liệu khi mở modal
     if (modal) {
         modal.addEventListener('show.bs.modal', async function (e) {
             const btn = e.relatedTarget;
@@ -286,7 +304,6 @@
         });
     }
 
-    // Chọn tất cả: tick + auto fill qty nếu đang 0
     document.addEventListener('change', function (e) {
         if (e.target?.id === 'chk-all') {
             const on = e.target.checked;
@@ -300,19 +317,15 @@
         }
     });
 
-    // Trước khi submit, bơm hidden inputs khoiPhucIds / khoiPhucQtys + chống double submit
     const form = document.getElementById('form-huy-don');
     if (form) {
         form.addEventListener('submit', function (e) {
-            // Disable button để tránh double submit
             const btn = document.getElementById('btn-huy');
             if (btn) btn.disabled = true;
 
-            // Xóa hidden cũ
             form.querySelectorAll('input[name="khoiPhucIds"], input[name="khoiPhucQtys"]').forEach(n => n.remove());
 
             const rows = document.querySelectorAll('#tbl-kphoiphuc tbody tr');
-
             rows.forEach(tr => {
                 const cb = tr.querySelector('.chk-row');
                 const qtyInput = tr.querySelector('.input-sl');

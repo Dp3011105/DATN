@@ -1,6 +1,5 @@
 ﻿using BE.models;
 using FE.Service.IService;
-using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Service.IService;
 using System;
@@ -10,19 +9,18 @@ using System.Threading.Tasks;
 
 namespace FE.Controllers
 {
-    //[Authorize(Roles = "Admin,Sales")] // tuỳ hệ thống role của bạn
     public class QuanLyDonHangController : Controller
     {
         private readonly IHoaDonService _hoaDonService;
         private readonly IProductService _productService;
 
-        // Trạng thái lưu trong DB
+        // Các trạng thái trong DB
         private static readonly string[] DbStatuses = new[]
         {
             "Chua_Xac_Nhan","Da_Xac_Nhan","Dang_Xu_Ly","Dang_Giao_Hang","Hoan_Thanh","Huy_Don"
         };
 
-        // Cho phép chuyển trạng thái từ -> đến
+        // Luồng chuyển hợp lệ
         private static readonly Dictionary<string, string[]> AllowedTransitions =
             new(StringComparer.OrdinalIgnoreCase)
             {
@@ -53,7 +51,6 @@ namespace FE.Controllers
 
             try
             {
-                // NOTE: nếu có paging/filter phía service thì dùng thay vì GetAllAsync()
                 var list = (await _hoaDonService.GetAllAsync())?.ToList() ?? new();
 
                 if (!string.IsNullOrWhiteSpace(vm.TuKhoa))
@@ -111,7 +108,6 @@ namespace FE.Controllers
                 .OrderBy(ct => ct.ID_HoaDon_ChiTiet)
                 .Select(ct =>
                 {
-                    // cố gắng lấy cờ "đã làm" từ các thuộc tính có thể có
                     bool daLam = GetFlag(ct, "Da_Lam", "IsPrepared", "IsDone", "DaLam") ||
                                  string.Equals(GetStringProp(ct, "Trang_Thai_Chi_Tiet", "TrangThaiChiTiet"), "Da_Lam", StringComparison.OrdinalIgnoreCase);
 
@@ -128,7 +124,7 @@ namespace FE.Controllers
             return Json(new { ok = true, items });
         }
 
-        // ===== Helpers reflection an toàn compile-time =====
+        // ===== Helpers =====
         private static string? GetStringProp(object? obj, params string[] candidates)
         {
             if (obj == null || candidates == null || candidates.Length == 0) return null;
@@ -181,6 +177,7 @@ namespace FE.Controllers
         }
 
         // ============== STATE TRANSITIONS ==============
+        // Bước 1: Chưa xác nhận -> Đã xác nhận
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> XacNhan(int id)
@@ -189,7 +186,7 @@ namespace FE.Controllers
             if (hd == null) return NotFound();
 
             var curr = hd.Trang_Thai ?? "";
-            var next = "Da_Xac_Nhan"; // bước đúng tiếp theo từ "Chua_Xac_Nhan"
+            var next = "Da_Xac_Nhan";
 
             if (!AllowedTransitions.TryGetValue(curr, out var allows) || !allows.Contains(next, StringComparer.OrdinalIgnoreCase))
             {
@@ -198,10 +195,55 @@ namespace FE.Controllers
             }
 
             var ok = await _hoaDonService.UpdateTrangThaiAsync(id, next, null);
-            TempData["msg"] = ok ? "Đã xác nhận đơn." : "Cập nhật thất bại.";
+            TempData["msg"] = ok ? "Đã xác nhận đơn. Tiếp theo hãy 'Bắt đầu xử lý'." : "Cập nhật thất bại.";
             return RedirectToAction(nameof(Index));
         }
 
+        // Bước 2: Đã xác nhận -> Đang xử lý
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> BatDauXuLy(int id)
+        {
+            var hd = await _hoaDonService.GetByIdAsync(id);
+            if (hd == null) return NotFound();
+
+            var curr = hd.Trang_Thai ?? "";
+            var next = "Dang_Xu_Ly";
+
+            if (!AllowedTransitions.TryGetValue(curr, out var allows) || !allows.Contains(next, StringComparer.OrdinalIgnoreCase))
+            {
+                TempData["msg"] = "Chỉ có thể chuyển sang 'Đang xử lý' khi đơn đã xác nhận.";
+                return RedirectToAction(nameof(Index));
+            }
+
+            var ok = await _hoaDonService.UpdateTrangThaiAsync(id, next, null);
+            TempData["msg"] = ok ? "Đơn đã chuyển sang Đang xử lý." : "Cập nhật thất bại.";
+            return RedirectToAction(nameof(Index));
+        }
+
+        // Bước 3: Đang xử lý -> Đang giao hàng
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> BatDauGiaoHang(int id)
+        {
+            var hd = await _hoaDonService.GetByIdAsync(id);
+            if (hd == null) return NotFound();
+
+            var curr = hd.Trang_Thai ?? "";
+            var next = "Dang_Giao_Hang";
+
+            if (!AllowedTransitions.TryGetValue(curr, out var allows) || !allows.Contains(next, StringComparer.OrdinalIgnoreCase))
+            {
+                TempData["msg"] = "Chỉ có thể 'Bắt đầu giao' khi đơn đang ở trạng thái Đang xử lý.";
+                return RedirectToAction(nameof(Index));
+            }
+
+            var ok = await _hoaDonService.UpdateTrangThaiAsync(id, next, null);
+            TempData["msg"] = ok ? "Đơn đã chuyển sang Đang giao hàng." : "Cập nhật thất bại.";
+            return RedirectToAction(nameof(Index));
+        }
+
+        // Bước 4: Đang giao hàng -> Hoàn thành
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> GiaoHangThanhCong(int id)
@@ -237,7 +279,6 @@ namespace FE.Controllers
             var hd = await _hoaDonService.GetByIdAsync(id);
             if (hd == null) return NotFound();
 
-            // Không cho hủy khi đã hoàn thành/đã huỷ
             if (string.Equals(hd.Trang_Thai, "Hoan_Thanh", StringComparison.OrdinalIgnoreCase) ||
                 string.Equals(hd.Trang_Thai, "Huy_Don", StringComparison.OrdinalIgnoreCase))
             {
@@ -257,15 +298,14 @@ namespace FE.Controllers
                     var q = Math.Max(0, khoiPhucQtys[i]);
                     if (cid <= 0 || q <= 0) continue;
 
-                    if (!mapCt.TryGetValue(cid, out var ct)) continue; // không thuộc đơn
+                    if (!mapCt.TryGetValue(cid, out var ct)) continue;
 
                     var max = Math.Max(0, ct.So_Luong);
-                    if (q > max) q = max; // clamp
+                    if (q > max) q = max;
                     selections.Add((cid, q));
                 }
             }
 
-            // CancelWithRestockAsync nên thực hiện transaction (update trạng thái + cộng tồn)
             var ok = await _hoaDonService.CancelWithRestockAsync(id, lyDo.Trim(), selections);
 
             TempData["msg"] = ok
