@@ -1,11 +1,14 @@
 ﻿@{
-
     Layout = "_AdminLayout";
 }
 @using System.Globalization
+@using System.Linq
+@using System.Collections.Generic
 @model FE.Controllers.ChiTietHoaDonViewModel
-@{
+
+@functions {
     string VND(decimal d) => string.Format(new CultureInfo("vi-VN"), "{0:#,0} đ", d);
+
     string Badge(string db) => db switch
     {
         "Chua_Xac_Nhan" or "Dang_Xu_Ly" => "badge bg-warning text-dark",
@@ -15,35 +18,164 @@
         "Huy_Don" => "badge bg-danger",
         _ => "badge bg-secondary"
     };
+
     string HienThi(string db) => db switch
     {
         "Chua_Xac_Nhan" or "Dang_Xu_Ly" => "Chờ xác nhận",
         "Da_Xac_Nhan" => "Chờ giao",
-        "Dang_Giao_Hang" => "Vận chuyển",
+        "Dang_Giao_Hang" => "Đang giao",
         "Hoan_Thanh" => "Hoàn thành",
         "Huy_Don" => "Đã huỷ",
-        _ => db
+        _ => db ?? "-"
     };
 }
 
 <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" />
 
+<style>
+    .order-tracker {
+        display: flex;
+        align-items: center;
+        gap: .75rem;
+        padding: .75rem 1rem;
+        border-radius: .75rem;
+        background: #fff;
+        border: 1px solid #e9ecef
+    }
+
+    .order-step {
+        display: flex;
+        align-items: center;
+        gap: .5rem
+    }
+
+        .order-step .dot {
+            width: 28px;
+            height: 28px;
+            border-radius: 50%;
+            display: grid;
+            place-items: center;
+            font-size: 14px;
+            font-weight: 700;
+            border: 2px solid #ced4da;
+            background: #f8f9fa;
+            color: #6c757d
+        }
+
+        .order-step .label {
+            font-weight: 600;
+            font-size: .95rem;
+            color: #6c757d
+        }
+
+    .order-connector {
+        flex: 1;
+        height: 4px;
+        border-radius: 2px;
+        background: #e9ecef
+    }
+
+    .order-step.done .dot {
+        background: #e9f7ef;
+        border-color: #51cf66;
+        color: #2b8a3e
+    }
+
+    .order-step.done .label {
+        color: #2b8a3e
+    }
+
+    .order-step.active .dot {
+        background: #e7f5ff;
+        border-color: #339af0;
+        color: #1864ab
+    }
+
+    .order-step.active .label {
+        color: #1864ab
+    }
+
+    .order-tracker.canceled .dot {
+        background: #ffe3e3;
+        border-color: #fa5252;
+        color: #c92a2a
+    }
+
+    .order-tracker.canceled .label {
+        color: #c92a2a
+    }
+
+    .order-tracker.canceled .order-connector {
+        background: #ffa8a8
+    }
+</style>
+
 <div class="container py-3">
     <a class="btn btn-sm btn-outline-secondary mb-3" href="@Url.Action("Index")">← Quay lại</a>
 
-    <h4 class="mb-3">Hóa đơn @Model.HoaDon.Ma_Hoa_Don</h4>
+    <h4 class="mb-3">Hóa đơn @Model.HoaDon?.Ma_Hoa_Don</h4>
 
-    <div class="row g-3">
+    @{
+        var st = Model.HoaDon?.Trang_Thai?.Trim();
+        bool isCanceled = st == "Huy_Don";
+        int stepIndex = st switch
+        {
+            "Chua_Xac_Nhan" => 0,
+            "Da_Xac_Nhan" => 1,
+            "Dang_Xu_Ly" => 2,
+            "Dang_Giao_Hang" => 3,
+            "Hoan_Thanh" => 4,
+            _ => 0
+        };
+        var steps = new[] { "Đặt hàng", "Xác nhận", "Đang pha chế", "Đang giao", "Hoàn thành" };
+    }
+
+    <div class="order-tracker @(isCanceled ? "canceled" : "") mb-3">
+        @for (int i = 0; i < steps.Length; i++)
+        {
+            var state = isCanceled ? "" : (i < stepIndex ? "done" : (i == stepIndex ? "active" : ""));
+            <div class="order-step @state">
+                <div class="dot">
+                    @if (isCanceled)
+                    {
+                        <span>×</span>
+                    }
+                    else if (i < stepIndex)
+                    {
+                        <span>✓</span>
+                    }
+                    else
+                    {
+                        <span>@(i + 1)</span>
+                    }
+                </div>
+                <div class="label">@steps[i]</div>
+            </div>
+
+            @if (i < steps.Length - 1)
+            {
+                var connectorClass = (i < stepIndex) ? "order-connector is-done" : (i == stepIndex ? "order-connector is-on" : "order-connector");
+                <div class="@connectorClass"></div>
+            }
+        }
+    </div>
+
+    @if (isCanceled)
+    {
+        <div class="text-danger fw-bold">Đơn hàng đã huỷ. @(Model.HoaDon?.Ghi_Chu)</div>
+    }
+
+    <div class="row g-3 mt-2">
         <div class="col-lg-6">
             <div class="card">
                 <div class="card-body">
-                    <div><strong>Mã đơn:</strong> @Model.HoaDon.Ma_Hoa_Don</div>
-                    <div><strong>Khách hàng:</strong> @(Model.HoaDon.KhachHang?.Ho_Ten ?? "Khách lẻ")</div>
-                    <div><strong>Ngày tạo:</strong> @Model.HoaDon.Ngay_Tao.ToString("dd/MM/yyyy HH:mm")</div>
-                    <div><strong>Hình thức thanh toán:</strong> @(Model.HoaDon.HinhThucThanhToan?.Phuong_Thuc_Thanh_Toan ?? "N/A")</div>
-                    <div><strong>Loại hoá đơn:</strong> @(Model.HoaDon.Loai_Hoa_Don ?? "N/A")</div>
-                    <div><strong>Trạng thái:</strong> <span class="@Badge(Model.HoaDon.Trang_Thai)">@HienThi(Model.HoaDon.Trang_Thai)</span></div>
-                    <div><strong>Ghi chú:</strong> @(Model.HoaDon.Ghi_Chu ?? "-")</div>
+                    <div><strong>Mã đơn:</strong> @Model.HoaDon?.Ma_Hoa_Don</div>
+                    <div><strong>Khách hàng:</strong> @(Model.HoaDon?.KhachHang?.Ho_Ten ?? "Khách lẻ")</div>
+                    <div><strong>Ngày tạo:</strong> @(Model.HoaDon?.Ngay_Tao.ToString("dd/MM/yyyy HH:mm"))</div>
+                    <div><strong>Thanh toán:</strong> @(Model.HoaDon?.HinhThucThanhToan?.Phuong_Thuc_Thanh_Toan ?? "N/A")</div>
+                    <div><strong>Loại:</strong> @(Model.HoaDon?.Loai_Hoa_Don ?? "N/A")</div>
+                    <div><strong>Trạng thái:</strong> <span class="@Badge(Model.HoaDon?.Trang_Thai ?? "")">@HienThi(Model.HoaDon?.Trang_Thai ?? "")</span></div>
+                    <div><strong>Ghi chú:</strong> @(Model.HoaDon?.Ghi_Chu ?? "-")</div>
                 </div>
             </div>
         </div>
@@ -51,7 +183,10 @@
         <div class="col-lg-6">
             <div class="card">
                 <div class="card-body">
-                    <div class="fs-5"><strong>Tổng tiền: </strong>@VND(Model.HoaDon.Tong_Tien)</div>
+                    <div class="fs-5">
+                        <strong>Tổng tiền: </strong>
+                        @(Model?.HoaDon == null ? "0 đ" : VND(Model.HoaDon.Tong_Tien))
+                    </div>
                 </div>
             </div>
         </div>
@@ -60,55 +195,60 @@
     <div class="card mt-3">
         <div class="card-header">Chi tiết sản phẩm</div>
         <div class="card-body p-0">
-            <div class="table-responsive">
-                <table class="table table-striped mb-0">
-                    <thead>
+            <table class="table table-striped mb-0">
+                <thead>
+                    <tr>
+                        <th>Sản phẩm</th>
+                        <th>Size</th>
+                        <th>Ngọt</th>
+                        <th>Đá</th>
+                        <th>Topping</th>
+                        <th class="text-end">Đơn giá</th>
+                        <th class="text-end">SL</th>
+                        <th class="text-end">Thành tiền</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @if (Model?.ChiTiets == null || !Model.ChiTiets.Any())
+                    {
                         <tr>
-                            <th>Sản phẩm</th>
-                            <th>Size</th>
-                            <th>Ngọt</th>
-                            <th>Đá</th>
-                            <th>Topping</th>
-                            <th class="text-end">Đơn giá</th>
-                            <th class="text-end">SL</th>
-                            <th class="text-end">Thành tiền</th>
+                            <td colspan="8" class="text-muted">Không có chi tiết.</td>
                         </tr>
-                    </thead>
-                    <tbody>
-                        @if (Model.ChiTiets?.Any() != true)
+                    }
+                    else
+                    {
+                        foreach (var ct in Model.ChiTiets)
                         {
-                            <tr><td colspan="8" class="text-muted">Không có chi tiết.</td></tr>
+                            var tenSp = ct.SanPham?.Ten_San_Pham ?? $"SP#{ct.ID_San_Pham}";
+                            var sizeTxt = ct.Size?.SizeName ?? (ct.ID_Size.HasValue ? $"#{ct.ID_Size}" : "-");
+                            var ngotTxt = ct.DoNgot?.Muc_Do ?? "-";
+                            var daTxt = ct.LuongDa?.Ten_LuongDa ?? (ct.ID_LuongDa.HasValue ? $"#{ct.ID_LuongDa}" : "-");
+
+                            var tops = (ct.HoaDonChiTietToppings ?? new List<BE.models.HoaDonChiTietTopping>())
+                            .Select(t => t.Topping?.Ten ?? $"T#{t.ID_Topping}");
+                            var topTxt = tops.Any() ? string.Join(", ", tops) : "-";
+
+                            // Ép sang decimal? để dùng được ?? kể cả khi property là decimal
+                            var giaSp = ((decimal?)ct.Gia_San_Pham) ?? 0m;
+                            var giaSize = ((decimal?)ct.Gia_Them_Size) ?? 0m;
+                            decimal donGia = giaSp + giaSize;
+                            int sl = ct.So_Luong;
+                            var thanhTien = ((decimal?)ct.Tong_Tien) ?? (donGia * sl);
+
+                            <tr>
+                                <td>@tenSp</td>
+                                <td>@sizeTxt</td>
+                                <td>@ngotTxt</td>
+                                <td>@daTxt</td>
+                                <td>@topTxt</td>
+                                <td class="text-end">@VND(donGia)</td>
+                                <td class="text-end">@sl</td>
+                                <td class="text-end">@VND(thanhTien)</td>
+                            </tr>
                         }
-                        else
-                        {
-                            foreach (var ct in Model.ChiTiets)
-                            {
-                                var tenSp = ct.SanPham?.Ten_San_Pham ?? $"SP#{ct.ID_San_Pham}";
-                                var sizeTxt = ct.Size?.SizeName ?? ct.Size?.SizeName ?? (ct.ID_Size.HasValue ? $"#{ct.ID_Size}" : "-");
-                                var ngotTxt = ct.DoNgot?.Muc_Do ?? "-";
-                                var daTxt = ct.LuongDa?.Ten_LuongDa ?? ct.LuongDa?.Ten_LuongDa ?? (ct.ID_LuongDa.HasValue ? $"#{ct.ID_LuongDa}" : "-");
-
-                                var tops = (ct.HoaDonChiTietToppings ?? new List<BE.models.HoaDonChiTietTopping>())
-                                .Select(t => t.Topping?.Ten ?? $"T#{t.ID_Topping}");
-                                var topTxt = tops.Any() ? string.Join(", ", tops) : "-";
-
-                                var donGia = ct.Gia_San_Pham + ct.Gia_Them_Size;
-
-                                <tr>
-                                    <td>@tenSp</td>
-                                    <td>@sizeTxt</td>
-                                    <td>@ngotTxt</td>
-                                    <td>@daTxt</td>
-                                    <td>@topTxt</td>
-                                    <td class="text-end">@VND(donGia)</td>
-                                    <td class="text-end">@ct.So_Luong</td>
-                                    <td class="text-end">@VND(ct.Tong_Tien)</td>
-                                </tr>
-                            }
-                        }
-                    </tbody>
-                </table>
-            </div>
+                    }
+                </tbody>
+            </table>
         </div>
     </div>
 </div>
