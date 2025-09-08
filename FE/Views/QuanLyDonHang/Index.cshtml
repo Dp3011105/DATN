@@ -106,22 +106,35 @@
                             <td>@hd.Ngay_Tao.ToString("dd/MM/yyyy HH:mm")</td>
                             <td>@PayText(hd.ID_Hinh_Thuc_Thanh_Toan)</td>
                             <td>@(string.IsNullOrWhiteSpace(hd.Loai_Hoa_Don) ? "—" : hd.Loai_Hoa_Don)</td>
+
                             <td>
-                                @(
-                                                        string.Equals(hd.Loai_Hoa_Don, "TaiQuay", StringComparison.OrdinalIgnoreCase)
-                                                        ? "Tại quầy"
-                                                        : (string.IsNullOrWhiteSpace(hd.Dia_Chi_Tu_Nhap) ? "—" : hd.Dia_Chi_Tu_Nhap)
-                                                        )
-                    </td>
-                    <td class="text-end">@VND(hd.Tong_Tien)</td>
-                    <td><span class="badge @BadgeClass(dbStatus)">@HumanStatus(dbStatus)</span></td>
+                                @{
+                                    // Ưu tiên hiển thị "Tại quầy" nếu là đơn tại quầy
+                                    string diaChiHienThi =
+                                    string.Equals(hd.Loai_Hoa_Don, "TaiQuay", StringComparison.OrdinalIgnoreCase)
+                                    ? "Tại quầy"
+                                    : (
+                                    // Nếu có ID_Dia_Chi và navigation DiaChi không rỗng -> lấy từ bảng Dia_Chi
+                                    (hd.ID_Dia_Chi.HasValue
+                                    && hd.DiaChi != null
+                                    && !string.IsNullOrWhiteSpace(hd.DiaChi.Dia_Chi))
+                                    ? hd.DiaChi.Dia_Chi
+                                    // fallback: dùng địa chỉ tự nhập (nếu rỗng thì '—')
+                                    : (string.IsNullOrWhiteSpace(hd.Dia_Chi_Tu_Nhap) ? "—" : hd.Dia_Chi_Tu_Nhap)
+                                    );
+                                }
+                                @diaChiHienThi
+                            </td>
+
+                            <td class="text-end">@VND(hd.Tong_Tien)</td>
+                            <td><span class="badge @BadgeClass(dbStatus)">@HumanStatus(dbStatus)</span></td>
 
                             <td class="text-end">
                                 <a class="btn btn-sm btn-outline-secondary me-1"
                                    href="@Url.Action("ChiTiet", "QuanLyDonHang", new { id = hd.ID_Hoa_Don })">Chi tiết</a>
 
                                 @* Bước 1: Xác nhận từ Chưa xác nhận -> Đã xác nhận *@
-                        @if (string.Equals(dbStatus, "Chua_Xac_Nhan", StringComparison.OrdinalIgnoreCase))
+                                @if (string.Equals(dbStatus, "Chua_Xac_Nhan", StringComparison.OrdinalIgnoreCase))
                                 {
                                     <form method="post" class="d-inline" action="@Url.Action("XacNhan","QuanLyDonHang")">
                                         @Html.AntiForgeryToken()
