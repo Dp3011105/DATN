@@ -1,6 +1,7 @@
-﻿using BE.DTOs;
+using BE.models;
+using BE.Repository.IRepository;
+
 using Microsoft.AspNetCore.Mvc;
-using Repository.IRepository;
 
 namespace BE.Controllers
 {
@@ -15,137 +16,187 @@ namespace BE.Controllers
             _voucherRepository = voucherRepository;
         }
 
-        // =================== LOOKUP BY CODE (cho FE) ===================
-
-        // Hỗ trợ: GET api/Voucher/by-code/Faker
-        [HttpGet("by-code/{code}")]
-        public async Task<ActionResult<VoucherDTO>> GetByCode([FromRoute] string code)
-        {
-            try
-            {
-                var key = (code ?? string.Empty).Trim();
-                if (string.IsNullOrWhiteSpace(key))
-                    return BadRequest(new { message = "Thiếu mã voucher." });
-
-                // Nếu repo chưa có GetByCodeAsync -> fallback lấy tất cả rồi lọc
-                var all = await _voucherRepository.GetAllAsync();
-                var found = all.FirstOrDefault(v =>
-                    string.Equals((v.Ma_Voucher ?? string.Empty).Trim(),
-                                  key, StringComparison.OrdinalIgnoreCase));
-
-                if (found == null)
-                    return NotFound(new { message = "Không tìm thấy voucher theo mã." });
-
-                return Ok(found);
-            }
-            catch (Exception ex)
-            {
-                return StatusCode(500, new { message = "Lỗi tra cứu voucher theo mã.", error = ex.Message });
-            }
-        }
-
-        // Hỗ trợ: GET api/Voucher?code=Faker  (để FE có thể gọi dạng query)
         [HttpGet]
-        public async Task<ActionResult> GetVouchers([FromQuery] string? code)
+        public async Task<ActionResult<IEnumerable<Voucher>>> GetAllVouchers()
         {
-            try
-            {
-                // Nếu có query ?code=... -> trả về 1 object (hoặc 404)
-                if (!string.IsNullOrWhiteSpace(code))
-                {
-                    var key = code.Trim();
-                    var all = await _voucherRepository.GetAllAsync();
-                    var found = all.FirstOrDefault(v =>
-                        string.Equals((v.Ma_Voucher ?? string.Empty).Trim(),
-                                      key, StringComparison.OrdinalIgnoreCase));
-
-                    if (found == null)
-                        return NotFound(new { message = "Không tìm thấy voucher theo mã." });
-
-                    return Ok(found);
-                }
-
-                // Không có query -> trả về danh sách
-                var vouchers = await _voucherRepository.GetAllAsync();
-                return Ok(vouchers);
-            }
-            catch (Exception ex)
-            {
-                return StatusCode(500, new { message = "Lỗi khi lấy danh sách/tra cứu voucher.", error = ex.Message });
-            }
+            var vouchers = await _voucherRepository.GetAllAsync();
+            return Ok(vouchers);
         }
 
-        // =================== GET BY ID ===================
-        // GET: api/Voucher/5
-        [HttpGet("{id:int}")]
-        public async Task<ActionResult<VoucherDTO>> GetVoucher([FromRoute] int id)
+        // THÊM: API lấy vouchers hoạt động
+        [HttpGet("active")]
+        public async Task<ActionResult<IEnumerable<Voucher>>> GetActiveVouchers()
         {
-            try
-            {
-                var voucher = await _voucherRepository.GetByIdAsync(id);
-                return Ok(voucher);
-            }
-            catch (KeyNotFoundException ex)
-            {
-                return NotFound(new { message = ex.Message });
-            }
-            catch (Exception ex)
-            {
-                return StatusCode(500, new { message = "Lỗi khi lấy chi tiết voucher.", error = ex.Message });
-            }
+            var vouchers = await _voucherRepository.GetActiveVouchersAsync();
+            return Ok(vouchers);
         }
 
+        [HttpGet("{id}")]
+        public async Task<ActionResult<Voucher>> GetVoucher(int id)
+        {
+            var voucher = await _voucherRepository.GetByIdAsync(id);
+
+            if (voucher == null)
+            {
+                return NotFound();
+            }
+
+            return Ok(voucher);
+        }
+
+        [HttpGet("code/{code}")]
+        public async Task<ActionResult<Voucher>> GetVoucherByCode(string code)
+        {
+            var voucher = await _voucherRepository.GetByCodeAsync(code);
+
+            if (voucher == null)
+            {
+                return NotFound();
+            }
+
+            return Ok(voucher);
+        }
+
+        // THÊM: API validate voucher
+        [HttpPost("validate")]
+        public async Task<ActionResult<object>> ValidateVoucher([FromBody] VoucherValidationRequest request)
+        {
+            var canUse = await _voucherRepository.CanUseVoucherAsync(request.Code, request.OrderAmount);
+
+            if (!canUse)
+            {
+                return BadRequest(new { message = "Voucher không thể sử dụng với đơn hàng này" });
+            }
+
+            var voucher = await _voucherRepository.GetByCodeAsync(request.Code);
+            var discountAmount = (voucher!.Gia_Tri_Giam / 100) * request.OrderAmount;
+
+            return Ok(new
+            {
+                canUse = true,
+                discountPercent = voucher.Gia_Tri_Giam,
+                discountAmount = discountAmount,
+                finalAmount = request.OrderAmount - discountAmount
+            });
+        }
         // =================== CREATE ===================
         // POST: api/Voucher
+
         [HttpPost]
-        public async Task<ActionResult<VoucherDTO>> CreateVoucher([FromBody] VoucherDTO voucherDTO)
+        public async Task<ActionResult<Voucher>> CreateVoucher(Voucher voucher)
         {
             if (!ModelState.IsValid)
                 return BadRequest(ModelState);
 
-            try
+            // SỬA: Validate phần trăm giảm (1-100%)
+            if (voucher.Gia_Tri_Giam.HasValue &&
+                (voucher.Gia_Tri_Giam.Value < 1 || voucher.Gia_Tri_Giam.Value > 100))
             {
-                var createdVoucher = await _voucherRepository.AddAsync(voucherDTO);
-                return CreatedAtAction(nameof(GetVoucher), new { id = createdVoucher.ID_Voucher }, createdVoucher);
+                return BadRequest("Phần trăm giảm phải từ 1% đến 100%");
             }
-            catch (InvalidOperationException ex)
+
+            // THÊM: Validate ngày
+            if (voucher.Ngay_Bat_Dau.HasValue && voucher.Ngay_Ket_Thuc.HasValue &&
+                voucher.Ngay_Bat_Dau.Value >= voucher.Ngay_Ket_Thuc.Value)
             {
-                return BadRequest(new { message = ex.Message });
+                return BadRequest("Ngày kết thúc phải sau ngày bắt đầu");
             }
-            catch (Exception ex)
+
+            // Kiểm tra mã voucher đã tồn tại
+            if (await _voucherRepository.CodeExistsAsync(voucher.Ma_Voucher))
             {
-                return StatusCode(500, new { message = "Lỗi khi thêm voucher.", error = ex.Message });
+                return BadRequest("Mã voucher đã tồn tại");
             }
+
+            voucher.Trang_Thai = true; // Mặc định là hoạt động
+
+            var createdVoucher = await _voucherRepository.CreateAsync(voucher);
+            return CreatedAtAction(nameof(GetVoucher), new { id = createdVoucher.ID_Voucher }, createdVoucher);
         }
 
-        // =================== UPDATE ===================
-        // PUT: api/Voucher/5
-        [HttpPut("{id:int}")]
-        public async Task<ActionResult<VoucherDTO>> UpdateVoucher([FromRoute] int id, [FromBody] VoucherDTO voucherDTO)
+
+        [HttpPut("{id}")]
+        public async Task<IActionResult> UpdateVoucher(int id, Voucher voucher)
+
         {
+            if (id != voucher.ID_Voucher)
+            {
+                return BadRequest("ID không khớp");
+            }
+
             if (!ModelState.IsValid)
                 return BadRequest(ModelState);
 
-            if (id != voucherDTO.ID_Voucher)
-                return BadRequest(new { message = "ID voucher không khớp." });
 
-            try
+            // SỬA: Validate phần trăm giảm (1-100%)
+            if (voucher.Gia_Tri_Giam.HasValue &&
+                (voucher.Gia_Tri_Giam.Value < 1 || voucher.Gia_Tri_Giam.Value > 100))
             {
-                var updatedVoucher = await _voucherRepository.UpdateAsync(id, voucherDTO);
-                return Ok(updatedVoucher);
+                return BadRequest("Phần trăm giảm phải từ 1% đến 100%");
             }
-            catch (KeyNotFoundException ex)
+
+            // THÊM: Validate ngày
+            if (voucher.Ngay_Bat_Dau.HasValue && voucher.Ngay_Ket_Thuc.HasValue &&
+                voucher.Ngay_Bat_Dau.Value >= voucher.Ngay_Ket_Thuc.Value)
             {
-                return NotFound(new { message = ex.Message });
+                return BadRequest("Ngày kết thúc phải sau ngày bắt đầu");
             }
-            catch (InvalidOperationException ex)
+
+
+            if (!await _voucherRepository.ExistsAsync(id))
             {
-                return BadRequest(new { message = ex.Message });
+                return NotFound();
             }
-            catch (Exception ex)
+
+            // Kiểm tra mã voucher đã tồn tại (trừ voucher hiện tại)
+            if (await _voucherRepository.CodeExistsAsync(voucher.Ma_Voucher, id))
             {
-                return StatusCode(500, new { message = "Lỗi khi cập nhật voucher.", error = ex.Message });
+                return BadRequest("Mã voucher đã tồn tại");
             }
+
+            await _voucherRepository.UpdateAsync(voucher);
+            return Ok(voucher);
         }
+
+        // THÊM: API kích hoạt voucher
+        [HttpPost("activate/{id}")]
+        public async Task<IActionResult> ActivateVoucher(int id)
+        {
+            var result = await _voucherRepository.ActivateAsync(id);
+
+            if (!result)
+            {
+                return NotFound();
+            }
+
+            return Ok(new { message = "Voucher đã được kích hoạt" });
+        }
+
+        [HttpPost("deactivate/{id}")]
+        public async Task<IActionResult> DeactivateVoucher(int id)
+        {
+            var result = await _voucherRepository.DeactivateAsync(id);
+
+            if (!result)
+            {
+                return NotFound();
+            }
+
+            return Ok(new { message = "Voucher đã được ngừng hoạt động" });
+        }
+
+        [HttpGet("check-code/{code}")]
+        public async Task<ActionResult<bool>> CheckCodeExists(string code, int? excludeId = null)
+        {
+            var exists = await _voucherRepository.CodeExistsAsync(code, excludeId);
+            return Ok(exists);
+        }
+    }
+
+    // THÊM: Request model cho validate voucher
+    public class VoucherValidationRequest
+    {
+        public string Code { get; set; } = string.Empty;
+        public decimal OrderAmount { get; set; }
     }
 }
