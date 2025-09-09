@@ -1,0 +1,599 @@
+﻿@model FE.Models.VoucherViewModel
+
+@{
+    Layout = "~/Views/Shared/_AdminLayout.cshtml";
+    ViewData["Title"] = "Tạo Voucher";
+}
+
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header" style="background: linear-gradient(45deg, #007bff, #0056b3); color: white;">
+                    <h3 class="card-title mb-0">
+                        <i class="fas fa-plus-circle"></i> Tạo Voucher Mới
+                    </h3>
+                </div>
+
+                <div class="card-body">
+                    <form asp-action="Create" method="post" id="voucherForm">
+                        @Html.AntiForgeryToken()
+                        <div asp-validation-summary="ModelOnly" class="alert alert-danger"></div>
+
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label asp-for="Ma_Voucher" class="form-label">Mã Voucher</label>
+                                    <div class="input-group">
+                                        <input asp-for="Ma_Voucher" class="form-control" id="maVoucher" placeholder="Nhập mã voucher hoặc tạo ngẫu nhiên" />
+                                        <button type="button" class="btn btn-outline-secondary" id="randomCodeBtn" title="Tạo mã ngẫu nhiên">
+                                            <i class="fas fa-dice"></i> Tạo mã
+                                        </button>
+                                    </div>
+                                    <span asp-validation-for="Ma_Voucher" class="text-danger"></span>
+                                    <div id="codeExistsMessage" class="text-danger" style="display: none;">
+                                        Mã voucher đã tồn tại!
+                                    </div>
+                                    <div class="form-text">Mã voucher sẽ được tạo tự động 6 ký tự nếu để trống</div>
+                                </div>
+
+                                <div class="mb-3">
+                                    <label asp-for="Ten" class="form-label">Tên Voucher <span class="text-danger">*</span></label>
+                                    <input asp-for="Ten" class="form-control" id="tenVoucher" placeholder="Nhập tên mô tả cho voucher" />
+                                    <span asp-validation-for="Ten" class="text-danger"></span>
+                                </div>
+
+                                <div class="mb-3">
+                                    <label asp-for="So_Luong" class="form-label">Số Lượng <span class="text-danger">*</span></label>
+                                    <input asp-for="So_Luong" class="form-control" type="number" min="1" id="soLuong" placeholder="Nhập số lượng voucher" />
+                                    <span asp-validation-for="So_Luong" class="text-danger"></span>
+                                    <div class="form-text">Số lượng voucher có thể sử dụng</div>
+                                </div>
+
+                                <div class="mb-3">
+                                    <label asp-for="Gia_Tri_Giam" class="form-label">Phần Trăm Giảm (%) <span class="text-danger">*</span></label>
+                                    <div class="input-group">
+                                        <input asp-for="Gia_Tri_Giam" class="form-control" type="number" min="1" max="50" step="1" id="giaTriGiam" placeholder="1-50" />
+                                        <span class="input-group-text">%</span>
+                                    </div>
+                                    <span asp-validation-for="Gia_Tri_Giam" class="text-danger"></span>
+                                    <div class="form-text">Phần trăm giảm giá từ 1% đến 50%</div>
+                                </div>
+                            </div>
+
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label asp-for="So_Tien_Dat_Yeu_Cau" class="form-label">Yêu Cầu Tối Thiểu (VNĐ)</label>
+                                    <div class="input-group">
+                                        <input asp-for="So_Tien_Dat_Yeu_Cau" class="form-control" type="number" min="0" step="0.01" id="soTienDatYeuCau" placeholder="Nhập số tiền tối thiểu" />
+                                        <span class="input-group-text">VNĐ</span>
+                                    </div>
+                                    <span asp-validation-for="So_Tien_Dat_Yeu_Cau" class="text-danger"></span>
+                                    <div class="form-text">Số tiền đơn hàng tối thiểu để sử dụng voucher (để trống nếu không yêu cầu)</div>
+                                </div>
+
+                                <div class="mb-3">
+                                    <label asp-for="Ngay_Bat_Dau" class="form-label">Ngày Bắt Đầu <span class="text-danger">*</span></label>
+                                    <input asp-for="Ngay_Bat_Dau" class="form-control" type="datetime-local" id="ngayBatDau" />
+                                    <span asp-validation-for="Ngay_Bat_Dau" class="text-danger"></span>
+                                    <div class="form-text">Thời gian bắt đầu có hiệu lực của voucher</div>
+                                </div>
+
+                                <div class="mb-3">
+                                    <label asp-for="Ngay_Ket_Thuc" class="form-label">Ngày Kết Thúc <span class="text-danger">*</span></label>
+                                    <input asp-for="Ngay_Ket_Thuc" class="form-control" type="datetime-local" id="ngayKetThuc" />
+                                    <span asp-validation-for="Ngay_Ket_Thuc" class="text-danger"></span>
+                                    <div class="form-text">Thời gian kết thúc hiệu lực của voucher</div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Preview voucher -->
+                        <div id="voucherPreview" class="card bg-light mb-3" style="display: none;">
+                            <div class="card-body">
+                                <h6><i class="fas fa-eye me-2"></i>Xem trước voucher</h6>
+                                <div class="voucher-preview-card" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 20px; border-radius: 12px; position: relative; overflow: hidden;">
+                                    <div class="voucher-pattern" style="position: absolute; top: -20px; right: -20px; width: 100px; height: 100px; background: rgba(255,255,255,0.1); border-radius: 50%;"></div>
+                                    <div class="row align-items-center">
+                                        <div class="col-md-8">
+                                            <h5 class="mb-2" id="previewMa" style="font-weight: bold;">VOUCHER123</h5>
+                                            <p class="mb-2" id="previewTen">Tên voucher</p>
+                                            <div class="d-flex gap-3">
+                                                <span class="badge bg-warning text-dark px-3 py-2" id="previewGiam" style="font-size: 1.1em;">10%</span>
+                                                <small class="align-self-center" id="previewYeuCau">Yêu cầu tối thiểu</small>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-4 text-end">
+                                            <i class="fas fa-ticket-alt" style="font-size: 3rem; opacity: 0.3;"></i>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-12">
+                                <div class="d-flex justify-content-between">
+                                    <a asp-action="Index" class="btn btn-secondary">
+                                        <i class="fas fa-arrow-left"></i> Quay lại
+                                    </a>
+                                    <div>
+                                        <button type="button" class="btn btn-outline-primary me-2" onclick="togglePreview()">
+                                            <i class="fas fa-eye"></i> Xem trước
+                                        </button>
+                                        <button type="submit" class="btn btn-primary" id="submitBtn">
+                                            <i class="fas fa-save"></i> Tạo Voucher
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Load jQuery và jQuery Validation từ CDN -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-validate/1.19.5/jquery.validate.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-validation-unobtrusive/3.2.12/jquery.validate.unobtrusive.min.js"></script>
+
+<script>
+    $(document).ready(function() {
+        // Tùy chỉnh thông báo lỗi mặc định cho jQuery Validation
+        $.extend($.validator.messages, {
+            required: function(param, element) {
+                var fieldName = $(element).closest('.mb-3').find('label').text().replace(' *', '');
+                return fieldName + " là bắt buộc.";
+            },
+            min: function(param, element) {
+                var fieldName = $(element).closest('.mb-3').find('label').text().replace(' *', '');
+                return fieldName + " phải lớn hơn hoặc bằng " + param + ".";
+            },
+            max: function(param, element) {
+                var fieldName = $(element).closest('.mb-3').find('label').text().replace(' *', '');
+                return fieldName + " phải nhỏ hơn hoặc bằng " + param + ".";
+            },
+            number: function(param, element) {
+                var fieldName = $(element).closest('.mb-3').find('label').text().replace(' *', '');
+                return fieldName + " phải là số hợp lệ.";
+            }
+        });
+
+        // Set ngày mặc định
+        const now = new Date();
+        const today = now.toISOString().slice(0, 16);
+
+        if (!$('#ngayBatDau').val()) {
+            $('#ngayBatDau').val(today);
+        }
+
+        const nextMonth = new Date(now);
+        nextMonth.setMonth(nextMonth.getMonth() + 1);
+        const defaultEndDate = nextMonth.toISOString().slice(0, 16);
+
+        if (!$('#ngayKetThuc').val()) {
+            $('#ngayKetThuc').val(defaultEndDate);
+        }
+
+        // Tạo mã voucher ngẫu nhiên
+        $('#randomCodeBtn').on('click', function() {
+            const randomCode = generateRandomCode(6);
+            $('#maVoucher').val(randomCode).trigger('input');
+        });
+
+        // Khởi tạo validation cho form
+        $('#voucherForm').submit(function(e) {
+            e.preventDefault(); // Ngăn submit mặc định
+
+            // Tự động tạo mã voucher nếu để trống
+            if (!$('#maVoucher').val().trim()) {
+                const randomCode = generateRandomCode(6);
+                $('#maVoucher').val(randomCode);
+                showToast('Đã tự động tạo mã voucher: ' + randomCode, 'info');
+            }
+
+            // Reset tất cả validation messages
+            $('.field-validation-error').removeClass('field-validation-error').addClass('field-validation-valid').text('');
+            $('.input-validation-error').removeClass('input-validation-error');
+
+            let isValid = true;
+            let firstErrorField = null;
+
+            // Kiểm tra từng trường bắt buộc
+            const requiredFields = [
+                { id: 'maVoucher', name: 'Ma_Voucher', label: 'Mã voucher' },
+                { id: 'tenVoucher', name: 'Ten', label: 'Tên voucher' },
+                { id: 'soLuong', name: 'So_Luong', label: 'Số lượng' },
+                { id: 'giaTriGiam', name: 'Gia_Tri_Giam', label: 'Phần trăm giảm' },
+                { id: 'ngayBatDau', name: 'Ngay_Bat_Dau', label: 'Ngày bắt đầu' },
+                { id: 'ngayKetThuc', name: 'Ngay_Ket_Thuc', label: 'Ngày kết thúc' }
+            ];
+
+            requiredFields.forEach(field => {
+                const element = $('#' + field.id);
+                const value = element.val().trim();
+                const validationSpan = $('span[data-valmsg-for="' + field.name + '"]');
+
+                if (!value || value === '') {
+                    isValid = false;
+                    element.addClass('input-validation-error');
+                    validationSpan.removeClass('field-validation-valid').addClass('field-validation-error')
+                        .text(field.label + ' là bắt buộc.');
+
+                    if (!firstErrorField) {
+                        firstErrorField = element;
+                    }
+                }
+            });
+
+            // Kiểm tra validation cho số lượng
+            const soLuong = parseInt($('#soLuong').val());
+            if ($('#soLuong').val() && (isNaN(soLuong) || soLuong < 1)) {
+                isValid = false;
+                $('#soLuong').addClass('input-validation-error');
+                $('span[data-valmsg-for="So_Luong"]').removeClass('field-validation-valid').addClass('field-validation-error')
+                    .text('Số lượng phải lớn hơn 0.');
+                if (!firstErrorField) {
+                    firstErrorField = $('#soLuong');
+                }
+            }
+
+            // Kiểm tra validation cho phần trăm giảm (1-50%)
+            const giaTriGiam = parseFloat($('#giaTriGiam').val());
+            if ($('#giaTriGiam').val() && (isNaN(giaTriGiam) || giaTriGiam < 1 || giaTriGiam > 50)) {
+                isValid = false;
+                $('#giaTriGiam').addClass('input-validation-error');
+                $('span[data-valmsg-for="Gia_Tri_Giam"]').removeClass('field-validation-valid').addClass('field-validation-error')
+                    .text('Phần trăm giảm phải từ 1% đến 50%.');
+                if (!firstErrorField) {
+                    firstErrorField = $('#giaTriGiam');
+                }
+            }
+
+            // Kiểm tra validation cho yêu cầu tối thiểu (tùy chọn, nếu nhập thì phải >= 0)
+            const soTienDatYeuCau = parseFloat($('#soTienDatYeuCau').val());
+            if ($('#soTienDatYeuCau').val() && (isNaN(soTienDatYeuCau) || soTienDatYeuCau < 0)) {
+                isValid = false;
+                $('#soTienDatYeuCau').addClass('input-validation-error');
+                $('span[data-valmsg-for="So_Tien_Dat_Yeu_Cau"]').removeClass('field-validation-valid').addClass('field-validation-error')
+                    .text('Yêu cầu tối thiểu phải là số không âm.');
+                if (!firstErrorField) {
+                    firstErrorField = $('#soTienDatYeuCau');
+                }
+            }
+
+            // Kiểm tra logic ngày tháng
+            const startDate = new Date($('#ngayBatDau').val());
+            const endDate = new Date($('#ngayKetThuc').val());
+
+            if ($('#ngayBatDau').val() && $('#ngayKetThuc').val() && startDate >= endDate) {
+                isValid = false;
+                $('#ngayKetThuc').addClass('input-validation-error');
+                $('span[data-valmsg-for="Ngay_Ket_Thuc"]').removeClass('field-validation-valid').addClass('field-validation-error')
+                    .text('Ngày kết thúc phải sau ngày bắt đầu.');
+                if (!firstErrorField) {
+                    firstErrorField = $('#ngayKetThuc');
+                }
+            }
+
+            // Kiểm tra mã voucher trùng lặp
+            if ($('#codeExistsMessage').is(':visible')) {
+                isValid = false;
+                $('#maVoucher').addClass('input-validation-error');
+                $('span[data-valmsg-for="Ma_Voucher"]').removeClass('field-validation-valid').addClass('field-validation-error')
+                    .text('Mã voucher đã tồn tại.');
+                if (!firstErrorField) {
+                    firstErrorField = $('#maVoucher');
+                }
+            }
+
+            // Nếu có lỗi, ngăn submit và focus vào trường đầu tiên có lỗi
+            if (!isValid) {
+                if (firstErrorField) {
+                    firstErrorField.focus();
+                    $('html, body').animate({
+                        scrollTop: firstErrorField.offset().top - 100
+                    }, 500);
+                }
+                showToast('Vui lòng kiểm tra lại thông tin đã nhập!', 'error');
+                return false;
+            }
+
+            // Nếu mã voucher vừa tự động tạo, kiểm tra trùng lặp trước khi submit
+            const currentCode = $('#maVoucher').val().trim();
+            if (currentCode) {
+                // Disable submit button để tránh double-click
+                $('#submitBtn').prop('disabled', true).html('<i class="fas fa-spinner fa-spin"></i> Đang kiểm tra...');
+
+                checkCodeExistsBeforeSubmit(currentCode, (exists) => {
+                    if (exists) {
+                        // Mã đã tồn tại, tạo mã mới và thử lại
+                        const newCode = generateRandomCode(6);
+                        $('#maVoucher').val(newCode);
+                        showToast('Mã ' + currentCode + ' đã tồn tại. Đã tạo mã mới: ' + newCode, 'warning');
+                        checkCodeExistsBeforeSubmit(newCode, (stillExists) => {
+                            if (!stillExists) {
+                                // Submit form
+                                submitForm();
+                            } else {
+                                // Thử lần nữa với mã khác
+                                const anotherCode = generateRandomCode(8); // Tăng độ dài để giảm xác suất trùng
+                                $('#maVoucher').val(anotherCode);
+                                showToast('Đã tạo mã mới: ' + anotherCode, 'info');
+                                submitForm();
+                            }
+                        });
+                    } else {
+                        // Mã không trùng, submit form
+                        submitForm();
+                    }
+                });
+            } else {
+                submitForm();
+            }
+
+            return false;
+        });
+
+        // Xóa lỗi khi user bắt đầu nhập
+        $('input').on('input change', function() {
+            // Chỉ xóa lỗi của trường hiện tại
+            if ($(this).hasClass('input-validation-error')) {
+                $(this).removeClass('input-validation-error');
+                const fieldName = $(this).attr('name');
+                if (fieldName) {
+                    $('span[data-valmsg-for="' + fieldName + '"]').removeClass('field-validation-error')
+                        .addClass('field-validation-valid').text('');
+                }
+            }
+        });
+
+        // Auto update preview khi nhập
+        $('input').on('input', function() {
+            if ($('#voucherPreview').is(':visible')) {
+                updatePreview();
+            }
+        });
+    });
+
+    let codeCheckTimeout;
+
+    // Kiểm tra mã voucher trùng lặp khi nhập
+    $('#maVoucher').on('input', function() {
+        clearTimeout(codeCheckTimeout);
+        const code = $(this).val().trim();
+
+        $('#codeExistsMessage').hide();
+
+        if (code.length > 0) {
+            codeCheckTimeout = setTimeout(() => {
+                checkCodeExists(code);
+            }, 500);
+        } else {
+            $('#submitBtn').prop('disabled', false).html('<i class="fas fa-save"></i> Tạo Voucher');
+        }
+    });
+
+    function checkCodeExists(code) {
+        $.post('@Url.Action("CheckCodeExists", "Voucher")', { code: code })
+            .done(function(data) {
+                if (data.exists) {
+                    $('#codeExistsMessage').show();
+                    $('#submitBtn').prop('disabled', true);
+                } else {
+                    $('#codeExistsMessage').hide();
+                    $('#submitBtn').prop('disabled', false);
+                }
+            })
+            .fail(function() {
+                console.error('Lỗi kiểm tra mã voucher');
+            });
+    }
+
+    // Kiểm tra mã voucher trước khi submit (với callback)
+    function checkCodeExistsBeforeSubmit(code, callback) {
+        $.post('@Url.Action("CheckCodeExists", "Voucher")', { code: code })
+            .done(function(data) {
+                callback(data.exists);
+            })
+            .fail(function() {
+                console.error('Lỗi kiểm tra mã voucher');
+                callback(false); // Giả sử không trùng nếu có lỗi
+            });
+    }
+
+    // Function để submit form thực tế
+    function submitForm() {
+        $('#submitBtn').html('<i class="fas fa-spinner fa-spin"></i> Đang tạo voucher...');
+
+        // Tạo một form mới để submit mà không trigger lại event handler
+        const form = $('#voucherForm')[0];
+        const newForm = document.createElement('form');
+
+        // Copy tất cả attributes
+        Array.from(form.attributes).forEach(attr => {
+            newForm.setAttribute(attr.name, attr.value);
+        });
+
+        // Copy tất cả input fields
+        $(form).find('input, select, textarea').each(function() {
+            const clone = $(this).clone();
+            newForm.appendChild(clone[0]);
+        });
+
+        // Thêm vào body và submit
+        document.body.appendChild(newForm);
+        newForm.submit();
+    }
+
+    // Tạo mã ngẫu nhiên 6 ký tự
+    function generateRandomCode(length = 6) {
+        const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+        let result = '';
+        for (let i = 0; i < length; i++) {
+            result += characters.charAt(Math.floor(Math.random() * characters.length));
+        }
+        return result;
+    }
+
+    // Hàm preview voucher
+    function togglePreview() {
+        const preview = $('#voucherPreview');
+
+        if (preview.is(':visible')) {
+            preview.slideUp();
+        } else {
+            updatePreview();
+            preview.slideDown();
+        }
+    }
+
+    function updatePreview() {
+        const maVoucher = $('#maVoucher').val() || 'VOUCHER';
+        const tenVoucher = $('#tenVoucher').val() || 'Tên voucher chưa được nhập';
+        const giaTriGiam = $('#giaTriGiam').val() || '0';
+        const soTienDatYeuCau = $('#soTienDatYeuCau').val();
+
+        $('#previewMa').text(maVoucher);
+        $('#previewTen').text(tenVoucher);
+        $('#previewGiam').text(`${giaTriGiam}%`);
+
+        const yeuCauText = soTienDatYeuCau ?
+            `Đơn hàng tối thiểu: ${parseFloat(soTienDatYeuCau).toLocaleString('vi-VN')} VNĐ` :
+            'Không yêu cầu tối thiểu';
+        $('#previewYeuCau').text(yeuCauText);
+    }
+
+    function showToast(message, type = 'success') {
+        $('.custom-toast').remove();
+
+        const alertClass = type === 'error' ? 'alert-danger' :
+                          type === 'warning' ? 'alert-warning' :
+                          type === 'info' ? 'alert-info' : 'alert-success';
+
+        const iconClass = type === 'error' ? 'fas fa-exclamation-circle' :
+                         type === 'warning' ? 'fas fa-exclamation-triangle' :
+                         type === 'info' ? 'fas fa-info-circle' : 'fas fa-check-circle';
+
+        const toast = $(`
+            <div class="alert ${alertClass} alert-dismissible fade show custom-toast"
+                 style="position: fixed; top: 20px; right: 20px; z-index: 9999; min-width: 300px; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.15);">
+                <i class="${iconClass} me-2"></i>
+                ${message}
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+        `);
+
+        $('body').append(toast);
+
+        setTimeout(function () {
+            toast.fadeOut('slow', function () {
+                $(this).remove();
+            });
+        }, 4000);
+    }
+</script>
+
+<style>
+    .card {
+        border: none;
+        box-shadow: 0 0 20px rgba(0,0,0,0.1);
+        border-radius: 15px;
+    }
+
+    .form-control {
+        border-radius: 8px;
+        border: 2px solid #e9ecef;
+        transition: all 0.3s ease;
+    }
+
+        .form-control:focus {
+            border-color: #007bff;
+            box-shadow: 0 0 0 0.2rem rgba(0,123,255,.25);
+        }
+
+    .input-validation-error {
+        border-color: #dc3545 !important;
+        box-shadow: 0 0 0 0.2rem rgba(220, 53, 69, 0.25) !important;
+    }
+
+    .field-validation-error {
+        color: #dc3545;
+        font-size: 0.875em;
+        margin-top: 0.25rem;
+    }
+
+    .btn {
+        border-radius: 8px;
+        transition: all 0.3s ease;
+    }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+        }
+
+    .input-group-text {
+        background: linear-gradient(45deg, #007bff, #0056b3);
+        color: white;
+        border: none;
+    }
+
+    #randomCodeBtn {
+        border-left: none;
+    }
+
+        #randomCodeBtn:hover {
+            background-color: #007bff;
+            color: white;
+            border-color: #007bff;
+        }
+
+    .voucher-preview-card {
+        box-shadow: 0 8px 25px rgba(0,0,0,0.15);
+        transition: transform 0.3s ease;
+    }
+
+        .voucher-preview-card:hover {
+            transform: translateY(-5px);
+        }
+
+    .form-text {
+        color: #6c757d;
+        font-size: 0.875em;
+        margin-top: 0.25rem;
+    }
+
+    .alert {
+        border-radius: 12px;
+        border: none;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+    }
+
+    @@media (max-width: 768px) {
+        .d-flex.justify-content-between
+
+    {
+        flex-direction: column;
+        gap: 15px;
+    }
+
+    .d-flex.justify-content-between > div {
+        display: flex;
+        gap: 10px;
+        justify-content: center;
+    }
+
+    .btn {
+        flex: 1;
+    }
+
+    }
+</style>
+
+@section Scripts {
+    <!-- Không load ValidationScriptsPartial để tránh conflict -->
+}
