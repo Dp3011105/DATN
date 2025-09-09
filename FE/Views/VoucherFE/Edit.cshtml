@@ -1,0 +1,185 @@
+﻿@model FE.Models.VoucherViewModel
+
+@{
+    Layout = "~/Views/Shared/_AdminLayout.cshtml";
+    ViewData["Title"] = "Sửa Voucher";
+}
+
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h3 class="card-title">Chỉnh sửa Voucher</h3>
+                </div>
+
+                <div class="card-body">
+                    <form asp-action="Edit" method="post" id="voucherForm">
+                        <input type="hidden" asp-for="ID_Voucher" />
+
+                        <div asp-validation-summary="ModelOnly" class="alert alert-danger"></div>
+
+                        <div class="row">
+                            <div class="col-md-6">
+                                <!-- SỬA: Không cho chỉnh sửa mã voucher -->
+                                <div class="mb-3">
+                                    <label asp-for="Ma_Voucher" class="form-label">Mã Voucher</label>
+                                    <input asp-for="Ma_Voucher" class="form-control bg-light" readonly />
+                                    <div class="form-text">Mã voucher không thể thay đổi</div>
+                                </div>
+
+                                <div class="mb-3">
+                                    <label asp-for="Ten" class="form-label">Tên Voucher</label>
+                                    <input asp-for="Ten" class="form-control" />
+                                    <span asp-validation-for="Ten" class="text-danger"></span>
+                                </div>
+
+                                <div class="mb-3">
+                                    <label asp-for="So_Luong" class="form-label">Số Lượng</label>
+                                    <input asp-for="So_Luong" class="form-control" type="number" min="1" />
+                                    <span asp-validation-for="So_Luong" class="text-danger"></span>
+                                </div>
+
+                                <!-- SỬA: Phần trăm giảm từ 1-50% -->
+                                <div class="mb-3">
+                                    <label asp-for="Gia_Tri_Giam" class="form-label">Phần Trăm Giảm (%) <span class="text-danger">*</span></label>
+                                    <div class="input-group">
+                                        <input asp-for="Gia_Tri_Giam" class="form-control" type="number" min="1" max="50" step="0.01" />
+                                        <span class="input-group-text">%</span>
+                                    </div>
+                                    <span asp-validation-for="Gia_Tri_Giam" class="text-danger"></span>
+                                    <div class="form-text">Nhập từ 1% đến 50%</div>
+                                </div>
+                            </div>
+
+                            <div class="col-md-6">
+                                <!-- SỬA: Yêu cầu tối thiểu không giới hạn, cho phép số thập phân -->
+                                <div class="mb-3">
+                                    <label asp-for="So_Tien_Dat_Yeu_Cau" class="form-label">Yêu Cầu Tối Thiểu (VNĐ)</label>
+                                    <div class="input-group">
+                                        <input asp-for="So_Tien_Dat_Yeu_Cau" class="form-control" type="number" min="0" step="0.01" />
+                                        <span class="input-group-text">VNĐ</span>
+                                    </div>
+                                    <span asp-validation-for="So_Tien_Dat_Yeu_Cau" class="text-danger"></span>
+                                    <div class="form-text">Số tiền đơn hàng tối thiểu để sử dụng voucher (để trống hoặc 0 nếu không có yêu cầu)</div>
+                                </div>
+
+                                <div class="mb-3">
+                                    <label asp-for="Ngay_Bat_Dau" class="form-label">Ngày Bắt Đầu</label>
+                                    <input asp-for="Ngay_Bat_Dau" class="form-control" type="datetime-local" />
+                                    <span asp-validation-for="Ngay_Bat_Dau" class="text-danger"></span>
+                                </div>
+
+                                <div class="mb-3">
+                                    <label asp-for="Ngay_Ket_Thuc" class="form-label">Ngày Kết Thúc</label>
+                                    <input asp-for="Ngay_Ket_Thuc" class="form-control" type="datetime-local" />
+                                    <span asp-validation-for="Ngay_Ket_Thuc" class="text-danger"></span>
+                                </div>
+
+                                <div class="mb-3">
+                                    <label asp-for="Trang_Thai" class="form-label">Trạng Thái</label>
+                                    <select asp-for="Trang_Thai" class="form-control">
+                                        <option value="true">Hoạt động</option>
+                                        <option value="false">Ngừng hoạt động</option>
+                                    </select>
+                                    <span asp-validation-for="Trang_Thai" class="text-danger"></span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- THÊM: Hiển thị trạng thái hiện tại -->
+                        <div class="row mb-3">
+                            <div class="col-12">
+                                <div class="alert alert-info">
+                                    <h6><i class="fas fa-info-circle me-2"></i>Trạng thái hiện tại</h6>
+                                    <p class="mb-2"><strong>Mã:</strong> @Model.Ma_Voucher</p>
+                                    <p class="mb-2">
+                                        <strong>Giảm:</strong> <span class="badge bg-success">@Model.GiaTriGiamText</span>
+                                        <strong class="ms-3">Yêu cầu:</strong> @Model.SoTienDatYeuCauText
+                                    </p>
+                                    <p class="mb-0"><strong>Trạng thái:</strong> <span class="@Model.TrangThaiClass">@Model.TrangThaiText</span></p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-12">
+                                <div class="d-flex justify-content-between">
+                                    <a asp-action="Index" class="btn btn-secondary">
+                                        <i class="fas fa-arrow-left"></i> Quay lại
+                                    </a>
+                                    <button type="submit" class="btn btn-primary" id="submitBtn">
+                                        <i class="fas fa-save"></i> Cập nhật
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    // SỬA: Loại bỏ code check mã voucher vì không cho chỉnh sửa
+    // const originalCode = '@Model.Ma_Voucher';
+    // const voucherId = @Model.ID_Voucher;
+
+    // Convert datetime để hiển thị đúng trong input datetime-local
+    $(document).ready(function() {
+        const startDateInput = $('#Ngay_Bat_Dau');
+        const endDateInput = $('#Ngay_Ket_Thuc');
+
+        if (startDateInput.val()) {
+            const startDate = new Date(startDateInput.val());
+            if (!isNaN(startDate.getTime())) {
+                startDateInput.val(formatDateTimeLocal(startDate));
+            }
+        }
+
+        if (endDateInput.val()) {
+            const endDate = new Date(endDateInput.val());
+            if (!isNaN(endDate.getTime())) {
+                endDateInput.val(formatDateTimeLocal(endDate));
+            }
+        }
+    });
+
+    function formatDateTimeLocal(date) {
+        const year = date.getFullYear();
+        const month = String(date.getMonth() + 1).padStart(2, '0');
+        const day = String(date.getDate()).padStart(2, '0');
+        const hours = String(date.getHours()).padStart(2, '0');
+        const minutes = String(date.getMinutes()).padStart(2, '0');
+
+        return `${year}-${month}-${day}T${hours}:${minutes}`;
+    }
+
+    // Validate form trước khi submit
+    $('#voucherForm').on('submit', function(e) {
+        const startDate = new Date($('#Ngay_Bat_Dau').val());
+        const endDate = new Date($('#Ngay_Ket_Thuc').val());
+        const giaTriGiam = parseFloat($('#Gia_Tri_Giam').val());
+
+        // SỬA: Validate phần trăm giảm từ 1-50%
+        if (giaTriGiam && (giaTriGiam < 1 || giaTriGiam > 50)) {
+            e.preventDefault();
+            alert('Phần trăm giảm phải từ 1% đến 50%!');
+            return false;
+        }
+
+        if (startDate && endDate && startDate >= endDate) {
+            e.preventDefault();
+            alert('Ngày kết thúc phải sau ngày bắt đầu!');
+            return false;
+        }
+
+        // SỬA: Loại bỏ validation mã voucher trùng lặp
+        // if ($('#codeExistsMessage').is(':visible')) {
+        //     e.preventDefault();
+        //     alert('Mã voucher đã tồn tại, vui lòng chọn mã khác!');
+        //     return false;
+        // }
+    });
+</script>

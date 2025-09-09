@@ -2,9 +2,10 @@ using BE.Data;
 using BE.Repository;
 using BE.Repository.IRepository;
 using BE.Service; // Thêm này để sử dụng EmailService
+using Microsoft.AspNetCore.Http.Features;
 using Microsoft.EntityFrameworkCore;
-using Repository.IRepository;
 using Repository;
+using Repository.IRepository;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -62,6 +63,7 @@ builder.Services.AddScoped<IKhuyenMaiRepository, KhuyenMaiRepository>();
 builder.Services.AddScoped<IBanHangTKRepository, BanHangTKRepository>();
 builder.Services.AddScoped<IDonHangTKRepository, DonHangTKRepository>();
 
+
 // THÊM LẠI: EmailService cần thiết cho GanVoucher
 builder.Services.AddSingleton<EmailService>();
 
@@ -82,6 +84,12 @@ builder.Services.AddCors(options =>
         .WithExposedHeaders("Access-Control-Allow-Origin"); // Thêm từ bản cũ
     });
 });
+
+builder.Services.Configure<FormOptions>(options =>
+{
+    options.MultipartBodyLengthLimit = 50 * 1024 * 1024; // 50 MB
+});
+
 
 // Controllers và Swagger
 builder.Services.AddControllers();
