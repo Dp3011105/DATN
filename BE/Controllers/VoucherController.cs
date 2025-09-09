@@ -1,5 +1,6 @@
-﻿using BE.models;
+using BE.models;
 using BE.Repository.IRepository;
+
 using Microsoft.AspNetCore.Mvc;
 
 namespace BE.Controllers
@@ -78,14 +79,14 @@ namespace BE.Controllers
                 finalAmount = request.OrderAmount - discountAmount
             });
         }
+        // =================== CREATE ===================
+        // POST: api/Voucher
 
         [HttpPost]
         public async Task<ActionResult<Voucher>> CreateVoucher(Voucher voucher)
         {
             if (!ModelState.IsValid)
-            {
                 return BadRequest(ModelState);
-            }
 
             // SỬA: Validate phần trăm giảm (1-100%)
             if (voucher.Gia_Tri_Giam.HasValue &&
@@ -113,8 +114,10 @@ namespace BE.Controllers
             return CreatedAtAction(nameof(GetVoucher), new { id = createdVoucher.ID_Voucher }, createdVoucher);
         }
 
+
         [HttpPut("{id}")]
         public async Task<IActionResult> UpdateVoucher(int id, Voucher voucher)
+
         {
             if (id != voucher.ID_Voucher)
             {
@@ -122,9 +125,8 @@ namespace BE.Controllers
             }
 
             if (!ModelState.IsValid)
-            {
                 return BadRequest(ModelState);
-            }
+
 
             // SỬA: Validate phần trăm giảm (1-100%)
             if (voucher.Gia_Tri_Giam.HasValue &&
@@ -139,6 +141,7 @@ namespace BE.Controllers
             {
                 return BadRequest("Ngày kết thúc phải sau ngày bắt đầu");
             }
+
 
             if (!await _voucherRepository.ExistsAsync(id))
             {

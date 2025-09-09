@@ -486,7 +486,7 @@
 
         <!-- Header with search -->
         <div class="text-center mb-6">
-            <h1 class="text-2xl md:text-3xl font-bold text-gray-800 mb-3">Hưng sẽ code ở trang này nhe home/index , Bạn có thể thêm chức năng check xem người dùng đã đăng nhập chưa nếu rồi thì tự động chuyển hướng đến /homekhachHang/index</h1>
+            <h1 class="text-2xl md:text-3xl font-bold text-gray-800 mb-3">Thực Đơn</h1>
             <p class="text-gray-600 text-sm max-w-xl mx-auto">Khám phá đồ uống tươi ngon</p>
 
             <!-- Search Bar -->
@@ -675,21 +675,21 @@
             let userId = null;
             @if (Context.Request.Cookies["UserData"] != null)
             {
-                        <text>
-                        try {
-                            const userData = JSON.parse('@Html.Raw(Context.Request.Cookies["UserData"])');
-                            userId = userData.ID_Khach_Hang;
-                            console.log('Parsed userId from UserData cookie:', userId);
-                        } catch (e) {
-                            console.error('Error parsing UserData cookie:', e);
-                        }
-                        </text>
+                    <text>
+                    try {
+                        const userData = JSON.parse('@Html.Raw(Context.Request.Cookies["UserData"])');
+                        userId = userData.ID_Khach_Hang;
+                        console.log('Parsed userId from UserData cookie:', userId);
+                    } catch (e) {
+                        console.error('Error parsing UserData cookie:', e);
+                    }
+                    </text>
             }
             else
             {
-                        <text>
-                        console.log('No UserData cookie found');
-                        </text>
+                    <text>
+                    console.log('No UserData cookie found');
+                    </text>
             }
 
             let productsData = [];

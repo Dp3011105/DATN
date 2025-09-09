@@ -1,6 +1,7 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using BE.models;
+using FE.Service.IService;
+using Microsoft.AspNetCore.Mvc;
 using Service.IService;
-using BE.models;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -11,195 +12,311 @@ namespace FE.Controllers
     public class QuanLyDonHangController : Controller
     {
         private readonly IHoaDonService _hoaDonService;
+        private readonly IProductService _productService;
 
-        public QuanLyDonHangController(IHoaDonService hoaDonService)
+        // Các trạng thái trong DB
+        private static readonly string[] DbStatuses = new[]
+        {
+            "Chua_Xac_Nhan","Da_Xac_Nhan","Dang_Xu_Ly","Dang_Giao_Hang","Hoan_Thanh","Huy_Don"
+        };
+
+        // Luồng chuyển hợp lệ
+        private static readonly Dictionary<string, string[]> AllowedTransitions =
+            new(StringComparer.OrdinalIgnoreCase)
+            {
+                ["Chua_Xac_Nhan"] = new[] { "Da_Xac_Nhan", "Huy_Don" },
+                ["Da_Xac_Nhan"] = new[] { "Dang_Xu_Ly", "Huy_Don" },
+                ["Dang_Xu_Ly"] = new[] { "Dang_Giao_Hang", "Huy_Don" },
+                ["Dang_Giao_Hang"] = new[] { "Hoan_Thanh" },
+                ["Hoan_Thanh"] = Array.Empty<string>(),
+                ["Huy_Don"] = Array.Empty<string>()
+            };
+
+        public QuanLyDonHangController(IHoaDonService hoaDonService, IProductService productService)
         {
             _hoaDonService = hoaDonService;
+            _productService = productService;
         }
 
-        // Trang danh sách + filter
+        // ============== LIST ==============
+        [HttpGet]
         public async Task<IActionResult> Index(string tuKhoa = "", string trangThai = "TẤT CẢ")
         {
-            var viewModel = new QuanLyDonHangViewModel();
+            var vm = new QuanLyDonHangViewModel
+            {
+                TuKhoa = tuKhoa?.Trim() ?? "",
+                TrangThai = string.IsNullOrWhiteSpace(trangThai) ? "TẤT CẢ" : trangThai.Trim(),
+                TrangThaiList = new List<string> { "TẤT CẢ" }.Concat(DbStatuses).ToList()
+            };
+
             try
             {
-                var hoaDonList = (await _hoaDonService.GetAllAsync())?.ToList() ?? new();
+                var list = (await _hoaDonService.GetAllAsync())?.ToList() ?? new();
 
-                if (!string.IsNullOrWhiteSpace(tuKhoa))
+                if (!string.IsNullOrWhiteSpace(vm.TuKhoa))
                 {
-                    hoaDonList = hoaDonList.Where(hd =>
-                        (hd.KhachHang?.Ho_Ten?.Contains(tuKhoa, StringComparison.OrdinalIgnoreCase) == true) ||
-                        (hd.Ma_Hoa_Don?.Contains(tuKhoa, StringComparison.OrdinalIgnoreCase) == true)).ToList();
+                    var kw = vm.TuKhoa;
+                    list = list.Where(hd =>
+                               (hd.Ma_Hoa_Don?.Contains(kw, StringComparison.OrdinalIgnoreCase) == true)
+                            || (hd.KhachHang?.Ho_Ten?.Contains(kw, StringComparison.OrdinalIgnoreCase) == true)
+                            || (hd.KhachHang?.So_Dien_Thoai?.Contains(kw, StringComparison.OrdinalIgnoreCase) == true)
+                        ).ToList();
                 }
 
-                if (!string.IsNullOrEmpty(trangThai) && !IsTatCa(trangThai))
+                if (!vm.TrangThai.Equals("TẤT CẢ", StringComparison.OrdinalIgnoreCase))
                 {
-                    var mapped = MapTrangThaiToDatabase(trangThai);
-                    if (!string.IsNullOrEmpty(mapped) && mapped != trangThai)
-                        hoaDonList = hoaDonList.Where(hd => hd.Trang_Thai == mapped).ToList();
+                    list = list.Where(hd => string.Equals(hd.Trang_Thai, vm.TrangThai, StringComparison.OrdinalIgnoreCase)).ToList();
                 }
 
-                viewModel.DanhSachHoaDon = hoaDonList;
+                vm.DanhSachHoaDon = list
+                    .OrderBy(h => string.Equals(h.Trang_Thai, "Chua_Xac_Nhan", StringComparison.OrdinalIgnoreCase) ? 0 : 1)
+                    .ThenByDescending(h => h.Ngay_Tao)
+                    .ToList();
             }
-            catch { /* giữ UI chạy kể cả khi lỗi */ }
-
-            viewModel.TuKhoa = tuKhoa;
-            viewModel.TrangThai = string.IsNullOrEmpty(trangThai) ? "TẤT CẢ" : trangThai;
-            viewModel.TrangThaiList = new List<string>
+            catch
             {
-                "TẤT CẢ",
-                "Chờ xác nhận",
-                "Chờ giao",
-                "Vận chuyển",
-                "Hoàn thành",
-                "Đã huỷ"
-            };
-            return View(viewModel);
-        }
-
-        // Trang chi tiết 1 đơn
-        public async Task<IActionResult> ChiTiet(int id)
-        {
-            var hoaDon = await _hoaDonService.GetByIdAsync(id);
-            if (hoaDon == null) return NotFound();
-
-            var vm = new ChiTietHoaDonViewModel
-            {
-                HoaDon = hoaDon,
-                ChiTiets = hoaDon.HoaDonChiTiets?.ToList() ?? new()
-            };
+                vm.DanhSachHoaDon = new();
+            }
 
             return View(vm);
         }
 
-        // API trả JSON để render bảng (dùng AJAX)
+        // ============== DETAIL ==============
         [HttpGet]
-        [Produces("application/json")]
-        public async Task<IActionResult> GetDanhSach(string tuKhoa = "", string trangThai = "TẤT CẢ")
+        public async Task<IActionResult> ChiTiet(int id)
         {
-            try
-            {
-                var hoaDons = await _hoaDonService.GetAllAsync();
-                var list = new List<object>();
+            var hd = await _hoaDonService.GetByIdAsync(id);
+            if (hd == null) return NotFound();
 
-                if (hoaDons != null)
+            var vm = new ChiTietHoaDonViewModel
+            {
+                HoaDon = hd,
+                ChiTiets = hd.HoaDonChiTiets?.OrderBy(x => x.ID_HoaDon_ChiTiet).ToList() ?? new()
+            };
+            return View(vm);
+        }
+
+        // ============== JSON cho modal hủy ==============
+        [HttpGet]
+        public async Task<IActionResult> ChiTietJson(int id)
+        {
+            var hd = await _hoaDonService.GetByIdAsync(id);
+            if (hd == null)
+                return Json(new { ok = false, items = Array.Empty<object>(), msg = "Not found" });
+
+            var items = (hd.HoaDonChiTiets ?? new List<HoaDonChiTiet>())
+                .OrderBy(ct => ct.ID_HoaDon_ChiTiet)
+                .Select(ct =>
                 {
-                    var mapped = MapTrangThaiToDatabase(trangThai);
-                    list = hoaDons
-                        .Where(hd =>
-                            (string.IsNullOrEmpty(tuKhoa) ||
-                                hd.KhachHang?.Ho_Ten?.Contains(tuKhoa, StringComparison.OrdinalIgnoreCase) == true ||
-                                hd.Ma_Hoa_Don?.Contains(tuKhoa, StringComparison.OrdinalIgnoreCase) == true) &&
-                            (IsTatCa(trangThai) || (!string.IsNullOrEmpty(mapped) && hd.Trang_Thai == mapped))
-                        )
-                        .Select(hd => new
-                        {
-                            ID_Hoa_Don = hd.ID_Hoa_Don,
-                            Ma_Hoa_Don = hd.Ma_Hoa_Don,
-                            Tong_Tien = hd.Tong_Tien,
-                            KhachHang = hd.KhachHang?.Ho_Ten ?? "Khách lẻ",
-                            Ngay_Tao = hd.Ngay_Tao.ToString("dd/MM/yyyy HH:mm"),
-                            HinhThucThanhToan = hd.HinhThucThanhToan?.Phuong_Thuc_Thanh_Toan ?? "N/A",
-                            Trang_Thai = hd.Trang_Thai,
-                            TrangThaiHienThi = MapTrangThaiFromDatabase(hd.Trang_Thai)
-                        })
-                        .Cast<object>()
-                        .ToList();
+                    bool daLam = GetFlag(ct, "Da_Lam", "IsPrepared", "IsDone", "DaLam") ||
+                                 string.Equals(GetStringProp(ct, "Trang_Thai_Chi_Tiet", "TrangThaiChiTiet"), "Da_Lam", StringComparison.OrdinalIgnoreCase);
+
+                    return new
+                    {
+                        id = ct.ID_HoaDon_ChiTiet,
+                        ten = BuildTenSp(ct),
+                        soLuong = ct.So_Luong,
+                        daLam
+                    };
+                })
+                .ToList();
+
+            return Json(new { ok = true, items });
+        }
+
+        // ===== Helpers =====
+        private static string? GetStringProp(object? obj, params string[] candidates)
+        {
+            if (obj == null || candidates == null || candidates.Length == 0) return null;
+            var t = obj.GetType();
+            foreach (var name in candidates)
+            {
+                var pi = t.GetProperty(name);
+                if (pi == null) continue;
+                var val = pi.GetValue(obj) as string;
+                if (!string.IsNullOrWhiteSpace(val)) return val;
+            }
+            return null;
+        }
+
+        private static bool GetFlag(object? obj, params string[] candidates)
+        {
+            if (obj == null || candidates == null || candidates.Length == 0) return false;
+            var t = obj.GetType();
+            foreach (var name in candidates)
+            {
+                var pi = t.GetProperty(name);
+                if (pi == null) continue;
+                var val = pi.GetValue(obj);
+                if (val is bool b) return b;
+                if (val is int i) return i != 0;
+            }
+            return false;
+        }
+
+        private static string BuildTenSp(HoaDonChiTiet ct)
+        {
+            var tenSp = GetStringProp(ct.SanPham, "Ten_San_Pham", "Ten", "Name") ?? "Sản phẩm";
+            var sizeName = GetStringProp(ct.Size, "SizeName", "Ten_Size", "Ten", "Name");
+
+            var toppingNames = new List<string>();
+            var listTp = ct.HoaDonChiTietToppings;
+            if (listTp != null)
+            {
+                foreach (var tpLine in listTp)
+                {
+                    var tp = tpLine?.Topping;
+                    var n = GetStringProp(tp, "Ten", "Ten_Topping", "Name");
+                    if (!string.IsNullOrWhiteSpace(n)) toppingNames.Add(n!);
                 }
+            }
 
-                return Json(new { success = true, data = list });
-            }
-            catch (Exception ex)
-            {
-                return Json(new { success = false, message = ex.Message });
-            }
+            if (!string.IsNullOrWhiteSpace(sizeName)) tenSp += $" - Size {sizeName}";
+            if (toppingNames.Count > 0) tenSp += $" (Topping: {string.Join(", ", toppingNames)})";
+            return tenSp;
         }
 
-        // Xác nhận / chuyển trạng thái (gọi service nhẹ)
+        // ============== STATE TRANSITIONS ==============
+        // Bước 1: Chưa xác nhận -> Đã xác nhận
         [HttpPost]
-        [Produces("application/json")]
-        public async Task<IActionResult> CapNhatTrangThaiLight([FromBody] CapNhatTrangThaiRequest req)
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> XacNhan(int id)
         {
-            try
-            {
-                if (req == null) return Json(new { success = false, message = "Body rỗng" });
-                var hoaDon = await _hoaDonService.GetByIdAsync(req.HoaDonId);
-                if (hoaDon == null) return Json(new { success = false, message = "Không tìm thấy hóa đơn" });
+            var hd = await _hoaDonService.GetByIdAsync(id);
+            if (hd == null) return NotFound();
 
-                var newDb = MapTrangThaiToDatabase(req.TrangThaiMoi);
-                var ok = await _hoaDonService.UpdateTrangThaiAsync(req.HoaDonId, newDb, null);
-                if (!ok) return Json(new { success = false, message = "Cập nhật thất bại (service)" });
+            var curr = hd.Trang_Thai ?? "";
+            var next = "Da_Xac_Nhan";
 
-                return Json(new { success = true, message = "Cập nhật thành công" });
-            }
-            catch (Exception ex)
+            if (!AllowedTransitions.TryGetValue(curr, out var allows) || !allows.Contains(next, StringComparer.OrdinalIgnoreCase))
             {
-                return Json(new { success = false, message = ex.Message });
+                TempData["msg"] = "Trạng thái hiện tại không cho phép xác nhận.";
+                return RedirectToAction(nameof(Index));
             }
+
+            var ok = await _hoaDonService.UpdateTrangThaiAsync(id, next, null);
+            TempData["msg"] = ok ? "Đã xác nhận đơn. Tiếp theo hãy 'Bắt đầu xử lý'." : "Cập nhật thất bại.";
+            return RedirectToAction(nameof(Index));
         }
 
-        // Hủy đơn (kèm lý do)
+        // Bước 2: Đã xác nhận -> Đang xử lý
         [HttpPost]
-        [Produces("application/json")]
-        public async Task<IActionResult> HuyDonLight([FromBody] HuyDonRequest req)
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> BatDauXuLy(int id)
         {
-            try
-            {
-                if (req == null) return Json(new { success = false, message = "Body rỗng" });
-                var hoaDon = await _hoaDonService.GetByIdAsync(req.HoaDonId);
-                if (hoaDon == null) return Json(new { success = false, message = "Không tìm thấy hóa đơn" });
+            var hd = await _hoaDonService.GetByIdAsync(id);
+            if (hd == null) return NotFound();
 
-                var ok = await _hoaDonService.UpdateTrangThaiAsync(req.HoaDonId, "Huy_Don", req.LyDoHuy ?? "");
-                if (!ok) return Json(new { success = false, message = "Hủy đơn thất bại (service)" });
+            var curr = hd.Trang_Thai ?? "";
+            var next = "Dang_Xu_Ly";
 
-                return Json(new { success = true, message = "Đã hủy đơn thành công" });
-            }
-            catch (Exception ex)
+            if (!AllowedTransitions.TryGetValue(curr, out var allows) || !allows.Contains(next, StringComparer.OrdinalIgnoreCase))
             {
-                return Json(new { success = false, message = ex.Message });
+                TempData["msg"] = "Chỉ có thể chuyển sang 'Đang xử lý' khi đơn đã xác nhận.";
+                return RedirectToAction(nameof(Index));
             }
+
+            var ok = await _hoaDonService.UpdateTrangThaiAsync(id, next, null);
+            TempData["msg"] = ok ? "Đơn đã chuyển sang Đang xử lý." : "Cập nhật thất bại.";
+            return RedirectToAction(nameof(Index));
         }
 
-        // Helpers
-        private static bool IsTatCa(string s)
-            => string.IsNullOrWhiteSpace(s) || s.Trim().Equals("TẤT CẢ", StringComparison.OrdinalIgnoreCase) || s.Trim().Equals("Tất cả", StringComparison.OrdinalIgnoreCase);
-
-        // Map từ text UI -> giá trị DB
-        private string MapTrangThaiToDatabase(string hienThi) => hienThi switch
+        // Bước 3: Đang xử lý -> Đang giao hàng
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> BatDauGiaoHang(int id)
         {
-            "Chờ xác nhận" or "Đang xử lý" => "Chua_Xac_Nhan",
-            "Chờ giao" => "Da_Xac_Nhan",
-            "Vận chuyển" => "Dang_Giao_Hang",
-            "Hoàn thành" or "Đã giao" or "Đã thanh toán" or "Hoàn tất" => "Hoan_Thanh",
-            "Đã huỷ" => "Huy_Don",
-            _ => string.IsNullOrWhiteSpace(hienThi) ? "" : hienThi
-        };
+            var hd = await _hoaDonService.GetByIdAsync(id);
+            if (hd == null) return NotFound();
 
-        // Map từ DB -> text UI + badge
-        private string MapTrangThaiFromDatabase(string db) => db switch
+            var curr = hd.Trang_Thai ?? "";
+            var next = "Dang_Giao_Hang";
+
+            if (!AllowedTransitions.TryGetValue(curr, out var allows) || !allows.Contains(next, StringComparer.OrdinalIgnoreCase))
+            {
+                TempData["msg"] = "Chỉ có thể 'Bắt đầu giao' khi đơn đang ở trạng thái Đang xử lý.";
+                return RedirectToAction(nameof(Index));
+            }
+
+            var ok = await _hoaDonService.UpdateTrangThaiAsync(id, next, null);
+            TempData["msg"] = ok ? "Đơn đã chuyển sang Đang giao hàng." : "Cập nhật thất bại.";
+            return RedirectToAction(nameof(Index));
+        }
+
+        // Bước 4: Đang giao hàng -> Hoàn thành
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> GiaoHangThanhCong(int id)
         {
-            "Chua_Xac_Nhan" or "Dang_Xu_Ly" => "Chờ xác nhận",
-            "Da_Xac_Nhan" => "Chờ giao",
-            "Dang_Giao_Hang" => "Vận chuyển",
-            "Hoan_Thanh" => "Hoàn thành",
-            "Huy_Don" => "Đã huỷ",
-            _ => db
-        };
+            var hd = await _hoaDonService.GetByIdAsync(id);
+            if (hd == null) return NotFound();
+
+            var curr = hd.Trang_Thai ?? "";
+            var next = "Hoan_Thanh";
+
+            if (!AllowedTransitions.TryGetValue(curr, out var allows) || !allows.Contains(next, StringComparer.OrdinalIgnoreCase))
+            {
+                TempData["msg"] = "Chỉ có thể hoàn thành khi đơn đang ở trạng thái Đang giao hàng.";
+                return RedirectToAction(nameof(Index));
+            }
+
+            var ok = await _hoaDonService.UpdateTrangThaiAsync(id, next, null);
+            TempData["msg"] = ok ? "Đã xác nhận giao hàng thành công." : "Cập nhật thất bại.";
+            return RedirectToAction(nameof(Index));
+        }
+
+        // ============== HỦY + KHÔI PHỤC TỒN ==============
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> Huy(int id, string lyDo, int[] khoiPhucIds, int[] khoiPhucQtys)
+        {
+            if (string.IsNullOrWhiteSpace(lyDo))
+            {
+                TempData["msg"] = "Vui lòng nhập lý do hủy.";
+                return RedirectToAction(nameof(Index));
+            }
+
+            var hd = await _hoaDonService.GetByIdAsync(id);
+            if (hd == null) return NotFound();
+
+            if (string.Equals(hd.Trang_Thai, "Hoan_Thanh", StringComparison.OrdinalIgnoreCase) ||
+                string.Equals(hd.Trang_Thai, "Huy_Don", StringComparison.OrdinalIgnoreCase))
+            {
+                TempData["msg"] = "Đơn đã hoàn tất hoặc đã huỷ. Không thể huỷ.";
+                return RedirectToAction(nameof(Index));
+            }
+
+            var mapCt = (hd.HoaDonChiTiets ?? new List<HoaDonChiTiet>())
+                        .ToDictionary(x => x.ID_HoaDon_ChiTiet, x => x);
+
+            var selections = new List<(int chiTietId, int soLuong)>();
+            if (khoiPhucIds != null && khoiPhucQtys != null && khoiPhucIds.Length == khoiPhucQtys.Length)
+            {
+                for (int i = 0; i < khoiPhucIds.Length; i++)
+                {
+                    var cid = khoiPhucIds[i];
+                    var q = Math.Max(0, khoiPhucQtys[i]);
+                    if (cid <= 0 || q <= 0) continue;
+
+                    if (!mapCt.TryGetValue(cid, out var ct)) continue;
+
+                    var max = Math.Max(0, ct.So_Luong);
+                    if (q > max) q = max;
+                    selections.Add((cid, q));
+                }
+            }
+
+            var ok = await _hoaDonService.CancelWithRestockAsync(id, lyDo.Trim(), selections);
+
+            TempData["msg"] = ok
+                ? "Đã hủy đơn và khôi phục tồn kho cho các cốc được chọn."
+                : "Hủy đơn thất bại (không khôi phục tồn kho).";
+
+            return RedirectToAction(nameof(Index));
+        }
     }
 
-    // DTOs
-    public class CapNhatTrangThaiRequest
-    {
-        public int HoaDonId { get; set; }
-        public string TrangThaiMoi { get; set; } = "";
-    }
-    public class HuyDonRequest
-    {
-        public int HoaDonId { get; set; }
-        public string? LyDoHuy { get; set; }
-    }
-
-    // ViewModels
+    // ============== ViewModels ==============
     public class QuanLyDonHangViewModel
     {
         public List<HoaDon> DanhSachHoaDon { get; set; } = new();
@@ -207,6 +324,7 @@ namespace FE.Controllers
         public string TrangThai { get; set; } = "TẤT CẢ";
         public List<string> TrangThaiList { get; set; } = new();
     }
+
     public class ChiTietHoaDonViewModel
     {
         public HoaDon HoaDon { get; set; } = default!;

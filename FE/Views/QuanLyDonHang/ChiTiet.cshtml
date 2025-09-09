@@ -1,85 +1,353 @@
-﻿@using FE.Controllers
-@model ChiTietHoaDonViewModel
-@{
-    ViewData["Title"] = "Chi tiết hóa đơn";
-    var hd = Model.HoaDon;
+﻿@{
+    Layout = "_AdminLayout";
+}
+@using System.Globalization
+@using System.Linq
+@using System.Collections.Generic
+@model FE.Controllers.ChiTietHoaDonViewModel
+
+@functions {
+    string VND(decimal d) => string.Format(new CultureInfo("vi-VN"), "{0:#,0} đ", d);
+
+    // ===== Map nhãn theo ID (fallback khi thiếu navigation) =====
+    static readonly Dictionary<int, string> SIZE_NAME_MAP = new()
+    {
+        { 1, "Cơ bản" },
+        { 2, "Large" },
+        { 3, "X-Large" }
+    };
+    static readonly Dictionary<int, string> NGOT_MAP = new()
+    {
+        { 1, "Mặc định" }, { 2, "Thêm đường" }, { 3, "Ít đường" }
+    };
+    static readonly Dictionary<int, string> DA_MAP = new()
+    {
+        { 1, "Mặc định" }, { 2, "Nhiều" }, { 3, "Ít" }
+    };
+
+    string SizeText(int? id, string? sizeNameFromDb = null)
+    {
+        if (!string.IsNullOrWhiteSpace(sizeNameFromDb)) return sizeNameFromDb.Trim();
+        if (id.HasValue && SIZE_NAME_MAP.TryGetValue(id.Value, out var s)) return s;
+        return "-";
+    }
+    string NgotText(int? id, string? mucDoFromDb = null)
+    {
+        if (!string.IsNullOrWhiteSpace(mucDoFromDb)) return mucDoFromDb.Trim();
+        if (id.HasValue && NGOT_MAP.TryGetValue(id.Value, out var s)) return s;
+        return "-";
+    }
+    string DaText(int? id, string? nameFromDb = null)
+    {
+        if (!string.IsNullOrWhiteSpace(nameFromDb)) return nameFromDb.Trim();
+        if (id.HasValue && DA_MAP.TryGetValue(id.Value, out var s)) return s;
+        return "-";
+    }
+
+    string Badge(string db) => db switch
+    {
+        "Chua_Xac_Nhan" or "Dang_Xu_Ly" => "badge bg-warning text-dark",
+        "Da_Xac_Nhan" => "badge bg-info text-dark",
+        "Dang_Giao_Hang" => "badge bg-primary",
+        "Hoan_Thanh" => "badge bg-success",
+        "Huy_Don" => "badge bg-danger",
+        _ => "badge bg-secondary"
+    };
+    string HienThi(string db) => db switch
+    {
+        "Chua_Xac_Nhan" or "Dang_Xu_Ly" => "Chờ xác nhận",
+        "Da_Xac_Nhan" => "Chờ giao",
+        "Dang_Giao_Hang" => "Đang giao",
+        "Hoan_Thanh" => "Hoàn thành",
+        "Huy_Don" => "Đã huỷ",
+        _ => db ?? "-"
+    };
 }
 
 <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" />
-<div class="container py-3">
-    <a class="btn btn-light mb-3" href="/QuanLyDonHang">← Quay lại</a>
-    <h3 class="mb-3">Hóa đơn @hd?.Ma_Hoa_Don</h3>
 
-    <div class="row g-3">
-        <div class="col-md-6">
-            <div class="card p-3 h-100">
-                <h5>Thông tin chung</h5>
-                <div>Mã đơn: <strong>@(hd?.Ma_Hoa_Don ?? "N/A")</strong></div>
-                <div>Khách hàng: <strong>@(hd?.KhachHang?.Ho_Ten ?? "Khách lẻ")</strong></div>
-                <div>Ngày tạo: <strong>@(hd?.Ngay_Tao.ToString("dd/MM/yyyy HH:mm"))</strong></div>
-                <div>Phương thức thanh toán: <strong>@(hd?.HinhThucThanhToan?.Phuong_Thuc_Thanh_Toan ?? "N/A")</strong></div>
-                <div>
-                    Trạng thái:
-                    <span class="badge bg-secondary">
-                        @MapTrangThaiFromDatabase(hd?.Trang_Thai ?? "")
-                    </span>
+<style>
+    .order-tracker {
+        display: flex;
+        align-items: center;
+        gap: .75rem;
+        padding: .75rem 1rem;
+        border-radius: .75rem;
+        background: #fff;
+        border: 1px solid #e9ecef
+    }
+
+    .order-step {
+        display: flex;
+        align-items: center;
+        gap: .5rem
+    }
+
+        .order-step .dot {
+            width: 28px;
+            height: 28px;
+            border-radius: 50%;
+            display: grid;
+            place-items: center;
+            font-size: 14px;
+            font-weight: 700;
+            border: 2px solid #ced4da;
+            background: #f8f9fa;
+            color: #6c757d
+        }
+
+        .order-step .label {
+            font-weight: 600;
+            font-size: .95rem;
+            color: #6c757d
+        }
+
+    .order-connector {
+        flex: 1;
+        height: 4px;
+        border-radius: 2px;
+        background: #e9ecef
+    }
+
+    .order-step.done .dot {
+        background: #e9f7ef;
+        border-color: #51cf66;
+        color: #2b8a3e
+    }
+
+    .order-step.done .label {
+        color: #2b8a3e
+    }
+
+    .order-step.active .dot {
+        background: #e7f5ff;
+        border-color: #339af0;
+        color: #1864ab
+    }
+
+    .order-step.active .label {
+        color: #1864ab
+    }
+
+    .order-tracker.canceled .dot {
+        background: #ffe3e3;
+        border-color: #fa5252;
+        color: #c92a2a
+    }
+
+    .order-tracker.canceled .label {
+        color: #c92a2a
+    }
+
+    .order-tracker.canceled .order-connector {
+        background: #ffa8a8
+    }
+</style>
+
+<div class="container py-3">
+    <a class="btn btn-sm btn-outline-secondary mb-3" href="@Url.Action("Index")">← Quay lại</a>
+
+    <h4 class="mb-3">Hóa đơn @Model.HoaDon?.Ma_Hoa_Don</h4>
+
+    @{
+        var st = Model.HoaDon?.Trang_Thai?.Trim();
+        bool isCanceled = st == "Huy_Don";
+        int stepIndex = st switch
+        {
+            "Chua_Xac_Nhan" => 0,
+            "Da_Xac_Nhan" => 1,
+            "Dang_Xu_Ly" => 2,
+            "Dang_Giao_Hang" => 3,
+            "Hoan_Thanh" => 4,
+            _ => 0
+        };
+        var steps = new[] { "Đặt hàng", "Xác nhận", "Đang pha chế", "Đang giao", "Hoàn thành" };
+    }
+
+    <div class="order-tracker @(isCanceled ? "canceled" : "") mb-3">
+        @for (int i = 0; i < steps.Length; i++)
+        {
+            var state = isCanceled ? "" : (i < stepIndex ? "done" : (i == stepIndex ? "active" : ""));
+            <div class="order-step @state">
+                <div class="dot">
+                    @if (isCanceled)
+                    {
+                        <span>×</span>
+                    }
+                    else if (i < stepIndex)
+                    {
+
+                        <span>✓</span>
+                    }
+                    else
+                    {
+
+                        <span>@(i + 1)</span>
+                    }
                 </div>
-                @if (!string.IsNullOrWhiteSpace(hd?.Ghi_Chu))
-                {
-                    <div class="mt-2">Ghi chú: <em>@hd.Ghi_Chu</em></div>
-                }
-                @if (!string.IsNullOrWhiteSpace(hd?.LyDoHuyDon))
-                {
-                    <div class="mt-2 text-danger">Lý do hủy: <em>@hd.LyDoHuyDon</em></div>
-                }
+                <div class="label">@steps[i]</div>
+            </div>
+            @if (i < steps.Length - 1)
+            {
+                <div class="order-connector"></div>
+            }
+        }
+    </div>
+
+    @if (isCanceled)
+    {
+        <div class="text-danger fw-bold">Đơn hàng đã huỷ. @(Model.HoaDon?.Ghi_Chu)</div>
+    }
+
+    <div class="row g-3 mt-2">
+        <div class="col-lg-6">
+            <div class="card">
+                <div class="card-body">
+                    <div><strong>Mã đơn:</strong> @Model.HoaDon?.Ma_Hoa_Don</div>
+                    <div><strong>Khách hàng:</strong> @(Model.HoaDon?.KhachHang?.Ho_Ten ?? "Khách lẻ")</div>
+                    <div><strong>Ngày tạo:</strong> @(Model.HoaDon?.Ngay_Tao.ToString("dd/MM/yyyy HH:mm"))</div>
+                    <div><strong>Thanh toán:</strong> @(Model.HoaDon?.HinhThucThanhToan?.Phuong_Thuc_Thanh_Toan ?? "N/A")</div>
+                    <div><strong>Loại:</strong> @(Model.HoaDon?.Loai_Hoa_Don ?? "N/A")</div>
+                    <div><strong>Trạng thái:</strong> <span class="@Badge(Model.HoaDon?.Trang_Thai ?? "")">@HienThi(Model.HoaDon?.Trang_Thai ?? "")</span></div>
+                    <div><strong>Ghi chú:</strong> @(Model.HoaDon?.Ghi_Chu ?? "-")</div>
+                </div>
             </div>
         </div>
 
-        <div class="col-md-6">
-            <div class="card p-3 h-100">
-                <h5>Tổng tiền</h5>
-                <div class="display-6">@String.Format(new System.Globalization.CultureInfo("vi-VN"), "{0:C0}", hd?.Tong_Tien ?? 0)</div>
-               
+        @* ===== Tổng kết: Tạm tính – Giảm voucher – Thanh toán (đã fix CS0119/CS0019/CS0305) ===== *@
+        <div class="col-lg-6">
+            @{
+                decimal Subtotal()
+                {
+                    if (Model?.ChiTiets == null) return 0m;
+                    decimal sum = 0m;
+                    foreach (var ct in Model.ChiTiets)
+                    {
+                        var giaSp = (decimal?)ct.Gia_San_Pham ?? 0m;
+                        var giaSize = (decimal?)ct.Gia_Them_Size ?? 0m;
+                        var topSum = (ct.HoaDonChiTietToppings ?? new List<BE.models.HoaDonChiTietTopping>())
+                        .Sum(t => (decimal?)t?.Topping?.Gia ?? 0m);
+                        var unitAfter = giaSp + giaSize + topSum;
+                        var lineTotal = (decimal?)ct.Tong_Tien ?? (unitAfter * ct.So_Luong);
+                        sum += lineTotal;
+                    }
+                    return sum;
+                }
+
+                var subtotal = Subtotal();
+                var hd = Model?.HoaDon;
+
+                // ✅ đúng generic
+                var voucherDiscount = (hd?.HoaDonVouchers ?? new List<BE.models.HoaDonVoucher>())
+                .Sum(v => (decimal?)v.Gia_Tri_Giam ?? 0m);
+
+                // nếu BE không lưu chi tiết voucher, suy ra từ chênh lệch
+                if (voucherDiscount <= 0 && hd != null)
+                {
+                    voucherDiscount = Math.Max(0m, subtotal - ((decimal?)hd.Tong_Tien ?? subtotal));
+                }
+
+                // ✅ tránh dùng ?? giữa 2 decimal non-nullable
+                decimal pay = (hd != null
+                ? ((decimal?)hd.Tong_Tien ?? Math.Max(0m, subtotal - voucherDiscount))
+                : Math.Max(0m, subtotal - voucherDiscount));
+
+                // ✅ đúng generic
+                var voucherCodes = (hd?.HoaDonVouchers ?? new List<BE.models.HoaDonVoucher>())
+                .Select(v => v.Voucher?.Ma_Voucher)
+                .Where(s => !string.IsNullOrWhiteSpace(s))
+                .ToList();
+            }
+            <div class="card">
+                <div class="card-body">
+                    <div><strong>Tạm tính:</strong> @VND(subtotal)</div>
+                    <div>
+                        <strong>Giảm voucher:</strong> - @VND(voucherDiscount)
+                        @if (voucherCodes?.Any() == true)
+                        {
+                            <span class="text-muted">(@string.Join(", ", voucherCodes))</span>
+                        }
+                    </div>
+                    <div class="fs-5 mt-1"><strong>Thanh toán:</strong> @VND(pay)</div>
+                </div>
             </div>
         </div>
     </div>
 
-    <div class="card p-3 mt-3">
-        <h5>Chi tiết sản phẩm</h5>
-        <div class="table-responsive">
-            <table class="table table-sm">
+    <div class="card mt-3">
+        <div class="card-header">Chi tiết sản phẩm</div>
+        <div class="card-body p-0">
+            <table class="table table-striped mb-0">
                 <thead>
                     <tr>
                         <th>Sản phẩm</th>
-                        <th>Số lượng</th>
-                        <th>Đơn giá</th>
-                        <th>Thành tiền</th>
+                        <th>Size</th>
+                        <th>Ngọt</th>
+                        <th>Đá</th>
+                        <th>Topping</th>
+                        <th class="text-end">Đơn giá</th>
+                        <th class="text-end">SL</th>
+                        <th class="text-end">Thành tiền</th>
                     </tr>
                 </thead>
                 <tbody>
-                    @foreach (var ct in Model.ChiTiets)
+                    @if (Model?.ChiTiets == null || !Model.ChiTiets.Any())
                     {
-                        <tr>
-                            <td>@(ct.SanPham?.Ten_San_Pham ?? "Sản phẩm")</td>
-                            <td>@ct.So_Luong</td>
-                            <td>@String.Format(new System.Globalization.CultureInfo("vi-VN"), "{0:C0}", ct.Gia_San_Pham)</td>
-                            <td>@String.Format(new System.Globalization.CultureInfo("vi-VN"), "{0:C0}", (ct.Gia_San_Pham * ct.So_Luong))</td>
-                        </tr>
+                        <tr><td colspan="8" class="text-muted">Không có chi tiết.</td></tr>
+                    }
+                    else
+                    {
+                        foreach (var ct in Model.ChiTiets)
+                        {
+                            var tenSp = ct.SanPham?.Ten_San_Pham ?? $"SP#{ct.ID_San_Pham}";
+                            var sizeTxt = SizeText(ct.ID_Size /* , ct.Size?.SizeName */);
+
+                            // ✅ KHÔNG dùng SanPham_DoNgot (tránh CS1061). Map theo ID.
+                            var ngotTxt = NgotText(ct.ID_SanPham_DoNgot /* , ct.DoNgot?.Muc_Do */);
+                            var daTxt = DaText(ct.ID_LuongDa /* , ct.LuongDa?.Ten_LuongDa */);
+
+                            var topNames = (ct.HoaDonChiTietToppings ?? new List<BE.models.HoaDonChiTietTopping>())
+                            .Select(t => t.Topping?.Ten ?? $"T#{t.ID_Topping}")
+                            .ToList();
+                            var topTxt = topNames.Any() ? string.Join(", ", topNames) : "-";
+
+                            // Giá gốc / sau giảm
+                            var giaSpSauKM = (decimal?)ct.Gia_San_Pham ?? 0m;
+                            var giaSpGoc = (decimal?)ct.SanPham?.Gia ?? giaSpSauKM;
+                            var giaSize = (decimal?)ct.Gia_Them_Size ?? 0m;
+                            var topSum = (ct.HoaDonChiTietToppings ?? new List<BE.models.HoaDonChiTietTopping>())
+                            .Sum(t => (decimal?)t?.Topping?.Gia ?? 0m);
+
+                            var unitGoc = giaSpGoc + giaSize + topSum;
+                            var unitSau = giaSpSauKM + giaSize + topSum;
+
+                            int sl = ct.So_Luong;
+                            var thanhTien = (decimal?)ct.Tong_Tien ?? (unitSau * sl);
+                            <tr>
+                                <td>@tenSp</td>
+                                <td>@sizeTxt</td>
+                                <td>@ngotTxt</td>
+                                <td>@daTxt</td>
+                                <td>@topTxt</td>
+
+                                <td class="text-end">
+                                    @if (unitSau < unitGoc)
+                                    {
+                                        <div class="text-muted text-decoration-line-through">@VND(unitGoc)</div>
+                                    }
+                                    <div class="fw-semibold">@VND(unitSau)</div>
+                                    <div class="small text-muted">
+                                        SP: @VND(giaSpSauKM) • Size: +@VND(giaSize) • Top: @VND(topSum)
+                                    </div>
+                                </td>
+
+                                <td class="text-end">@sl</td>
+                                <td class="text-end">@VND(thanhTien)</td>
+                            </tr>
+                        }
                     }
                 </tbody>
             </table>
         </div>
     </div>
 </div>
-
-@functions {
-    private string MapTrangThaiFromDatabase(string db) => db switch
-    {
-        "Chua_Xac_Nhan" or "Dang_Xu_Ly" => "Chờ xác nhận",
-        "Da_Xac_Nhan" => "Chờ giao",
-        "Dang_Giao_Hang" => "Vận chuyển",
-        "Hoan_Thanh" => "Hoàn thành",
-        "Huy_Don" => "Đã huỷ",
-        _ => db
-    };
-}

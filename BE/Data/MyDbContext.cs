@@ -316,100 +316,116 @@ namespace BE.Data
                 .HasPrecision(5, 2);
 
             // 19. Hoa_Don
-            modelBuilder.Entity<HoaDon>()
-                .HasKey(hd => hd.ID_Hoa_Don);
-            modelBuilder.Entity<HoaDon>()
-                .HasOne(hd => hd.KhachHang)
-                .WithMany(k => k.HoaDons)
-                .HasForeignKey(hd => hd.ID_Khach_Hang)
-                .IsRequired(true);
-            modelBuilder.Entity<HoaDon>()
-                .HasOne(hd => hd.NhanVien)
-                .WithMany(n => n.HoaDons)
-                .HasForeignKey(hd => hd.ID_Nhan_Vien)
-                .IsRequired(false);
-            modelBuilder.Entity<HoaDon>()
-                .HasOne(hd => hd.HinhThucThanhToan)
-                .WithMany(httt => httt.HoaDons)
-                .HasForeignKey(hd => hd.ID_Hinh_Thuc_Thanh_Toan)
-                .IsRequired(false);
-            modelBuilder.Entity<HoaDon>()
-                .HasOne(hd => hd.DiaChi)
-                .WithMany(d => d.HoaDons)
-                .HasForeignKey(hd => hd.ID_Dia_Chi)
-                .IsRequired(false);
-            
-            modelBuilder.Entity<HoaDon>()
-                .Property(hd => hd.Tong_Tien)
-                .HasPrecision(18, 2);
-            modelBuilder.Entity<HoaDon>()
-                .Property(hd => hd.Phi_Ship)
-                .HasPrecision(18, 2)
-                .IsRequired(false);
-            modelBuilder.Entity<HoaDon>()
-                .Property(hd => hd.Ghi_Chu)
-                .IsRequired(false);
-            modelBuilder.Entity<HoaDon>()
-                .Property(hd => hd.Dia_Chi_Tu_Nhap)
-                .IsRequired(false);
-            modelBuilder.Entity<HoaDon>()
-                .Property(hd => hd.LyDoHuyDon)
-                .HasMaxLength(500)
-                .IsRequired(false);
-            modelBuilder.Entity<HoaDon>()
-                .Property(hd => hd.LyDoDonHangCoVanDe)
-                .HasMaxLength(500)
-                .IsRequired(false);
+            modelBuilder.Entity<HoaDon>(e =>
+            {
+                e.HasKey(hd => hd.ID_Hoa_Don);
 
+                // Optional FK (tránh lỗi bắt buộc khi bạn gán ID mặc định/để null)
+                e.HasOne(hd => hd.NhanVien)
+                 .WithMany(n => n.HoaDons)
+                 .HasForeignKey(hd => hd.ID_Nhan_Vien)
+                 .IsRequired(false)
+                 .OnDelete(DeleteBehavior.Restrict);
+
+                e.HasOne(hd => hd.KhachHang)
+                 .WithMany(k => k.HoaDons)
+                 .HasForeignKey(hd => hd.ID_Khach_Hang)
+                 .IsRequired(false)                // cho phép null nếu là khách lẻ
+                 .OnDelete(DeleteBehavior.Restrict);
+
+                e.HasOne(hd => hd.HinhThucThanhToan)
+                 .WithMany(ht => ht.HoaDons)
+                 .HasForeignKey(hd => hd.ID_Hinh_Thuc_Thanh_Toan)
+                 .IsRequired(false)
+                 .OnDelete(DeleteBehavior.Restrict);
+
+                e.HasOne(hd => hd.DiaChi)
+                 .WithMany(d => d.HoaDons)
+                 .HasForeignKey(hd => hd.ID_Dia_Chi)
+                 .IsRequired(false)
+                 .OnDelete(DeleteBehavior.Restrict);
+
+                // 1-n: HoaDon -> HoaDonChiTiet
+                e.HasMany(hd => hd.HoaDonChiTiets)
+                 .WithOne(ct => ct.HoaDon!)
+                 .HasForeignKey(ct => ct.ID_Hoa_Don)
+                 .OnDelete(DeleteBehavior.Cascade);
+
+                // Số liệu & mặc định
+                e.Property(hd => hd.Tong_Tien).HasPrecision(18, 2);
+                e.Property(hd => hd.Phi_Ship).HasPrecision(18, 2).IsRequired(false);
+
+                e.Property(hd => hd.Trang_Thai)
+                 .HasMaxLength(50)
+                 .HasDefaultValue("Chua_Xac_Nhan");
+
+                e.Property(hd => hd.Loai_Hoa_Don)
+                 .HasMaxLength(50)
+                 .HasDefaultValue("TaiQuay");
+
+                e.Property(hd => hd.Ma_Hoa_Don)
+                 .HasMaxLength(50)
+                 .IsRequired();
+
+                e.Property(hd => hd.Ghi_Chu).IsRequired(false);
+                e.Property(hd => hd.Dia_Chi_Tu_Nhap).IsRequired(false);
+                e.Property(hd => hd.LyDoHuyDon).HasMaxLength(500).IsRequired(false);
+                e.Property(hd => hd.LyDoDonHangCoVanDe).HasMaxLength(500).IsRequired(false);
+            });
 
             // 20. HoaDon_ChiTiet
-            modelBuilder.Entity<HoaDonChiTiet>()
-                .HasKey(hdct => hdct.ID_HoaDon_ChiTiet);
-            modelBuilder.Entity<HoaDonChiTiet>()
-                .HasOne(hdct => hdct.HoaDon)
-                .WithMany(hd => hd.HoaDonChiTiets)
-                .HasForeignKey(hdct => hdct.ID_Hoa_Don);
-            modelBuilder.Entity<HoaDonChiTiet>()
-                .HasOne(hdct => hdct.SanPham)
-                .WithMany(sp => sp.HoaDonChiTiets)
-                .HasForeignKey(hdct => hdct.ID_San_Pham);
-            modelBuilder.Entity<HoaDonChiTiet>()
-                .HasOne(hdct => hdct.Size)
-                .WithMany(s => s.HoaDonChiTiets)
-                .HasForeignKey(hdct => hdct.ID_Size)
-                .IsRequired(false);
-            modelBuilder.Entity<HoaDonChiTiet>()
-                .HasOne(hdct => hdct.DoNgot)
-                .WithMany(dn => dn.HoaDonChiTiets)
-                .HasForeignKey(hdct => hdct.ID_SanPham_DoNgot)
-                .IsRequired(false);
-            modelBuilder.Entity<HoaDonChiTiet>()
-                .HasOne(hdct => hdct.LuongDa)
-                .WithMany(ld => ld.HoaDonChiTiets)
-                .HasForeignKey(hdct => hdct.ID_LuongDa)
-                .IsRequired(false);
-            modelBuilder.Entity<HoaDonChiTiet>()
-                .Property(hdct => hdct.Gia_San_Pham)
-                .HasPrecision(18, 2);
-            modelBuilder.Entity<HoaDonChiTiet>()
-                .Property(hdct => hdct.Gia_Them_Size)
-                .HasPrecision(18, 2);
-            modelBuilder.Entity<HoaDonChiTiet>()
-                .Property(hdct => hdct.Tong_Tien)
-                .HasPrecision(18, 2);
-            modelBuilder.Entity<HoaDonChiTiet>()
-                .Property(hdct => hdct.Ghi_Chu)
-                .IsRequired(false);
-            modelBuilder.Entity<HoaDonChiTiet>()
-                .Property(hdct => hdct.Ma_HoaDon_ChiTiet)
-                .IsRequired(true);
-            modelBuilder.Entity<HoaDonChiTiet>()
-                .Property(hdct => hdct.So_Luong)
-                .IsRequired(true);
-            modelBuilder.Entity<HoaDonChiTiet>()
-                .Property(hdct => hdct.Ngay_Tao)
-                .IsRequired(true)
-                .HasDefaultValueSql("GETDATE()");
+            modelBuilder.Entity<HoaDonChiTiet>(e =>
+            {
+                e.HasKey(ct => ct.ID_HoaDon_ChiTiet);
+
+                // Quan hệ đến SanPham/Size/DoNgot/LuongDa
+                e.HasOne(ct => ct.SanPham)
+                 .WithMany(sp => sp.HoaDonChiTiets)
+                 .HasForeignKey(ct => ct.ID_San_Pham)
+                 .OnDelete(DeleteBehavior.Restrict);
+
+                e.HasOne(ct => ct.Size)
+                 .WithMany(s => s.HoaDonChiTiets)
+                 .HasForeignKey(ct => ct.ID_Size)
+                 .IsRequired(false)
+                 .OnDelete(DeleteBehavior.Restrict);
+
+                e.HasOne(ct => ct.DoNgot)
+                 .WithMany(dn => dn.HoaDonChiTiets)
+                 .HasForeignKey(ct => ct.ID_SanPham_DoNgot)
+                 .IsRequired(false)
+                 .OnDelete(DeleteBehavior.Restrict);
+
+                e.HasOne(ct => ct.LuongDa)
+                 .WithMany(ld => ld.HoaDonChiTiets)
+                 .HasForeignKey(ct => ct.ID_LuongDa)
+                 .IsRequired(false)
+                 .OnDelete(DeleteBehavior.Restrict);
+
+                // Số liệu
+                e.Property(ct => ct.Gia_San_Pham).HasPrecision(18, 2);
+                e.Property(ct => ct.Gia_Them_Size).HasPrecision(18, 2);
+                e.Property(ct => ct.Tong_Tien).HasPrecision(18, 2);
+
+                e.Property(ct => ct.Ghi_Chu).IsRequired(false);
+                e.Property(ct => ct.Ma_HoaDon_ChiTiet).IsRequired();
+                e.Property(ct => ct.So_Luong).IsRequired();
+
+                // default Ngay_Tao ở DB
+                e.Property(ct => ct.Ngay_Tao)
+                 .IsRequired()
+                 .HasDefaultValueSql("GETDATE()");
+
+                // Unique theo đơn + mã chi tiết (tránh trùng)
+                e.HasIndex(ct => new { ct.ID_Hoa_Don, ct.Ma_HoaDon_ChiTiet }).IsUnique();
+            });
+
+            // (Giữ nguyên phần seed HinhThucThanhToan của bạn)
+            modelBuilder.Entity<HinhThucThanhToan>().HasData(
+                new HinhThucThanhToan { ID_Hinh_Thuc_Thanh_Toan = 1, Phuong_Thuc_Thanh_Toan = "TienMat", Cong_Thanh_Toan = "Cash", Trang_Thai = true },
+                new HinhThucThanhToan { ID_Hinh_Thuc_Thanh_Toan = 2, Phuong_Thuc_Thanh_Toan = "The", Cong_Thanh_Toan = "Card", Trang_Thai = true },
+                new HinhThucThanhToan { ID_Hinh_Thuc_Thanh_Toan = 3, Phuong_Thuc_Thanh_Toan = "ChuyenKhoan", Cong_Thanh_Toan = "Bank", Trang_Thai = true }
+            );
 
             // 21. HoaDonChiTiet_Topping
             modelBuilder.Entity<HoaDonChiTietTopping>()
@@ -537,7 +553,7 @@ namespace BE.Data
             modelBuilder.Entity<GioHang_ChiTiet>()
                 .HasIndex(ghct => ghct.Ma_GioHang_ChiTiet)
                 .IsUnique();
-
+   
             // 28. GioHangChiTiet_Topping
             modelBuilder.Entity<GioHangChiTiet_Topping>()
                 .HasKey(ghctt => ghctt.ID_GioHangChiTiet_Topping);
