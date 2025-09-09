@@ -184,6 +184,7 @@
 
                 <!-- Nhóm: Hệ thống -->
                 <li class="nav-item">
+
                     <a class="nav-link" data-bs-toggle="collapse" href="#systemMenu" role="button" aria-expanded="false" aria-controls="systemMenu" title="Hệ thống">
                         <i class="fas fa-cogs nav-icon"></i>
                         <span class="sidebar-text">Hệ thống</span>
@@ -200,6 +201,7 @@
 
                 <!-- Nhóm: Đơn hàng -->
                 <li class="nav-item">
+
                     <a class="nav-link" data-bs-toggle="collapse" href="#orderMenu" role="button" aria-expanded="false" aria-controls="orderMenu" title="Đơn hàng">
                         <i class="fas fa-cart-shopping nav-icon"></i>
                         <span class="sidebar-text">Đơn hàng</span>
@@ -207,7 +209,7 @@
                     </a>
                     <div class="collapse" id="orderMenu">
                         <ul class="list-unstyled">
-                            <li><a href="@Url.Action("OnlineOrders", "Admin")" class="nav-link">Đơn hàng online</a></li>
+                            <li><a href="@Url.Action("quanlydonhang", "Index")" class="nav-link">Đơn hàng online</a></li>
                             <li><a href="@Url.Action("Index", "BanHangTaiQuay")" class="nav-link">Bán hàng trực tiếp</a></li>
                             <li><a href="@Url.Action("Index", "QuanLyDonHang")" class="nav-link">Quản Lý Đơn Hàng</a></li>
                         </ul>

@@ -1,9 +1,10 @@
 ﻿namespace BE.Repository.IRepository
 {
-    using System.Collections.Generic;
-    using System.Threading.Tasks;
     using BE.DTOs;
     using BE.models;
+    using BE.Service;
+    using System.Collections.Generic;
+    using System.Threading.Tasks;
 
     public interface IHoaDonRepository
     {
@@ -18,8 +19,8 @@
         Task<IEnumerable<HoaDon>> GetAllEntitiesAsync();     // Entity cho FE cũ
 
         // --- CẬP NHẬT TRẠNG THÁI ---
-        Task<bool> UpdateTrangThaiAsync(int id, string trangThai, string? lyDoHuy);
-
+        //Task<bool> UpdateTrangThaiAsync(int id, string trangThai, string? lyDoHuy);
+        Task<bool> UpdateTrangThaiAsync(int id, string trangThai, string? lyDoHuy, EmailService emailService);
         // --- NEW: HỦY + HOÀN TRẢ TỒN KHO ---
         /// <summary>
         /// Hủy đơn (đổi trạng thái sang Huy_Don, lưu lý do) và cộng trả tồn kho cho các chi tiết được chọn.

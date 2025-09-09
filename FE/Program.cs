@@ -27,6 +27,10 @@ builder.Services.AddScoped<IQuanLyVaiTroService, QuanLyVaiTroService>();
 builder.Services.AddScoped<IGanVoucherService, GanVoucherService>();
 builder.Services.AddScoped<IKhuyenMaiService, KhuyenMaiService>();
 builder.Services.AddScoped<IPromotionService, PromotionService>();
+builder.Services.AddScoped<ICheckoutService, CheckoutService>();
+builder.Services.AddHttpClient<IQLDonHangTkService, QLDonHangTkService>();
+
+
 // SỬA LẠI: Base API URL phải trỏ đến BE, không phải FE
 var baseApiUrl = "https://localhost:7169/"; // Đây là port của BE
 
