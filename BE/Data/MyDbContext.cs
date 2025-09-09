@@ -426,6 +426,26 @@ namespace BE.Data
                 new HinhThucThanhToan { ID_Hinh_Thuc_Thanh_Toan = 2, Phuong_Thuc_Thanh_Toan = "The", Cong_Thanh_Toan = "Card", Trang_Thai = true },
                 new HinhThucThanhToan { ID_Hinh_Thuc_Thanh_Toan = 3, Phuong_Thuc_Thanh_Toan = "ChuyenKhoan", Cong_Thanh_Toan = "Bank", Trang_Thai = true }
             );
+            // Size
+            modelBuilder.Entity<Size>().HasData(
+                new Size { ID_Size = 1, SizeName = "Cơ bản", Gia = 0m, Trang_Thai = true },
+                new Size { ID_Size = 2, SizeName = "Large", Gia = 10000m, Trang_Thai = true },
+                new Size { ID_Size = 3, SizeName = "X-Large", Gia = 15000m, Trang_Thai = true }
+            );
+
+            // Lượng đá
+            modelBuilder.Entity<LuongDa>().HasData(
+                new LuongDa { ID_LuongDa = 1, Ten_LuongDa = "Mặc Định", Trang_Thai = true },
+                new LuongDa { ID_LuongDa = 2, Ten_LuongDa = "Nhiều Đá", Trang_Thai = true },
+                new LuongDa { ID_LuongDa = 3, Ten_LuongDa = "Ít Đá", Trang_Thai = true }
+            );
+
+            // Độ ngọt
+            modelBuilder.Entity<DoNgot>().HasData(
+                new DoNgot { ID_DoNgot = 1, Muc_Do = "Mặc Định", Ghi_Chu = "asd", Trang_Thai = true },
+                new DoNgot { ID_DoNgot = 2, Muc_Do = "Thêm Đường", Ghi_Chu = "asd", Trang_Thai = true },
+                new DoNgot { ID_DoNgot = 3, Muc_Do = "Ít Đường", Ghi_Chu = "asd", Trang_Thai = true }
+            );
 
             // 21. HoaDonChiTiet_Topping
             modelBuilder.Entity<HoaDonChiTietTopping>()
