@@ -1,251 +1,442 @@
 ﻿@model IEnumerable<BE.models.NhanVien>
 @{
-    ViewData["Title"] = "Danh sách nhân viên";
-    Layout = "_AdminLayout";
+	ViewData["Title"] = "Danh sách nhân viên";
+	Layout = "_AdminLayout";
 }
 
 <style>
-    .card-nhanvien {
-        border-radius: 8px;
-        overflow: hidden;
-        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-    }
+	/* Container chính */
+	.employee-container {
+		background: linear-gradient(135deg, #f8fafc, #e2e8f0);
+		border-radius: 18px;
+		padding: 25px;
+		box-shadow: 0 12px 35px rgba(0, 0, 0, 0.1);
+		margin-bottom: 25px;
+	}
 
-    .table-nhanvien {
-        font-size: 0.9rem;
-        margin-bottom: 0;
-    }
+	/* Thống kê nhân viên */
+	.stats-container {
+		display: grid;
+		grid-template-columns: repeat(4, 1fr);
+		gap: 18px;
+		margin-bottom: 25px;
+	}
 
-    .table-nhanvien thead {
-        background: linear-gradient(180deg, #1e3a8a, #3b82f6);
-        color: white;
-    }
+	.stat-card {
+		padding: 25px 15px;
+		border-radius: 18px;
+		text-align: center;
+		font-weight: 600;
+		font-size: 1rem;
+		color: #fff;
+		cursor: pointer;
+		position: relative;
+		overflow: hidden;
+		transition: all 0.4s ease;
+	}
 
-    .table-nhanvien tr {
-        transition: background-color 0.3s ease, transform 0.2s ease;
-    }
+		.stat-card i {
+			font-size: 1.8rem;
+			margin-bottom: 10px;
+			opacity: 0.9;
+		}
 
-    .table-nhanvien tbody tr:hover {
-        background-color: rgba(59, 130, 246, 0.1);
-        transform: translateX(5px);
-    }
+		.stat-card strong {
+			display: block;
+			font-size: 1.5rem;
+			margin-top: 5px;
+		}
 
-    .btn-sm {
-        padding: 0.25rem 0.5rem;
-        font-size: 0.8rem;
-        transition: all 0.3s ease;
-    }
+		.stat-card:hover {
+			transform: translateY(-6px) scale(1.05);
+			box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+		}
 
-    .btn-sm:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
-    }
+	.stat-total {
+		background: linear-gradient(135deg, #2563eb, #3b82f6);
+	}
 
-    .btn-success, .btn-info, .btn-warning, .btn-danger {
-        border: none;
-    }
+	.stat-working {
+		background: linear-gradient(135deg, #059669, #10b981);
+	}
 
-    .badge {
-        font-size: 0.75rem;
-        padding: 0.4em 0.6em;
-    }
+	.stat-new {
+		background: linear-gradient(135deg, #f59e0b, #fbbf24);
+	}
 
-    .text-primary {
-        color: #1e3a8a !important;
-    }
+	.stat-leaving {
+		background: linear-gradient(135deg, #dc2626, #ef4444);
+	}
 
-    .card-header {
-        background: linear-gradient(180deg, #1e3a8a, #3b82f6);
-        color: white;
-        border-bottom: none;
-    }
+	/* Thanh tìm kiếm */
+	.search-filter {
+		display: flex;
+		flex-wrap: wrap;
+		gap: 15px;
+		background: #fff;
+		padding: 15px;
+		border-radius: 12px;
+		box-shadow: 0 6px 15px rgba(0,0,0,0.05);
+		margin-bottom: 20px;
+	}
 
-    /* Search and Filter Styles */
-    .search-filter {
-        margin-bottom: 1rem;
-        display: flex;
-        gap: 1rem;
-    }
+		.search-filter input, .search-filter select {
+			border-radius: 8px;
+			box-shadow: inset 0 2px 5px rgba(0,0,0,0.08);
+		}
 
-    /* Modal styles */
-    .modal {
-        display: none;
-        position: fixed;
-        top: 0;
-        left: 0;
-        width: 100%;
-        height: 100%;
-        background-color: rgba(0, 0, 0, 0.5);
-        z-index: 1000;
-    }
+	/* Bảng */
+	.table-custom {
+		border-radius: 12px;
+		overflow: hidden;
+		background: #fff;
+		box-shadow: 0 8px 20px rgba(0,0,0,0.08);
+	}
 
-    .modal-content {
-        background-color: white;
-        margin: 15% auto;
-        padding: 20px;
-        border-radius: 8px;
-        width: 40%;
-        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-        position: relative;
-    }
+		.table-custom thead {
+			background: linear-gradient(135deg, #1e40af, #3b82f6);
+			color: #fff;
+		}
 
-    .close {
-        position: absolute;
-        right: 10px;
-        top: 10px;
-        font-size: 24px;
-        cursor: pointer;
-    }
+		.table-custom tbody tr {
+			transition: all 0.3s ease;
+		}
+
+			.table-custom tbody tr:hover {
+				background: rgba(59, 130, 246, 0.08);
+				transform: translateX(5px);
+			}
+
+	/* Checkbox */
+	.custom-checkbox {
+		width: 20px;
+		height: 20px;
+		border-radius: 6px;
+		border: 2px solid #3b82f6;
+		cursor: pointer;
+		position: relative;
+		transition: all 0.3s;
+	}
+
+		.custom-checkbox:checked {
+			background: linear-gradient(135deg, #2563eb, #3b82f6);
+			border-color: #2563eb;
+		}
+
+			.custom-checkbox:checked::after {
+				content: '\2713';
+				color: #fff;
+				position: absolute;
+				top: 50%;
+				left: 50%;
+				transform: translate(-50%, -50%);
+				font-weight: bold;
+				font-size: 14px;
+			}
+
+	/* Nút bấm */
+	.btn-sm {
+		border-radius: 25px;
+		font-weight: 500;
+		padding: 0.35rem 0.9rem;
+		transition: all 0.3s ease;
+	}
+
+		.btn-sm:hover {
+			transform: translateY(-3px) scale(1.05);
+			box-shadow: 0 6px 15px rgba(0,0,0,0.2);
+		}
+
+	/* Badge trạng thái */
+	.badge {
+		padding: 0.4em 0.7em;
+		border-radius: 10px;
+		font-size: 0.85rem;
+		font-weight: 600;
+	}
+
+	/* Modal chi tiết */
+	.modal-custom {
+		display: none;
+		position: fixed;
+		inset: 0;
+		background: rgba(0,0,0,0.65);
+		backdrop-filter: blur(5px);
+		z-index: 1050;
+	}
+
+	.modal-content-custom {
+		background: #fff;
+		border-radius: 15px;
+		padding: 25px;
+		width: 50%;
+		margin: 8% auto;
+		box-shadow: 0 15px 40px rgba(0,0,0,0.25);
+		animation: fadeIn 0.3s ease;
+		position: relative;
+	}
+
+		.modal-content-custom h3 {
+			margin-bottom: 15px;
+			color: #1e3a8a;
+		}
+
+		.modal-content-custom .close {
+			position: absolute;
+			top: 12px;
+			right: 18px;
+			font-size: 28px;
+			cursor: pointer;
+			color: #ef4444;
+			transition: 0.3s;
+		}
+
+			.modal-content-custom .close:hover {
+				color: #dc2626;
+				transform: scale(1.2) rotate(90deg);
+			}
+
+	keyframes fadeIn {
+		from
+
+	{
+		opacity: 0;
+		transform: scale(0.9);
+	}
+
+	to {
+		opacity: 1;
+		transform: scale(1);
+	}
+
+	}
 </style>
 
-<div class="card card-nhanvien">
-    <div class="card-header">
-        <h2 class="text-center my-2">Danh sách nhân viên</h2>
-    </div>
-    <div class="card-body p-3">
-        <div class="search-filter mb-3">
-            <input type="text" id="searchTerm" class="form-control" placeholder="Tìm theo họ tên..." value="@ViewBag.SearchTerm" />
-            <button id="filterBtn" class="btn btn-primary btn-sm">Lọc</button>
-            <a asp-action="Create" class="btn btn-success btn-sm ms-auto"><i class="fas fa-plus me-1"></i> Thêm nhân viên</a>
-        </div>
-        <table class="table table-striped table-hover table-bordered table-nhanvien">
-            <thead class="text-center">
-                <tr>
-                    <th>Họ tên</th>
-                    <th>Email</th>
-                    <th>SĐT</th>
-                    <th>Giới tính</th>
-                    <th>Năm sinh</th>
-                    <th>Trạng thái</th>
-                    <th>Ảnh</th>
-                    <th>Thao tác</th>
-                </tr>
-            </thead>
-            <tbody class="align-middle">
-                @if (Model.Any())
-                {
-                    @foreach (var nv in Model)
-                    {
-                        <tr data-id="@nv.ID_Nhan_Vien" class="detail-trigger">
-                            <td>@nv.Ho_Ten</td>
-                            <td>@nv.Email</td>
-                            <td>@nv.So_Dien_Thoai</td>
-                            <td>@(nv.GioiTinh == true ? "Nam" : nv.GioiTinh == false ? "Nữ" : "Khác")</td>
-                            <td>@(nv.NamSinh)</td>
-                            <td class="text-center">
-                                <span class="badge bg-@(nv.Trang_Thai == true ? "success" : "secondary")">
-                                    @(nv.Trang_Thai == true ? "Đang làm" : "Nghỉ")
-                                </span>
-                            </td>
-                            <td class="text-center">
-                                @if (!string.IsNullOrEmpty(nv.AnhNhanVien))
-                                {
-                                    <img src="@nv.AnhNhanVien" alt="Ảnh nhân viên" style="width: 40px; height: 40px; object-fit: cover; border-radius: 50%;" />
-                                }
-                                else
-                                {
-                                    <span class="text-muted">Chưa có</span>
-                                }
-                            </td>
-                            <td class="text-center">
-                                <a asp-action="Edit" asp-route-id="@nv.ID_Nhan_Vien" class="btn btn-sm btn-warning"><i class="fas fa-edit"></i> Sửa</a>
-                                <form asp-action="Delete" asp-route-id="@nv.ID_Nhan_Vien" method="post" style="display:inline-block" onsubmit="return confirm('Bạn có chắc muốn xoá?');">
-                                    <button class="btn btn-sm btn-danger"><i class="fas fa-trash"></i> Xoá</button>
-                                </form>
-                            </td>
-                        </tr>
-                    }
-                }
-                else
-                {
-                    <tr>
-                        <td colspan="8" class="text-center">Không có dữ liệu</td>
-                    </tr>
-                }
-            </tbody>
-        </table>
-        <!-- Pagination Controls -->
-        @{
-            var totalPages = ViewBag.TotalPages ?? 1;
-            var currentPage = ViewBag.CurrentPage ?? 1;
-            var pageSize = ViewBag.PageSize ?? 10;
-            var searchTerm = ViewBag.SearchTerm ?? "";
-            var statusFilter = ViewBag.StatusFilter;
-        }
-        <nav aria-label="Page navigation">
-            <ul class="pagination justify-content-center mt-3">
-                <li class="page-item @(currentPage == 1 ? "disabled" : "")">
-                    <a class="page-link" href="@Url.Action("Index", new { searchTerm, statusFilter, page = currentPage - 1, pageSize })">Trước</a>
-                </li>
-                @for (int i = 1; i <= totalPages; i++)
-                {
-                    <li class="page-item @(i == currentPage ? "active" : "")">
-                        <a class="page-link" href="@Url.Action("Index", new { searchTerm, statusFilter, page = i, pageSize })">@i</a>
-                    </li>
-                }
-                <li class="page-item @(currentPage == totalPages ? "disabled" : "")">
-                    <a class="page-link" href="@Url.Action("Index", new { searchTerm, statusFilter, page = currentPage + 1, pageSize })">Sau</a>
-                </li>
-            </ul>
-        </nav>
-    </div>
+<div class="employee-container">
+
+	<!-- Thống kê -->
+	<div class="stats-container">
+		<button class="stat-card stat-total" onclick="filterStatus('all')">
+			<i class="fas fa-users"></i>
+			Tổng nhân viên
+			<strong>@ViewBag.TotalEmployees</strong>
+		</button>
+		<button class="stat-card stat-working" onclick="filterStatus('working')">
+			<i class="fas fa-briefcase"></i>
+			Đang làm việc
+			<strong>@ViewBag.WorkingEmployees</strong>
+		</button>
+		<button class="stat-card stat-new" onclick="goToCreate()">
+			<i class="fas fa-user-plus"></i>
+			Nhân viên mới
+			<strong>@ViewBag.NewEmployees</strong>
+		</button>
+		<button class="stat-card stat-leaving" onclick="filterStatus('leaving')">
+			<i class="fas fa-user-slash"></i>
+			Đã nghỉ việc
+			<strong>@ViewBag.LeavingEmployees</strong>
+		</button>
+	</div>
+
+	<!-- Tìm kiếm & thao tác -->
+	<div class="search-filter">
+		<input type="text" id="searchTerm" class="form-control" placeholder="Tìm theo họ tên, email, số điện thoại..." value="@ViewBag.SearchTerm" />
+		<select id="statusFilter" class="form-select">
+			<option value="">Tất cả trạng thái</option>
+		</select>
+		<button id="filterBtn" class="btn btn-warning btn-sm"><i class="fas fa-filter"></i> Lọc</button>
+		<button id="selectAllBtn" class="btn btn-secondary btn-sm"><i class="fas fa-check-square"></i> Chọn tất cả</button>
+		<button id="deleteSelectedBtn" class="btn btn-danger btn-sm"><i class="fas fa-trash"></i> Xóa chọn</button>
+		<a asp-action="Create" class="btn btn-success btn-sm ms-auto"><i class="fas fa-plus"></i> Thêm</a>
+		<a asp-action="ExportToExcel" asp-route-searchTerm="@ViewBag.SearchTerm" asp-route-statusFilter="@ViewBag.StatusFilter" class="btn btn-info btn-sm ms-2"><i class="fas fa-file-export"></i> Xuất Excel</a>
+		<button type="button" class="btn btn-primary btn-sm ms-2" data-bs-toggle="modal" data-bs-target="#importModal">
+			<i class="fas fa-file-import"></i> Import Excel
+		</button>
+	</div>
+
+	<!-- Bảng danh sách -->
+	<table class="table table-bordered table-hover text-center table-custom">
+		<thead>
+			<tr>
+				<th></th>
+				<th>Mã NV</th>
+				<th>Họ tên</th>
+				<th>Email</th>
+				<th>Điện thoại</th>
+				<th>Giới tính</th>
+				<th>Năm sinh</th>
+				<th>Địa chỉ</th>
+				<th>Trạng thái</th>
+				<th>Ảnh</th>
+				<th>Thao tác</th>
+			</tr>
+		</thead>
+		<tbody>
+			@if (Model.Any())
+			{
+				foreach (var nv in Model)
+				{
+					<tr data-id="@nv.ID_Nhan_Vien" class="detail-trigger">
+						<td><input type="checkbox" class="custom-checkbox employee-checkbox" data-id="@nv.ID_Nhan_Vien"></td>
+						<td>@nv.ID_Nhan_Vien</td>
+						<td>@nv.Ho_Ten</td>
+						<td>@nv.Email</td>
+						<td>@nv.So_Dien_Thoai</td>
+						<td>@(nv.GioiTinh == true ? "Nam" : nv.GioiTinh == false ? "Nữ" : "Khác")</td>
+						<td>@nv.NamSinh.ToString("yyyy-MM-dd")</td>
+						<td>@nv.Dia_Chi</td>
+						<td>
+							<span class="badge bg-@(nv.Trang_Thai == true ? "success" : "secondary")">
+								@(nv.Trang_Thai == true ? "Đang làm" : "Nghỉ")
+							</span>
+						</td>
+						<td>
+							@if (!string.IsNullOrEmpty(nv.AnhNhanVien))
+							{
+								<img src="@nv.AnhNhanVien" style="width:40px; height:40px; border-radius:50%; object-fit:cover;" />
+							}
+							else
+							{
+
+								<span class="text-muted">Chưa có</span>
+							}
+						</td>
+						<td>
+							<a asp-action="Edit" asp-route-id="@nv.ID_Nhan_Vien" class="btn btn-warning btn-sm"><i class="fas fa-edit"></i></a>
+							<form asp-action="Delete" asp-route-id="@nv.ID_Nhan_Vien" method="post" style="display:inline-block" onsubmit="return confirm('Bạn có chắc muốn xoá?');">
+								<button class="btn btn-danger btn-sm"><i class="fas fa-trash"></i></button>
+							</form>
+						</td>
+					</tr>
+				}
+			}
+			else
+			{
+				<tr><td colspan="11">Không có dữ liệu</td></tr>
+			}
+		</tbody>
+	</table>
+
+	<!-- Phân trang -->
+	@{
+		var totalPages = ViewBag.TotalPages ?? 1;
+		var currentPage = ViewBag.CurrentPage ?? 1;
+		var searchTerm = ViewBag.SearchTerm ?? "";
+		var statusFilter = ViewBag.StatusFilter;
+	}
+	<nav aria-label="Page navigation">
+		<ul class="pagination justify-content-center mt-3">
+			<li class="page-item @(currentPage == 1 ? "disabled" : "")">
+				<a class="page-link" href="@Url.Action("Index", new { searchTerm, statusFilter, page = currentPage - 1 })">Trước</a>
+			</li>
+			@for (int i = 1; i <= totalPages; i++)
+			{
+				<li class="page-item @(i == currentPage ? "active" : "")">
+					<a class="page-link" href="@Url.Action("Index", new { searchTerm, statusFilter, page = i })">@i</a>
+				</li>
+			}
+			<li class="page-item @(currentPage == totalPages ? "disabled" : "")">
+				<a class="page-link" href="@Url.Action("Index", new { searchTerm, statusFilter, page = currentPage + 1 })">Sau</a>
+			</li>
+		</ul>
+	</nav>
 </div>
 
-<!-- Modal -->
-<div id="detailModal" class="modal">
-    <div class="modal-content">
-        <span class="close">&times;</span>
-        <h3>Thông tin chi tiết</h3>
-        <div id="modalBody"></div>
-    </div>
+<!-- Modal chi tiết -->
+<div id="detailModal" class="modal-custom">
+	<div class="modal-content-custom">
+		<span class="close">&times;</span>
+		<h3>Thông tin chi tiết</h3>
+		<div id="modalBody"></div>
+	</div>
+</div>
+
+<!-- Modal Import -->
+<div class="modal fade" id="importModal" tabindex="-1" aria-labelledby="importModalLabel" aria-hidden="true">
+	<div class="modal-dialog modal-dialog-centered">
+		<div class="modal-content">
+			<div class="modal-header bg-primary text-white">
+				<h5 class="modal-title" id="importModalLabel">Import Excel</h5>
+				<button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+			</div>
+			<div class="modal-body">
+				<form asp-action="ImportFromExcel" asp-controller="NhanVien" method="post" enctype="multipart/form-data">
+					<div class="mb-3">
+						<label for="fileExcel" class="form-label">Chọn file</label>
+						<input type="file" name="file" id="fileExcel" class="form-control" accept=".xlsx,.xls" required />
+					</div>
+					<div class="modal-footer">
+						<button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Hủy</button>
+						<button type="submit" class="btn btn-primary btn-sm"><i class="fas fa-upload"></i> Tải lên</button>
+					</div>
+				</form>
+			</div>
+		</div>
+	</div>
 </div>
 
 @section Scripts {
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-    <script>
-        document.addEventListener('DOMContentLoaded', function () {
-            const modal = document.getElementById('detailModal');
-            const closeBtn = document.querySelector('.close');
-            const detailTriggers = document.querySelectorAll('.detail-trigger');
-            const searchInput = document.getElementById('searchTerm');
-            const statusFilter = document.getElementById('statusFilter');
-            const filterBtn = document.getElementById('filterBtn');
+	<script>
+		document.addEventListener('DOMContentLoaded', function () {
+			const modal = document.getElementById('detailModal');
+			const closeBtn = document.querySelector('.modal-content-custom .close');
+			const triggers = document.querySelectorAll('.detail-trigger');
+			const checkboxes = document.querySelectorAll('.employee-checkbox');
 
-            detailTriggers.forEach(trigger => {
-                trigger.addEventListener('click', function () {
-                    const id = this.getAttribute('data-id');
-                    document.getElementById('modalBody').innerHTML = "Đang tải...";
-                    fetch(`/NhanVien/Details/${id}`)
-                        .then(response => response.text())
-                        .then(data => {
-                            document.getElementById('modalBody').innerHTML = data;
-                            modal.style.display = 'block';
-                        })
-                        .catch(error => console.error('Lỗi:', error));
-                });
-            });
+			// Chi tiết NV
+			triggers.forEach(tr => {
+				tr.addEventListener('click', function (e) {
+					if (e.target.closest("a,button,input")) return; // tránh conflict click
+					const id = this.getAttribute('data-id');
+					document.getElementById('modalBody').innerHTML = "Đang tải...";
+					fetch(`/NhanVien/Details/${id}`)
+						.then(r => r.text())
+						.then(data => {
+							document.getElementById('modalBody').innerHTML = data;
+							modal.style.display = 'block';
+						});
+				});
+			});
+			closeBtn.addEventListener('click', () => modal.style.display = 'none');
+			window.addEventListener('click', e => { if (e.target == modal) modal.style.display = 'none'; });
 
-            closeBtn.addEventListener('click', function () {
-                modal.style.display = 'none';
-            });
+			// Lọc
+			document.getElementById('filterBtn').addEventListener('click', () => {
+				const searchTerm = document.getElementById('searchTerm').value;
+				const statusFilter = document.getElementById('statusFilter').value || "";
+				window.location.href = `@Url.Action("Index", "NhanVien")?searchTerm=${searchTerm}&statusFilter=${statusFilter}`;
+			});
 
-            window.addEventListener('click', function (event) {
-                if (event.target == modal) {
-                    modal.style.display = 'none';
-                }
-            });
+			// Chọn tất cả
+			document.getElementById('selectAllBtn').addEventListener('click', () => {
+				checkboxes.forEach(c => c.checked = !c.checked);
+			});
 
-            filterBtn.addEventListener('click', function () {
-                const searchTerm = searchInput.value;
-                const statusFilterValue = statusFilter.value === "" ? null : statusFilter.value === "true";
-                window.location.href = `@Url.Action("Index", "NhanVien")?searchTerm=${searchTerm}&statusFilter=${statusFilterValue}&page=1&pageSize=${@pageSize}`;
-            });
+			// Xóa nhiều
+			document.getElementById('deleteSelectedBtn').addEventListener('click', () => {
+				const ids = Array.from(checkboxes).filter(c => c.checked).map(c => c.dataset.id);
+				if (ids.length > 0 && confirm("Xóa các nhân viên đã chọn?")) {
+					fetch('/NhanVien/DeleteSelected', {
+						method: 'POST',
+						headers: { 'Content-Type': 'application/json' },
+						body: JSON.stringify(ids)
+					}).then(r => r.json()).then(data => {
+						if (data.success) location.reload();
+						else alert("Có lỗi xảy ra");
+					});
+				}
+			});
+		});
 
-            searchInput.addEventListener('keypress', function (e) {
-                if (e.key === 'Enter') {
-                    filterBtn.click();
-                }
-            });
-        });
-    </script>
+		function filterStatus(type) {
+			let url = '@Url.Action("Index", "NhanVien")';
+			let search = document.getElementById('searchTerm').value || "";
+			if (type === 'all') window.location.href = `${url}?searchTerm=${search}&statusFilter=`;
+			else if (type === 'working') window.location.href = `${url}?searchTerm=${search}&statusFilter=true`;
+			else if (type === 'leaving') window.location.href = `${url}?searchTerm=${search}&statusFilter=false`;
+		}
+		function goToCreate() {
+			window.location.href = '@Url.Action("Create", "NhanVien")';
+		}
+	</script>
 }
