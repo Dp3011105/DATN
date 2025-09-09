@@ -20,11 +20,11 @@
 <form id="__afForm">@Html.AntiForgeryToken()</form>
 
 <style>
-    /* == giữ style gốc của bạn, rút gọn phần trình bày == */
+    /* rộng giỏ hàng thêm ~80px */
     .pos-wrap {
         display: grid;
-        grid-template-columns: 1fr 420px;
-        gap: 1rem
+        grid-template-columns: 1fr 500px; /* trước là 420px */
+        gap: 1rem;
     }
 
     .product-card {
@@ -36,10 +36,7 @@
         position: relative;
         overflow: hidden
     }
-
-        .product-card:hover {
-            box-shadow: 0 2px 10px rgba(0,0,0,.08)
-        }
+    .product-card:hover { box-shadow: 0 2px 10px rgba(0,0,0,.08) }
 
     .product-img {
         width: 100%;
@@ -63,9 +60,7 @@
         font-size: .8rem
     }
 
-    .money {
-        font-weight: 600
-    }
+    .money { font-weight: 600 }
 
     .promo-badge {
         position: absolute;
@@ -77,99 +72,33 @@
         padding: .25rem .5rem;
         border-radius: .5rem;
         max-width: 90%;
-        text-overflow: ellipsis;
-        white-space: nowrap;
-        overflow: hidden
+        text-overflow: ellipsis; white-space: nowrap; overflow: hidden
     }
 
-    .price-line {
-        display: flex;
-        gap: .5rem;
-        align-items: baseline
-    }
-
-    .old-price {
-        color: #888;
-        text-decoration: line-through;
-        font-weight: 400
-    }
-
-    .off-tag {
-        font-size: .75rem;
-        border: 1px dashed #dc2626;
-        color: #dc2626;
-        border-radius: .5rem;
-        padding: 0 .4rem
-    }
+    .price-line { display: flex; gap: .5rem; align-items: baseline }
+    .old-price { color: #888; text-decoration: line-through; font-weight: 400 }
+    .off-tag { font-size: .75rem; border: 1px dashed #dc2626; color: #dc2626; border-radius: .5rem; padding: 0 .4rem }
 
     .stock-badge {
-        position: absolute;
-        top: 8px;
-        right: 8px;
-        background: #111827;
-        color: #fff;
-        font-size: .75rem;
-        padding: .25rem .5rem;
-        border-radius: .5rem;
-        opacity: .9
+        position: absolute; top: 8px; right: 8px;
+        background: #111827; color: #fff; font-size: .75rem;
+        padding: .25rem .5rem; border-radius: .5rem; opacity: .9
     }
-
-    .out-of-stock {
-        opacity: .5;
-        pointer-events: none
-    }
+    .out-of-stock { opacity: .5; pointer-events: none }
 
     /* Invoice */
     .invoice {
         font-family: system-ui,-apple-system,Segoe UI,Roboto,'Helvetica Neue',Arial,'Noto Sans','Liberation Sans',sans-serif;
-        max-width: 780px;
-        margin: 0 auto;
-        color: #111827;
-        font-size: 13px;
-        background: #fff
+        max-width: 780px; margin: 0 auto; color: #111827; font-size: 13px; background: #fff
     }
-
-        .invoice h1, .invoice h2, .invoice h3 {
-            margin: 0
-        }
-
-        .invoice .muted {
-            color: #6b7280
-        }
-
-        .invoice .row {
-            display: flex;
-            justify-content: space-between;
-            gap: 1rem
-        }
-
-        .invoice table {
-            width: 100%;
-            border-collapse: collapse
-        }
-
-        .invoice th, .invoice td {
-            border-bottom: 1px dashed #e5e7eb;
-            padding: .5rem .25rem;
-            vertical-align: top
-        }
-
-        .invoice .totals td {
-            border: 0;
-            padding: .25rem 0
-        }
-
-        .invoice .money {
-            font-weight: 600
-        }
-
-        .invoice .badge {
-            display: inline-block;
-            border: 1px solid #ddd;
-            border-radius: 8px;
-            padding: .1rem .4rem;
-            font-size: .75rem
-        }
+    .invoice h1,.invoice h2,.invoice h3{ margin:0 }
+    .invoice .muted { color:#6b7280 }
+    .invoice .row { display:flex; justify-content:space-between; gap:1rem }
+    .invoice table { width:100%; border-collapse:collapse }
+    .invoice th,.invoice td { border-bottom:1px dashed #e5e7eb; padding:.5rem .25rem; vertical-align:top }
+    .invoice .totals td { border:0; padding:.25rem 0 }
+    .invoice .money { font-weight:600 }
+    .invoice .badge { display:inline-block; border:1px solid #ddd; border-radius:8px; padding:.1rem .4rem; font-size:.75rem }
 </style>
 
 <div class="container-fluid py-3">
@@ -260,7 +189,7 @@
     </div>
 </div>
 
-<!-- Modal cấu hình item -->
+<!-- Modal cấu hình item (CHỌN SIZE Ở ĐÂY) -->
 <div class="modal fade" id="modalItem" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-dialog-scrollable">
         <div class="modal-content">
@@ -270,6 +199,12 @@
             </div>
             <div class="modal-body">
                 <input type="hidden" id="mdlIndex" />
+                <div class="mb-2">
+                    <label class="form-label">Size</label>
+                    <div class="btn-group w-100" role="group" id="mdlSizes">
+                        <!-- sẽ render 3 nút: Cơ bản / Large / XL -->
+                    </div>
+                </div>
                 <div class="mb-2">
                     <label class="form-label">Độ ngọt</label>
                     <select id="mdlDoNgot" class="form-select"></select>
@@ -288,8 +223,9 @@
                     <small class="text-muted" id="mdlQtyHint"></small>
                 </div>
                 <div class="text-end">
-                    <div>Đơn giá: <span class="money" id="mdlDonGia">0</span></div>
-                    <div>Topping: <span class="money" id="mdlTienTop">0</span></div>
+                    <div>Đơn giá sp (sau KM): <span class="money" id="mdlDonGia">0</span></div>
+                    <div>+ Size: <span class="money" id="mdlTienSize">0</span></div>
+                    <div>+ Topping: <span class="money" id="mdlTienTop">0</span></div>
                     <div>Tạm tính: <span class="money" id="mdlTamTinh">0</span></div>
                 </div>
             </div>
@@ -353,7 +289,7 @@
 </div>
 
 <script>
-    // ===== Seed từ server
+    // ===== Seed
     window.__DATA = {
       products: @Html.Raw(productsJson),
       doNgots : @Html.Raw(doNgotsJson),
@@ -361,12 +297,17 @@
       toppings: @Html.Raw(toppingsJson)
     };
 
-    // Lấy anti-forgery token
+    // ===== Size meta (dùng trong giỏ hàng / modal)
+    const SIZE_META = {
+      1: { id:1, name:"Cơ bản",  extra: 0 },
+      2: { id:2, name:"Large",   extra: 10000 },
+      3: { id:3, name:"X-Large", extra: 15000 },
+    };
+
+    // Anti-forgery
     const getAFT = () => document.querySelector('#__afForm input[name="__RequestVerificationToken"]')?.value || '';
 
     const BE_BASE = "https://localhost:7169";
-
-    // Ảnh
     const imgUrl = path => {
       if (!path) return "https://placehold.co/400x400?text=Drink";
       path = String(path).replace(/^~\//, "/");
@@ -374,18 +315,9 @@
       return BE_BASE + (path.startsWith("/") ? "" : "/") + path;
     };
 
-    // ===== STATE
+    // ===== Helpers
     let PAGE=1, PAGE_SIZE=12, TOTAL=0;
-
-    // Escape text chống XSS cơ bản khi gán vào innerHTML
-    const esc = s => String(s??'')
-      .replace(/&/g,'&amp;')
-      .replace(/</g,'&lt;')
-      .replace(/>/g,'&gt;')
-      .replace(/"/g,'&quot;')
-      .replace(/'/g,'&#39;');
-
-    // parse số an toàn
+    const esc = s => String(s??'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
     const toNumber = v => {
       if (typeof v === 'number') return Number.isFinite(v) ? v : 0;
       if (v == null) return 0;
@@ -393,7 +325,6 @@
       const n = parseInt(s,10);
       return Number.isFinite(n) ? n : 0;
     };
-
     const pickStock = (p) => {
       const keys = ['SoLuongTon','So_Luong','So_Luong_Ton','SoLuong','Stock','TonKho','Ton_kho'];
       for (const k of keys) {
@@ -407,13 +338,11 @@
     };
 
     const CURRENT_DATE = new Date();
-
     const promoListOf = p => {
       const cands = [p?.KhuyenMais, p?.KhuyenMai, p?.DanhSachKhuyenMai, p?.dsKhuyenMai];
       for (const x of cands) if (Array.isArray(x) && x.length) return x;
       return [];
     };
-
     function parseD(v){
       if (!v) return null;
       if (v instanceof Date && !isNaN(+v)) return v;
@@ -428,11 +357,10 @@
       const iso = new Date(v);
       return isNaN(+iso) ? null : iso;
     }
-
     function getActivePromotion(p, now = CURRENT_DATE) {
       const list = promoListOf(p);
       const origin = toNumber(p?.Gia ?? 0);
-      let result = { has:false, price:origin, name:null, start:null, end:null };
+      let result = { has:false, price:origin, name:null };
       if (!list.length) return result;
       let best = origin, bestName = null;
       for (const km of list) {
@@ -440,14 +368,16 @@
         const e = parseD(km?.Ngay_Ket_Thuc);
         if (!s || !e) continue;
         if (now >= s && now <= e) {
-          const promoPrice = toNumber(km?.Gia_Giam ?? origin);
+          const promoPrice = toNumber(km?.Gia_Giam ?? origin); // ở DB bạn Gia_Giam là GIÁ SAU KM
           if (promoPrice < best) { best = promoPrice; bestName = km?.Ten_Khuyen_Mai || "Khuyến mãi"; }
         }
       }
-      if (best < origin) return { has:true, price:best, name:bestName, start:null, end:null };
+      if (best < origin) return { has:true, price:best, name:bestName };
       return result;
     }
+    const fmtVND = n => { try { return (toNumber(n)||0).toLocaleString('vi-VN',{style:'currency',currency:'VND'}) } catch { return n } };
 
+    // ===== SOURCE
     let SOURCE = (window.__DATA.products || []).map(p => {
       const promo = getActivePromotion(p, CURRENT_DATE);
       return {
@@ -460,16 +390,20 @@
     });
     let FILTERED = SOURCE.slice();
 
+    // ===== OPTIONS
     const OPTIONS = {
       doNgots : window.__DATA.doNgots  || [],
       luongDas: window.__DATA.luongDas || [],
       toppings: window.__DATA.toppings || []
     };
+
+    // ===== CART
     let CART = [];
     let VOUCHER=null, DISCOUNT=0;
     let PAYABLE = 0;
 
-    const fmtVND = n => { try { return (toNumber(n)||0).toLocaleString('vi-VN',{style:'currency',currency:'VND'}) } catch { return n } };
+    const cartQtyOf = productId => CART.filter(x=>x.sanPhamId==productId).reduce((s,x)=>s+x.soLuong,0);
+
     const resetSearch = ()=>{ document.getElementById('txtSearch').value=''; searchProducts(1); };
     const prevPage = ()=>{ if(PAGE>1) searchProducts(PAGE-1) };
     const nextPage = ()=>{ if(PAGE<Math.ceil(TOTAL/PAGE_SIZE)) searchProducts(PAGE+1) };
@@ -481,8 +415,6 @@
       const pct = Math.round((1 - (p / o)) * 100);
       return pct>0 ? pct : null;
     };
-
-    const cartQtyOf = productId => CART.filter(x=>x.sanPhamId==productId).reduce((s,x)=>s+x.soLuong,0);
 
     function searchProducts(page){
       PAGE = page||1;
@@ -511,7 +443,7 @@
         col.innerHTML = `
           <div class="product-card ${disabled?'out-of-stock':''}" ${disabled?'':'data-id="'+p.ID_San_Pham+'" data-name="'+esc(p.Ten_San_Pham||'')+'"'}>
             ${p.__HasPromo ? `<div class="promo-badge" title="${esc(p.__PromoName||'')}">${esc(p.__PromoName||'Khuyến mãi')}</div>` : ``}
-            <div class="stock-badge" title="Tồn kho còn lại">Tồn: ${p.__Stock ?? 0}</div>
+            <div class="stock-badge" title="Tồn kho">Tồn: ${p.__Stock ?? 0}</div>
             <img class="product-img" src="${img}" onerror="this.src='https://placehold.co/400x400?text=Drink';" />
             <div class="mt-1 fw-semibold">${esc(p.Ten_San_Pham||'')}</div>
             <div class="text-muted small">${esc(ma)}</div>
@@ -542,15 +474,25 @@
       return true;
     }
 
-    function addToCart(id, name){
-      const prod = SOURCE.find(x => x.ID_San_Pham == id);
+    function basePriceAfterPromo(productId){
+      const prod = SOURCE.find(x => x.ID_San_Pham == productId);
       const promo = getActivePromotion(prod, CURRENT_DATE);
-      const finalPrice = Number.isFinite(promo.price) ? promo.price : toNumber(prod?.Gia ?? 0);
+      return Number.isFinite(promo.price) ? promo.price : toNumber(prod?.Gia ?? 0);
+    }
 
+    // Thêm sản phẩm: mặc định size Cơ bản, tinh chỉnh size ở modal
+    function addToCart(id, name){
+      const base = toNumber(basePriceAfterPromo(id));
       if(!ensureNotOverStock(id, 1)) return;
-      CART.push({ sanPhamId:id, ten:name, donGia:toNumber(finalPrice)||0, soLuong:1, doNgotId:null, luongDaId:null, toppingIds:[], tienTopping:0 });
+      CART.push({
+        sanPhamId:id, ten:name,
+        sizeId:1, sizeName: SIZE_META[1].name, sizeExtra: SIZE_META[1].extra,
+        donGia: base, // sau KM (chưa size/topping)
+        soLuong:1, doNgotId:null, luongDaId:null, toppingIds:[], tienTopping:0
+      });
       renderCart();
     }
+
     const removeItem = i => { CART.splice(i,1); renderCart(); };
     const decQty = i => { if(CART[i].soLuong>1){ CART[i].soLuong--; renderCart(); } };
     const incQty = i => {
@@ -574,6 +516,7 @@
       renderCart();
     };
 
+    // Modal cấu hình (chọn size tại đây)
     function openConfig(idx){
       const it = CART[idx];
       document.getElementById('mdlIndex').value = idx;
@@ -585,6 +528,25 @@
       const maxAllow = Math.max(1, stock - othersInCart);
       document.getElementById('mdlQtyHint').textContent = `Số lượng tối đa có thể chọn: ${maxAllow}`;
 
+      // Size buttons
+      const sizesWrap = document.getElementById('mdlSizes');
+      sizesWrap.innerHTML = '';
+      [1,2,3].forEach(sid=>{
+        const btn = document.createElement('button');
+        btn.type="button";
+        btn.className = `btn btn-outline-primary ${sid===it.sizeId?'active':''}`;
+        const label = `${SIZE_META[sid].name}${SIZE_META[sid].extra>0 ? ' +' + (SIZE_META[sid].extra/1000).toFixed(0) + 'k' : ''}`;
+        btn.textContent = label;
+        btn.dataset.sid = String(sid);
+        btn.onclick = () => {
+          sizesWrap.querySelectorAll('button').forEach(b=>b.classList.remove('active'));
+          btn.classList.add('active');
+          calcModalMoney(); // cập nhật tiền size/tạm tính
+        };
+        sizesWrap.appendChild(btn);
+      });
+
+      // Độ ngọt / Lượng đá
       const selSweet = document.getElementById('mdlDoNgot');
       selSweet.innerHTML = (OPTIONS.doNgots||[]).map(d=>`<option value="${d.ID_DoNgot}" ${it.doNgotId==d.ID_DoNgot?'selected':''}>${esc(d.Muc_Do)}</option>`).join('');
 
@@ -594,6 +556,7 @@
         return `<option value="${d.ID_LuongDa}" ${it.luongDaId==d.ID_LuongDa?'selected':''}>${esc(label)}</option>`;
       }).join('');
 
+      // Topping
       const topWrap = document.getElementById('mdlToppings');
       topWrap.innerHTML = '';
       (OPTIONS.toppings||[]).forEach(t=>{
@@ -613,17 +576,32 @@
       new bootstrap.Modal(document.getElementById('modalItem')).show();
     }
 
+    function currentModalSizeExtra(){
+      const btn = document.querySelector('#mdlSizes .btn.active');
+      const sid = btn ? parseInt(btn.dataset.sid,10) : 1;
+      return SIZE_META[sid]?.extra || 0;
+    }
+    function currentModalSizeId(){
+      const btn = document.querySelector('#mdlSizes .btn.active');
+      return btn ? parseInt(btn.dataset.sid,10) : 1;
+    }
+
     function calcModalMoney(){
       const idx = +document.getElementById('mdlIndex').value;
       const it  = CART[idx];
       const qty = +document.getElementById('mdlQty').value || 1;
+
       let top = 0;
       document.querySelectorAll('#mdlToppings input[type="checkbox"]').forEach(ch=>{
         if(ch.checked){ top += toNumber(ch.getAttribute('data-price')||'0'); }
       });
+
+      const sizeExtra = currentModalSizeExtra();
+
       document.getElementById('mdlDonGia').textContent  = fmtVND(it.donGia);
+      document.getElementById('mdlTienSize').textContent= fmtVND(sizeExtra);
       document.getElementById('mdlTienTop').textContent = fmtVND(top);
-      document.getElementById('mdlTamTinh').textContent = fmtVND((it.donGia + top) * qty);
+      document.getElementById('mdlTamTinh').textContent = fmtVND((it.donGia + sizeExtra + top) * qty);
     }
     document.addEventListener('change', e=>{
       if(e.target.closest('#mdlToppings') || e.target.id==='mdlQty'){ calcModalMoney(); }
@@ -646,6 +624,11 @@
 
       it.doNgotId  = parseInt(document.getElementById('mdlDoNgot').value)||null;
       it.luongDaId = parseInt(document.getElementById('mdlLuongDa').value)||null;
+
+      const sid = currentModalSizeId();
+      it.sizeId   = sid;
+      it.sizeName = SIZE_META[sid]?.name || 'Cơ bản';
+      it.sizeExtra= SIZE_META[sid]?.extra || 0;
 
       const topIds=[]; let topMoney=0;
       document.querySelectorAll('#mdlToppings input[type="checkbox"]').forEach(ch=>{
@@ -671,8 +654,7 @@
       const note  = (document.getElementById('txtNote')?.value  || '').trim();
       if (phone) return phone;
       if (note)  return note;
-      const now = new Date();
-      const pad = n => String(n).padStart(2,'0');
+      const now = new Date(); const pad = n => String(n).padStart(2,'0');
       return `POS-${now.getFullYear()}${pad(now.getMonth()+1)}${pad(now.getDate())}${pad(now.getHours())}${pad(now.getMinutes())}${pad(now.getSeconds())}`;
     }
     function buildVietQRUrl(amount, addInfo) {
@@ -700,17 +682,21 @@
 
       CART.forEach((it,idx)=>{
         const optChips = `
+          <span class='chip'>Size: ${esc(it.sizeName || 'Cơ bản')}</span>
           ${it.doNgotId?`<span class='chip'>Ngọt: ${esc(findName(OPTIONS.doNgots,'ID_DoNgot','Muc_Do',it.doNgotId))}</span>`:''}
           ${it.luongDaId?`<span class='chip'>Đá: ${esc(findName(OPTIONS.luongDas,'ID_LuongDa','Ten_LuongDa',it.luongDaId) || findName(OPTIONS.luongDas,'ID_LuongDa','Muc_Da',it.luongDaId))}</span>`:''}
           ${(it.toppingIds||[]).length>0?`<span class='chip'>${(it.toppingIds||[]).length} topping</span>`:''}
         `;
         const line=document.createElement('div'); line.className='cart-item';
+        const unit = (it.donGia + it.sizeExtra + it.tienTopping);
         line.innerHTML=`
           <div class="d-flex justify-content-between align-items-start">
             <div>
               <div class="fw-semibold">${esc(it.ten)}</div>
               <div class="text-muted small">${optChips}</div>
-              <div class="text-muted small">Đơn giá: ${fmtVND(it.donGia)} + topping ${fmtVND(it.tienTopping)}</div>
+              <div class="text-muted small">
+                Đơn giá sp: ${fmtVND(it.donGia)} • Size: +${fmtVND(it.sizeExtra)} • Topping: ${fmtVND(it.tienTopping)}
+              </div>
             </div>
             <div class="text-end">
               <div class="input-group input-group-sm">
@@ -718,7 +704,7 @@
                 <input class="form-control text-center" style="width:60px" value="${it.soLuong}" onblur="setQty(${idx}, this.value)">
                 <button class="btn btn-outline-secondary" onclick="incQty(${idx})">+</button>
               </div>
-              <div class="money mt-1">${fmtVND((it.donGia + it.tienTopping) * it.soLuong)}</div>
+              <div class="money mt-1">${fmtVND(unit * it.soLuong)}</div>
               <div class="mt-2 d-flex gap-1 justify-content-end">
                 <button class="btn btn-sm btn-outline-primary" onclick="openConfig(${idx})">Tùy chọn</button>
                 <button class="btn btn-sm btn-outline-danger" onclick="removeItem(${idx})">Xoá</button>
@@ -730,47 +716,105 @@
       recalcTotals();
     }
 
-    function recalcTotals(){
-      const tam = CART.reduce((s,it)=> s + (it.donGia + it.tienTopping)*it.soLuong, 0);
-      let giam = Math.min(DISCOUNT, tam*0.5);
+       function recalcTotals(){
+      const tam = CART.reduce((s,it)=> s + (it.donGia + it.sizeExtra + it.tienTopping)*it.soLuong, 0);
+
+      let giam = 0;
+      if (VOUCHER) {
+        if (VOUCHER.type === 'percent') {
+          const pct = Number(VOUCHER.pct) || 0;
+          giam = tam * (pct / 100);
+        } else if (VOUCHER.type === 'fixed') {
+          giam = Number(VOUCHER.amount) || 0; // phòng trường hợp có loại giảm cố định sau này
+        }
+
+        // điều kiện tối thiểu (nếu có)
+        if (VOUCHER.minOrder && tam < VOUCHER.minOrder) {
+          giam = 0;
+          const msg = document.getElementById('voucherMsg');
+          if (msg) msg.textContent = `Đơn tối thiểu ${fmtVND(VOUCHER.minOrder)} để dùng voucher.`;
+        }
+
+        // áp trần 50% tổng
+        giam = Math.min(giam, tam * 0.5);
+      }
+
+      DISCOUNT = giam;
       const pay = Math.max(0, tam - giam);
       PAYABLE = pay;
+
       document.getElementById('lblTamTinh').textContent   = fmtVND(tam);
       document.getElementById('lblGiam').textContent      = `- ${fmtVND(giam)}`;
       document.getElementById('lblThanhToan').textContent = fmtVND(pay);
     }
-    function applyVoucher(){
-      const code = (document.getElementById('txtVoucher').value||'').trim().toUpperCase();
-      const tam  = CART.reduce((s,it)=> s + (it.donGia + it.tienTopping)*it.soLuong, 0);
+
+        async function applyVoucher(){
+      const code = (document.getElementById('txtVoucher').value||'').trim();
       const msg  = document.getElementById('voucherMsg');
 
-      if(!code){ VOUCHER=null; DISCOUNT=0; msg.textContent=''; recalcTotals(); return; }
+      if(!code){
+        VOUCHER = null; DISCOUNT = 0;
+        msg.textContent = '';
+        recalcTotals();
+        return;
+      }
 
-      let giam=0;
-      if(code.startsWith('SALE') && code.length>=6 && !isNaN(+code.substring(4))){
-        const pct=+code.substring(4); if(pct<=100) giam=tam*(pct/100);
-      }else if(code==='SALE100'){ giam=100000; }
-      const max=tam*0.5; if(giam>max) giam=Math.floor(max);
+      const tam = CART.reduce((s,it)=> s + (it.donGia + it.sizeExtra + it.tienTopping)*it.soLuong, 0);
 
-      if(giam>0){ VOUCHER={id:0, code}; DISCOUNT=giam; msg.textContent=`Áp dụng thành công. Giảm ${fmtVND(giam)}.`; }
-      else { VOUCHER=null; DISCOUNT=0; msg.textContent='Voucher không hợp lệ.'; }
-      recalcTotals();
+      try{
+        const res = await fetch('/BanHangTaiQuay/CheckVoucher', {
+          method:'POST',
+          headers:{ 'Content-Type':'application/json', 'RequestVerificationToken': getAFT() },
+          body: JSON.stringify({ Code: code, Subtotal: tam })
+        });
+
+        const text = await res.text();
+        let data; try { data = JSON.parse(text) } catch { data = {}; }
+
+        // Hỗ trợ camelCase/PascalCase
+        const success    = data.Success    ?? data.success;
+        const message    = data.Message    ?? data.message;
+        const discount   = Number(data.Discount ?? data.discount) || 0;
+        const voucherId  = data.VoucherId  ?? data.voucherId ?? data.id_Voucher ?? data.ID_Voucher ?? 0;
+        const codeReturn = data.Code       ?? data.code      ?? data.ma_Voucher ?? data.Ma_Voucher ?? code;
+        const pct        = Number(data.Percentage ?? data.percentage) || 0;
+        const minOrder   = Number(data.MinOrder   ?? data.minOrder)   || 0;
+
+        if(!res.ok || !success){
+          VOUCHER=null; DISCOUNT=0;
+          msg.textContent = message || 'Voucher không hợp lệ.';
+          recalcTotals();
+          return;
+        }
+
+        // Lưu meta để tính động mỗi lần tổng thay đổi
+        VOUCHER = { id: voucherId, code: codeReturn, pct, minOrder, type:'percent' };
+        DISCOUNT = discount; // hiển thị tức thời, recalcTotals sẽ tính lại theo %.
+        msg.textContent = `${message || 'Áp dụng voucher thành công.'} Giảm ${fmtVND(DISCOUNT)}.`;
+        recalcTotals();
+
+      }catch(e){
+        VOUCHER=null; DISCOUNT=0;
+        msg.textContent = 'Lỗi gọi API voucher: ' + (e?.message || e);
+        recalcTotals();
+      }
     }
+
+
     const clearCart = ()=>{ CART=[]; VOUCHER=null; DISCOUNT=0; document.getElementById('txtVoucher').value=''; document.getElementById('voucherMsg').textContent=''; renderCart(); };
 
     function onLoaiChange(){
       const loai = document.getElementById('selLoai').value;
-      const wrap = document.getElementById('shipAddressWrap');
-      wrap.style.display = (loai === 'GiaoHang') ? '' : 'none';
+      document.getElementById('shipAddressWrap').style.display = (loai === 'GiaoHang') ? '' : 'none';
     }
 
     const fmtDateTime = (d) => { try { const dt = (d instanceof Date) ? d : new Date(d); return dt.toLocaleString('vi-VN'); } catch { return d || ''; } }
 
     function renderInvoicePreview(inv) {
       const lines = inv.Items?.map((it, i) => {
-        const tops = (it.ToppingNames && it.ToppingNames.length)
-          ? `<div class="muted">Topping: ${esc(it.ToppingNames.join(', '))}</div>` : '';
+        const tops = (it.ToppingNames && it.ToppingNames.length) ? `<div class="muted">Topping: ${esc(it.ToppingNames.join(', '))}</div>` : '';
         const opts = [];
+        if (it.SizeName)    opts.push('Size: ' + esc(it.SizeName));
         if (it.DoNgotName)  opts.push('Ngọt: ' + esc(it.DoNgotName));
         if (it.LuongDaName) opts.push('Đá: ' + esc(it.LuongDaName));
         const optLine = opts.length ? `<div class="muted">${opts.join(' • ')}</div>` : '';
@@ -783,10 +827,10 @@
               ${optLine}
               ${tops}
             </td>
-            <td class="text-end">${fmtVND(it.DonGia)}</td>
+            <td class="text-end">${fmtVND(it.DonGia)}<div class="muted">+ size ${fmtVND(it.SizeExtra||0)}</div></td>
             <td class="text-center">${it.SoLuong}</td>
             <td class="text-end">${fmtVND(it.TienTopping || 0)}</td>
-            <td class="text-end money">${fmtVND((it.DonGia + (it.TienTopping||0)) * it.SoLuong)}</td>
+            <td class="text-end money">${fmtVND((it.DonGia + (it.SizeExtra||0) + (it.TienTopping||0)) * it.SoLuong)}</td>
           </tr>`;
       }).join('') || '';
 
@@ -882,7 +926,7 @@
       const btn = document.getElementById('btnCreate');
       btn.disabled = true;
 
-      const tam  = CART.reduce((s,it)=> s + (it.donGia + it.tienTopping)*it.soLuong, 0);
+      const tam  = CART.reduce((s,it)=> s + (it.donGia + it.sizeExtra + it.tienTopping)*it.soLuong, 0);
       const giam = Math.min(DISCOUNT, tam*0.5);
 
       const loai = document.getElementById('selLoai').value;
@@ -899,22 +943,24 @@
         KhachHang_SDT: (document.getElementById('txtPhone').value||'').trim() || null,
         GhiChu: (document.getElementById('txtNote').value||'').trim() || null,
         VoucherId: VOUCHER?.id || null,
-        TongTien: tam,                          // server sẽ bỏ qua và tự tính lại
+        TongTien: tam,                          // server sẽ tính lại
         TienGiam: giam,
         DiaChiTuNhap: loai === 'GiaoHang' ? shipAddr : null,
         Items: CART.map(it=>({
-          SanPhamId: it.sanPhamId, SoLuong: it.soLuong, DonGia: it.donGia,
-          DoNgotId: it.doNgotId, LuongDaId: it.luongDaId, ToppingIds: it.toppingIds
+          SanPhamId: it.sanPhamId,
+          SoLuong: it.soLuong,
+          DonGia: it.donGia,
+          DoNgotId: it.doNgotId,
+          LuongDaId: it.luongDaId,
+          ToppingIds: it.toppingIds,
+          SizeId: it.sizeId
         }))
       };
 
       try{
         const res = await fetch('/BanHangTaiQuay/TaoHoaDonTaiQuay', {
           method:'POST',
-          headers:{
-            'Content-Type':'application/json',
-            'RequestVerificationToken': getAFT()
-          },
+          headers:{ 'Content-Type':'application/json', 'RequestVerificationToken': getAFT() },
           body: JSON.stringify(payload)
         });
         const text = await res.text();
@@ -926,14 +972,15 @@
           return;
         }
 
-        // Dữ liệu hiển thị hóa đơn
+        // Hiển thị hoá đơn
         const inv = {
           ID: data.id || null, Code: data.code || null, NgayLap: new Date(),
           KhachHang_SDT: payload.KhachHang_SDT, LoaiHoaDon: payload.LoaiHoaDon, DiaChi: payload.DiaChiTuNhap,
           HinhThucThanhToanId: payload.HinhThucThanhToanId, GhiChu: payload.GhiChu, VoucherCode: (VOUCHER?.code || null),
           Tong: tam, Giam: giam, ThanhToan: tam - giam,
           Items: CART.map(it=>({
-            Ten: it.ten, DonGia: it.donGia, SoLuong: it.soLuong, TienTopping: it.tienTopping||0,
+            Ten: it.ten, DonGia: it.donGia, SizeExtra: it.sizeExtra, SizeName: it.sizeName,
+            SoLuong: it.soLuong, TienTopping: it.tienTopping||0,
             DoNgotName: findName(OPTIONS.doNgots,'ID_DoNgot','Muc_Do',it.doNgotId),
             LuongDaName: findName(OPTIONS.luongDas,'ID_LuongDa','Ten_LuongDa',it.luongDaId) || findName(OPTIONS.luongDas,'ID_LuongDa','Muc_Da',it.luongDaId),
             ToppingNames: (it.toppingIds||[]).map(id=>{ const o=(OPTIONS.toppings||[]).find(t=>t.ID_Topping==id); return o ? (o.Ten || o.Ten_Topping || ('Topping #' + id)) : ('Topping #' + id); })

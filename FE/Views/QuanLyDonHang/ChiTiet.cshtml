@@ -241,7 +241,7 @@
                         {
                             var tenSp = ct.SanPham?.Ten_San_Pham ?? $"SP#{ct.ID_San_Pham}";
                             var sizeTxt = SizeText(ct.ID_Size, ct.Size?.SizeName);   // <-- dùng helper map tên size
-                            var ngotTxt = ct.DoNgot?.ID_DoNgot ;
+                            var ngotTxt = ct.ID_SanPham_DoNgot ;
                             var daTxt = ct.LuongDa?.Ten_LuongDa ?? (ct.ID_LuongDa.HasValue ? $"#{ct.ID_LuongDa}" : "-");
 
                             var tops = (ct.HoaDonChiTietToppings ?? new List<BE.models.HoaDonChiTietTopping>())
