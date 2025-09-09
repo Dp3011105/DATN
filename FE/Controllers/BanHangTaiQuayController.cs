@@ -27,14 +27,11 @@ namespace FE.Controllers
 
         // Voucher lookup endpoints (tuỳ BE – thêm/bớt nếu cần)
         private static readonly string[] VoucherByCodeEndpoints = new[]
-        {
-            "/api/Voucher/by-code/{code}",
-            "/api/Voucher/{code}",
-            "/api/voucher/by-code/{code}",
-            "/api/voucher/{code}",
-            "/api/Voucher?code={code}",
-            "/api/voucher?code={code}"
-        };
+{
+    "/api/Voucher/code/{code}",
+    "/api/voucher/code/{code}",   // đề phòng BE map lowercase
+    "/api/Voucher",               // không dùng by-code nữa
+};
 
         // IDs mặc định/fallback
         private const int DEFAULT_KHACH_LE_ID = 1;
@@ -177,7 +174,9 @@ namespace FE.Controllers
                     return Json(new CheckVoucherResponse { Success = false, Message = "Thiếu mã voucher." });
 
                 // CHỈ GỌI endpoint đúng như Swagger của bạn trước
-                var primaryEndpoint = $"/api/Voucher/by-code/{Uri.EscapeDataString(code)}";
+                // Đúng route của BE: GET /api/Voucher/code/{code}
+                var primaryEndpoint = $"/api/Voucher/code/{Uri.EscapeDataString(code)}";
+
                 using var http = new HttpClient { BaseAddress = new Uri(BeBaseUrl), Timeout = TimeSpan.FromSeconds(15) };
 
                 HttpResponseMessage resp;
