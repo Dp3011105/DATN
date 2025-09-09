@@ -1,0 +1,204 @@
+﻿@model FE.Models.DonHangTK
+@{
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+@{
+    ViewData["Title"] = "Chi Tiết Đơn Hàng";
+    var statusDisplay = new Dictionary<string, string>
+    {
+        { "Chua_Xac_Nhan", "Chưa Xác Nhận" },
+        { "Da_Xac_Nhan", "Đã Xác Nhận" },
+        { "Dang_Giao_Hang", "Đang Giao Hàng" },
+        { "Hoan_Thanh", "Hoàn Thành" },
+        { "Huy_Don", "Hủy Đơn" }
+    };
+    var statuses = new[] { "Chua_Xac_Nhan", "Da_Xac_Nhan", "Dang_Giao_Hang", "Hoan_Thanh" };
+    var currentStatusIndex = Array.IndexOf(statuses, Model.Trang_Thai);
+    var isCancelled = Model.Trang_Thai == "Huy_Don";
+}
+
+<div class="container mt-5">
+    <h2 class="text-center mb-4 fw-bold">Chi Tiết Đơn Hàng #@Model.Ma_Hoa_Don</h2>
+
+    <!-- Order Progress Timeline (Similar to TikTok Shop) -->
+    <div class="mb-5">
+        <h4 class="mb-3">Tiến Trình Đơn Hàng</h4>
+        <div class="timeline">
+            @for (int i = 0; i < statuses.Length; i++)
+            {
+                var isActive = !isCancelled && i <= currentStatusIndex;
+                var isPending = !isCancelled && i > currentStatusIndex;
+                var lineClass = i < statuses.Length - 1 ? (isActive ? "timeline-line active" : (isPending ? "timeline-line pending" : "timeline-line")) : "";
+                var iconClass = i switch
+                {
+                    0 => "fas fa-clock",
+                    1 => "fas fa-check-circle",
+                    2 => "fas fa-truck",
+                    3 => "fas fa-flag-checkered",
+                    _ => ""
+                };
+                var statusColor = isCancelled ? "text-danger" : isActive ? "text-success" : "text-secondary";
+
+                <div class="timeline-item @(isActive ? "active" : "") @(isPending ? "pending" : "")">
+                    <div class="timeline-icon @statusColor bg-light border @statusColor">
+                        <i class="@iconClass"></i>
+                    </div>
+                    <div class="timeline-content">
+                        <p class="fw-bold mb-0 @statusColor">@statusDisplay[statuses[i]]</p>
+                    </div>
+                    @if (i < statuses.Length - 1)
+                    {
+                        <div class="@lineClass"></div>
+                    }
+                </div>
+            }
+            @if (isCancelled)
+            {
+                <div class="timeline-item cancelled">
+                    <div class="timeline-icon text-danger bg-light border text-danger">
+                        <i class="fas fa-times-circle"></i>
+                    </div>
+                    <div class="timeline-content">
+                        <p class="fw-bold mb-0 text-danger">Hủy Đơn</p>
+                    </div>
+                </div>
+            }
+        </div>
+        @if (isCancelled)
+        {
+            <p class="text-danger mt-3">Lý do hủy: @Model.LyDoHuyDon</p>
+        }
+    </div>
+
+    <!-- Order Details Card -->
+    <div class="card mb-4 shadow-sm border-0 rounded">
+        <div class="card-header bg-info text-white">
+            <h5 class="mb-0">Thông Tin Đơn Hàng</h5>
+        </div>
+        <div class="card-body">
+            <p><strong>Mã Đơn Hàng:</strong> @Model.Ma_Hoa_Don</p>
+            <p><strong>Ngày Tạo:</strong> @Model.Ngay_Tao.ToString("dd/MM/yyyy HH:mm")</p>
+            <p><strong>Tổng Tiền:</strong> @Model.Tong_Tien.ToString("N0") VNĐ</p>
+            <p><strong>Phương Thức Thanh Toán:</strong> @Model.Phuong_Thuc_Thanh_Toan</p>
+            <p><strong>Địa Chỉ:</strong> @Model.DiaChi.Dia_Chi, @Model.DiaChi.Tinh_Thanh</p>
+            <p><strong>Ghi Chú:</strong> @(string.IsNullOrEmpty(Model.Ghi_Chu) ? "Không có" : Model.Ghi_Chu)</p>
+        </div>
+    </div>
+
+    <!-- Order Items Card -->
+    <div class="card mb-4 shadow-sm border-0 rounded">
+        <div class="card-header bg-info text-white">
+            <h5 class="mb-0">Chi Tiết Sản Phẩm</h5>
+        </div>
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-hover">
+                    <thead>
+                        <tr>
+                            <th>Sản Phẩm</th>
+                            <th>Size</th>
+                            <th>Mức Độ</th>
+                            <th>Lượng Đá</th>
+                            <th>Topping</th>
+                            <th>Số Lượng</th>
+                            <th>Tổng Tiền</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var item in Model.ChiTiets)
+                        {
+                            <tr>
+                                <td>@item.Ten_San_Pham</td>
+                                <td>@item.SizeName</td>
+                                <td>@item.Muc_Do</td>
+                                <td>@item.Ten_LuongDa</td>
+                                <td>@(item.Toppings.Any() ? string.Join(", ", item.Toppings.Select(t => $"{t.Ten} (+{t.Gia:N0} VNĐ)")) : "Không có")</td>
+                                <td>@item.So_Luong</td>
+                                <td>@item.Tong_Tien.ToString("N0") VNĐ</td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- Vouchers Card -->
+    @if (Model.Vouchers.Any())
+    {
+        <div class="card mb-4 shadow-sm border-0 rounded">
+            <div class="card-header bg-info text-white">
+                <h5 class="mb-0">Voucher</h5>
+            </div>
+            <div class="card-body">
+                <ul class="list-group list-group-flush">
+                    @foreach (var voucher in Model.Vouchers)
+                    {
+                        <li class="list-group-item">@voucher.Ten (Giảm: @voucher.Gia_Tri_Giam%)</li>
+                    }
+                </ul>
+            </div>
+        </div>
+    }
+
+    <a class="btn btn-secondary mt-3" asp-action="Index">Quay lại</a>
+</div>
+
+<style>
+    .timeline {
+        display: flex;
+        justify-content: space-between;
+        position: relative;
+    }
+
+    .timeline-item {
+        text-align: center;
+        position: relative;
+        flex: 1;
+    }
+
+    .timeline-icon {
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin: 0 auto 10px;
+        font-size: 1.2rem;
+        border-width: 2px;
+    }
+
+    .timeline-line {
+        position: absolute;
+        top: 20px;
+        left: 50%;
+        width: calc(100% - 40px);
+        height: 2px;
+        background: #dee2e6;
+        z-index: -1;
+    }
+
+        .timeline-line.active {
+            background: #28a745;
+        }
+
+        .timeline-line.pending {
+            background: #6c757d;
+        }
+
+    .timeline-item.active .timeline-icon {
+        background: #28a745 !important;
+        color: white !important;
+    }
+
+    .timeline-item.pending .timeline-icon {
+        background: #6c757d !important;
+        color: white !important;
+    }
+
+    .timeline-item.cancelled .timeline-icon {
+        background: #dc3545 !important;
+        color: white !important;
+    }
+</style>

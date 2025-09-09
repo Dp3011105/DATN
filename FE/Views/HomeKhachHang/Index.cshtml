@@ -1,7 +1,6 @@
 ﻿@model List<FE.Models.SanPham>
 @{
     var activeProducts = Model.Where(p => p.Trang_Thai && p.So_Luong > 0).OrderByDescending(p => p.ID_San_Pham).ToList();
-    // Xử lý múi giờ
     TimeZoneInfo vnTimeZone;
     try
     {
@@ -488,8 +487,6 @@
         <div class="text-center mb-6">
             <h1 class="text-2xl md:text-3xl font-bold text-gray-800 mb-3">Thực Đơn</h1>
             <p class="text-gray-600 text-sm max-w-xl mx-auto">Khám phá đồ uống tươi ngon</p>
-
-            <!-- Search Bar -->
             <div class="search-container">
                 <i class="bi bi-search search-icon responsive-search-icon"></i>
                 <input type="text" id="searchInput" class="search-input responsive-search-input" placeholder="Tìm kiếm sản phẩm...">
@@ -533,7 +530,6 @@
                             <div class="p-3 flex flex-col flex-grow">
                                 <h3 class="text-lg font-bold text-gray-800 mb-1">@product.Ten_San_Pham</h3>
                                 <p class="text-gray-600 text-xs mb-2 flex-grow">@(product.Mo_Ta.Length > 80 ? product.Mo_Ta.Substring(0, 80) + "..." : product.Mo_Ta)</p>
-
                                 <div class="price-container">
                                     @if (hasActivePromotion)
                                     {
@@ -545,7 +541,6 @@
                                         <span class="regular-price">@string.Format("{0:N0} đ", product.Gia)</span>
                                     }
                                 </div>
-
                                 <div class="mt-auto pt-2 flex justify-between items-center">
                                     <span class="text-xs text-gray-500">@product.So_Luong sẵn có</span>
                                     <button class="view-details-btn text-xs text-blue-600 font-medium hover:text-blue-800 transition">
@@ -556,8 +551,6 @@
                         </div>
                     }
                 </div>
-
-                <!-- Empty state for search results -->
                 <div id="noResults" class="hidden text-center py-8">
                     <i class="bi bi-search text-3xl text-gray-300 mb-3"></i>
                     <h3 class="text-lg font-medium text-gray-500">Không tìm thấy sản phẩm</h3>
@@ -574,6 +567,7 @@
                     <div id="cartItems" class="cart-items"></div>
                     <div class="cart-total" id="cartTotal">Tổng cộng: 0 đ</div>
                     <button id="checkoutBtn" class="cart-checkout-btn">Thanh toán</button>
+                    <span id="checkoutError" class="error-message">Vui lòng chọn ít nhất một sản phẩm để thanh toán.</span>
                 </div>
             </div>
         </div>
@@ -598,16 +592,13 @@
                             <div>
                                 <p class="text-gray-600 text-sm" id="modalProductDescription"></p>
                             </div>
-
                             <div class="price-container">
                                 <span id="modalProductPrice" class="regular-price"></span>
                                 <span id="modalProductPromotionBadge" class="badge bg-amber-100 text-amber-800 hidden"></span>
                             </div>
-
                             <div>
                                 <p class="text-xs text-gray-500" id="modalProductQuantity"></p>
                             </div>
-
                             <form id="productOptionsForm" class="space-y-4">
                                 <div>
                                     <h4 class="section-title"><i class="bi bi-rulers"></i> Kích thước <span class="text-red-500">*</span></h4>
@@ -633,7 +624,6 @@
                                     <input type="number" id="quantityInput" class="quantity-input" min="1" value="1" required>
                                     <p id="quantityError" class="text-red-500 text-xs hidden">Số lượng từ 1 đến <span id="maxQuantity"></span>.</p>
                                 </div>
-
                                 <div class="pt-2 border-t border-gray-100">
                                     <div class="flex justify-between items-center">
                                         <span class="text-gray-700 font-medium text-sm">Tổng cộng:</span>
@@ -670,31 +660,54 @@
             const iceError = document.getElementById('iceError');
             const sweetnessError = document.getElementById('sweetnessError');
             const checkoutBtn = document.getElementById('checkoutBtn');
+            const checkoutError = document.getElementById('checkoutError');
 
-            // Lấy userId từ cookie giống như trong Layout
+            // Lấy userId từ cookie
             let userId = null;
             @if (Context.Request.Cookies["UserData"] != null)
             {
-                    <text>
-                    try {
-                        const userData = JSON.parse('@Html.Raw(Context.Request.Cookies["UserData"])');
-                        userId = userData.ID_Khach_Hang;
-                        console.log('Parsed userId from UserData cookie:', userId);
-                    } catch (e) {
-                        console.error('Error parsing UserData cookie:', e);
-                    }
-                    </text>
+                            <text>
+                            try {
+                                const userData = JSON.parse('@Html.Raw(Context.Request.Cookies["UserData"])');
+                                userId = userData.ID_Khach_Hang;
+                                console.log('Parsed userId from UserData cookie:', userId);
+                            } catch (e) {
+                                console.error('Error parsing UserData cookie:', e);
+                            }
+                            </text>
             }
             else
             {
-                    <text>
-                    console.log('No UserData cookie found');
-                    </text>
+                            <text>
+                            console.log('No UserData cookie found');
+                            </text>
             }
 
             let productsData = [];
+            let sizesData = [];
 
-            // Fetch all products for checkout check
+            // Hàm lấy danh sách size
+            async function fetchSizes() {
+                try {
+                    const response = await fetch('https://localhost:7169/api/Size', {
+                        method: 'GET',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        }
+                    });
+                    if (!response.ok) {
+                        const errorText = await response.text();
+                        throw new Error(`Không thể lấy danh sách size: ${errorText}`);
+                    }
+                    sizesData = await response.json();
+                    console.log('Fetched sizes:', sizesData);
+                } catch (error) {
+                    console.error('Lỗi fetch sizes:', error);
+                    showAlert('Lỗi khi lấy danh sách size!', 'error');
+                }
+            }
+
+            // Hàm lấy danh sách sản phẩm
             async function fetchProducts() {
                 try {
                     const response = await fetch('https://localhost:7169/api/SanPham', {
@@ -715,11 +728,71 @@
                 }
             }
 
-            fetchProducts();
+            // Gọi cả hai API khi khởi tạo
+            Promise.all([fetchProducts(), fetchSizes()]);
+
+            // Hàm để lưu trữ danh sách sản phẩm được chọn vào cookie
+            function updateSelectedItemsCookie(selectedItems) {
+                const cleanedItems = selectedItems.map(item => ({
+                    iD_GioHang_ChiTiet: item.iD_GioHang_ChiTiet,
+                    iD_San_Pham: item.iD_San_Pham,
+                    ten_San_Pham: item.ten_San_Pham,
+                    gia_Hien_Thi: item.gia_Hien_Thi || item.gia_Goc,
+                    gia_Goc: item.gia_Goc || item.gia_Hien_Thi,
+                    khuyen_Mai: {
+                        co_Khuyen_Mai: !!item.khuyen_Mai,
+                        ten_Khuyen_Mai: item.khuyen_Mai ? item.khuyen_Mai.ten_Khuyen_Mai || '' : '',
+                        gia_Giam: item.khuyen_Mai ? item.khuyen_Mai.gia_Giam || item.gia_Hien_Thi : item.gia_Hien_Thi
+                    },
+                    hinh_Anh: item.hinh_Anh,
+                    so_Luong: item.so_Luong,
+                    iD_Size: item.iD_Size || null,
+                    ten_Size: item.ten_Size || '',
+                    gia_Size: item.gia_Size || 0, // Thêm giá size
+                    iD_LuongDa: item.iD_LuongDa || null,
+                    ten_LuongDa: item.ten_LuongDa || '',
+                    iD_SanPham_DoNgot: item.iD_SanPham_DoNgot || null,
+                    ten_DoNgot: item.ten_DoNgot || '',
+                    ghi_Chu: item.ghi_Chu || '',
+                    toppings: item.toppings ? item.toppings.map(topping => ({
+                        iD_Topping: topping.iD_Topping,
+                        ten_Topping: topping.ten_Topping,
+                        gia_Topping: topping.gia_Topping
+                    })) : []
+                }));
+                const cookieValue = JSON.stringify(cleanedItems);
+                console.log('Storing in cookie:', cookieValue);
+                document.cookie = `selectedCartItems=${encodeURIComponent(cookieValue)}; path=/; max-age=86400`;
+            }
+
+            // Hàm để lấy danh sách sản phẩm được chọn từ cookie
+            function getSelectedItemsFromCookie() {
+                const cookies = document.cookie.split('; ');
+                for (const cookie of cookies) {
+                    if (cookie.startsWith('selectedCartItems=')) {
+                        try {
+                            const decodedValue = decodeURIComponent(cookie.split('=')[1]);
+                            console.log('Retrieved cookie value:', decodedValue);
+                            return JSON.parse(decodedValue) || [];
+                        } catch (e) {
+                            console.error('Error parsing selectedCartItems cookie:', e);
+                            return [];
+                        }
+                    }
+                }
+                console.log('No selectedCartItems cookie found');
+                return [];
+            }
+
+            // Xóa cookie
+            function clearSelectedItemsCookie() {
+                document.cookie = `selectedCartItems=; path=/; max-age=0`;
+                console.log('Selected items cookie cleared');
+            }
 
             // View details buttons
             document.querySelectorAll('.view-details-btn').forEach((btn, index) => {
-                btn.addEventListener('click', function(e) {
+                btn.addEventListener('click', function (e) {
                     e.stopPropagation();
                     const card = this.closest('.product-card');
                     card.click();
@@ -756,6 +829,7 @@
 
             let basePrice = 0;
             let selectedSize = null;
+            let selectedSizePrice = 0;
             let selectedIce = null;
             let selectedSweetness = null;
             let selectedToppings = [];
@@ -767,7 +841,7 @@
                 if (quantity > maxQuantity) quantity = maxQuantity;
                 quantityInput.value = quantity;
 
-                let total = basePrice * quantity;
+                let total = (basePrice + selectedSizePrice) * quantity;
                 selectedToppings.forEach(topping => {
                     total += topping.price * quantity;
                 });
@@ -809,6 +883,8 @@
                     console.log('No userId, showing login message');
                     cartItemsContainer.innerHTML = '<p class="cart-empty">Vui lòng đăng nhập để xem giỏ hàng.</p>';
                     cartTotalElement.textContent = 'Tổng cộng: 0 đ';
+                    checkoutError.style.display = 'none';
+                    clearSelectedItemsCookie();
                     return;
                 }
 
@@ -834,6 +910,8 @@
                     console.error('Lỗi khi lấy giỏ hàng:', error);
                     cartItemsContainer.innerHTML = '<p class="cart-empty text-red-500">Lỗi khi tải giỏ hàng.</p>';
                     cartTotalElement.textContent = 'Tổng cộng: 0 đ';
+                    checkoutError.style.display = 'none';
+                    clearSelectedItemsCookie();
                 }
             }
 
@@ -841,40 +919,74 @@
                 console.log('Rendering cart items...');
                 cartItemsContainer.innerHTML = '';
                 let cartTotal = 0;
+                let selectedItems = getSelectedItemsFromCookie();
 
                 if (!cartData.chi_Tiet_Gio_Hang || cartData.chi_Tiet_Gio_Hang.length === 0) {
                     console.log('Cart is empty');
                     cartItemsContainer.innerHTML = '<p class="cart-empty">Giỏ hàng trống.</p>';
                     cartTotalElement.textContent = 'Tổng cộng: 0 đ';
+                    checkoutError.style.display = 'none';
+                    clearSelectedItemsCookie();
                     return;
                 }
+
+                selectedItems = selectedItems.filter(selected =>
+                    cartData.chi_Tiet_Gio_Hang.some(item => item.iD_GioHang_ChiTiet === selected.iD_GioHang_ChiTiet)
+                );
+                updateSelectedItemsCookie(selectedItems);
 
                 cartData.chi_Tiet_Gio_Hang.forEach(item => {
                     console.log('Creating cart item:', item.ten_San_Pham);
                     const toppingTotal = item.toppings ? item.toppings.reduce((sum, topping) => sum + (topping.gia_Topping || 0), 0) : 0;
-                    const itemTotal = (item.gia_Hien_Thi + toppingTotal) * item.so_Luong;
+                    const size = sizesData.find(s => s.iD_Size === item.iD_Size);
+                    const sizePrice = size ? size.gia : 0;
+                    const itemTotal = (item.gia_Hien_Thi + toppingTotal + sizePrice) * item.so_Luong;
+
+                    const isChecked = selectedItems.some(selected => selected.iD_GioHang_ChiTiet === item.iD_GioHang_ChiTiet);
 
                     const itemElement = document.createElement('div');
                     itemElement.className = 'cart-item';
-                    itemElement.dataset.itemData = JSON.stringify(item);
+                    itemElement.dataset.itemData = JSON.stringify({
+                        iD_GioHang_ChiTiet: item.iD_GioHang_ChiTiet,
+                        iD_San_Pham: item.iD_San_Pham,
+                        ten_San_Pham: item.ten_San_Pham,
+                        gia_Hien_Thi: item.gia_Hien_Thi,
+                        gia_Goc: item.gia_Goc,
+                        khuyen_Mai: item.khuyen_Mai ? {
+                            co_Khuyen_Mai: true,
+                            ten_Khuyen_Mai: item.khuyen_Mai.ten_Khuyen_Mai,
+                            gia_Giam: item.khuyen_Mai.gia_Giam
+                        } : { co_Khuyen_Mai: false },
+                        hinh_Anh: item.hinh_Anh,
+                        so_Luong: item.so_Luong,
+                        iD_Size: item.iD_Size,
+                        ten_Size: item.ten_Size,
+                        gia_Size: sizePrice,
+                        iD_LuongDa: item.iD_LuongDa,
+                        ten_LuongDa: item.ten_LuongDa,
+                        iD_SanPham_DoNgot: item.iD_SanPham_DoNgot,
+                        ten_DoNgot: item.ten_DoNgot,
+                        ghi_Chu: item.ghi_Chu,
+                        toppings: item.toppings
+                    });
                     itemElement.innerHTML = `
-                        <input type="checkbox" class="cart-checkbox" checked data-id="${item.iD_GioHang_ChiTiet}">
+                        <input type="checkbox" class="cart-checkbox" ${isChecked ? 'checked' : ''} data-id="${item.iD_GioHang_ChiTiet}">
                         <img src="https://localhost:7169${item.hinh_Anh || '/images/products/default.jpg'}" alt="${item.ten_San_Pham}" class="cart-item-image">
                         <div class="cart-item-details">
                             <div class="cart-item-name">${item.ten_San_Pham}</div>
                             <div class="cart-item-options">
-                                ${item.ten_Size ? `Kích thước: ${item.ten_Size}<br>` : ''}
+                                ${item.ten_Size ? `Kích thước: ${item.ten_Size} (+${sizePrice.toLocaleString('vi-VN')} đ)<br>` : ''}
                                 ${item.ten_LuongDa ? `Lượng đá: ${item.ten_LuongDa}<br>` : ''}
                                 ${item.ten_DoNgot ? `Độ ngọt: ${item.ten_DoNgot}<br>` : ''}
                                 ${item.toppings && item.toppings.length > 0 ? `Topping: ${item.toppings.map(t => `${t.ten_Topping} (+${t.gia_Topping.toLocaleString('vi-VN')} đ)`).join(', ')}<br>` : ''}
                                 ${item.ghi_Chu ? `Ghi chú: ${item.ghi_Chu}` : ''}
                             </div>
                             <div class="price-container">
-                                ${item.khuyen_Mai ? `
-                                    <span class="original-price">${(item.gia_Goc + toppingTotal).toLocaleString('vi-VN')} đ</span>
-                                    <span class="discounted-price">${(item.gia_Hien_Thi + toppingTotal).toLocaleString('vi-VN')} đ</span>
+                                ${item.khuyen_Mai && item.khuyen_Mai.co_Khuyen_Mai ? `
+                                    <span class="original-price">${(item.gia_Goc + toppingTotal + sizePrice).toLocaleString('vi-VN')} đ</span>
+                                    <span class="discounted-price">${(item.gia_Hien_Thi + toppingTotal + sizePrice).toLocaleString('vi-VN')} đ</span>
                                 ` : `
-                                    <span class="regular-price">${(item.gia_Hien_Thi + toppingTotal).toLocaleString('vi-VN')} đ</span>
+                                    <span class="regular-price">${(item.gia_Hien_Thi + toppingTotal + sizePrice).toLocaleString('vi-VN')} đ</span>
                                 `}
                             </div>
                         </div>
@@ -887,7 +999,9 @@
                     `;
                     cartItemsContainer.appendChild(itemElement);
 
-                    cartTotal += itemTotal;
+                    if (isChecked) {
+                        cartTotal += itemTotal;
+                    }
                 });
 
                 console.log('Cart items rendered, total:', cartTotal);
@@ -897,11 +1011,16 @@
                     console.log('Attaching event to checkbox:', checkbox.dataset.id);
                     checkbox.addEventListener('change', function () {
                         const item = JSON.parse(this.closest('.cart-item').dataset.itemData);
+                        let selectedItems = getSelectedItemsFromCookie();
+
                         if (this.checked) {
-                            console.log('Sản phẩm được chọn:', item);
+                            console.log('Sản phẩm được chọn và lưu vào cookie:', item);
+                            selectedItems.push(item);
                         } else {
-                            console.log('Sản phẩm bị bỏ chọn:', item);
+                            console.log('Sản phẩm bị bỏ chọn và xóa khỏi cookie:', item);
+                            selectedItems = selectedItems.filter(selected => selected.iD_GioHang_ChiTiet !== item.iD_GioHang_ChiTiet);
                         }
+                        updateSelectedItemsCookie(selectedItems);
                         updateCartTotal();
                     });
                 });
@@ -909,6 +1028,9 @@
                 document.querySelectorAll('.cart-item-remove').forEach(btn => {
                     btn.addEventListener('click', async function () {
                         const id = this.dataset.id;
+                        let selectedItems = getSelectedItemsFromCookie();
+                        selectedItems = selectedItems.filter(selected => selected.iD_GioHang_ChiTiet !== id);
+                        updateSelectedItemsCookie(selectedItems);
                         await removeCartItem(id);
                     });
                 });
@@ -921,7 +1043,8 @@
                     if (checkbox.checked) {
                         const itemData = JSON.parse(item.dataset.itemData);
                         const toppingTotal = itemData.toppings ? itemData.toppings.reduce((sum, topping) => sum + (topping.gia_Topping || 0), 0) : 0;
-                        const itemTotal = (itemData.gia_Hien_Thi + toppingTotal) * itemData.so_Luong;
+                        const sizePrice = itemData.gia_Size || 0;
+                        const itemTotal = (itemData.gia_Hien_Thi + toppingTotal + sizePrice) * itemData.so_Luong;
                         cartTotal += itemTotal;
                     }
                 });
@@ -952,6 +1075,11 @@
             }
 
             async function checkCartAvailability() {
+                if (!userId) {
+                    showAlert('Vui lòng đăng nhập để thanh toán!', 'error');
+                    return false;
+                }
+
                 try {
                     const cartResponse = await fetch(`https://localhost:7169/api/Gio_Hang/${userId}`, {
                         method: 'GET',
@@ -967,6 +1095,7 @@
                     const cartData = await cartResponse.json();
                     if (!cartData.chi_Tiet_Gio_Hang || cartData.chi_Tiet_Gio_Hang.length === 0) {
                         showAlert('Giỏ hàng trống, vui lòng thêm sản phẩm!', 'error');
+                        checkoutError.style.display = 'block';
                         return false;
                     }
 
@@ -976,6 +1105,7 @@
 
                     if (checkedItems.length === 0) {
                         showAlert('Vui lòng chọn ít nhất một sản phẩm để thanh toán!', 'error');
+                        checkoutError.style.display = 'block';
                         return false;
                     }
 
@@ -994,6 +1124,7 @@
                         const product = await productResponse.json();
                         if (product.so_Luong < item.so_Luong) {
                             showAlert(`Sản phẩm ${item.ten_San_Pham} chỉ còn ${product.so_Luong} đơn vị, không đủ số lượng ${item.so_Luong}. Vui lòng chọn lại!`, 'error');
+                            checkoutError.style.display = 'block';
                             return false;
                         }
 
@@ -1002,33 +1133,33 @@
                                 const productTopping = product.toppings.find(t => t.iD_Topping === topping.iD_Topping);
                                 if (!productTopping || productTopping.so_Luong < item.so_Luong) {
                                     showAlert(`Topping ${topping.ten_Topping} chỉ còn ${productTopping ? productTopping.so_Luong : 0} đơn vị, không đủ số lượng ${item.so_Luong}. Vui lòng chọn lại!`, 'error');
+                                    checkoutError.style.display = 'block';
                                     return false;
                                 }
                             }
                         }
                     }
 
+                    const selectedIds = checkedItems.map(item => item.iD_GioHang_ChiTiet);
+                    console.log('Selected cart item IDs for checkout:', selectedIds);
+
+                    const queryString = `selectedItems=${encodeURIComponent(JSON.stringify(selectedIds))}`;
+                    showAlert('Đang chuyển hướng đến trang thanh toán...', 'success');
+                    setTimeout(() => {
+                        window.location.href = `/CheckoutTK?${queryString}`;
+                    }, 1000);
                     return true;
                 } catch (error) {
                     console.error('Lỗi khi kiểm tra giỏ hàng:', error);
                     showAlert('Lỗi khi kiểm tra giỏ hàng, vui lòng thử lại!', 'error');
+                    checkoutError.style.display = 'block';
                     return false;
                 }
             }
 
             checkoutBtn.addEventListener('click', async function () {
-                if (!userId) {
-                    showAlert('Vui lòng đăng nhập để thanh toán!', 'error');
-                    return;
-                }
-
-                const isAvailable = await checkCartAvailability();
-                if (isAvailable) {
-                    showAlert('Đang chuyển hướng đến trang thanh toán...', 'success');
-                    setTimeout(() => {
-                        window.location.href = '/Cart';
-                    }, 1000);
-                }
+                checkoutError.style.display = 'none';
+                await checkCartAvailability();
             });
 
             document.getElementById('modalAddToCart').addEventListener('click', async function () {
@@ -1151,6 +1282,7 @@
                         quantityError.classList.add('hidden');
 
                         selectedSize = null;
+                        selectedSizePrice = 0;
                         selectedIce = null;
                         selectedSweetness = null;
                         selectedToppings = [];
@@ -1164,10 +1296,12 @@
                         if (product.sizes && product.sizes.length > 0) {
                             product.sizes.forEach(size => {
                                 if (size.trang_Thai) {
+                                    const sizeData = sizesData.find(s => s.iD_Size === size.iD_Size);
+                                    const sizePrice = sizeData ? sizeData.gia : 0;
                                     sizesHtml += `
                                         <label class="cursor-pointer">
-                                            <input type="radio" name="size" value="${size.sizeName}" class="sr-only" data-id="${size.iD_Size}">
-                                            <span class="option-badge">${size.sizeName}</span>
+                                            <input type="radio" name="size" value="${size.sizeName}" class="sr-only" data-id="${size.iD_Size}" data-price="${sizePrice}">
+                                            <span class="option-badge">${size.sizeName} (+${sizePrice.toLocaleString('vi-VN')} đ)</span>
                                         </label>`;
                                 }
                             });
@@ -1233,7 +1367,10 @@
                                         selectedToppings = selectedToppings.filter(t => t.id !== this.dataset.id);
                                     }
                                 } else {
-                                    if (this.name === 'size') selectedSize = this.dataset.id;
+                                    if (this.name === 'size') {
+                                        selectedSize = this.dataset.id;
+                                        selectedSizePrice = parseFloat(this.dataset.price) || 0;
+                                    }
                                     if (this.name === 'ice') selectedIce = this.dataset.id;
                                     if (this.name === 'sweetness') selectedSweetness = this.dataset.id;
 
@@ -1281,3 +1418,16 @@
     </script>
 </body>
 </html>
+```
+
+
+
+
+
+
+
+
+
+
+
+

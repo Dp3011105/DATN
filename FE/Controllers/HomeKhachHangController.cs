@@ -1,8 +1,10 @@
-﻿using FE.Service.IService;
+﻿using FE.Filters;
+using FE.Service.IService;
 using Microsoft.AspNetCore.Mvc;
 
 namespace FE.Controllers
 {
+    [RedirectBasedOnLoginFilter] // Phương thức này đươc để trong thư mục Filters nhé ae , dùng để chuyển hướng nếu người dùng chưa đăng nhập thi /home , đăng nhập rồi thì /homekhachhang
     public class HomeKhachHangController : Controller
     {
         private readonly IProductService _productService;

@@ -59,7 +59,8 @@ builder.Services.AddScoped<IAccountRepository, AccountRepository>();
 builder.Services.AddScoped<IQuanLyPhanQuyenNhanVienRepository, QuanLyPhanQuyenNhanVienRepository>();
 builder.Services.AddScoped<IKhuyenMaiSanPhamRepository, KhuyenMaiSanPhamRepository>();
 builder.Services.AddScoped<IKhuyenMaiRepository, KhuyenMaiRepository>();
-builder.Services.AddScoped<IProfileRepository, ProfileRepository>();
+builder.Services.AddScoped<IBanHangTKRepository, BanHangTKRepository>();
+builder.Services.AddScoped<IDonHangTKRepository, DonHangTKRepository>();
 
 // THÊM LẠI: EmailService cần thiết cho GanVoucher
 builder.Services.AddSingleton<EmailService>();

@@ -1,9 +1,10 @@
-﻿using System.Collections.Generic;
+﻿using BE.models;
+using BE.Repository.IRepository;
+using BE.Service;
+using Microsoft.AspNetCore.Mvc;
+using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using Microsoft.AspNetCore.Mvc;
-using BE.models;
-using BE.Repository.IRepository;
 
 namespace BE.Controllers
 {
@@ -12,8 +13,12 @@ namespace BE.Controllers
     public class HoaDonController : ControllerBase
     {
         private readonly IHoaDonRepository _repository;
-        public HoaDonController(IHoaDonRepository repository) => _repository = repository;
-
+        private readonly EmailService _emailService;
+        public HoaDonController(IHoaDonRepository repository, EmailService emailService)
+        {
+            _repository = repository;
+            _emailService = emailService;
+        }
         // GET api/HoaDon  -> (giữ nguyên: nếu bạn đang trả DTO ở repo thì giữ như cũ)
         [HttpGet]
         public async Task<ActionResult<IEnumerable<object>>> GetAll()
@@ -69,15 +74,27 @@ namespace BE.Controllers
         }
 
         // PATCH api/HoaDon/5/TrangThai
-        [HttpPatch("{id:int}/TrangThai")]
-        public async Task<IActionResult> UpdateTrangThai(int id, [FromBody] UpdateTrangThaiRequest req)
-        {
-            if (req == null || string.IsNullOrWhiteSpace(req.TrangThai))
-                return BadRequest("Thiếu trạng thái.");
+        //[HttpPatch("{id:int}/TrangThai")]
+        //public async Task<IActionResult> UpdateTrangThai(int id, [FromBody] UpdateTrangThaiRequest req)
+        //{
+        //    if (req == null || string.IsNullOrWhiteSpace(req.TrangThai))
+        //        return BadRequest("Thiếu trạng thái.");
 
-            var ok = await _repository.UpdateTrangThaiAsync(id, req.TrangThai, req.LyDoHuy);
-            return ok ? NoContent() : NotFound();
-        }
+        //    var ok = await _repository.UpdateTrangThaiAsync(id, req.TrangThai, req.LyDoHuy);
+        //    return ok ? NoContent() : NotFound();
+        //}
+
+        // -------- Update để dùng có gmail nhé Phúc Beo --------
+        // PATCH api/HoaDon/5/TrangThai
+                        [HttpPatch("{id:int}/TrangThai")]
+                        public async Task<IActionResult> UpdateTrangThai(int id, [FromBody] UpdateTrangThaiRequest req)
+                        {
+                            if (req == null || string.IsNullOrWhiteSpace(req.TrangThai))
+                                return BadRequest("Thiếu trạng thái.");
+
+                            var ok = await _repository.UpdateTrangThaiAsync(id, req.TrangThai, req.LyDoHuy, _emailService);
+                            return ok ? NoContent() : NotFound();
+                        }
 
         // -------- HỦY + RESTOCK (KHÔNG TẠO DTO FILE MỚI) --------
         public class RestockItem

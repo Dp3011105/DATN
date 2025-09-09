@@ -56,7 +56,7 @@ namespace FE.Controllers
                         var userDataJson = JsonSerializer.Serialize(response);
                         Response.Cookies.Append("UserData", userDataJson, new CookieOptions
                         {
-                            HttpOnly = true,
+                            HttpOnly = false,
                             Secure = true, // Sử dụng true nếu dùng HTTPS
                             Expires = DateTimeOffset.UtcNow.AddHours(24) // Thời gian hết hạn, ví dụ 24 giờ
                         });
