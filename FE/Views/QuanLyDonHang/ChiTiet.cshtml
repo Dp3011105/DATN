@@ -9,22 +9,38 @@
 @functions {
     string VND(decimal d) => string.Format(new CultureInfo("vi-VN"), "{0:#,0} đ", d);
 
-    // ===== FIX CỨNG TÊN SIZE THEO DB =====
-    // Đổi nhãn theo dữ liệu DB của bạn (ví dụ: 1=to, 2=beo, 3=XL...)
+    // ===== Map nhãn theo ID (fallback khi thiếu navigation) =====
     static readonly Dictionary<int, string> SIZE_NAME_MAP = new()
     {
-        { 1, "Cơ bản" },   // hoặc "to"
-        { 2, "Large"   },  // hoặc "beo"
-        { 3, "X-Large" }   // thêm nếu DB có
+        { 1, "Cơ bản" },
+        { 2, "Large" },
+        { 3, "X-Large" }
+    };
+    static readonly Dictionary<int, string> NGOT_MAP = new()
+    {
+        { 1, "Mặc định" }, { 2, "Thêm đường" }, { 3, "Ít đường" }
+    };
+    static readonly Dictionary<int, string> DA_MAP = new()
+    {
+        { 1, "Mặc định" }, { 2, "Nhiều" }, { 3, "Ít" }
     };
 
-    // Lấy tên size ưu tiên từ navigation ct.Size.SizeName; nếu null thì map theo ID
-    string SizeText(int? id, string? sizeNameFromDb)
+    string SizeText(int? id, string? sizeNameFromDb = null)
     {
-        if (!string.IsNullOrWhiteSpace(sizeNameFromDb))
-            return sizeNameFromDb!.Trim();
-        if (id.HasValue && SIZE_NAME_MAP.TryGetValue(id.Value, out var label))
-            return label;
+        if (!string.IsNullOrWhiteSpace(sizeNameFromDb)) return sizeNameFromDb.Trim();
+        if (id.HasValue && SIZE_NAME_MAP.TryGetValue(id.Value, out var s)) return s;
+        return "-";
+    }
+    string NgotText(int? id, string? mucDoFromDb = null)
+    {
+        if (!string.IsNullOrWhiteSpace(mucDoFromDb)) return mucDoFromDb.Trim();
+        if (id.HasValue && NGOT_MAP.TryGetValue(id.Value, out var s)) return s;
+        return "-";
+    }
+    string DaText(int? id, string? nameFromDb = null)
+    {
+        if (!string.IsNullOrWhiteSpace(nameFromDb)) return nameFromDb.Trim();
+        if (id.HasValue && DA_MAP.TryGetValue(id.Value, out var s)) return s;
         return "-";
     }
 
@@ -37,7 +53,6 @@
         "Huy_Don" => "badge bg-danger",
         _ => "badge bg-secondary"
     };
-
     string HienThi(string db) => db switch
     {
         "Chua_Xac_Nhan" or "Dang_Xu_Ly" => "Chờ xác nhận",
@@ -174,8 +189,7 @@
             </div>
             @if (i < steps.Length - 1)
             {
-                var connectorClass = (i < stepIndex) ? "order-connector is-done" : (i == stepIndex ? "order-connector is-on" : "order-connector");
-                <div class="@connectorClass"></div>
+                <div class="order-connector"></div>
             }
         }
     </div>
@@ -200,13 +214,61 @@
             </div>
         </div>
 
+        @* ===== Tổng kết: Tạm tính – Giảm voucher – Thanh toán (đã fix CS0119/CS0019/CS0305) ===== *@
         <div class="col-lg-6">
+            @{
+                decimal Subtotal()
+                {
+                    if (Model?.ChiTiets == null) return 0m;
+                    decimal sum = 0m;
+                    foreach (var ct in Model.ChiTiets)
+                    {
+                        var giaSp = (decimal?)ct.Gia_San_Pham ?? 0m;
+                        var giaSize = (decimal?)ct.Gia_Them_Size ?? 0m;
+                        var topSum = (ct.HoaDonChiTietToppings ?? new List<BE.models.HoaDonChiTietTopping>())
+                        .Sum(t => (decimal?)t?.Topping?.Gia ?? 0m);
+                        var unitAfter = giaSp + giaSize + topSum;
+                        var lineTotal = (decimal?)ct.Tong_Tien ?? (unitAfter * ct.So_Luong);
+                        sum += lineTotal;
+                    }
+                    return sum;
+                }
+
+                var subtotal = Subtotal();
+                var hd = Model?.HoaDon;
+
+                // ✅ đúng generic
+                var voucherDiscount = (hd?.HoaDonVouchers ?? new List<BE.models.HoaDonVoucher>())
+                .Sum(v => (decimal?)v.Gia_Tri_Giam ?? 0m);
+
+                // nếu BE không lưu chi tiết voucher, suy ra từ chênh lệch
+                if (voucherDiscount <= 0 && hd != null)
+                {
+                    voucherDiscount = Math.Max(0m, subtotal - ((decimal?)hd.Tong_Tien ?? subtotal));
+                }
+
+                // ✅ tránh dùng ?? giữa 2 decimal non-nullable
+                decimal pay = (hd != null
+                ? ((decimal?)hd.Tong_Tien ?? Math.Max(0m, subtotal - voucherDiscount))
+                : Math.Max(0m, subtotal - voucherDiscount));
+
+                // ✅ đúng generic
+                var voucherCodes = (hd?.HoaDonVouchers ?? new List<BE.models.HoaDonVoucher>())
+                .Select(v => v.Voucher?.Ma_Voucher)
+                .Where(s => !string.IsNullOrWhiteSpace(s))
+                .ToList();
+            }
             <div class="card">
                 <div class="card-body">
-                    <div class="fs-5">
-                        <strong>Tổng tiền: </strong>
-                        @(Model?.HoaDon == null ? "0 đ" : VND(Model.HoaDon.Tong_Tien))
+                    <div><strong>Tạm tính:</strong> @VND(subtotal)</div>
+                    <div>
+                        <strong>Giảm voucher:</strong> - @VND(voucherDiscount)
+                        @if (voucherCodes?.Any() == true)
+                        {
+                            <span class="text-muted">(@string.Join(", ", voucherCodes))</span>
+                        }
                     </div>
+                    <div class="fs-5 mt-1"><strong>Thanh toán:</strong> @VND(pay)</div>
                 </div>
             </div>
         </div>
@@ -231,36 +293,54 @@
                 <tbody>
                     @if (Model?.ChiTiets == null || !Model.ChiTiets.Any())
                     {
-                        <tr>
-                            <td colspan="8" class="text-muted">Không có chi tiết.</td>
-                        </tr>
+                        <tr><td colspan="8" class="text-muted">Không có chi tiết.</td></tr>
                     }
                     else
                     {
                         foreach (var ct in Model.ChiTiets)
                         {
                             var tenSp = ct.SanPham?.Ten_San_Pham ?? $"SP#{ct.ID_San_Pham}";
-                            var sizeTxt = SizeText(ct.ID_Size, ct.Size?.SizeName);   // <-- dùng helper map tên size
-                            var ngotTxt = ct.DoNgot?.ID_DoNgot ;
-                            var daTxt = ct.LuongDa?.Ten_LuongDa ?? (ct.ID_LuongDa.HasValue ? $"#{ct.ID_LuongDa}" : "-");
+                            var sizeTxt = SizeText(ct.ID_Size /* , ct.Size?.SizeName */);
 
-                            var tops = (ct.HoaDonChiTietToppings ?? new List<BE.models.HoaDonChiTietTopping>())
-                            .Select(t => t.Topping?.Ten ?? $"T#{t.ID_Topping}");
-                            var topTxt = tops.Any() ? string.Join(", ", tops) : "-";
+                            // ✅ KHÔNG dùng SanPham_DoNgot (tránh CS1061). Map theo ID.
+                            var ngotTxt = NgotText(ct.ID_SanPham_DoNgot /* , ct.DoNgot?.Muc_Do */);
+                            var daTxt = DaText(ct.ID_LuongDa /* , ct.LuongDa?.Ten_LuongDa */);
 
-                            var giaSp = ((decimal?)ct.Gia_San_Pham) ?? 0m;
-                            var giaSize = ((decimal?)ct.Gia_Them_Size) ?? 0m;
-                            decimal donGia = giaSp + giaSize;
+                            var topNames = (ct.HoaDonChiTietToppings ?? new List<BE.models.HoaDonChiTietTopping>())
+                            .Select(t => t.Topping?.Ten ?? $"T#{t.ID_Topping}")
+                            .ToList();
+                            var topTxt = topNames.Any() ? string.Join(", ", topNames) : "-";
+
+                            // Giá gốc / sau giảm
+                            var giaSpSauKM = (decimal?)ct.Gia_San_Pham ?? 0m;
+                            var giaSpGoc = (decimal?)ct.SanPham?.Gia ?? giaSpSauKM;
+                            var giaSize = (decimal?)ct.Gia_Them_Size ?? 0m;
+                            var topSum = (ct.HoaDonChiTietToppings ?? new List<BE.models.HoaDonChiTietTopping>())
+                            .Sum(t => (decimal?)t?.Topping?.Gia ?? 0m);
+
+                            var unitGoc = giaSpGoc + giaSize + topSum;
+                            var unitSau = giaSpSauKM + giaSize + topSum;
+
                             int sl = ct.So_Luong;
-                            var thanhTien = ((decimal?)ct.Tong_Tien) ?? (donGia * sl);
-
+                            var thanhTien = (decimal?)ct.Tong_Tien ?? (unitSau * sl);
                             <tr>
                                 <td>@tenSp</td>
                                 <td>@sizeTxt</td>
                                 <td>@ngotTxt</td>
                                 <td>@daTxt</td>
                                 <td>@topTxt</td>
-                                <td class="text-end">@VND(donGia)</td>
+
+                                <td class="text-end">
+                                    @if (unitSau < unitGoc)
+                                    {
+                                        <div class="text-muted text-decoration-line-through">@VND(unitGoc)</div>
+                                    }
+                                    <div class="fw-semibold">@VND(unitSau)</div>
+                                    <div class="small text-muted">
+                                        SP: @VND(giaSpSauKM) • Size: +@VND(giaSize) • Top: @VND(topSum)
+                                    </div>
+                                </td>
+
                                 <td class="text-end">@sl</td>
                                 <td class="text-end">@VND(thanhTien)</td>
                             </tr>
