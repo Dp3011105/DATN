@@ -1,4 +1,5 @@
-﻿using FE.Models;
+﻿using FE.Filters;
+using FE.Models;
 using FE.Service.IService;
 using Microsoft.AspNetCore.Mvc;
 using System.Text.Json;
@@ -6,6 +7,8 @@ using System.Text.Json;
 
 namespace FE.Controllers
 {
+    [RoleAuthorize(2)] // Trang cho phép cả vai trò 2 
+    // Phương thức này đươc để trong thư mục Filters nhé ae
     public class QuanLyVaiTroNhanVienController : Controller
     {
         private readonly IQuanLyVaiTroService _service;

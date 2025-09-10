@@ -1,10 +1,13 @@
-﻿using FE.Models;
+﻿using FE.Filters;
+using FE.Models;
 using FE.Service;
 using FE.Service.IService;
 using Microsoft.AspNetCore.Mvc;
 using Service.IService;
 namespace FE.Controllers// controler dùng để thực hiện các chức năng liên quan đến khuyến mãi, crud quản lý khuyến mãi
 {
+    [RoleAuthorize(2, 3)]// Phương thức này đươc để trong thư mục Filters nhé ae
+
     public class KhuyenMaiController : Controller
     {
         private readonly IKhuyenMaiService _khuyenMaiService;

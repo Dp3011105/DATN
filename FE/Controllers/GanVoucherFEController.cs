@@ -1,9 +1,12 @@
-﻿using FE.Models;
+﻿using FE.Filters;
+using FE.Models;
 using FE.Service;
 using Microsoft.AspNetCore.Mvc;
 
 namespace FE.Controllers
 {
+    [RoleAuthorize(2, 3)] // Trang cho phép cả vai trò 2 và 3
+
     public class GanVoucherFEController : Controller
     {
         private readonly IGanVoucherService _service;

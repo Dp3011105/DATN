@@ -1,4 +1,5 @@
-﻿using FE.Models;
+﻿using FE.Filters;
+using FE.Models;
 using FE.Service.IService;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -9,7 +10,7 @@ using System.Text.RegularExpressions;
 
 namespace FE.Controllers
 {
-    //[Authorize]
+    [RoleAuthorize(2, 3)] // Trang cho phép cả vai trò 2 và 3// Phương thức này đươc để trong thư mục Filters nhé ae
     [AutoValidateAntiforgeryToken]
     public class BanHangTaiQuayController : Controller
     {

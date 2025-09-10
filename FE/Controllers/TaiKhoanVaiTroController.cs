@@ -1,10 +1,13 @@
 ﻿using BE.DTOs;
 using BE.models;
+using FE.Filters;
 using Microsoft.AspNetCore.Mvc;
 using Service.IService;
 
 namespace FE.Controllers
 {
+    [RoleAuthorize(2)] // Trang cho phép cả vai trò 2
+
     public class TaiKhoanVaiTroController : Controller
     {
         private readonly ITaiKhoanVaiTroService _taiKhoanVaiTroService;

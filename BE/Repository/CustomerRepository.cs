@@ -28,6 +28,13 @@ namespace BE.Repository
         {
             return await _context.SaveChangesAsync();
         }
+
+
+
+        public async Task<KhachHang> GetKhachHangByEmailAsync(string email)
+        {
+            return await _context.Khach_Hang.FirstOrDefaultAsync(k => k.Email == email);
+        }
     }
 
 }
