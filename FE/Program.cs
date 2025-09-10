@@ -27,7 +27,6 @@ builder.Services.AddScoped<ITaiKhoanService, TaiKhoanService>();
 builder.Services.AddScoped<IQuanLyVaiTroService, QuanLyVaiTroService>();
 builder.Services.AddScoped<IGanVoucherService, GanVoucherService>();
 builder.Services.AddScoped<IKhuyenMaiService, KhuyenMaiService>();
-builder.Services.AddScoped<IPromotionService, PromotionService>();
 builder.Services.AddScoped<ICheckoutService, CheckoutService>();
 builder.Services.AddHttpClient<IQLDonHangTkService, QLDonHangTkService>();
 

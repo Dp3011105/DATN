@@ -1,4 +1,4 @@
-﻿@{
+﻿@* @{
     Layout = "~/Views/Shared/_AdminLayout.cshtml";
 }
 @model FE.Models.QuanLyVaiTroViewModel
@@ -442,5 +442,613 @@
         if (noResultsRow) {
             noResultsRow.style.display = hasResults ? 'none' : '';
         }
+    });
+</script> *@
+
+
+
+@{
+    Layout = "~/Views/Shared/_AdminLayout.cshtml";
+}
+@{
+    ViewData["Title"] = "Quản Lý Phân Quyền Vai Trò";
+}
+
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+
+<style>
+    body {
+        font-family: 'Inter', sans-serif;
+        background-color: #f4f7fa;
+    }
+
+    .container {
+        max-width: 1400px;
+        margin: 2rem auto;
+        background: #ffffff;
+        border-radius: 12px;
+        padding: 2rem;
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+        transition: transform 0.2s ease-in-out;
+    }
+
+        .container:hover {
+            transform: translateY(-2px);
+        }
+
+    .nav-tabs {
+        border-bottom: 2px solid #e2e8f0;
+    }
+
+        .nav-tabs .nav-link {
+            background: #ffffff;
+            color: #4b5563;
+            border: none;
+            border-radius: 8px 8px 0 0;
+            padding: 0.75rem 1.5rem;
+            font-weight: 500;
+            transition: all 0.3s ease;
+        }
+
+            .nav-tabs .nav-link:hover {
+                background: #edf2f7;
+                color: #1e40af;
+            }
+
+            .nav-tabs .nav-link.active {
+                background: #1e40af;
+                color: #ffffff;
+                border-bottom: 3px solid #3b82f6;
+            }
+
+    .table {
+        background-color: #ffffff;
+        border-radius: 8px;
+        overflow: hidden;
+    }
+
+        .table thead {
+            background: linear-gradient(90deg, #1e40af, #3b82f6);
+            color: #ffffff;
+        }
+
+        .table tbody tr {
+            transition: background-color 0.2s ease;
+        }
+
+            .table tbody tr:hover {
+                background-color: #f1f5f9;
+            }
+
+    .btn-primary {
+        background: linear-gradient(90deg, #1e40af, #3b82f6);
+        border: none;
+        padding: 0.5rem 1rem;
+        border-radius: 6px;
+        transition: all 0.3s ease;
+    }
+
+        .btn-primary:hover {
+            background: linear-gradient(90deg, #2b4db9, #60a5fa);
+            transform: translateY(-1px);
+        }
+
+    .btn-success {
+        background-color: #10b981;
+        border-color: #10b981;
+        padding: 0.5rem 1rem;
+        border-radius: 6px;
+        transition: all 0.3s ease;
+    }
+
+        .btn-success:hover {
+            background-color: #059669;
+            transform: translateY(-1px);
+        }
+
+    .btn-warning {
+        background-color: #f59e0b;
+        border-color: #f59e0b;
+        color: #ffffff;
+        padding: 0.5rem 1rem;
+        border-radius: 6px;
+        transition: all 0.3s ease;
+    }
+
+        .btn-warning:hover {
+            background-color: #d97706;
+            transform: translateY(-1px);
+        }
+
+    .btn-secondary {
+        background-color: #6b7280;
+        border-color: #6b7280;
+        padding: 0.5rem 1rem;
+        border-radius: 6px;
+        transition: all 0.3s ease;
+    }
+
+        .btn-secondary:hover {
+            background-color: #4b5563;
+            transform: translateY(-1px);
+        }
+
+    .modal-content {
+        border-radius: 12px;
+        border: none;
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+    }
+
+    .modal-header {
+        background: linear-gradient(90deg, #1e40af, #3b82f6);
+        color: #ffffff;
+        border-bottom: none;
+        border-radius: 12px 12px 0 0;
+    }
+
+    .alert-info {
+        background-color: #dbeafe;
+        border-color: #3b82f6;
+        color: #1e40af;
+        border-radius: 8px;
+        padding: 1rem;
+        margin-bottom: 1.5rem;
+    }
+
+    .alert-danger {
+        background-color: #fee2e2;
+        border-color: #ef4444;
+        color: #b91c1c;
+        border-radius: 8px;
+        padding: 1rem;
+        margin-bottom: 1.5rem;
+    }
+
+    pre {
+        background-color: #f3f4f6;
+        padding: 1rem;
+        border-radius: 8px;
+        color: #1e40af;
+        font-size: 0.875rem;
+        overflow-x: auto;
+    }
+
+    .search-container input, .filter-container select {
+        border: 1px solid #d1d5db;
+        border-radius: 6px;
+        padding: 0.5rem 1rem;
+        width: 100%;
+        max-width: 400px;
+        font-size: 0.875rem;
+        transition: all 0.3s ease;
+    }
+
+        .search-container input:focus, .filter-container select:focus {
+            border-color: #1e40af;
+            box-shadow: 0 0 0 3px rgba(30, 64, 175, 0.1);
+            outline: none;
+        }
+
+    .no-results {
+        color: #b91c1c;
+        font-style: italic;
+        text-align: center;
+        padding: 1rem;
+    }
+
+    .fade-in {
+        animation: fadeIn 0.5s ease-in;
+    }
+
+    
+
+    {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+
+    }
+</style>
+
+<div class="container mx-auto">
+    <h1 class="text-2xl font-bold text-center text-gray-800 mb-6">Quản Lý Phân Quyền Vai Trò Người Dùng</h1>
+
+    <div id="errorMessage" class="alert alert-danger hidden" role="alert">
+        <strong>Lỗi:</strong> <span id="errorText"></span>
+    </div>
+    <div id="requestLog" class="alert alert-info hidden" role="alert">
+        <strong>JSON gửi đi:</strong>
+        <pre id="logText"></pre>
+    </div>
+
+    <ul class="nav nav-tabs flex border-b-2 border-gray-200" id="myTab" role="tablist">
+        <li class="nav-item" role="presentation">
+            <a class="nav-link active px-4 py-2 text-sm font-medium" id="khong-vai-tro-tab" data-toggle="tab" href="#khong-vai-tro" role="tab" aria-controls="khong-vai-tro" aria-selected="true">Nhân Viên Chưa Có Vai Trò</a>
+        </li>
+        <li class="nav-item" role="presentation">
+            <a class="nav-link px-4 py-2 text-sm font-medium" id="co-vai-tro-tab" data-toggle="tab" href="#co-vai-tro" role="tab" aria-controls="co-vai-tro" aria-selected="false">Nhân Viên Đã Có Vai Trò</a>
+        </li>
+    </ul>
+
+    <div class="tab-content mt-4" id="myTabContent">
+        <div class="tab-pane fade show active" id="khong-vai-tro" role="tabpanel" aria-labelledby="khong-vai-tro-tab">
+            <h2 class="text-xl font-semibold text-gray-800 mb-4">Danh Sách Nhân Viên Chưa Có Vai Trò</h2>
+            <div class="search-container mb-4">
+                <input type="text" id="searchKhongVaiTro" class="form-control" placeholder="Tìm kiếm theo Tên Đăng Nhập, Email hoặc Họ Tên..." />
+            </div>
+            <div class="overflow-x-auto">
+                <table class="table w-full text-sm text-left text-gray-700" id="tableKhongVaiTro">
+                    <thead class="text-xs text-white uppercase bg-gradient-to-r from-blue-800 to-blue-600">
+                        <tr>
+                            <th class="px-4 py-3">ID Tài Khoản</th>
+                            <th class="px-4 py-3">Tên Đăng Nhập</th>
+                            <th class="px-4 py-3">Email</th>
+                            <th class="px-4 py-3">Họ Tên</th>
+                            <th class="px-4 py-3">Số Điện Thoại</th>
+                            <th class="px-4 py-3">Địa Chỉ</th>
+                            <th class="px-4 py-3">Năm Sinh</th>
+                            <th class="px-4 py-3">CCCD</th>
+                            <th class="px-4 py-3">Hành Động</th>
+                        </tr>
+                    </thead>
+                    <tbody id="khongVaiTroBody" class="bg-white">
+                        <tr><td colspan="9" class="text-center py-4">Đang tải dữ liệu...</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        <div class="tab-pane fade" id="co-vai-tro" role="tabpanel" aria-labelledby="co-vai-tro-tab">
+            <h2 class="text-xl font-semibold text-gray-800 mb-4">Danh Sách Nhân Viên Đã Có Vai Trò</h2>
+            <div class="flex space-x-4 mb-4">
+                <div class="search-container flex-1">
+                    <input type="text" id="searchCoVaiTro" class="form-control" placeholder="Tìm kiếm theo Tên Đăng Nhập, Email hoặc Họ Tên..." />
+                </div>
+                <div class="filter-container">
+                    <select id="filterVaiTro" class="form-control">
+                        <option value="">Tất cả vai trò</option>
+                    </select>
+                </div>
+            </div>
+            <div class="overflow-x-auto">
+                <table class="table w-full text-sm text-left text-gray-700" id="tableCoVaiTro">
+                    <thead class="text-xs text-white uppercase bg-gradient-to-r from-blue-800 to-blue-600">
+                        <tr>
+                            <th class="px-4 py-3">ID Tài Khoản</th>
+                            <th class="px-4 py-3">Tên Đăng Nhập</th>
+                            <th class="px-4 py-3">Email</th>
+                            <th class="px-4 py-3">Họ Tên</th>
+                            <th class="px-4 py-3">Số Điện Thoại</th>
+                            <th class="px-4 py-3">Địa Chỉ</th>
+                            <th class="px-4 py-3">Năm Sinh</th>
+                            <th class="px-4 py-3">CCCD</th>
+                            <th class="px-4 py-3">Vai Trò Hiện Tại</th>
+                            <th class="px-4 py-3">Hành Động</th>
+                        </tr>
+                    </thead>
+                    <tbody id="coVaiTroBody" class="bg-white">
+                        <tr><td colspan="10" class="text-center py-4">Đang tải dữ liệu...</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal fade" id="themVaiTroModal" tabindex="-1" role="dialog" aria-labelledby="themVaiTroModalLabel" aria-hidden="true">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title font-semibold" id="themVaiTroModalLabel">Thêm Vai Trò Cho Nhân Viên</h5>
+                    <button type="button" class="close text-white" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body p-6">
+                    <form id="themVaiTroForm">
+                        <input type="hidden" id="idTaiKhoanThem" name="idTaiKhoan" />
+                        <div class="form-group">
+                            <label class="font-semibold text-gray-700">Chọn Vai Trò:</label>
+                            <div id="vaiTroThemCheckboxes" class="mt-2 space-y-2"></div>
+                            <p id="themVaiTroError" class="text-red-500 text-sm mt-2 hidden">Vui lòng chọn ít nhất một vai trò.</p>
+                        </div>
+                        <div class="flex justify-end space-x-2 mt-4">
+                            <button type="button" class="btn btn-secondary" data-dismiss="modal">Hủy</button>
+                            <button type="submit" class="btn btn-success">Thêm</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal fade" id="capNhatVaiTroModal" tabindex="-1" role="dialog" aria-labelledby="capNhatVaiTroModalLabel" aria-hidden="true">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title font-semibold" id="capNhatVaiTroModalLabel">Cập Nhật Vai Trò Cho Nhân Viên</h5>
+                    <button type="button" class="close text-white" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body p-6">
+                    <form id="capNhatVaiTroForm">
+                        <input type="hidden" id="idTaiKhoanCapNhat" name="idTaiKhoan" />
+                        <div class="form-group">
+                            <label class="font-semibold text-gray-700">Chọn Vai Trò (Chọn để giữ/gán, bỏ chọn để hủy):</label>
+                            <div id="vaiTroCapNhatCheckboxes" class="mt-2 space-y-2"></div>
+                            <p id="capNhatVaiTroError" class="text-red-500 text-sm mt-2 hidden">Vui lòng chọn ít nhất một vai trò.</p>
+                        </div>
+                        <div class="flex justify-end space-x-2 mt-4">
+                            <button type="button" class="btn btn-secondary" data-dismiss="modal">Hủy</button>
+                            <button type="submit" class="btn btn-success">Cập Nhật</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@4.5.3/dist/js/bootstrap.bundle.min.js"></script>
+
+<script>
+    let vaiTros = [];
+
+    function loadVaiTros() {
+        fetch('https://localhost:7169/api/VaiTro')
+            .then(response => response.json())
+            .then(data => {
+                vaiTros = data.filter(vt => vt.iD_Vai_Tro !== 1);
+                const filterSelect = document.getElementById('filterVaiTro');
+                vaiTros.forEach(vt => {
+                    const option = document.createElement('option');
+                    option.value = vt.iD_Vai_Tro;
+                    option.textContent = vt.ten_Vai_Tro;
+                    filterSelect.appendChild(option);
+                });
+                loadVaiTroCheckboxes('vaiTroThemCheckboxes', 'vt_them_');
+                loadVaiTroCheckboxes('vaiTroCapNhatCheckboxes', 'vt_capnhat_');
+            })
+            .catch(error => showError('Lỗi khi tải danh sách vai trò: ' + error.message));
+    }
+
+    function loadNhanVienKhongVaiTro() {
+        fetch('https://localhost:7169/api/QuanLyNhanVienVaiTro/nhan-vien-khong-vai-tro')
+            .then(response => response.json())
+            .then(data => {
+                const tbody = document.getElementById('khongVaiTroBody');
+                tbody.innerHTML = '';
+                if (data && data.length > 0) {
+                    data.forEach(nv => {
+                        const row = document.createElement('tr');
+                        row.className = 'fade-in';
+                        row.setAttribute('data-search', `${nv.ten_Dang_Nhap.toLowerCase()} ${nv.email.toLowerCase()} ${nv.ho_Ten.toLowerCase()}`);
+                        row.innerHTML = `
+                            <td class="px-4 py-3">${nv.iD_Tai_Khoan}</td>
+                            <td class="px-4 py-3">${nv.ten_Dang_Nhap}</td>
+                            <td class="px-4 py-3">${nv.email}</td>
+                            <td class="px-4 py-3">${nv.ho_Ten}</td>
+                            <td class="px-4 py-3">${nv.so_Dien_Thoai}</td>
+                            <td class="px-4 py-3">${nv.dia_Chi}</td>
+                            <td class="px-4 py-3">${new Date(nv.nam_Sinh).toLocaleDateString('vi-VN')}</td>
+                            <td class="px-4 py-3">${nv.cccd}</td>
+                            <td class="px-4 py-3">
+                                <button class="btn btn-primary btn-sm" data-toggle="modal" data-target="#themVaiTroModal" onclick="loadThemVaiTro(${nv.iD_Tai_Khoan})">Thêm Vai Trò</button>
+                            </td>
+                        `;
+                        tbody.appendChild(row);
+                    });
+                } else {
+                    tbody.innerHTML = '<tr><td colspan="9" class="no-results">Không có dữ liệu</td></tr>';
+                }
+            })
+            .catch(error => showError('Lỗi khi tải danh sách nhân viên chưa có vai trò: ' + error.message));
+    }
+
+    function loadNhanVienCoVaiTro(filterVaiTroId = '') {
+        fetch('https://localhost:7169/api/QuanLyNhanVienVaiTro/nhan-vien-co-vai-tro')
+            .then(response => response.json())
+            .then(data => {
+                const tbody = document.getElementById('coVaiTroBody');
+                tbody.innerHTML = '';
+                let filteredData = data;
+                if (filterVaiTroId) {
+                    filteredData = data.filter(nv => nv.vai_Tros.some(vt => vt.iD_Vai_Tro == filterVaiTroId));
+                }
+                if (filteredData && filteredData.length > 0) {
+                    filteredData.forEach(nv => {
+                        const row = document.createElement('tr');
+                        row.className = 'fade-in';
+                        row.setAttribute('data-search', `${nv.ten_Dang_Nhap.toLowerCase()} ${nv.email.toLowerCase()} ${nv.ho_Ten.toLowerCase()}`);
+                        row.innerHTML = `
+                            <td class="px-4 py-3">${nv.iD_Tai_Khoan}</td>
+                            <td class="px-4 py-3">${nv.ten_Dang_Nhap}</td>
+                            <td class="px-4 py-3">${nv.email}</td>
+                            <td class="px-4 py-3">${nv.ho_Ten}</td>
+                            <td class="px-4 py-3">${nv.so_Dien_Thoai}</td>
+                            <td class="px-4 py-3">${nv.dia_Chi}</td>
+                            <td class="px-4 py-3">${new Date(nv.nam_Sinh).toLocaleDateString('vi-VN')}</td>
+                            <td class="px-4 py-3">${nv.cccd}</td>
+                            <td class="px-4 py-3">${nv.vai_Tros && nv.vai_Tros.length > 0 ? nv.vai_Tros.map(v => v.ten_Vai_Tro).join(', ') : '<span class="text-gray-500">Không có vai trò</span>'}</td>
+                            <td class="px-4 py-3">
+                                <button class="btn btn-warning btn-sm" data-toggle="modal" data-target="#capNhatVaiTroModal" onclick="loadCapNhatVaiTro(${nv.iD_Tai_Khoan}, '${nv.vai_Tros.map(v => v.iD_Vai_Tro).join(',')}')">Sửa Vai Trò</button>
+                            </td>
+                        `;
+                        tbody.appendChild(row);
+                    });
+                } else {
+                    tbody.innerHTML = '<tr><td colspan="10" class="no-results">Không có dữ liệu</td></tr>';
+                }
+            })
+            .catch(error => showError('Lỗi khi tải danh sách nhân viên đã có vai trò: ' + error.message));
+    }
+
+    function loadVaiTroCheckboxes(containerId, prefix) {
+        const container = document.getElementById(containerId);
+        container.innerHTML = '';
+        vaiTros.forEach(vt => {
+            const div = document.createElement('div');
+            div.className = 'form-check flex items-center space-x-2';
+            div.innerHTML = `
+                <input class="form-check-input h-4 w-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500" type="checkbox" name="danhSachVaiTro" value="${vt.iD_Vai_Tro}" id="${prefix}${vt.iD_Vai_Tro}">
+                <label class="form-check-label text-gray-700" for="${prefix}${vt.iD_Vai_Tro}">${vt.ten_Vai_Tro}</label>
+            `;
+            container.appendChild(div);
+        });
+    }
+
+    function showError(message) {
+        const errorDiv = document.getElementById('errorMessage');
+        const errorText = document.getElementById('errorText');
+        errorText.textContent = message;
+        errorDiv.classList.remove('hidden');
+        setTimeout(() => errorDiv.classList.add('hidden'), 5000);
+    }
+
+    function showLog(json) {
+        const logDiv = document.getElementById('requestLog');
+        const logText = document.getElementById('logText');
+        logText.textContent = JSON.stringify(json, null, 2);
+        logDiv.classList.remove('hidden');
+        setTimeout(() => logDiv.classList.add('hidden'), 5000);
+    }
+
+    function loadThemVaiTro(id) {
+        document.getElementById('idTaiKhoanThem').value = id;
+        document.querySelectorAll('#vaiTroThemCheckboxes input[type="checkbox"]').forEach(cb => cb.checked = false);
+        document.getElementById('themVaiTroError').classList.add('hidden');
+    }
+
+    function loadCapNhatVaiTro(id, currentVaiTroIds) {
+        document.getElementById('idTaiKhoanCapNhat').value = id;
+        const ids = currentVaiTroIds ? currentVaiTroIds.split(',').filter(id => id !== '') : [];
+        document.querySelectorAll('#vaiTroCapNhatCheckboxes input[type="checkbox"]').forEach(cb => {
+            cb.checked = ids.includes(cb.value);
+        });
+        document.getElementById('capNhatVaiTroError').classList.add('hidden');
+    }
+
+    document.getElementById('themVaiTroForm').addEventListener('submit', function (e) {
+        e.preventDefault();
+        const idTaiKhoan = document.getElementById('idTaiKhoanThem').value;
+        const checkboxes = document.querySelectorAll('#vaiTroThemCheckboxes input[type="checkbox"]:checked');
+        const danhSachVaiTro = Array.from(checkboxes).map(cb => parseInt(cb.value));
+
+        if (danhSachVaiTro.length === 0) {
+            document.getElementById('themVaiTroError').classList.remove('hidden');
+            return;
+        }
+
+        const data = {
+            iD_Tai_Khoan: parseInt(idTaiKhoan),
+            danh_Sach_ID_Vai_Tro: danhSachVaiTro
+        };
+
+        showLog(data);
+
+        fetch('https://localhost:7169/api/QuanLyNhanVienVaiTro/gan-vai-tro', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(data)
+        })
+        .then(response => {
+            if (!response.ok) throw new Error('Gán vai trò thất bại');
+            return response.json();
+        })
+        .then(() => {
+            $('#themVaiTroModal').modal('hide');
+            loadNhanVienKhongVaiTro();
+            loadNhanVienCoVaiTro();
+        })
+        .catch(error => showError(error.message));
+    });
+
+    document.getElementById('capNhatVaiTroForm').addEventListener('submit', function (e) {
+        e.preventDefault();
+        const idTaiKhoan = document.getElementById('idTaiKhoanCapNhat').value;
+        const checkboxes = document.querySelectorAll('#vaiTroCapNhatCheckboxes input[type="checkbox"]:checked');
+        const danhSachVaiTro = Array.from(checkboxes).map(cb => parseInt(cb.value));
+
+        if (danhSachVaiTro.length === 0) {
+            document.getElementById('capNhatVaiTroError').classList.remove('hidden');
+            return;
+        }
+
+        const data = {
+            iD_Tai_Khoan: parseInt(idTaiKhoan),
+            danh_Sach_ID_Vai_Tro: danhSachVaiTro
+        };
+
+        showLog(data);
+
+        fetch('https://localhost:7169/api/QuanLyNhanVienVaiTro/cap-nhat-vai-tro', {
+            method: 'PUT',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(data)
+        })
+        .then(response => {
+            if (!response.ok) throw new Error('Cập nhật vai trò thất bại');
+            return response.json();
+        })
+        .then(() => {
+            $('#capNhatVaiTroModal').modal('hide');
+            loadNhanVienCoVaiTro();
+            loadNhanVienKhongVaiTro();
+        })
+        .catch(error => showError(error.message));
+    });
+
+    document.getElementById('searchKhongVaiTro').addEventListener('input', function () {
+        const searchTerm = this.value.toLowerCase();
+        const rows = document.querySelectorAll('#tableKhongVaiTro tbody tr');
+        let hasResults = false;
+
+        rows.forEach(row => {
+            const searchData = row.getAttribute('data-search') || '';
+            row.style.display = searchData.includes(searchTerm) ? '' : 'none';
+            if (searchData.includes(searchTerm)) hasResults = true;
+        });
+
+        const noResultsRow = document.querySelector('#tableKhongVaiTro .no-results');
+        if (noResultsRow) {
+            noResultsRow.style.display = hasResults ? 'none' : '';
+        }
+    });
+
+    document.getElementById('searchCoVaiTro').addEventListener('input', function () {
+        const searchTerm = this.value.toLowerCase();
+        const rows = document.querySelectorAll('#tableCoVaiTro tbody tr');
+        let hasResults = false;
+
+        rows.forEach(row => {
+            const searchData = row.getAttribute('data-search') || '';
+            row.style.display = searchData.includes(searchTerm) ? '' : 'none';
+            if (searchData.includes(searchTerm)) hasResults = true;
+        });
+
+        const noResultsRow = document.querySelector('#tableCoVaiTro .no-results');
+        if (noResultsRow) {
+            noResultsRow.style.display = hasResults ? 'none' : '';
+        }
+    });
+
+    document.getElementById('filterVaiTro').addEventListener('change', function () {
+        loadNhanVienCoVaiTro(this.value);
+    });
+
+    document.addEventListener('DOMContentLoaded', function () {
+        loadVaiTros();
+        loadNhanVienKhongVaiTro();
+        loadNhanVienCoVaiTro();
     });
 </script>
