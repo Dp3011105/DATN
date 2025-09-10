@@ -193,6 +193,6 @@ app.UseAuthorization();
 // SỬA LẠI: Route mặc định giống bản cũ để GanVoucher hoạt động
 app.MapControllerRoute(
     name: "default",
-    pattern: "{controller=Admin}/{action=Index}/{id?}");
+    pattern: "{controller=Home}/{action=Index}/{id?}");
 
 app.Run();

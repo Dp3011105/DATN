@@ -648,29 +648,55 @@ namespace BE.Repository
 
 
 
+        public async Task<bool> KiemTraCoSoDienThoaiAsync(int idKhachHang)
+        {
+            var khachHang = await _context.Khach_Hang.FindAsync(idKhachHang);
+            if (khachHang == null)
+            {
+                return false; // Hoặc throw exception nếu cần
+            }
+            return !string.IsNullOrEmpty(khachHang.So_Dien_Thoai);
+        }
+
+        public async Task<string> LaySoDienThoaiAsync(int idKhachHang)
+        {
+            var khachHang = await _context.Khach_Hang
+                .Where(k => k.ID_Khach_Hang == idKhachHang)
+                .Select(k => k.So_Dien_Thoai)
+                .FirstOrDefaultAsync();
+            return khachHang;
+        }
+        public async Task ThemSoDienThoaiAsync(int idKhachHang, string soDienThoai)
+        {
+            var khachHang = await _context.Khach_Hang.FindAsync(idKhachHang);
+            if (khachHang == null)
+            {
+                // Throw exception hoặc xử lý lỗi
+                throw new Exception("Khách hàng không tồn tại");
+            }
+            if (!string.IsNullOrEmpty(khachHang.So_Dien_Thoai))
+            {
+                // Có thể throw nếu đã có, nhưng theo yêu cầu API 2 là thêm (giả sử thêm nếu chưa có)
+                throw new Exception("Khách hàng đã có số điện thoại");
+            }
+            khachHang.So_Dien_Thoai = soDienThoai;
+            await _context.SaveChangesAsync();
+        }
+
+        public async Task CapNhatSoDienThoaiAsync(int idKhachHang, string soDienThoaiMoi)
+        {
+            var khachHang = await _context.Khach_Hang.FindAsync(idKhachHang);
+            if (khachHang == null)
+            {
+                // Throw exception hoặc xử lý lỗi
+                throw new Exception("Khách hàng không tồn tại");
+            }
+            khachHang.So_Dien_Thoai = soDienThoaiMoi;
+            await _context.SaveChangesAsync();
+        }
+
+
 
     }
 
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
