@@ -1,0 +1,1165 @@
+﻿@model FE.Models.ProfileModel
+
+@{
+    ViewData["Title"] = "Thông tin cá nhân";
+}
+
+<style>
+    /* Profile Page CSS - Vietnamese Layout */
+
+    /* Body and general styles */
+    body {
+        background-color: #f8f9fa;
+        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        color: #333;
+    }
+
+    /* Container styling */
+    .container {
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 20px 15px;
+    }
+
+    /* Card styling */
+    .card {
+        border: none;
+        border-radius: 12px;
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.08);
+        background: white;
+        margin-bottom: 20px;
+    }
+
+    .card-header {
+        background: linear-gradient(135deg, #007bff, #0056b3);
+        color: white;
+        border-radius: 12px 12px 0 0 !important;
+        padding: 20px;
+        border: none;
+    }
+
+        .card-header h4 {
+            margin: 0;
+            font-weight: 600;
+            font-size: 1.25rem;
+        }
+
+    .card-body {
+        padding: 30px;
+    }
+
+    /* Form styling */
+    .form-label {
+        font-weight: 600;
+        color: #495057;
+        margin-bottom: 8px;
+        font-size: 0.95rem;
+    }
+
+    .form-control, .form-select {
+        border: 2px solid #e9ecef;
+        border-radius: 8px;
+        padding: 12px 15px;
+        font-size: 0.95rem;
+        transition: all 0.3s ease;
+    }
+
+        .form-control:focus, .form-select:focus {
+            border-color: #007bff;
+            box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.15);
+            outline: none;
+        }
+
+        .form-control[readonly] {
+            background-color: #f8f9fa;
+            border-color: #dee2e6;
+            color: #6c757d;
+        }
+
+    /* Button styling */
+    .btn {
+        border-radius: 8px;
+        font-weight: 600;
+        padding: 12px 24px;
+        font-size: 0.95rem;
+        transition: all 0.3s ease;
+        border: none;
+    }
+
+    .btn-primary {
+        background: linear-gradient(135deg, #007bff, #0056b3);
+        color: white;
+    }
+
+        .btn-primary:hover {
+            background: linear-gradient(135deg, #0056b3, #004085);
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(0, 123, 255, 0.3);
+        }
+
+    .btn-success {
+        background: linear-gradient(135deg, #28a745, #1e7e34);
+        color: white;
+    }
+
+        .btn-success:hover {
+            background: linear-gradient(135deg, #1e7e34, #155724);
+            transform: translateY(-1px);
+        }
+
+    .btn-outline-primary {
+        border: 2px solid #007bff;
+        color: #007bff;
+        background: transparent;
+    }
+
+        .btn-outline-primary:hover {
+            background: #007bff;
+            color: white;
+            transform: translateY(-1px);
+        }
+
+    .btn-outline-danger {
+        border: 2px solid #dc3545;
+        color: #dc3545;
+        background: transparent;
+    }
+
+        .btn-outline-danger:hover {
+            background: #dc3545;
+            color: white;
+            transform: translateY(-1px);
+        }
+
+    .btn-secondary {
+        background: #6c757d;
+        color: white;
+    }
+
+    .btn-sm {
+        padding: 8px 16px;
+        font-size: 0.875rem;
+    }
+
+    /* Address section styling */
+    .mt-4 h5 {
+        color: #495057;
+        font-weight: 700;
+        margin-bottom: 20px;
+    }
+
+    /* Address card styling */
+    .card.border-light {
+        border: 2px solid #e9ecef !important;
+        transition: all 0.3s ease;
+        background: #fafbfc;
+    }
+
+        .card.border-light:hover {
+            border-color: #007bff !important;
+            box-shadow: 0 4px 15px rgba(0, 123, 255, 0.1);
+            transform: translateY(-2px);
+        }
+
+    .card-title.text-primary {
+        color: #007bff !important;
+        font-weight: 600;
+        font-size: 1rem;
+        margin-bottom: 12px;
+    }
+
+    .card-text {
+        font-size: 0.9rem;
+        line-height: 1.6;
+    }
+
+    /* Badge styling */
+    .badge {
+        font-size: 0.8rem;
+        padding: 6px 12px;
+        border-radius: 20px;
+        font-weight: 600;
+    }
+
+        .badge.bg-success {
+            background: linear-gradient(135deg, #28a745, #1e7e34) !important;
+        }
+
+        .badge.bg-secondary {
+            background: linear-gradient(135deg, #6c757d, #495057) !important;
+        }
+
+    /* Modal styling */
+    .modal-content {
+        border: none;
+        border-radius: 12px;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+    }
+
+    .modal-header {
+        background: linear-gradient(135deg, #007bff, #0056b3);
+        color: white;
+        border-radius: 12px 12px 0 0;
+        padding: 20px 30px;
+        border-bottom: none;
+    }
+
+    .modal-title {
+        font-weight: 600;
+        font-size: 1.2rem;
+    }
+
+    .modal-body {
+        padding: 30px;
+    }
+
+    .modal-footer {
+        padding: 20px 30px;
+        border-top: 1px solid #e9ecef;
+        background: #fafbfc;
+        border-radius: 0 0 12px 12px;
+    }
+
+    /* Checkbox styling */
+    .form-check-input {
+        width: 1.2em;
+        height: 1.2em;
+        border: 2px solid #007bff;
+        border-radius: 4px;
+    }
+
+        .form-check-input:checked {
+            background-color: #007bff;
+            border-color: #007bff;
+        }
+
+    .form-check-label {
+        font-weight: 500;
+        color: #495057;
+        margin-left: 8px;
+    }
+
+    /* Text styling */
+    .text-muted {
+        color: #8a8a8a !important;
+        font-style: italic;
+    }
+
+    .fw-bold {
+        font-weight: 600 !important;
+    }
+
+    /* Cải thiện styling cho button group trong address cards */
+    .btn-group-sm {
+        display: flex;
+        gap: 8px;
+        margin-top: 12px;
+    }
+
+        .btn-group-sm .btn {
+            flex: 1;
+            padding: 8px 16px;
+            font-size: 0.85rem;
+            font-weight: 600;
+            border-radius: 8px !important;
+            transition: all 0.3s ease;
+            border: 2px solid;
+            position: relative;
+            overflow: hidden;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 36px;
+        }
+
+        /* Nút Sửa - Style mới */
+        .btn-group-sm .btn-outline-primary {
+            background: linear-gradient(135deg, #ffffff, #f8f9fa);
+            border-color: #007bff;
+            color: #007bff;
+            box-shadow: 0 2px 8px rgba(0, 123, 255, 0.15);
+        }
+
+            .btn-group-sm .btn-outline-primary:hover {
+                background: linear-gradient(135deg, #007bff, #0056b3);
+                border-color: #0056b3;
+                color: white;
+                transform: translateY(-2px);
+                box-shadow: 0 4px 15px rgba(0, 123, 255, 0.3);
+            }
+
+        /* Nút Xóa - Style mới */
+        .btn-group-sm .btn-outline-danger {
+            background: linear-gradient(135deg, #ffffff, #f8f9fa);
+            border-color: #dc3545;
+            color: #dc3545;
+            box-shadow: 0 2px 8px rgba(220, 53, 69, 0.15);
+        }
+
+            .btn-group-sm .btn-outline-danger:hover {
+                background: linear-gradient(135deg, #dc3545, #c82333);
+                border-color: #c82333;
+                color: white;
+                transform: translateY(-2px);
+                box-shadow: 0 4px 15px rgba(220, 53, 69, 0.3);
+            }
+
+        /* Thêm icon cho các nút */
+        .btn-group-sm .btn::before {
+            content: '';
+            width: 16px;
+            height: 16px;
+            margin-right: 6px;
+            background-size: contain;
+            background-repeat: no-repeat;
+            background-position: center;
+        }
+
+        .btn-group-sm .btn-outline-primary::before {
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23007bff' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7'%3E%3C/path%3E%3Cpath d='m18.5 2.5 a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z'%3E%3C/path%3E%3C/svg%3E");
+        }
+
+        .btn-group-sm .btn-outline-primary:hover::before {
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='white' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7'%3E%3C/path%3E%3Cpath d='m18.5 2.5 a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z'%3E%3C/path%3E%3C/svg%3E");
+        }
+
+        .btn-group-sm .btn-outline-danger::before {
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23dc3545' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='3,6 5,6 21,6'%3E%3C/polyline%3E%3Cpath d='m19,6v14a2,2 0 0,1 -2,2H7a2,2 0 0,1 -2,-2V6m3,0V4a2,2 0 0,1 2,-2h4a2,2 0 0,1 2,2v2'%3E%3C/path%3E%3Cline x1='10' y1='11' x2='10' y2='17'%3E%3C/line%3E%3Cline x1='14' y1='11' x2='14' y2='17'%3E%3C/line%3E%3C/svg%3E");
+        }
+
+        .btn-group-sm .btn-outline-danger:hover::before {
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='white' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='3,6 5,6 21,6'%3E%3C/polyline%3E%3Cpath d='m19,6v14a2,2 0 0,1 -2,2H7a2,2 0 0,1 -2,-2V6m3,0V4a2,2 0 0,1 2,-2h4a2,2 0 0,1 2,2v2'%3E%3C/path%3E%3Cline x1='10' y1='11' x2='10' y2='17'%3E%3C/line%3E%3Cline x1='14' y1='11' x2='14' y2='17'%3E%3C/line%3E%3C/svg%3E");
+        }
+
+    /* Select dropdown styling */
+    select.form-select {
+        background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3e%3cpath fill='none' stroke='%23343a40' stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='m1 6 7 7 7-7'/%3e%3c/svg%3e");
+        background-repeat: no-repeat;
+        background-position: right 12px center;
+        background-size: 16px 12px;
+        padding-right: 40px;
+    }
+
+    /* Toast Notification Styles */
+    .toast-container {
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        z-index: 9999;
+        max-width: 400px;
+    }
+
+    .toast {
+        border: none;
+        border-radius: 12px;
+        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.12);
+        backdrop-filter: blur(10px);
+        margin-bottom: 10px;
+        overflow: hidden;
+        animation: slideInRight 0.4s ease-out;
+    }
+
+        .toast.hide {
+            animation: slideOutRight 0.4s ease-in forwards;
+        }
+
+    @@keyframes slideInRight {
+        from {
+            transform: translateX(100%);
+            opacity: 0;
+        }
+
+        to {
+            transform: translateX(0);
+            opacity: 1;
+        }
+    }
+
+    @@keyframes slideOutRight {
+        from {
+            transform: translateX(0);
+            opacity: 1;
+        }
+
+        to {
+            transform: translateX(100%);
+            opacity: 0;
+        }
+    }
+
+    /* Success Toast */
+    .toast.toast-success {
+        background: linear-gradient(135deg, #d4edda 0%, #c3e6cb 100%);
+        border-left: 4px solid #28a745;
+    }
+
+        .toast.toast-success .toast-header {
+            background: rgba(40, 167, 69, 0.1);
+            border-bottom: 1px solid rgba(40, 167, 69, 0.2);
+            color: #155724;
+        }
+
+        .toast.toast-success .toast-body {
+            color: #155724;
+            background: transparent;
+        }
+
+    /* Error Toast */
+    .toast.toast-error {
+        background: linear-gradient(135deg, #f8d7da 0%, #f1b0b7 100%);
+        border-left: 4px solid #dc3545;
+    }
+
+        .toast.toast-error .toast-header {
+            background: rgba(220, 53, 69, 0.1);
+            border-bottom: 1px solid rgba(220, 53, 69, 0.2);
+            color: #721c24;
+        }
+
+        .toast.toast-error .toast-body {
+            color: #721c24;
+            background: transparent;
+        }
+
+    /* Warning Toast */
+    .toast.toast-warning {
+        background: linear-gradient(135deg, #fff3cd 0%, #ffeaa7 100%);
+        border-left: 4px solid #ffc107;
+    }
+
+        .toast.toast-warning .toast-header {
+            background: rgba(255, 193, 7, 0.1);
+            border-bottom: 1px solid rgba(255, 193, 7, 0.2);
+            color: #856404;
+        }
+
+        .toast.toast-warning .toast-body {
+            color: #856404;
+            background: transparent;
+        }
+
+    /* Info Toast */
+    .toast.toast-info {
+        background: linear-gradient(135deg, #d1ecf1 0%, #bee5eb 100%);
+        border-left: 4px solid #17a2b8;
+    }
+
+        .toast.toast-info .toast-header {
+            background: rgba(23, 162, 184, 0.1);
+            border-bottom: 1px solid rgba(23, 162, 184, 0.2);
+            color: #0c5460;
+        }
+
+        .toast.toast-info .toast-body {
+            color: #0c5460;
+            background: transparent;
+        }
+
+    /* Toast Header Styling */
+    .toast-header {
+        padding: 12px 16px;
+        font-weight: 600;
+        font-size: 0.95rem;
+        border-radius: 12px 12px 0 0;
+    }
+
+        .toast-header .toast-icon {
+            font-size: 1.1rem;
+            margin-right: 8px;
+        }
+
+    /* Toast Body Styling */
+    .toast-body {
+        padding: 12px 16px;
+        font-size: 0.9rem;
+        line-height: 1.5;
+        font-weight: 500;
+    }
+
+    /* Close Button */
+    .toast .btn-close {
+        background-size: 0.8em;
+        opacity: 0.7;
+        margin: 0;
+        padding: 0.5rem;
+    }
+
+        .toast .btn-close:hover {
+            opacity: 1;
+        }
+
+    /* Progress Bar */
+    .toast-progress {
+        position: absolute;
+        bottom: 0;
+        left: 0;
+        height: 3px;
+        background: rgba(255, 255, 255, 0.3);
+        width: 100%;
+        overflow: hidden;
+    }
+
+    .toast-progress-bar {
+        height: 100%;
+        background: rgba(255, 255, 255, 0.8);
+        width: 100%;
+        animation: progressBar 5s linear forwards;
+    }
+
+    @@keyframes progressBar {
+        from {
+            width: 100%;
+        }
+
+        to {
+            width: 0%;
+        }
+    }
+
+    /* Responsive Design */
+    @@media (max-width: 768px) {
+        .container {
+            padding: 15px 10px;
+        }
+
+        .card-body {
+            padding: 20px;
+        }
+
+        .modal-body, .modal-header, .modal-footer {
+            padding: 20px;
+        }
+
+        .col-md-6.mb-3 {
+            margin-bottom: 20px !important;
+        }
+
+        .btn-group-sm {
+            flex-direction: column;
+            gap: 8px;
+        }
+
+            .btn-group-sm .btn {
+                width: 100%;
+                margin-right: 0;
+                min-height: 42px;
+            }
+
+        .toast-container {
+            top: 10px;
+            right: 10px;
+            left: 10px;
+            max-width: none;
+        }
+
+        .toast {
+            margin-bottom: 8px;
+        }
+
+        .toast-header {
+            padding: 10px 12px;
+            font-size: 0.9rem;
+        }
+
+        .toast-body {
+            padding: 10px 12px;
+            font-size: 0.85rem;
+        }
+    }
+
+    /* Additional spacing */
+    .mb-3 {
+        margin-bottom: 1.5rem !important;
+    }
+
+    .mt-1 {
+        margin-top: 0.5rem !important;
+    }
+
+    /* Hover effects */
+    .card:not(.border-light):hover {
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.12);
+    }
+
+    /* Form validation */
+    .text-danger {
+        font-size: 0.85rem;
+        margin-top: 5px;
+        font-weight: 500;
+    }
+
+    /* Custom scrollbar for textarea */
+    textarea.form-control {
+        resize: vertical;
+        min-height: 100px;
+    }
+
+        textarea.form-control::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        textarea.form-control::-webkit-scrollbar-track {
+            background: #f1f1f1;
+            border-radius: 3px;
+        }
+
+        textarea.form-control::-webkit-scrollbar-thumb {
+            background: #007bff;
+            border-radius: 3px;
+        }
+
+    /* Loading state for buttons */
+    .btn:disabled {
+        opacity: 0.6;
+        cursor: not-allowed;
+        transform: none !important;
+    }
+
+    /* Address management header */
+    .d-flex.justify-content-between.align-items-center {
+        margin-bottom: 25px;
+    }
+
+        .d-flex.justify-content-between.align-items-center h5 {
+            margin: 0;
+            color: #2c3e50;
+        }
+
+    /* Loading state */
+    .btn-group-sm .btn:disabled {
+        opacity: 0.6;
+        cursor: not-allowed;
+        transform: none !important;
+    }
+
+        .btn-group-sm .btn:disabled::before {
+            opacity: 0.5;
+        }
+
+    /* Focus states for accessibility */
+    .btn-group-sm .btn:focus {
+        outline: none;
+        box-shadow: 0 0 0 3px rgba(0, 123, 255, 0.25);
+    }
+
+    .btn-group-sm .btn-outline-danger:focus {
+        box-shadow: 0 0 0 3px rgba(220, 53, 69, 0.25);
+    }
+
+    /* Animation khi hover vào card chứa buttons */
+    .card.border-light:hover .btn-group-sm .btn {
+        transform: scale(1.02);
+    }
+
+        .card.border-light:hover .btn-group-sm .btn:hover {
+            transform: scale(1.05) translateY(-2px);
+        }
+</style>
+
+<div class="container mt-4">
+    <div class="row">
+        <div class="col-md-8 mx-auto">
+            <div class="card">
+                <div class="card-header">
+                    <h4 class="mb-0">Thông tin cá nhân</h4>
+                </div>
+                <div class="card-body">
+                    <!-- Thông tin cá nhân -->
+                    <form asp-action="UpdateProfile" method="post">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label class="form-label">Họ và tên *</label>
+                                    <input asp-for="Ho_Ten" class="form-control" required />
+                                    <span asp-validation-for="Ho_Ten" class="text-danger"></span>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label class="form-label">Email (không thể thay đổi)</label>
+                                    <input asp-for="Email" class="form-control" readonly />
+                                </div>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label class="form-label">Số điện thoại</label>
+                                    <input asp-for="So_Dien_Thoai" class="form-control" />
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label class="form-label">Giới tính</label>
+                                    <select asp-for="GioiTinh" class="form-select">
+                                        <option value="false">Nữ</option>
+                                        <option value="true">Nam</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Ghi chú</label>
+                            <textarea asp-for="Ghi_Chu" class="form-control" rows="3"></textarea>
+                        </div>
+                        <button type="submit" class="btn btn-primary">Cập nhật thông tin</button>
+                    </form>
+
+                    <hr />
+
+                    <!-- Quản lý địa chỉ -->
+                    <div class="mt-4">
+                        <div class="d-flex justify-content-between align-items-center mb-3">
+                            <h5>Danh sách địa chỉ</h5>
+                            <button type="button" class="btn btn-success btn-sm" data-bs-toggle="modal" data-bs-target="#addAddressModal">
+                                <i class="fas fa-plus"></i> Thêm địa chỉ
+                            </button>
+                        </div>
+
+                        @if (Model.DiaChis != null && Model.DiaChis.Any())
+                        {
+                            <div class="row">
+                                @foreach (var address in Model.DiaChis)
+                                {
+                                    <div class="col-md-6 mb-3">
+                                        <div class="card border-light">
+                                            <div class="card-body">
+                                                <h6 class="card-title text-primary">@address.Dia_Chi</h6>
+                                                <p class="card-text">
+                                                    @if (!string.IsNullOrEmpty(address.Ghi_Chu))
+                                                    {
+                                                        <span class="fw-bold">@address.Ghi_Chu</span>
+                                                        <br>
+                                                    }
+                                                    @if (address.Trang_Thai == true)
+                                                    {
+                                                        <span class="badge bg-success mt-1">Đang sử dụng</span>
+                                                    }
+                                                    else
+                                                    {
+                                                        <span class="badge bg-secondary mt-1">Không sử dụng</span>
+                                                    }
+                                                </p>
+                                                <div class="btn-group btn-group-sm">
+                                                    <button type="button" class="btn btn-outline-primary"
+                                                            onclick="editAddress(@address.ID_Dia_Chi, '@Html.Raw(address.Dia_Chi?.Replace("'", "\\'"))', '@Html.Raw(address.Ghi_Chu?.Replace("'", "\\'"))', @address.Trang_Thai.ToString().ToLower())">
+                                                        Sửa
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                }
+                            </div>
+                        }
+                        else
+                        {
+                            <p class="text-muted">Chưa có địa chỉ nào được thêm.</p>
+                        }
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Toast Container -->
+<div class="toast-container"></div>
+
+<!-- Modal thêm địa chỉ -->
+<div class="modal fade" id="addAddressModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <form asp-action="AddAddress" method="post" id="addAddressForm">
+                <div class="modal-header">
+                    <h5 class="modal-title">Thêm địa chỉ mới</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label class="form-label">Quận/Huyện *</label>
+                                <select name="district" id="districtSelect" class="form-select" required>
+                                    <option value="">Chọn Quận/Huyện</option>
+                                    <option value="Ba Đình">Ba Đình</option>
+                                    <option value="Hoàn Kiếm">Hoàn Kiếm</option>
+                                    <option value="Tây Hồ">Tây Hồ</option>
+                                    <option value="Long Biên">Long Biên</option>
+                                    <option value="Cầu Giấy">Cầu Giấy</option>
+                                    <option value="Đống Đa">Đống Đa</option>
+                                    <option value="Hai Bà Trưng">Hai Bà Trưng</option>
+                                    <option value="Hoàng Mai">Hoàng Mai</option>
+                                    <option value="Thanh Xuân">Thanh Xuân</option>
+                                    <option value="Nam Từ Liêm">Nam Từ Liêm</option>
+                                    <option value="Bắc Từ Liêm">Bắc Từ Liêm</option>
+                                    <option value="Hà Đông">Hà Đông</option>
+                                    <option value="Sóc Sơn">Sóc Sơn</option>
+                                    <option value="Đông Anh">Đông Anh</option>
+                                    <option value="Gia Lâm">Gia Lâm</option>
+                                    <option value="Thanh Trì">Thanh Trì</option>
+                                    <option value="Hoài Đức">Hoài Đức</option>
+                                    <option value="Đan Phượng">Đan Phượng</option>
+                                    <option value="Thường Tín">Thường Tín</option>
+                                    <option value="Phú Xuyên">Phú Xuyên</option>
+                                    <option value="Ứng Hòa">Ứng Hòa</option>
+                                    <option value="Mỹ Đức">Mỹ Đức</option>
+                                    <option value="Chương Mỹ">Chương Mỹ</option>
+                                    <option value="Quốc Oai">Quốc Oai</option>
+                                    <option value="Thạch Thất">Thạch Thất</option>
+                                    <option value="Ba Vì">Ba Vì</option>
+                                    <option value="Phúc Thọ">Phúc Thọ</option>
+                                    <option value="Mê Linh">Mê Linh</option>
+                                    <option value="Sơn Tây">Sơn Tây</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label class="form-label">Phường/Xã *</label>
+                                <select name="ward" id="wardSelect" class="form-select" required>
+                                    <option value="">Chọn Phường/Xã</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Địa chỉ chi tiết (tự động tạo)</label>
+                        <input name="Dia_Chi" id="addressDisplay" class="form-control bg-light" readonly
+                               placeholder="Sẽ hiển thị sau khi chọn Quận/Huyện và Phường/Xã" />
+                        <input type="hidden" name="Tinh_Thanh" value="Hà Nội" />
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Địa chỉ cụ thể của bạn</label>
+                        <textarea name="Ghi_Chu" class="form-control" rows="3"
+                                  placeholder="Nhập số nhà, tên đường, ngõ xóm cụ thể..." required></textarea>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
+                    <button type="submit" class="btn btn-primary">Thêm địa chỉ</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Modal sửa địa chỉ -->
+<div class="modal fade" id="editAddressModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <form asp-action="UpdateAddress" method="post" id="editAddressForm">
+                <div class="modal-header">
+                    <h5 class="modal-title">Sửa địa chỉ</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <input type="hidden" name="ID_Dia_Chi" id="editAddressId" />
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label class="form-label">Quận/Huyện *</label>
+                                <select name="editDistrict" id="editDistrictSelect" class="form-select" required>
+                                    <option value="">Chọn Quận/Huyện</option>
+                                    <option value="Ba Đình">Ba Đình</option>
+                                    <option value="Hoàn Kiếm">Hoàn Kiếm</option>
+                                    <option value="Tây Hồ">Tây Hồ</option>
+                                    <option value="Long Biên">Long Biên</option>
+                                    <option value="Cầu Giấy">Cầu Giấy</option>
+                                    <option value="Đống Đa">Đống Đa</option>
+                                    <option value="Hai Bà Trưng">Hai Bà Trưng</option>
+                                    <option value="Hoàng Mai">Hoàng Mai</option>
+                                    <option value="Thanh Xuân">Thanh Xuân</option>
+                                    <option value="Nam Từ Liêm">Nam Từ Liêm</option>
+                                    <option value="Bắc Từ Liêm">Bắc Từ Liêm</option>
+                                    <option value="Hà Đông">Hà Đông</option>
+                                    <option value="Sóc Sơn">Sóc Sơn</option>
+                                    <option value="Đông Anh">Đông Anh</option>
+                                    <option value="Gia Lâm">Gia Lâm</option>
+                                    <option value="Thanh Trì">Thanh Trì</option>
+                                    <option value="Hoài Đức">Hoài Đức</option>
+                                    <option value="Đan Phượng">Đan Phượng</option>
+                                    <option value="Thường Tín">Thường Tín</option>
+                                    <option value="Phú Xuyên">Phú Xuyên</option>
+                                    <option value="Ứng Hòa">Ứng Hòa</option>
+                                    <option value="Mỹ Đức">Mỹ Đức</option>
+                                    <option value="Chương Mỹ">Chương Mỹ</option>
+                                    <option value="Quốc Oai">Quốc Oai</option>
+                                    <option value="Thạch Thất">Thạch Thất</option>
+                                    <option value="Ba Vì">Ba Vì</option>
+                                    <option value="Phúc Thọ">Phúc Thọ</option>
+                                    <option value="Mê Linh">Mê Linh</option>
+                                    <option value="Sơn Tây">Sơn Tây</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label class="form-label">Phường/Xã *</label>
+                                <select name="editWard" id="editWardSelect" class="form-select" required>
+                                    <option value="">Chọn Phường/Xã</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Địa chỉ chi tiết (tự động tạo)</label>
+                        <input name="Dia_Chi" id="editAddressDisplay" class="form-control bg-light" readonly />
+                        <input type="hidden" name="Tinh_Thanh" value="Hà Nội" />
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Địa chỉ cụ thể của bạn</label>
+                        <textarea name="Ghi_Chu" id="editAddressNote" class="form-control" rows="3" required></textarea>
+                    </div>
+                    <div class="mb-3">
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" name="Trang_Thai" id="editAddressStatus" value="true">
+                            <label class="form-check-label" for="editAddressStatus">
+                                Đang sử dụng
+                            </label>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
+                    <button type="submit" class="btn btn-primary">Cập nhật</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        // Toast Notification Functions
+        /**
+         * Hiển thị toast notification
+         * @@param {string} type - Loại toast: 'success', 'error', 'warning', 'info'
+         * @@param {string} title - Tiêu đề toast
+         * @@param {string} message - Nội dung toast
+         * @@param {number} duration - Thời gian hiển thị (ms), mặc định 5000ms
+         */
+        function showToast(type = 'info', title = '', message = '', duration = 5000) {
+            // Định nghĩa icon cho từng loại toast
+            const icons = {
+                success: 'fas fa-check-circle',
+                error: 'fas fa-exclamation-circle',
+                warning: 'fas fa-exclamation-triangle',
+                info: 'fas fa-info-circle'
+            };
+
+            // Tạo unique ID cho toast
+            const toastId = 'toast-' + Date.now() + '-' + Math.random().toString(36).substr(2, 9);
+
+            // Tạo HTML cho toast
+            const toastHTML = `
+                <div id="${toastId}" class="toast toast-${type}" role="alert" aria-live="assertive" aria-atomic="true">
+                    <div class="toast-header">
+                        <i class="${icons[type]} toast-icon"></i>
+                        <strong class="me-auto">${title}</strong>
+                        <button type="button" class="btn-close" data-bs-dismiss="toast" aria-label="Close"></button>
+                    </div>
+                    <div class="toast-body">
+                        ${message}
+                    </div>
+                    <div class="toast-progress">
+                        <div class="toast-progress-bar"></div>
+                    </div>
+                </div>
+            `;
+
+            // Thêm toast vào container
+            const container = document.querySelector('.toast-container');
+            container.insertAdjacentHTML('beforeend', toastHTML);
+
+            // Lấy element toast vừa tạo
+            const toastElement = document.getElementById(toastId);
+
+            // Khởi tạo Bootstrap Toast
+            const bsToast = new bootstrap.Toast(toastElement, {
+                autohide: true,
+                delay: duration
+            });
+
+            // Hiển thị toast
+            bsToast.show();
+
+            // Xử lý sự kiện khi toast bị ẩn
+            toastElement.addEventListener('hidden.bs.toast', function () {
+                this.remove();
+            });
+
+            // Xử lý click vào toast để đóng
+            toastElement.addEventListener('click', function(e) {
+                if (!e.target.classList.contains('btn-close')) {
+                    bsToast.hide();
+                }
+            });
+
+            // Tự động ẩn progress bar
+            setTimeout(() => {
+                const progressBar = toastElement.querySelector('.toast-progress-bar');
+                if (progressBar) {
+                    progressBar.style.animationPlayState = 'running';
+                }
+            }, 100);
+
+            return bsToast;
+        }
+
+        // Dữ liệu phường xã theo quận huyện
+        const wardsData = {
+            'Ba Đình': ['Phúc Xá', 'Trúc Bạch', 'Vĩnh Phúc', 'Cống Vị', 'Liễu Giai', 'Nguyễn Trung Trực', 'Quán Thánh', 'Ngọc Hà', 'Đội Cấn', 'Ngọc Khánh', 'Kim Mã', 'Giảng Võ', 'Điện Biên', 'Thành Công'],
+            'Hoàn Kiếm': ['Phúc Tấn', 'Đồng Xuân', 'Hàng Mã', 'Hàng Buồm', 'Hàng Đào', 'Hàng Bồ', 'Cửa Đông', 'Lý Thái Tổ', 'Hàng Bạc', 'Hàng Gai', 'Chương Dương Độ', 'Cửa Nam', 'Hàng Trống', 'Tràng Tiền', 'Trần Hưng Đạo', 'Phan Chu Trinh', 'Hàng Bông', 'Hàng Thiếc'],
+            'Tây Hồ': ['Phú Thượng', 'Nhật Tân', 'Tứ Liên', 'Quảng An', 'Xuân La', 'Yến Phụ', 'Bưởi', 'Thụy Khuê'],
+            'Long Biên': ['Thượng Thanh', 'Ngọc Thụy', 'Giang Biên', 'Đức Giang', 'Việt Hưng', 'Gia Thụy', 'Ngọc Lâm', 'Phúc Lợi', 'Bo Đề', 'Sài Đồng', 'Long Biên', 'Thạch Bàn', 'Phúc Đồng', 'Cự Khối'],
+            'Cầu Giấy': ['Nghĩa Đô', 'Nghĩa Tân', 'Mai Dịch', 'Dịch Vọng', 'Dịch Vọng Hậu', 'Quan Hoa', 'Yên Hòa', 'Trung Hòa'],
+            'Đống Đa': ['Cát Linh', 'Văn Miếu', 'Quốc Tử Giám', 'Láng Thượng', 'Ô Chợ Dừa', 'Văn Chương', 'Hàng Bột', 'Nam Đồng', 'Trung Liệt', 'Khâm Thiên', 'Thổ Quan', 'Nam Thành', 'Kim Liên', 'Phương Liên', 'Thịnh Quang', 'Trung Phụng', 'Quang Trung', 'Ngã Tư Sở', 'Khương Thượng', 'Láng Hạ', 'Phương Mai'],
+            'Hai Bà Trưng': ['Nguyễn Du', 'Bạch Đằng', 'Phạm Đình Hổ', 'Lê Đại Hành', 'Đồng Nhân', 'Phố Huế', 'Đống Mác', 'Thanh Lương', 'Thanh Nhàn', 'Cầu Dền', 'Bách Khoa', 'Đồng Tâm', 'Vĩnh Tuy', 'Bạch Mai', 'Quỳnh Mai', 'Quỳnh Lôi', 'Minh Khai', 'Trương Định'],
+            'Hoàng Mai': ['Thịnh Liệt', 'Trần Phú', 'Hoàng Văn Thụ', 'Tân Mai', 'Vĩnh Hưng', 'Định Công', 'Mai Động', 'Tương Mai', 'Đại Kim', 'Tân Triều', 'Thanh Trì', 'Linh Đàm', 'Hoàng Liệt', 'Yên Sở'],
+            'Thanh Xuân': ['Hạ Đình', 'Khương Đình', 'Khương Trung', 'Khương Mai', 'Thanh Xuân Bắc', 'Thanh Xuân Nam', 'Thanh Xuân Trung', 'Nhân Chính', 'Thượng Đình', 'Kim Giang'],
+            'Nam Từ Liêm': ['Mễ Trì', 'Phú Đô', 'Phương Canh', 'Mỹ Đình 1', 'Mỹ Đình 2', 'Tây Mỗ', 'Xuân Phương', 'Phúc Diễn', 'Cầu Diễn'],
+            'Bắc Từ Liêm': ['Thượng Cát', 'Liên Mạc', 'Đông Ngạc', 'Đức Thắng', 'Thụy Phương', 'Tây Tựu', 'Xuân Đỉnh', 'Minh Khai', 'Cổ Nhuế 1', 'Cổ Nhuế 2', 'Phú Diễn', 'Phúc Diễn'],
+            'Hà Đông': ['Nguyễn Trãi', 'Mộ Lao', 'Hà Cầu', 'Văn Quán', 'Vạn Phúc', 'Yết Kiêu', 'Quang Trung', 'La Khê', 'Phú La', 'Phú Lãm', 'Phú Lương', 'Kiến Hưng', 'Yên Nghĩa', 'Binh Hưng', 'Phan Sào Nam', 'Cự Khối', 'Đồng Mai']
+        };
+
+        function editAddress(id, address, note, status) {
+            document.getElementById('editAddressId').value = id;
+            document.getElementById('editAddressNote').value = note || '';
+            document.getElementById('editAddressStatus').checked = status;
+
+            // Parse address to extract district and ward
+            if (address) {
+                const parts = address.split(' - ');
+                if (parts.length >= 2) {
+                    const ward = parts[0].trim();
+                    const district = parts[1].trim();
+
+                    // Set district
+                    document.getElementById('editDistrictSelect').value = district;
+
+                    // Update wards and set ward
+                    updateWards(document.getElementById('editDistrictSelect'), document.getElementById('editWardSelect'));
+                    setTimeout(() => {
+                        document.getElementById('editWardSelect').value = ward;
+                        updateAddressDisplay('edit');
+                    }, 100);
+                }
+            }
+
+            var modal = new bootstrap.Modal(document.getElementById('editAddressModal'));
+            modal.show();
+        }
+
+        // Cập nhật hiển thị địa chỉ
+        function updateAddressDisplay(mode) {
+            const districtSelect = mode === 'edit' ? document.getElementById('editDistrictSelect') : document.getElementById('districtSelect');
+            const wardSelect = mode === 'edit' ? document.getElementById('editWardSelect') : document.getElementById('wardSelect');
+            const addressDisplay = mode === 'edit' ? document.getElementById('editAddressDisplay') : document.getElementById('addressDisplay');
+
+            const district = districtSelect.value;
+            const ward = wardSelect.value;
+
+            if (district && ward) {
+                addressDisplay.value = `${ward} - ${district} - Hà Nội`;
+            } else {
+                addressDisplay.value = '';
+            }
+        }
+
+        // Xử lý thay đổi quận/huyện để cập nhật phường/xã
+        function updateWards(districtSelect, wardSelect) {
+            const district = districtSelect.value;
+            wardSelect.innerHTML = '<option value="">Chọn Phường/Xã</option>';
+
+            if (district && wardsData[district]) {
+                wardsData[district].forEach(ward => {
+                    const option = document.createElement('option');
+                    option.value = ward;
+                    option.textContent = ward;
+                    wardSelect.appendChild(option);
+                });
+            }
+        }
+
+        // Khởi tạo khi trang load
+        document.addEventListener('DOMContentLoaded', function() {
+            // Kiểm tra và hiển thị toast từ TempData
+            @if (TempData["SuccessMessage"] != null)
+            {
+                            <text>
+                            showToast('success', 'Thành công!', '@Html.Raw(TempData["SuccessMessage"])');
+                            </text>
+            }
+
+            @if (TempData["ErrorMessage"] != null)
+            {
+                            <text>
+                            showToast('error', 'Lỗi!', '@Html.Raw(TempData["ErrorMessage"])');
+                            </text>
+            }
+
+            // Thiết lập event listener cho select quận/huyện
+            const districtSelect = document.getElementById('districtSelect');
+            const wardSelect = document.getElementById('wardSelect');
+            const editDistrictSelect = document.getElementById('editDistrictSelect');
+            const editWardSelect = document.getElementById('editWardSelect');
+
+            districtSelect.addEventListener('change', function() {
+                updateWards(this, wardSelect);
+                updateAddressDisplay('add');
+            });
+
+            wardSelect.addEventListener('change', function() {
+                updateAddressDisplay('add');
+            });
+
+            editDistrictSelect.addEventListener('change', function() {
+                updateWards(this, editWardSelect);
+                updateAddressDisplay('edit');
+            });
+
+            editWardSelect.addEventListener('change', function() {
+                updateAddressDisplay('edit');
+            });
+
+            // Xử lý form validation
+            const addAddressForm = document.getElementById('addAddressForm');
+            addAddressForm.addEventListener('submit', function(e) {
+                const districtInput = document.querySelector('select[name="district"]');
+                const wardInput = document.querySelector('select[name="ward"]');
+
+                if (!districtInput.value) {
+                    e.preventDefault();
+                    showToast('warning', 'Cảnh báo!', 'Vui lòng chọn Quận/Huyện!');
+                    return;
+                }
+
+                if (!wardInput.value) {
+                    e.preventDefault();
+                    showToast('warning', 'Cảnh báo!', 'Vui lòng chọn Phường/Xã!');
+                    return;
+                }
+            });
+
+            const editAddressForm = document.getElementById('editAddressForm');
+            editAddressForm.addEventListener('submit', function(e) {
+                const districtInput = document.querySelector('select[name="editDistrict"]');
+                const wardInput = document.querySelector('select[name="editWard"]');
+
+                if (!districtInput.value) {
+                    e.preventDefault();
+                    showToast('warning', 'Cảnh báo!', 'Vui lòng chọn Quận/Huyện!');
+                    return;
+                }
+
+                if (!wardInput.value) {
+                    e.preventDefault();
+                    showToast('warning', 'Cảnh báo!', 'Vui lòng chọn Phường/Xã!');
+                    return;
+                }
+            });
+        });
+    </script>
+}
