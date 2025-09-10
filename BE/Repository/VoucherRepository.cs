@@ -118,5 +118,25 @@ namespace BE.Repository
 
             return true;
         }
+        public async Task<bool> DecrementAsync(int id, int qty)
+        {
+            // UPDATE atomic, chỉ trừ khi đủ số lượng
+            var affected = await _context.Database.ExecuteSqlInterpolatedAsync($@"
+        UPDATE [Voucher]
+        SET [So_Luong] = [So_Luong] - {qty}
+        WHERE [ID_Voucher] = {id} AND [So_Luong] >= {qty};
+    ");
+            return affected > 0;
+        }
+
+        public async Task<bool> DecrementByCodeAsync(string code, int qty)
+        {
+            var affected = await _context.Database.ExecuteSqlInterpolatedAsync($@"
+        UPDATE [Voucher]
+        SET [So_Luong] = [So_Luong] - {qty}
+        WHERE [Ma_Voucher] = {code} AND [So_Luong] >= {qty};
+    ");
+            return affected > 0;
+        }
     }
 }
