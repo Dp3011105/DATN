@@ -15,16 +15,20 @@ namespace FE.Controllers
             _service = service;
         }
 
-        public async Task<IActionResult> Index()
-        {
-            var viewModel = new QuanLyVaiTroViewModel
-            {
-                NhanVienKhongVaiTro = await _service.GetNhanVienKhongVaiTro(),
-                NhanVienCoVaiTro = await _service.GetNhanVienCoVaiTro(),
-                VaiTros = await _service.GetAllVaiTro()
-            };
+        //public async Task<IActionResult> Index()
+        //{
+        //    var viewModel = new QuanLyVaiTroViewModel
+        //    {
+        //        NhanVienKhongVaiTro = await _service.GetNhanVienKhongVaiTro(),
+        //        NhanVienCoVaiTro = await _service.GetNhanVienCoVaiTro(),
+        //        VaiTros = await _service.GetAllVaiTro()
+        //    };
 
-            return View(viewModel);
+        //    return View(viewModel);
+        //}
+          public IActionResult Index()
+        {
+            return View();
         }
 
         [HttpPost]
@@ -44,7 +48,7 @@ namespace FE.Controllers
             catch (Exception ex)
             {
                 ViewBag.ErrorMessage = $"Lỗi khi gán vai trò: {ex.Message}";
-                return await Index();
+                return View();
             }
         }
 
@@ -65,7 +69,7 @@ namespace FE.Controllers
             catch (Exception ex)
             {
                 ViewBag.ErrorMessage = $"Lỗi khi cập nhật vai trò: {ex.Message}";
-                return await Index();
+                return View();
             }
         }
     }
