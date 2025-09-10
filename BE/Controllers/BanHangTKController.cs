@@ -81,5 +81,75 @@ namespace BE.Controllers
         }
 
 
+
+
+
+
+
+        // API 1: Check có số điện thoại chưa
+        [HttpGet("kiem-tra-so-dien-thoai/{idKhachHang}")]
+        public async Task<IActionResult> KiemTraSoDienThoai(int idKhachHang)
+        {
+            var coSoDienThoai = await _repository.KiemTraCoSoDienThoaiAsync(idKhachHang);
+            return Ok(coSoDienThoai);
+        }
+
+
+
+
+        // API 2: Lấy số điện thoại của khách hàng dựa trên idKhachHang
+        [HttpGet("lay-so-dien-thoai/{idKhachHang}")]
+        public async Task<IActionResult> LaySoDienThoai(int idKhachHang)
+        {
+            try
+            {
+                // Gọi phương thức từ repository để lấy số điện thoại
+                var soDienThoai = await _repository.LaySoDienThoaiAsync(idKhachHang);
+
+                // Kiểm tra nếu không tìm thấy khách hàng hoặc số điện thoại
+                if (string.IsNullOrEmpty(soDienThoai))
+                {
+                    return NotFound(new { Message = "Không tìm thấy khách hàng hoặc số điện thoại." });
+                }
+
+                // Trả về số điện thoại
+                return Ok(new { IdKhachHang = idKhachHang, SoDienThoai = soDienThoai });
+            }
+            catch (Exception ex)
+            {
+                // Xử lý lỗi và trả về thông báo lỗi
+                return StatusCode(500, new { Message = "Đã xảy ra lỗi khi lấy số điện thoại.", Error = ex.Message });
+            }
+        }
+
+
+
+
+        // API 3: Thêm số điện thoại
+        [HttpPost("them-so-dien-thoai")]
+        public async Task<IActionResult> ThemSoDienThoai([FromBody] SoDienThoaiBanHangTKDTO dto)
+        {
+            if (dto == null || string.IsNullOrEmpty(dto.So_Dien_Thoai))
+            {
+                return BadRequest("Dữ liệu không hợp lệ");
+            }
+            await _repository.ThemSoDienThoaiAsync(dto.ID_Khach_Hang, dto.So_Dien_Thoai);
+            return Ok("Thêm số điện thoại thành công");
+        }
+
+        // API 4: Update số điện thoại
+        [HttpPut("cap-nhat-so-dien-thoai")]
+        public async Task<IActionResult> CapNhatSoDienThoai([FromBody] SoDienThoaiBanHangTKDTO dto)
+        {
+            if (dto == null || string.IsNullOrEmpty(dto.So_Dien_Thoai))
+            {
+                return BadRequest("Dữ liệu không hợp lệ");
+            }
+            await _repository.CapNhatSoDienThoaiAsync(dto.ID_Khach_Hang, dto.So_Dien_Thoai);
+            return Ok("Cập nhật số điện thoại thành công");
+        }
+        
+
+
     }
 }

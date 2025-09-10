@@ -11,6 +11,12 @@ namespace BE.Repository.IRepository
         Task<IEnumerable<HinhThucThanhToanDTO>> GetAllHinhThucThanhToan();
         Task<HoaDonBanHangTKDTO> CheckOutTk(HoaDonBanHangTKDTO hoaDonDto);
 
+        // Methods mới cho So_Dien_Thoai
+        Task<bool> KiemTraCoSoDienThoaiAsync(int idKhachHang);
+        Task<string> LaySoDienThoaiAsync(int idKhachHang);
+        Task ThemSoDienThoaiAsync(int idKhachHang, string soDienThoai);
+        Task CapNhatSoDienThoaiAsync(int idKhachHang, string soDienThoaiMoi);
+
 
     }
 }
