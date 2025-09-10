@@ -1,9 +1,12 @@
-﻿using Microsoft.AspNetCore.Mvc;
-using BE.models;
+﻿using BE.models;
+using FE.Filters;
+using Microsoft.AspNetCore.Mvc;
 using Service.IService;
 
 namespace FE.Controllers
 {
+    [RoleAuthorize(2,3)] // Trang cho phép cả vai trò 2,3
+    // Phương thức này đươc để trong thư mục Filters nhé ae
     public class ThongKeController : Controller
     {
         private readonly IHoaDonService _hoaDonService;

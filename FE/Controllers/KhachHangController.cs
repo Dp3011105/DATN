@@ -1,11 +1,14 @@
 ﻿using BE.DTOs;
+using ClosedXML.Excel;
+using FE.Filters;
 using Microsoft.AspNetCore.Mvc;
 using Service.IService;
-using ClosedXML.Excel;
 using System.IO;
 
 namespace FE.Controllers
 {
+    [RoleAuthorize(2)]// Phương thức này đươc để trong thư mục Filters nhé ae
+
     public class KhachHangController : Controller
     {
         private readonly IKhachHangService _khachHangService;

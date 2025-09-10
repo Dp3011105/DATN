@@ -98,7 +98,7 @@ namespace BE.Controllers
             await _accountRepository.SaveChangesAsync();
 
             // Gửi email chứa mật khẩu
-            var emailBody = $"Chào mừng bạn đến với DATN App!\n\nTên người dùng: {request.Ten_Nguoi_Dung}\nMật khẩu: {password}";
+            var emailBody = $"Chào mừng bạn đến với Trà sữa TheBoy!\n\nTên người dùng: {request.Ten_Nguoi_Dung}\nMật khẩu: {password}";
             await _emailService.SendEmailAsync(request.Email, "Đăng ký tài khoản DATN", emailBody);
 
             return Ok("Đăng ký thành công. Vui lòng kiểm tra email để lấy mật khẩu.");
@@ -148,6 +148,53 @@ namespace BE.Controllers
             };
 
             return Ok(response);
+        }
+
+
+        [HttpPost("change-password")]
+        public async Task<IActionResult> ChangePassword([FromBody] ChangePasswordRequest request)
+        {
+            var taiKhoan = await _accountRepository.GetTaiKhoanByKhachHangIdAsync(request.IdKhachHang);
+            if (taiKhoan == null)
+            {
+                return BadRequest("Không tìm thấy tài khoản.");
+            }
+
+            if (taiKhoan.Mat_Khau != request.OldPassword)
+            {
+                return BadRequest("Mật khẩu cũ không đúng.");
+            }
+
+            taiKhoan.Mat_Khau = request.NewPassword;
+            await _accountRepository.UpdateTaiKhoanAsync(taiKhoan);
+            await _accountRepository.SaveChangesAsync();
+
+            return Ok("Đổi mật khẩu thành công.");
+        }
+        [HttpPost("forgot-password")]
+        public async Task<IActionResult> ForgotPassword([FromBody] BE.DTOs.CustomForgotPasswordRequest request)
+        {
+            var khachHang = await _customerRepository.GetKhachHangByEmailAsync(request.Email);
+            if (khachHang == null)
+            {
+                return BadRequest("Email không tồn tại.");
+            }
+
+            var taiKhoan = await _accountRepository.GetTaiKhoanByKhachHangIdAsync(khachHang.ID_Khach_Hang);
+            if (taiKhoan == null)
+            {
+                return BadRequest("Không tìm thấy tài khoản liên kết.");
+            }
+
+            var newPassword = GenerateRandomPassword();
+            taiKhoan.Mat_Khau = newPassword;
+            await _accountRepository.UpdateTaiKhoanAsync(taiKhoan);
+            await _accountRepository.SaveChangesAsync();
+
+            var emailBody = $"Yêu cầu quên mật khẩu của bạn đã được xử lý.\n\nMật khẩu mới: {newPassword}\nVui lòng đổi mật khẩu sau khi đăng nhập.";
+            await _emailService.SendEmailAsync(request.Email, "Quên mật khẩu DATN", emailBody);
+
+            return Ok("Mật khẩu mới đã được gửi qua email.");
         }
 
     }

@@ -1,10 +1,13 @@
 ﻿// FE/Controllers/VoucherFEController.cs
+using FE.Filters;
 using FE.Models;
 using FE.Service.IService;
 using Microsoft.AspNetCore.Mvc;
 
 namespace FE.Controllers
 {
+    [RoleAuthorize(2, 3)] // Trang cho phép cả vai trò 2,3
+    // Phương thức này đươc để trong thư mục Filters nhé ae
     public class VoucherFEController : Controller
     {
         private readonly IVoucherService _voucherService;

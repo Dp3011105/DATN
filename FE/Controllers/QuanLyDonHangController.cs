@@ -1,4 +1,5 @@
 ﻿using BE.models;
+using FE.Filters;
 using FE.Service.IService;
 using Microsoft.AspNetCore.Mvc;
 using Service.IService;
@@ -9,6 +10,8 @@ using System.Threading.Tasks;
 
 namespace FE.Controllers
 {
+    [RoleAuthorize(2, 3)] // Trang cho phép cả vai trò 2 và 3
+    // Phương thức này đươc để trong thư mục Filters nhé ae
     public class QuanLyDonHangController : Controller
     {
         private readonly IHoaDonService _hoaDonService;

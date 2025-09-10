@@ -1,15 +1,18 @@
 ﻿using BE.models;
 using ClosedXML.Excel;
+using FE.Filters;
 using Microsoft.AspNetCore.Mvc;
 using OfficeOpenXml;
 using OfficeOpenXml.Drawing;
 using Service.IService;
-using System.IO;
 using System.Drawing;
 using System.Drawing.Imaging;
+using System.IO;
 
 namespace FE.Controllers
 {
+    [RoleAuthorize(2)]// Trang chỉ cho vai trò 2 truy cập// Phương thức này đươc để trong thư mục Filters nhé ae
+
     public class NhanVienController : Controller
     {
         private readonly INhanVienService _service;

@@ -8,5 +8,6 @@ namespace BE.Repository.IRepository
         Task<bool> EmailExistsAsync(string email);
         Task AddKhachHangAsync(KhachHang khachHang);
         Task<int> SaveChangesAsync();
+        Task<KhachHang> GetKhachHangByEmailAsync(string email);
     }
 }

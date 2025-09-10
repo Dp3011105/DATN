@@ -456,10 +456,52 @@ namespace BE.Data
 
             // vì 1 lỗi từ bán hàng trực tiếp nên tui thêm dữ liệu tạm thời vào đây để tránh lỗi nhé 
 
-            modelBuilder.Entity<VaiTro>().HasData(
-             new VaiTro { ID_Vai_Tro = 1, Ten_Vai_Tro = "Khách Hàng" } // xác định trước vai trò khách hàng là id 1 
-             );
+            //modelBuilder.Entity<VaiTro>().HasData(
+            // new VaiTro { ID_Vai_Tro = 1, Ten_Vai_Tro = "Khách Hàng" } // xác định trước vai trò khách hàng là id 1 
+            // );
 
+            //modelBuilder.Entity<KhachHang>().HasData(
+            //    new KhachHang
+            //    {
+            //        ID_Khach_Hang = 1,
+            //        Ho_Ten = "Nguyen Van A",
+            //        Email = "nguyenvana@example.com",
+            //        GioiTinh = true, // true: Nam, false: Nữ
+            //        So_Dien_Thoai = "0123456789",
+            //        Trang_Thai = true,
+            //        Ghi_Chu = "Khách hàng mặc định"
+            //    }
+            //);
+            //modelBuilder.Entity<TaiKhoan>().HasData(
+            //    new TaiKhoan
+            //    {
+            //        ID_Tai_Khoan = 1,
+            //        ID_Khach_Hang = 1, // Liên kết với KhachHang ID = 1
+            //        Ten_Nguoi_Dung = "nguyenvana",
+            //        Email = "nguyenvana@example.com",
+            //        Mat_Khau = "hashed_password_here", // Nên mã hóa mật khẩu trong thực tế
+            //        Trang_Thai = true,
+            //        Ngay_Tao = DateTime.Now
+            //    }
+            //);
+
+            //modelBuilder.Entity<TaiKhoanVaiTro>().HasData(
+            //    new TaiKhoanVaiTro
+            //    {
+            //        ID_Tai_Khoan = 1, // Liên kết với TaiKhoan ID = 1
+            //        ID_Vai_Tro = 1   // Liên kết với VaiTro ID = 1 ("Khách Hàng")
+            //    }
+            //);
+
+
+            // Thêm dữ liệu cho bảng VaiTro
+            modelBuilder.Entity<VaiTro>().HasData(
+                new VaiTro { ID_Vai_Tro = 1, Ten_Vai_Tro = "Khách Hàng" },
+                new VaiTro { ID_Vai_Tro = 2, Ten_Vai_Tro = "Admin" },
+                new VaiTro { ID_Vai_Tro = 3, Ten_Vai_Tro = "Nhân Viên" }
+            );
+
+            // Thêm dữ liệu cho bảng KhachHang
             modelBuilder.Entity<KhachHang>().HasData(
                 new KhachHang
                 {
@@ -472,6 +514,27 @@ namespace BE.Data
                     Ghi_Chu = "Khách hàng mặc định"
                 }
             );
+
+            // Thêm dữ liệu cho bảng NhanVien
+            modelBuilder.Entity<NhanVien>().HasData(
+                new NhanVien
+                {
+                    ID_Nhan_Vien = 1,
+                    Ho_Ten = "Tran Van B",
+                    Email = "tranvanb@example.com",
+                    GioiTinh = true, // Nam
+                    So_Dien_Thoai = "0987654321",
+                    Dia_Chi = "123 Đường Láng, Đống Đa, Hà Nội",
+                    NamSinh = new DateTime(1990, 5, 15),
+                    CCCD = "123456789012",
+                    Trang_Thai = true,
+                    Ghi_Chu = "Nhân viên Admin",
+                    AnhNhanVien = null, // Có thể thêm đường dẫn ảnh nếu cần
+                    AnhCCCD = null // Có thể thêm đường dẫn ảnh nếu cần
+                }
+            );
+
+            // Thêm dữ liệu cho bảng TaiKhoan
             modelBuilder.Entity<TaiKhoan>().HasData(
                 new TaiKhoan
                 {
@@ -482,17 +545,32 @@ namespace BE.Data
                     Mat_Khau = "hashed_password_here", // Nên mã hóa mật khẩu trong thực tế
                     Trang_Thai = true,
                     Ngay_Tao = DateTime.Now
+                },
+                new TaiKhoan
+                {
+                    ID_Tai_Khoan = 2,
+                    ID_Nhan_Vien = 1, // Không liên kết với KhachHang
+                    Ten_Nguoi_Dung = "admin",
+                    Email = "tranvanb@example.com",
+                    Mat_Khau = "admin", // Nên mã hóa mật khẩu trong thực tế
+                    Trang_Thai = true,
+                    Ngay_Tao = DateTime.Now
                 }
             );
 
+            // Thêm dữ liệu cho bảng TaiKhoanVaiTro
             modelBuilder.Entity<TaiKhoanVaiTro>().HasData(
                 new TaiKhoanVaiTro
                 {
                     ID_Tai_Khoan = 1, // Liên kết với TaiKhoan ID = 1
                     ID_Vai_Tro = 1   // Liên kết với VaiTro ID = 1 ("Khách Hàng")
+                },
+                new TaiKhoanVaiTro
+                {
+                    ID_Tai_Khoan = 2, // Liên kết với TaiKhoan ID = 2
+                    ID_Vai_Tro = 2   // Liên kết với VaiTro ID = 2 ("Admin")
                 }
             );
-
 
 
 
