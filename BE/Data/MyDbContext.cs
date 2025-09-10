@@ -421,14 +421,15 @@ namespace BE.Data
             });
 
             // (Giữ nguyên phần seed HinhThucThanhToan của bạn)
-            modelBuilder.Entity<HinhThucThanhToan>().HasData(
-                new HinhThucThanhToan { ID_Hinh_Thuc_Thanh_Toan = 1, Phuong_Thuc_Thanh_Toan = "TienMat", Cong_Thanh_Toan = "Cash", Trang_Thai = true },
-                new HinhThucThanhToan { ID_Hinh_Thuc_Thanh_Toan = 2, Phuong_Thuc_Thanh_Toan = "The", Cong_Thanh_Toan = "Card", Trang_Thai = true },
-                new HinhThucThanhToan { ID_Hinh_Thuc_Thanh_Toan = 3, Phuong_Thuc_Thanh_Toan = "ChuyenKhoan", Cong_Thanh_Toan = "Bank", Trang_Thai = true },
-                new HinhThucThanhToan { ID_Hinh_Thuc_Thanh_Toan = 4, Phuong_Thuc_Thanh_Toan = "Thanh Toán Khi Nhận Hàng", Cong_Thanh_Toan = "Cash", Trang_Thai = true },
-                new HinhThucThanhToan { ID_Hinh_Thuc_Thanh_Toan = 5, Phuong_Thuc_Thanh_Toan = "Thanh Toán MOMO", Cong_Thanh_Toan = "Bank", Trang_Thai = true },
-                new HinhThucThanhToan { ID_Hinh_Thuc_Thanh_Toan = 6, Phuong_Thuc_Thanh_Toan = "Chuyển Khoản Mã QR", Cong_Thanh_Toan = "Bank", Trang_Thai = true }
-            );
+                    modelBuilder.Entity<HinhThucThanhToan>().HasData(
+              new HinhThucThanhToan { ID_Hinh_Thuc_Thanh_Toan = 1, Phuong_Thuc_Thanh_Toan = "TienMat", Cong_Thanh_Toan = "Cash", Trang_Thai = true },
+              new HinhThucThanhToan { ID_Hinh_Thuc_Thanh_Toan = 2, Phuong_Thuc_Thanh_Toan = "The", Cong_Thanh_Toan = "Card", Trang_Thai = true },
+              new HinhThucThanhToan { ID_Hinh_Thuc_Thanh_Toan = 3, Phuong_Thuc_Thanh_Toan = "ChuyenKhoan", Cong_Thanh_Toan = "Bank", Trang_Thai = true },
+              new HinhThucThanhToan { ID_Hinh_Thuc_Thanh_Toan = 4, Phuong_Thuc_Thanh_Toan = "Thanh Toan Khi Nhan Hang", Cong_Thanh_Toan = "Cash", Trang_Thai = true },
+              new HinhThucThanhToan { ID_Hinh_Thuc_Thanh_Toan = 5, Phuong_Thuc_Thanh_Toan = "Thanh Toan MoMo", Cong_Thanh_Toan = "Bank", Trang_Thai = true }
+
+
+          );
             // Size
             modelBuilder.Entity<Size>().HasData(
                 new Size { ID_Size = 1, SizeName = "Cơ bản", Gia = 0m, Trang_Thai = true },
