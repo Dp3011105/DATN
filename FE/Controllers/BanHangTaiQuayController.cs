@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System.Net;
 using System.Net.Http.Json;
+using System.Text.Json;
 using System.Text.RegularExpressions;
 
 namespace FE.Controllers
@@ -25,13 +26,10 @@ namespace FE.Controllers
 
         private const string AdjustStockEndpoint = "/api/SanPham/tru-ton";
 
-        // Voucher lookup endpoints (tuỳ BE – thêm/bớt nếu cần)
-        private static readonly string[] VoucherByCodeEndpoints = new[]
-{
-    "/api/Voucher/code/{code}",
-    "/api/voucher/code/{code}",   // đề phòng BE map lowercase
-    "/api/Voucher",               // không dùng by-code nữa
-};
+        // Voucher BE routes
+        private const string VoucherByCodeRoute = "/api/Voucher/code/{code}";
+        private const string VoucherConsumeByIdRoute = "/api/Voucher/consume/{id}?qty=1";
+        private const string VoucherConsumeByCodeRoute = "/api/Voucher/consume-by-code/{code}?qty=1";
 
         // IDs mặc định/fallback
         private const int DEFAULT_KHACH_LE_ID = 1;
@@ -50,7 +48,7 @@ namespace FE.Controllers
         // === Helper: mã chi tiết hoá đơn duy nhất (tránh trùng unique index) ===
         private static string NewChiTietCode(int lineNo)
         {
-            var rand = Guid.NewGuid().ToString("N").Substring(0, 4);
+            var rand = Guid.NewGuid().ToString("N")[..4];
             return $"CT{DateTime.UtcNow:yyMMddHHmmss}{lineNo:D2}{rand}";
         }
 
@@ -161,7 +159,8 @@ namespace FE.Controllers
             public decimal Discount { get; set; }   // số tiền giảm
             public decimal Percentage { get; set; } // % giảm thực tế
         }
-        // ====== CHECK VOUCHER (đã fix theo JSON thực tế) ======
+
+        // ====== CHECK VOUCHER (theo JSON thực tế BE) ======
         [HttpPost]
         [Produces("application/json")]
         public async Task<IActionResult> CheckVoucher([FromBody] CheckVoucherRequest req)
@@ -173,17 +172,14 @@ namespace FE.Controllers
                 if (string.IsNullOrWhiteSpace(code))
                     return Json(new CheckVoucherResponse { Success = false, Message = "Thiếu mã voucher." });
 
-                // CHỈ GỌI endpoint đúng như Swagger của bạn trước
-                // Đúng route của BE: GET /api/Voucher/code/{code}
-                var primaryEndpoint = $"/api/Voucher/code/{Uri.EscapeDataString(code)}";
-
+                var endpoint = VoucherByCodeRoute.Replace("{code}", Uri.EscapeDataString(code));
                 using var http = new HttpClient { BaseAddress = new Uri(BeBaseUrl), Timeout = TimeSpan.FromSeconds(15) };
 
                 HttpResponseMessage resp;
                 string tx;
                 try
                 {
-                    resp = await http.GetAsync(primaryEndpoint);
+                    resp = await http.GetAsync(endpoint);
                     tx = await resp.Content.ReadAsStringAsync();
                 }
                 catch (Exception exCall)
@@ -192,26 +188,19 @@ namespace FE.Controllers
                 }
 
                 if (!resp.IsSuccessStatusCode)
-                {
-                    // Cho biết BE status để bạn dễ thấy nguyên nhân
-                    return Json(new CheckVoucherResponse { Success = false, Message = $"BE trả về {(int)resp.StatusCode} khi tra voucher." });
-                }
+                    return Json(new CheckVoucherResponse { Success = false, Message = $"BE trả {(int)resp.StatusCode} khi tra voucher." });
 
-                System.Text.Json.JsonElement root;
-                try
-                {
-                    root = System.Text.Json.JsonDocument.Parse(tx).RootElement;
-                }
+                JsonElement root;
+                try { root = JsonDocument.Parse(tx).RootElement; }
                 catch (Exception exParse)
                 {
-                    return Json(new CheckVoucherResponse { Success = false, Message = "BE trả về dữ liệu không phải JSON: " + exParse.Message });
+                    return Json(new CheckVoucherResponse { Success = false, Message = "BE trả không phải JSON: " + exParse.Message });
                 }
 
-                if (root.ValueKind != System.Text.Json.JsonValueKind.Object)
-                    return Json(new CheckVoucherResponse { Success = false, Message = "Dữ liệu voucher không đúng định dạng (expected object)." });
+                if (root.ValueKind != JsonValueKind.Object)
+                    return Json(new CheckVoucherResponse { Success = false, Message = "Dữ liệu voucher không đúng định dạng." });
 
-                // ===== Map field theo JSON thực tế từ Swagger =====
-                // { "id_Voucher", "ma_Voucher", "ten", "so_Luong", "gia_Tri_Giam", "so_Tien_Dat_Yeu_Cau", "ngay_Bat_Dau", "ngay_Ket_Thuc", "trang_Thai" }
+                // Map field (camel/Pascal)
                 string? codeFromObj =
                       root.TryGetProperty("ma_Voucher", out var pCode1) ? pCode1.GetString()
                     : root.TryGetProperty("Ma_Voucher", out var pCode2) ? pCode2.GetString()
@@ -222,9 +211,16 @@ namespace FE.Controllers
                     : (root.TryGetProperty("ID_Voucher", out var pId2) && pId2.TryGetInt32(out var id2)) ? id2
                     : (int?)null;
 
+                // Trang_Thai: nhận bool true/false hoặc number 1/0
                 bool trangThai =
-                      (root.TryGetProperty("trang_Thai", out var pSt1) && pSt1.ValueKind == System.Text.Json.JsonValueKind.True)
-                   || (root.TryGetProperty("Trang_Thai", out var pSt2) && pSt2.ValueKind == System.Text.Json.JsonValueKind.True);
+                    (root.TryGetProperty("trang_Thai", out var pSt1) && (
+                        pSt1.ValueKind == JsonValueKind.True ||
+                        (pSt1.ValueKind == JsonValueKind.Number && pSt1.TryGetInt32(out var stn1) && stn1 == 1)
+                    )) ||
+                    (root.TryGetProperty("Trang_Thai", out var pSt2) && (
+                        pSt2.ValueKind == JsonValueKind.True ||
+                        (pSt2.ValueKind == JsonValueKind.Number && pSt2.TryGetInt32(out var stn2) && stn2 == 1)
+                    ));
 
                 int soLuong =
                       (root.TryGetProperty("so_Luong", out var pSl1) && pSl1.TryGetInt32(out var sl1)) ? sl1
@@ -251,7 +247,6 @@ namespace FE.Controllers
                     : root.TryGetProperty("Ngay_Ket_Thuc", out var pE2) ? pE2.ToString()
                     : null);
 
-                // ===== Validate =====
                 if (!trangThai) return Json(new CheckVoucherResponse { Success = false, Message = "Voucher đã tắt." });
                 if (soLuong <= 0) return Json(new CheckVoucherResponse { Success = false, Message = "Voucher đã hết lượt dùng." });
 
@@ -262,11 +257,9 @@ namespace FE.Controllers
                 if (subtotal < minOrder)
                     return Json(new CheckVoucherResponse { Success = false, Message = $"Đơn tối thiểu {minOrder:n0}đ để dùng voucher." });
 
-                // QUY ƯỚC: gia_Tri_Giam là % (0–100)
+                // QUY ƯỚC: gia_Tri_Giam là % (0–100). Áp trần 50% đơn.
                 var pct = Math.Clamp(giaTriGiam, 0m, 100m);
                 var rawDiscount = subtotal * (pct / 100m);
-
-                // Trần 50%
                 var cap = subtotal * 0.5m;
                 var discount = Math.Min(rawDiscount, cap);
 
@@ -276,7 +269,7 @@ namespace FE.Controllers
                 return Json(new CheckVoucherResponse
                 {
                     Success = true,
-                    Message = $"Áp dụng {pct}% (đã áp trần 50% nếu có).",
+                    Message = $"Áp dụng {pct}% (đã áp trần 50%).",
                     VoucherId = id,
                     Code = codeFromObj ?? code,
                     Discount = discount,
@@ -288,7 +281,6 @@ namespace FE.Controllers
                 return Json(new CheckVoucherResponse { Success = false, Message = ex.Message });
             }
         }
-
 
         // =====================================================================
         // ======================== TẠO HÓA ĐƠN =================================
@@ -466,14 +458,14 @@ namespace FE.Controllers
                 int? returnedId = null;
                 try
                 {
-                    var beObj = System.Text.Json.JsonDocument.Parse(respText).RootElement;
-                    if (beObj.TryGetProperty("ma_Hoa_Don", out var codeProp) && codeProp.ValueKind == System.Text.Json.JsonValueKind.String)
+                    var beObj = JsonDocument.Parse(respText).RootElement;
+                    if (beObj.TryGetProperty("ma_Hoa_Don", out var codeProp) && codeProp.ValueKind == JsonValueKind.String)
                         returnedCode = codeProp.GetString();
-                    if (beObj.TryGetProperty("ma_HoaDon", out var codeProp2) && codeProp2.ValueKind == System.Text.Json.JsonValueKind.String)
+                    if (beObj.TryGetProperty("ma_HoaDon", out var codeProp2) && codeProp2.ValueKind == JsonValueKind.String)
                         returnedCode = codeProp2.GetString() ?? returnedCode;
                     if (beObj.TryGetProperty("id_Hoa_Don", out var idProp) && idProp.TryGetInt32(out var idVal))
                         returnedId = idVal;
-                    if (returnedCode == null && beObj.TryGetProperty("ma_Hoa_Don", out var any) && any.ValueKind == System.Text.Json.JsonValueKind.Number)
+                    if (returnedCode == null && beObj.TryGetProperty("ma_Hoa_Don", out var any) && any.ValueKind == JsonValueKind.Number)
                         returnedCode = any.GetRawText();
                 }
                 catch { /* ignore */ }
@@ -508,10 +500,60 @@ namespace FE.Controllers
                     });
                 }
 
+                // ==== Giảm So_Luong voucher (-1) nếu có áp dụng ====
+                if (giam > 0)
+                {
+                    try
+                    {
+                        HttpResponseMessage? consumeResp = null;
+
+                        // 1) Ưu tiên theo ID (nếu có)
+                        if (req.VoucherId.HasValue)
+                        {
+                            var urlById = $"/api/Voucher/consume/{req.VoucherId.Value}?qty=1";
+                            consumeResp = await http.PostAsync(urlById, null);
+                        }
+
+                        // 2) Fallback theo CODE (nếu chưa thành công hoặc không có ID)
+                        if ((consumeResp == null || !consumeResp.IsSuccessStatusCode) &&
+                            !string.IsNullOrWhiteSpace(req.VoucherCode))
+                        {
+                            var urlByCode = $"/api/Voucher/consume-by-code/{Uri.EscapeDataString(req.VoucherCode)}?qty=1";
+                            consumeResp = await http.PostAsync(urlByCode, null);
+                        }
+
+                        // 3) Nếu vẫn lỗi → trả thông tin để bạn thấy ngay trong FE
+                        if (consumeResp == null || !consumeResp.IsSuccessStatusCode)
+                        {
+                            var tx = consumeResp != null ? await consumeResp.Content.ReadAsStringAsync() : "no-response";
+                            return Json(new
+                            {
+                                success = true,
+                                message = "Tạo hoá đơn & trừ tồn OK, nhưng trừ So_Luong voucher thất bại.",
+                                id = returnedId,
+                                code = returnedCode,
+                                voucher_consume_status = consumeResp != null ? (int)consumeResp.StatusCode : 0,
+                                voucher_consume_body = tx
+                            });
+                        }
+                    }
+                    catch (Exception exV)
+                    {
+                        return Json(new
+                        {
+                            success = true,
+                            message = "Tạo hoá đơn & trừ tồn OK, nhưng lỗi khi gọi consume voucher.",
+                            id = returnedId,
+                            code = returnedCode,
+                            voucher_consume_error = exV.Message
+                        });
+                    }
+                }
+
                 return Json(new
                 {
                     success = true,
-                    message = "Tạo hoá đơn & trừ tồn thành công.",
+                    message = "Tạo hoá đơn & trừ tồn (và trừ voucher nếu có) thành công.",
                     id = returnedId,
                     code = returnedCode
                 });
@@ -546,7 +588,10 @@ namespace FE.Controllers
             public string? LoaiHoaDon { get; set; }        // "TaiQuay" | "Online" | "GiaoHang"
             public string? KhachHang_SDT { get; set; }
             public string? GhiChu { get; set; }
-            public int? VoucherId { get; set; }
+
+            public int? VoucherId { get; set; }            // Ưu tiên theo ID
+            public string? VoucherCode { get; set; }       // Fallback theo mã
+
             public decimal TongTien { get; set; }          // client gửi – server tự tính lại
             public decimal TienGiam { get; set; }          // clamp ≤ 50%
             public string? DiaChiTuNhap { get; set; }      // UI: chỉ dùng khi GiaoHang

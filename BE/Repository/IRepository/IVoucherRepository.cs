@@ -16,5 +16,7 @@ namespace BE.Repository.IRepository
         // Thêm 2 method mới:
         Task<IEnumerable<Voucher>> GetActiveVouchersAsync();
         Task<bool> CanUseVoucherAsync(string code, decimal orderAmount);
+        Task<bool> DecrementAsync(int id, int qty);              // giảm theo ID
+        Task<bool> DecrementByCodeAsync(string code, int qty);
     }
 }

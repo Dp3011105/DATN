@@ -943,6 +943,7 @@
         KhachHang_SDT: (document.getElementById('txtPhone').value||'').trim() || null,
         GhiChu: (document.getElementById('txtNote').value||'').trim() || null,
         VoucherId: VOUCHER?.id || null,
+         VoucherCode: VOUCHER?.code || (document.getElementById('txtVoucher').value || '').trim() || null,
         TongTien: tam,                          // server sẽ tính lại
         TienGiam: giam,
         DiaChiTuNhap: loai === 'GiaoHang' ? shipAddr : null,
