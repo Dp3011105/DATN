@@ -30,6 +30,7 @@ builder.Services.AddScoped<IHoaDonChiTietRepository, HoaDonChiTietRepository>();
 builder.Services.AddScoped<IHoaDonChiTietThueRepository, HoaDonChiTietThueRepository>();
 builder.Services.AddScoped<IHoaDonChiTietToppingRepository, HoaDonChiTietToppingRepository>();
 builder.Services.AddScoped<IHoaDonVoucherRepository, HoaDonVoucherRepository>();
+builder.Services.AddScoped<IProfileRepository, ProfileRepository>();
 
 // THÊM LẠI: KhachHangRepository bị comment trong bản mới
 builder.Services.AddScoped<IKhachHangRepository, KhachHangRepository>();

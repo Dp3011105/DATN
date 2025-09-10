@@ -18,6 +18,7 @@ builder.Services.AddScoped<IHoaDonChiTietService, HoaDonChiTietService>();
 builder.Services.AddScoped<IHoaDonChiTietThueService, HoaDonChiTietThueService>();
 builder.Services.AddScoped<INhanVienService, NhanVienService>();
 builder.Services.AddScoped<IKhachHangService, KhachHangService>();
+builder.Services.AddScoped<IProfileService, ProfileService>();
 
 builder.Services.AddScoped<IVaiTroService, VaiTroService>();
 builder.Services.AddScoped<ITaiKhoanVaiTroService, TaiKhoanVaiTroService>();
