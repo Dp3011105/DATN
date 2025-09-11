@@ -2,10 +2,13 @@
 @{
     ViewData["Title"] = "Quản lý tài khoản";
     Layout = "_AdminLayout";
+
+    var tongTaiKhoan = ViewBag.TongTaiKhoan as int? ?? 0;
+    var taiKhoanHoatDong = ViewBag.TaiKhoanHoatDong as int? ?? 0;
+    var taiKhoanKhoa = ViewBag.TaiKhoanKhoa as int? ?? 0;
 }
 
 <style>
-
     .btn {
         transition: background-color 0.3s ease, color 0.3s ease, transform 0.2s ease, box-shadow 0.3s ease;
     }
@@ -38,6 +41,26 @@
         .btn-add-new:hover {
             background: linear-gradient(135deg, #e2e6ea, #ced4da);
             color: #0056b3;
+        }
+
+    .btn-export {
+        background: linear-gradient(135deg, #28a745, #218838);
+        color: white;
+        border: none;
+    }
+
+        .btn-export:hover {
+            background: linear-gradient(135deg, #218838, #1e7e34);
+        }
+
+    .btn-import {
+        background: linear-gradient(135deg, #ffc107, #e0a800);
+        color: white;
+        border: none;
+    }
+
+        .btn-import:hover {
+            background: linear-gradient(135deg, #e0a800, #d39e00);
         }
 
     .search-form {
@@ -74,16 +97,70 @@
         font-weight: 600;
         box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
     }
+
+    .statistics-box {
+        display: flex;
+        justify-content: space-between;
+        margin-bottom: 20px;
+        gap: 15px;
+    }
+
+    .stat-card {
+        flex: 1;
+        background: #fff;
+        border-radius: 10px;
+        padding: 15px;
+        text-align: center;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        transition: transform 0.3s ease;
+    }
+
+        .stat-card:hover {
+            transform: translateY(-5px);
+        }
+
+        .stat-card h6 {
+            font-size: 1rem;
+            color: #333;
+            margin-bottom: 8px;
+        }
+
+        .stat-card span {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: #007bff;
+        }
 </style>
 
 <div class="card shadow border-0">
     <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
         <h5 class="mb-0"><i class="fas fa-id-card me-2"></i>Danh sách tài khoản</h5>
-        <a href="@Url.Action("Create", "TaiKhoan")" class="btn btn-add-new btn-sm shadow-sm">
-            <i class="fas fa-plus-circle me-1"></i> Đăng ký tài khoản nhân viên
-        </a>
+        <div>
+            <a href="@Url.Action("Create", "TaiKhoan")" class="btn btn-add-new btn-sm shadow-sm me-2">
+                <i class="fas fa-plus-circle me-1"></i> Đăng ký tài khoản nhân viên
+            </a>
+            <a href="@Url.Action("ExportToExcel", "TaiKhoan", new { search = ViewData["Search"] })" class="btn btn-export btn-sm shadow-sm me-2">
+                <i class="fas fa-file-export me-1"></i> Xuất Excel
+            </a>
+        </div>
     </div>
     <div class="card-body">
+        <!-- Thống kê -->
+        <div class="statistics-box">
+            <div class="stat-card">
+                <h6>Tổng tài khoản</h6>
+                <span>@tongTaiKhoan</span>
+            </div>
+            <div class="stat-card">
+                <h6>Tài khoản hoạt động</h6>
+                <span>@taiKhoanHoatDong</span>
+            </div>
+            <div class="stat-card">
+                <h6>Tài khoản bị khóa</h6>
+                <span>@taiKhoanKhoa</span>
+            </div>
+        </div>
+
         <form method="get" class="row g-3 search-form">
             <div class="col-md-6 col-lg-4">
                 <input type="text" name="search" class="form-control"
@@ -112,7 +189,7 @@
                     @if (!Model.Any())
                     {
                         <tr>
-                            <td colspan="6" class="text-center text-muted">Không có dữ liệu</td>
+                            <td colspan="7" class="text-center text-muted">Không có dữ liệu</td>
                         </tr>
                     }
                     else
@@ -127,14 +204,13 @@
                                 <td>
                                     @if (string.IsNullOrEmpty(item.Mat_Khau))
                                     {
-										<span class="text-muted
-                                              fst-italic">Chưa đặt mật khẩu</span>
+                                        <span class="text-muted fst-italic">Chưa đặt mật khẩu</span>
                                     }
                                     else
                                     {
-										<span class="text-muted
-                                              fst-italic">******</span>
-									}
+                                        <span class="text-muted fst-italic">******</span>
+                                    }
+                                </td>
                                 <td>
                                     @if (item.Trang_Thai)
                                     {
@@ -165,3 +241,33 @@
         </div>
     </div>
 </div>
+
+<!-- Modal for Import Excel -->
+<div class="modal fade" id="importModal" tabindex="-1" aria-labelledby="importModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="importModalLabel">Import Excel</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form method="post" enctype="multipart/form-data" asp-action="ImportExcel">
+                    <div class="mb-3">
+                        <label for="file" class="form-label">Chọn file Excel</label>
+                        <input type="file" class="form-control" id="file" name="file" accept=".xlsx, .xls">
+                    </div>
+                    <button type="submit" class="btn btn-primary">Import</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+@if (TempData["Success"] != null)
+{
+    <div class="alert alert-success">@TempData["Success"]</div>
+}
+@if (TempData["Error"] != null)
+{
+    <div class="alert alert-danger">@TempData["Error"]</div>
+}

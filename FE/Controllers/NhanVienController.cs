@@ -35,11 +35,10 @@ namespace FE.Controllers
                 filteredResult = filteredResult.Where(nv => nv.Trang_Thai == statusFilter.Value);
             }
 
-            // Tính toán số liệu thống kê
-            ViewBag.TotalEmployees = result.Count(); // Tổng số nhân viên
-            ViewBag.WorkingEmployees = result.Count(nv => nv.Trang_Thai == true); // Đang làm việc
-            ViewBag.LeavingEmployees = result.Count(nv => nv.Trang_Thai == false); // Đã nghỉ việc
-            ViewBag.NewEmployees = result.Count(nv => (DateTime.Now - nv.NamSinh).TotalDays / 365 < 1); // Nhân viên mới (dưới 1 năm, tùy chỉnh logic)
+            ViewBag.TotalEmployees = result.Count(); 
+            ViewBag.WorkingEmployees = result.Count(nv => nv.Trang_Thai == true);
+            ViewBag.LeavingEmployees = result.Count(nv => nv.Trang_Thai == false); 
+            ViewBag.NewEmployees = result.Count(nv => (DateTime.Now - nv.NamSinh).TotalDays / 365 < 1); 
 
             var totalItems = filteredResult.Count();
             var paginatedResult = filteredResult
@@ -109,6 +108,12 @@ namespace FE.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Edit(int id, NhanVien entity, IFormFile anhNhanVien)
         {
+            var currentEmployee = await _service.GetByIdAsync(id);
+            if (currentEmployee == null)
+            {
+                return NotFound();
+            }
+
             if (anhNhanVien != null && anhNhanVien.Length > 0)
             {
                 var fileName = Path.GetFileName(anhNhanVien.FileName);
@@ -121,10 +126,16 @@ namespace FE.Controllers
 
                 entity.AnhNhanVien = "/uploads/" + fileName;
             }
+            else
+            {
+                entity.AnhNhanVien = currentEmployee.AnhNhanVien;
+            }
+
             entity.ID_Nhan_Vien = id;
             await _service.UpdateAsync(id, entity);
             return RedirectToAction("Index", "NhanVien");
         }
+
         [HttpPost]
         public async Task<IActionResult> Delete(int id)
         {
@@ -274,7 +285,7 @@ namespace FE.Controllers
                 using (var workbook = new XLWorkbook(stream))
                 {
                     var worksheet = workbook.Worksheet(1);
-                    var rows = worksheet.RowsUsed().Skip(1); // Bỏ header
+                    var rows = worksheet.RowsUsed().Skip(1); 
 
                     foreach (var row in rows)
                     {
