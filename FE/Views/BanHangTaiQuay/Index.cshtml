@@ -922,7 +922,7 @@
       await reallyCreateHoaDon();
     }
 
-    async function reallyCreateHoaDon(){
+     async function reallyCreateHoaDon(){
       const btn = document.getElementById('btnCreate');
       btn.disabled = true;
 
@@ -937,14 +937,19 @@
         return;
       }
 
+      // --- chỉnh ở đây: gom SĐT vào GhiChu ---
+      const phoneRaw = (document.getElementById('txtPhone').value || '').trim();
+      const noteRaw  = (document.getElementById('txtNote').value  || '').trim();
+      const noteCombined = phoneRaw ? `[SDT: ${phoneRaw}] ${noteRaw}` : noteRaw;
+
       const payload = {
         HinhThucThanhToanId: parseInt(document.getElementById('selPay').value,10) || 1,
         LoaiHoaDon: loai,
-        KhachHang_SDT: (document.getElementById('txtPhone').value||'').trim() || null,
-        GhiChu: (document.getElementById('txtNote').value||'').trim() || null,
+        KhachHang_SDT: null,  // model BE không có SĐT nên để null
+        GhiChu: noteCombined, // nếu nhập SĐT thì sẽ nằm ở đây
         VoucherId: VOUCHER?.id || null,
-         VoucherCode: VOUCHER?.code || (document.getElementById('txtVoucher').value || '').trim() || null,
-        TongTien: tam,                          // server sẽ tính lại
+        VoucherCode: VOUCHER?.code || (document.getElementById('txtVoucher').value || '').trim() || null,
+        TongTien: tam,   // server sẽ tính lại
         TienGiam: giam,
         DiaChiTuNhap: loai === 'GiaoHang' ? shipAddr : null,
         Items: CART.map(it=>({
@@ -976,15 +981,22 @@
         // Hiển thị hoá đơn
         const inv = {
           ID: data.id || null, Code: data.code || null, NgayLap: new Date(),
-          KhachHang_SDT: payload.KhachHang_SDT, LoaiHoaDon: payload.LoaiHoaDon, DiaChi: payload.DiaChiTuNhap,
-          HinhThucThanhToanId: payload.HinhThucThanhToanId, GhiChu: payload.GhiChu, VoucherCode: (VOUCHER?.code || null),
+          KhachHang_SDT: null,              // bỏ hẳn vì model không có
+          LoaiHoaDon: payload.LoaiHoaDon,
+          DiaChi: payload.DiaChiTuNhap,
+          HinhThucThanhToanId: payload.HinhThucThanhToanId,
+          GhiChu: payload.GhiChu,           // ghi chú đã bao gồm SĐT nếu có
+          VoucherCode: (VOUCHER?.code || null),
           Tong: tam, Giam: giam, ThanhToan: tam - giam,
           Items: CART.map(it=>({
             Ten: it.ten, DonGia: it.donGia, SizeExtra: it.sizeExtra, SizeName: it.sizeName,
             SoLuong: it.soLuong, TienTopping: it.tienTopping||0,
             DoNgotName: findName(OPTIONS.doNgots,'ID_DoNgot','Muc_Do',it.doNgotId),
             LuongDaName: findName(OPTIONS.luongDas,'ID_LuongDa','Ten_LuongDa',it.luongDaId) || findName(OPTIONS.luongDas,'ID_LuongDa','Muc_Da',it.luongDaId),
-            ToppingNames: (it.toppingIds||[]).map(id=>{ const o=(OPTIONS.toppings||[]).find(t=>t.ID_Topping==id); return o ? (o.Ten || o.Ten_Topping || ('Topping #' + id)) : ('Topping #' + id); })
+            ToppingNames: (it.toppingIds||[]).map(id=>{
+              const o=(OPTIONS.toppings||[]).find(t=>t.ID_Topping==id);
+              return o ? (o.Ten || o.Ten_Topping || ('Topping #' + id)) : ('Topping #' + id);
+            })
           }))
         };
 
@@ -1009,6 +1021,7 @@
         btn.disabled = false;
       }
     }
+
 
     window.addEventListener('DOMContentLoaded', ()=>{
       searchProducts(1);
