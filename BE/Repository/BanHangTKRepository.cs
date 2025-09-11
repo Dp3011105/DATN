@@ -153,6 +153,9 @@ namespace BE.Repository
 
 
 
+        ///Logic check out dưới là trừ số lượng , trừ Topping , trừ voucher
+
+
 
 
         //public async Task<HoaDonBanHangTKDTO> CheckOutTk(HoaDonBanHangTKDTO hoaDonDto)
@@ -202,7 +205,7 @@ namespace BE.Repository
         //                throw new Exception($"Khách hàng {hoaDonDto.ID_Khach_Hang} không sở hữu voucher {voucher.Ma_Voucher} hoặc voucher đã sử dụng.");
 
         //            giamGiaVoucher = voucher.Gia_Tri_Giam ?? 0;
-        //            voucher.So_Luong -= 1; // Trừ số lượng voucher
+        //            //voucher.So_Luong -= 1; // Trừ số lượng voucher
         //            khachHangVoucher.Trang_Thai = false; // Cập nhật Trang_Thai thành false
         //        }
 
@@ -372,16 +375,14 @@ namespace BE.Repository
         //                .FirstOrDefaultAsync(kh => kh.ID_Khach_Hang == hoaDon.ID_Khach_Hang.Value);
         //            if (khachHang != null && !string.IsNullOrEmpty(khachHang.Email))
         //            {
+        //                string linkTraCuu = $"https://yourdomain.com/hoa-don/tra-cuu/{hoaDon.Ma_Hoa_Don}";
+
         //                var emailBody = new StringBuilder();
         //                emailBody.AppendLine("Hóa đơn của bạn đã được tạo thành công!");
         //                emailBody.AppendLine($"Mã hóa đơn: {hoaDon.Ma_Hoa_Don}");
         //                emailBody.AppendLine($"Ngày tạo: {hoaDon.Ngay_Tao:dd/MM/yyyy HH:mm}");
         //                emailBody.AppendLine($"Trạng thái: Chưa Xác Nhận");
-        //                emailBody.AppendLine("Chi tiết sản phẩm:");
-        //                emailBody.Append(emailChiTietSanPham.ToString());
-        //                if (voucher != null)
-        //                    emailBody.AppendLine($"Voucher: {voucher.Ma_Voucher} (Giảm: {giamGiaVoucher.ToString("C", _vnCulture)})");
-        //                emailBody.AppendLine($"Tổng tiền: {hoaDon.Tong_Tien.ToString("C", _vnCulture)}");
+        //                emailBody.AppendLine($"Tra cứu chi tiết tại: {linkTraCuu}");
         //                emailBody.AppendLine("Cảm ơn bạn đã mua hàng!");
 
         //                await _emailService.SendEmailAsync(khachHang.Email, "Thông tin hóa đơn", emailBody.ToString());
@@ -433,10 +434,6 @@ namespace BE.Repository
                     if (voucher == null)
                         throw new Exception($"Voucher {hoaDonDto.ID_Voucher} không tồn tại hoặc không hợp lệ.");
 
-                    // Kiểm tra số lượng voucher
-                    if (!voucher.So_Luong.HasValue || voucher.So_Luong < 1)
-                        throw new Exception($"Voucher {voucher.Ma_Voucher} đã hết số lượng.");
-
                     // Kiểm tra điều kiện số tiền đạt yêu cầu của voucher
                     if (voucher.So_Tien_Dat_Yeu_Cau.HasValue && hoaDonDto.Tong_Tien < voucher.So_Tien_Dat_Yeu_Cau.Value)
                         throw new Exception($"Tổng tiền hóa đơn không đủ để sử dụng voucher {voucher.Ma_Voucher}.");
@@ -450,7 +447,6 @@ namespace BE.Repository
                         throw new Exception($"Khách hàng {hoaDonDto.ID_Khach_Hang} không sở hữu voucher {voucher.Ma_Voucher} hoặc voucher đã sử dụng.");
 
                     giamGiaVoucher = voucher.Gia_Tri_Giam ?? 0;
-                    //voucher.So_Luong -= 1; // Trừ số lượng voucher
                     khachHangVoucher.Trang_Thai = false; // Cập nhật Trang_Thai thành false
                 }
 
@@ -485,7 +481,7 @@ namespace BE.Repository
                     _context.HoaDonVouchers.Add(hoaDonVoucher);
                 }
 
-                // Xử lý chi tiết hóa đơn và trừ số lượng
+                // Xử lý chi tiết hóa đơn
                 var emailChiTietSanPham = new StringBuilder();
                 foreach (var item in hoaDonDto.HoaDonChiTiets)
                 {
@@ -494,10 +490,6 @@ namespace BE.Repository
                         .FirstOrDefaultAsync(sp => sp.ID_San_Pham == item.ID_San_Pham && sp.Trang_Thai == true);
                     if (sanPham == null)
                         throw new Exception($"Sản phẩm {item.Ten_San_Pham} không tồn tại hoặc không hoạt động.");
-                    if (sanPham.So_Luong < item.So_Luong)
-                        throw new Exception($"Sản phẩm {sanPham.Ten_San_Pham} không đủ số lượng.");
-
-                    sanPham.So_Luong -= item.So_Luong;
 
                     // Ánh xạ tên Size, Lượng Đá, Độ Ngọt sang ID
                     int? idSize = null;
@@ -581,10 +573,6 @@ namespace BE.Repository
                                 .FirstOrDefaultAsync(t => t.ID_Topping == toppingDto.ID_Topping && t.Trang_Thai == true);
                             if (topping == null)
                                 throw new Exception($"Topping {toppingDto.Ten_Topping} không tồn tại hoặc không hoạt động.");
-                            if (topping.So_Luong < toppingDto.So_Luong)
-                                throw new Exception($"Topping {topping.Ten} không đủ số lượng.");
-
-                            topping.So_Luong -= toppingDto.So_Luong;
 
                             var hoaDonChiTietTopping = new HoaDonChiTietTopping
                             {
@@ -644,8 +632,6 @@ namespace BE.Repository
                 throw new Exception($"Lỗi khi xử lý thanh toán: {ex.Message}");
             }
         }
-
-
 
 
         public async Task<bool> KiemTraCoSoDienThoaiAsync(int idKhachHang)
