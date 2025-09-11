@@ -132,6 +132,7 @@ namespace BE.Controllers
             return Ok(result);
         }
 
+
         // ---------- GET BY ID ----------
         [HttpGet("{id}")]
         [ProducesResponseType(typeof(object), StatusCodes.Status200OK)]
@@ -374,5 +375,70 @@ namespace BE.Controllers
 
             return Ok(new { success = true, message = "Đã trừ tồn.", updated });
         }
+
+
+
+        //Lấy sản phầm nhiều lượt mua nhất 
+
+        [HttpGet("most-purchased")]
+        [ProducesResponseType(typeof(object), StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        public async Task<ActionResult> GetTop10MostPurchasedProducts()
+        {
+            var sanPhams = await _sanPhamRepository.GetTop10MostPurchasedProductsAsync();
+            if (sanPhams == null || !sanPhams.Any())
+            {
+                return NotFound("No products found in invoices.");
+            }
+
+            var result = sanPhams.Select(sanPham => new
+            {
+                iD_San_Pham = sanPham.ID_San_Pham,
+                ten_San_Pham = sanPham.Ten_San_Pham,
+                gia = sanPham.Gia,
+                so_Luong = sanPham.So_Luong,
+                hinh_Anh = sanPham.Hinh_Anh,
+                mo_Ta = sanPham.Mo_Ta,
+                trang_Thai = sanPham.Trang_Thai,
+                sizes = sanPham.SanPhamSizes.Select(sps => new
+                {
+                    iD_Size = sps.Size.ID_Size,
+                    sizeName = sps.Size.SizeName,
+                    trang_Thai = sps.Size.Trang_Thai
+                }).ToList(),
+                luongDas = sanPham.SanPhamLuongDas.Select(spld => new
+                {
+                    iD_LuongDa = spld.LuongDa.ID_LuongDa,
+                    ten_LuongDa = spld.LuongDa.Ten_LuongDa,
+                    trang_Thai = spld.LuongDa.Trang_Thai
+                }).ToList(),
+                doNgots = sanPham.SanPhamDoNgots.Select(spdn => new
+                {
+                    iD_DoNgot = spdn.DoNgot.ID_DoNgot,
+                    muc_Do = spdn.DoNgot.Muc_Do,
+                    trang_Thai = spdn.DoNgot.Trang_Thai
+                }).ToList(),
+                toppings = sanPham.SanPhamToppings.Select(spt => new
+                {
+                    iD_Topping = spt.Topping.ID_Topping,
+                    ten = spt.Topping.Ten,
+                    so_Luong = spt.Topping.So_Luong,
+                    gia = spt.Topping.Gia,
+                    trang_Thai = spt.Topping.Trang_Thai
+                }).ToList(),
+                khuyenMais = sanPham.SanPhamKhuyenMais.Select(spkm => new
+                {
+                    iD_Khuyen_Mai = spkm.ID_Khuyen_Mai,
+                    gia_Giam = spkm.Gia_Giam,
+                    ten_Khuyen_Mai = spkm.BangKhuyenMai.Ten_Khuyen_Mai,
+                    ngay_Bat_Dau = spkm.BangKhuyenMai.Ngay_Bat_Dau,
+                    ngay_Ket_Thuc = spkm.BangKhuyenMai.Ngay_Ket_Thuc
+                }).ToList()
+            }).ToList();
+
+            return Ok(result);
+        }
+
+
     }
 }
