@@ -114,32 +114,118 @@
         //}
         // ===== update UpdateTrangThaiAsync để gửi dữ liệu về gmail  =====
 
+
+
+        // LOGIC DƯỚI PHỤC VỤ CHO BÁN HÀNG ONLINE , CHÚNG CHƯA TRỪ ĐƯỢC DỮ LIỆU , NẾU ĐỔI TRANGJT HÁI HÓ ĐƠN THÀNH Da_Xac_Nhan THÌ SẼ TRỪ SỐ LƯƠNG SẢN PHẨM VÀ TOPING TRONG KHO và chưa thay đổi được voucher
+        //public async Task<bool> UpdateTrangThaiAsync(int id, string trangThai, string? lyDoHuy, EmailService emailService)
+        //{
+        //    var hd = await _context.Hoa_Don
+        //        .Include(h => h.KhachHang)
+        //        .Include(h => h.HoaDonChiTiets)
+        //        .ThenInclude(hdct => hdct.SanPham)
+        //        .FirstOrDefaultAsync(x => x.ID_Hoa_Don == id);
+
+        //    if (hd == null) return false;
+
+        //    hd.Trang_Thai = trangThai;
+        //    if (!string.IsNullOrWhiteSpace(lyDoHuy) && trangThai == "Huy_Don")
+        //        hd.LyDoHuyDon = lyDoHuy;
+
+        //    await _context.SaveChangesAsync();
+
+        //    if (hd.KhachHang != null && !string.IsNullOrWhiteSpace(hd.KhachHang.Email))
+        //    {
+        //        var subject = $"Cập nhật trạng thái hóa đơn {hd.Ma_Hoa_Don}";
+        //        var productList = string.Join("\n", hd.HoaDonChiTiets.Select(hdct =>
+        //            $"- {hdct.SanPham?.Ten_San_Pham} (Số lượng: {hdct.So_Luong}, Giá: {hdct.Gia_San_Pham})"));
+        //        var body = new StringBuilder();
+        //        body.AppendLine($"Kính gửi {hd.KhachHang.Ho_Ten},");
+        //        body.AppendLine();
+        //        body.AppendLine($"Hóa đơn {hd.Ma_Hoa_Don} của bạn đã được cập nhật trạng thái thành: {trangThai}.");
+        //        body.AppendLine("Chi tiết sản phẩm:");
+        //        body.AppendLine(productList);
+        //        if (trangThai == "Huy_Don" && !string.IsNullOrWhiteSpace(lyDoHuy))
+        //            body.AppendLine($"Lý do hủy: {lyDoHuy}");
+        //        body.AppendLine();
+        //        body.AppendLine("Trân trọng,");
+        //        body.AppendLine("Đội ngũ hỗ trợ");
+
+        //        await emailService.SendEmailAsync(hd.KhachHang.Email, subject, body.ToString());
+        //    }
+
+        //    return true;
+        //}
+
+
+
         public async Task<bool> UpdateTrangThaiAsync(int id, string trangThai, string? lyDoHuy, EmailService emailService)
         {
             var hd = await _context.Hoa_Don
                 .Include(h => h.KhachHang)
                 .Include(h => h.HoaDonChiTiets)
                 .ThenInclude(hdct => hdct.SanPham)
+                .Include(h => h.HoaDonChiTiets)
+                .ThenInclude(hdct => hdct.HoaDonChiTietToppings)
+                .ThenInclude(hdctt => hdctt.Topping)
                 .FirstOrDefaultAsync(x => x.ID_Hoa_Don == id);
 
             if (hd == null) return false;
 
+            // If status is "Da_Xac_Nhan", deduct product and topping quantities
+            if (trangThai == "Da_Xac_Nhan")
+            {
+                foreach (var hdct in hd.HoaDonChiTiets)
+                {
+                    // Check and deduct product quantity
+                    var sanPham = hdct.SanPham;
+                    if (sanPham == null)
+                        throw new Exception($"Sản phẩm với ID {hdct.ID_San_Pham} không tồn tại.");
+                    if (sanPham.So_Luong < hdct.So_Luong)
+                        throw new Exception($"Sản phẩm {sanPham.Ten_San_Pham} không đủ số lượng.");
+
+                    sanPham.So_Luong -= hdct.So_Luong;
+
+                    // Check and deduct topping quantities
+                    if (hdct.HoaDonChiTietToppings != null && hdct.HoaDonChiTietToppings.Any())
+                    {
+                        foreach (var topping in hdct.HoaDonChiTietToppings)
+                        {
+                            var toppingEntity = topping.Topping;
+                            if (toppingEntity == null)
+                                throw new Exception($"Topping với ID {topping.ID_Topping} không tồn tại.");
+                            if (toppingEntity.So_Luong < topping.So_Luong)
+                                throw new Exception($"Topping {toppingEntity.Ten} không đủ số lượng.");
+
+                            toppingEntity.So_Luong -= topping.So_Luong;
+                        }
+                    }
+                }
+            }
+
+            // Update order status
             hd.Trang_Thai = trangThai;
             if (!string.IsNullOrWhiteSpace(lyDoHuy) && trangThai == "Huy_Don")
                 hd.LyDoHuyDon = lyDoHuy;
 
             await _context.SaveChangesAsync();
 
+            // Send email notification
             if (hd.KhachHang != null && !string.IsNullOrWhiteSpace(hd.KhachHang.Email))
             {
                 var subject = $"Cập nhật trạng thái hóa đơn {hd.Ma_Hoa_Don}";
                 var productList = string.Join("\n", hd.HoaDonChiTiets.Select(hdct =>
-                    $"- {hdct.SanPham?.Ten_San_Pham} (Số lượng: {hdct.So_Luong}, Giá: {hdct.Gia_San_Pham})"));
+                {
+                    var toppingList = hdct.HoaDonChiTietToppings != null && hdct.HoaDonChiTietToppings.Any()
+                        ? string.Join("\n", hdct.HoaDonChiTietToppings.Select(t =>
+                            $"  - Topping: {t.Topping?.Ten} (Số lượng: {t.So_Luong}, Giá: {t.Gia_Topping})"))
+                        : "  - Không có topping";
+                    return $"- {hdct.SanPham?.Ten_San_Pham} (Số lượng: {hdct.So_Luong}, Giá: {hdct.Gia_San_Pham})\n{toppingList}";
+                }));
                 var body = new StringBuilder();
                 body.AppendLine($"Kính gửi {hd.KhachHang.Ho_Ten},");
                 body.AppendLine();
                 body.AppendLine($"Hóa đơn {hd.Ma_Hoa_Don} của bạn đã được cập nhật trạng thái thành: {trangThai}.");
-                body.AppendLine("Chi tiết sản phẩm:");
+                body.AppendLine("Chi tiết sản phẩm và topping:");
                 body.AppendLine(productList);
                 if (trangThai == "Huy_Don" && !string.IsNullOrWhiteSpace(lyDoHuy))
                     body.AppendLine($"Lý do hủy: {lyDoHuy}");
@@ -152,6 +238,7 @@
 
             return true;
         }
+
 
 
 
@@ -231,18 +318,93 @@
 
 
         // ===== NEW: HỦY + HOÀN TRẢ TỒN KHO + GỬI EMAIL =====
+        //public async Task<bool> CancelWithRestockAsync(
+        //    int hoaDonId,
+        //    string lyDoHuy,
+        //    IEnumerable<(int chiTietId, int quantity)> selections
+        //)
+        //{
+        //    using var tx = await _context.Database.BeginTransactionAsync();
+
+        //    // Tải đơn + khách hàng + chi tiết
+        //    var hd = await _context.Hoa_Don
+        //        .Include(h => h.KhachHang)
+        //        .Include(h => h.HoaDonChiTiets)
+        //        .FirstOrDefaultAsync(h => h.ID_Hoa_Don == hoaDonId);
+
+        //    if (hd == null) return false;
+
+        //    // Không cho hủy nếu đã Hủy/Hoàn thành
+        //    if (hd.Trang_Thai == "Huy_Don" || hd.Trang_Thai == "Hoan_Thanh")
+        //        return false;
+
+        //    // Map nhanh chi tiết
+        //    var ctMap = hd.HoaDonChiTiets.ToDictionary(x => x.ID_HoaDon_ChiTiet, x => x);
+
+        //    // Cộng trả tồn kho
+        //    foreach (var (chiTietId, quantity) in selections ?? Enumerable.Empty<(int, int)>())
+        //    {
+        //        if (!ctMap.TryGetValue(chiTietId, out var ct)) continue;
+
+        //        var qty = Math.Clamp(quantity, 0, ct.So_Luong);
+        //        if (qty <= 0) continue;
+
+        //        var sp = await _context.San_Pham.FirstOrDefaultAsync(s => s.ID_San_Pham == ct.ID_San_Pham);
+        //        if (sp != null)
+        //        {
+        //            sp.So_Luong += qty;
+        //            _context.San_Pham.Update(sp);
+        //        }
+        //    }
+
+        //    // Ghi lý do hủy & đổi trạng thái
+        //    hd.Trang_Thai = "Huy_Don";
+        //    hd.LyDoHuyDon = string.IsNullOrWhiteSpace(lyDoHuy) ? "Không rõ lý do" : lyDoHuy;
+        //    _context.Hoa_Don.Update(hd);
+
+        //    await _context.SaveChangesAsync();
+
+        //    // ===== GỬI EMAIL THÔNG BÁO KHÁCH HÀNG =====
+        //    if (hd.KhachHang != null && !string.IsNullOrWhiteSpace(hd.KhachHang.Email))
+        //    {
+        //        var linkTraCuu = $"https://yourdomain.com/hoa-don/tra-cuu/{hd.Ma_Hoa_Don}";
+        //        var subject = $"Hủy đơn hàng #{hd.Ma_Hoa_Don}";
+        //        var body = new StringBuilder();
+        //        body.AppendLine($"Kính gửi {hd.KhachHang.Ho_Ten},");
+        //        body.AppendLine();
+        //        body.AppendLine($"Đơn hàng của bạn (Mã: {hd.Ma_Hoa_Don}) đã bị hủy.");
+        //        body.AppendLine($"Lý do hủy: {hd.LyDoHuyDon}");
+        //        body.AppendLine();
+        //        body.AppendLine($"Bạn có thể tra cứu chi tiết tại: {linkTraCuu}");
+        //        body.AppendLine();
+        //        body.AppendLine("Nếu có thắc mắc, vui lòng liên hệ chúng tôi.");
+        //        body.AppendLine("Trân trọng,");
+
+        //        await _emailService.SendEmailAsync(hd.KhachHang.Email, subject, body.ToString());
+        //    }
+
+        //    await tx.CommitAsync();
+        //    return true;
+        //}
+
+        //THỰC HIỆN CODE LẠI ĐỂ PHÙ HỢP VỚI BÁN HÀNG ONLINE CÓ GỬI MAIL CHO KHÁCH HÀNG KHI HỦY ĐƠN HÀNG VÀ HOÀN TRẢ TỒN KHO
         public async Task<bool> CancelWithRestockAsync(
-            int hoaDonId,
-            string lyDoHuy,
-            IEnumerable<(int chiTietId, int quantity)> selections
-        )
+       int hoaDonId,
+       string lyDoHuy,
+       IEnumerable<(int chiTietId, int quantity)> selections
+   )
         {
             using var tx = await _context.Database.BeginTransactionAsync();
 
-            // Tải đơn + khách hàng + chi tiết
+            // Tải đơn + khách hàng + chi tiết + KhachHangVoucher + Topping
             var hd = await _context.Hoa_Don
                 .Include(h => h.KhachHang)
+                .ThenInclude(kh => kh.KhachHangVouchers)
                 .Include(h => h.HoaDonChiTiets)
+                .ThenInclude(ct => ct.HoaDonChiTietToppings)
+                .ThenInclude(ctt => ctt.Topping)
+                .Include(h => h.HoaDonVouchers)
+                .ThenInclude(hdv => hdv.Voucher)
                 .FirstOrDefaultAsync(h => h.ID_Hoa_Don == hoaDonId);
 
             if (hd == null) return false;
@@ -254,19 +416,61 @@
             // Map nhanh chi tiết
             var ctMap = hd.HoaDonChiTiets.ToDictionary(x => x.ID_HoaDon_ChiTiet, x => x);
 
-            // Cộng trả tồn kho
-            foreach (var (chiTietId, quantity) in selections ?? Enumerable.Empty<(int, int)>())
+            // Kiểm tra trạng thái đơn hàng
+            if (hd.Trang_Thai == "Chua_Xac_Nhan")
             {
-                if (!ctMap.TryGetValue(chiTietId, out var ct)) continue;
-
-                var qty = Math.Clamp(quantity, 0, ct.So_Luong);
-                if (qty <= 0) continue;
-
-                var sp = await _context.San_Pham.FirstOrDefaultAsync(s => s.ID_San_Pham == ct.ID_San_Pham);
-                if (sp != null)
+                // Không tiếp nhận dữ liệu selections, chỉ xử lý KhachHangVoucher
+                if (hd.HoaDonVouchers != null && hd.HoaDonVouchers.Any())
                 {
-                    sp.So_Luong += qty;
-                    _context.San_Pham.Update(sp);
+                    var khachHangVoucher = hd.KhachHang?.KhachHangVouchers
+                        .FirstOrDefault(khv => khv.ID_Voucher == hd.HoaDonVouchers.First().ID_Voucher);
+                    if (khachHangVoucher != null)
+                    {
+                        khachHangVoucher.Trang_Thai = true; // Đánh dấu trạng thái KhachHangVoucher
+                        _context.KhachHang_Voucher.Update(khachHangVoucher);
+                    }
+                }
+            }
+            else if (hd.Trang_Thai == "Da_Xac_Nhan")
+            {
+                // Tiếp nhận dữ liệu selections và cộng trả tồn kho
+                foreach (var (chiTietId, quantity) in selections ?? Enumerable.Empty<(int, int)>())
+                {
+                    if (!ctMap.TryGetValue(chiTietId, out var ct)) continue;
+
+                    var qty = Math.Clamp(quantity, 0, ct.So_Luong);
+                    if (qty <= 0) continue;
+
+                    // Cộng trả số lượng sản phẩm
+                    var sp = await _context.San_Pham.FirstOrDefaultAsync(s => s.ID_San_Pham == ct.ID_San_Pham);
+                    if (sp != null)
+                    {
+                        sp.So_Luong += qty;
+                        _context.San_Pham.Update(sp);
+                    }
+
+                    // Cộng trả số lượng topping nếu có
+                    foreach (var toppingDetail in ct.HoaDonChiTietToppings)
+                    {
+                        var topping = toppingDetail.Topping;
+                        if (topping != null && toppingDetail.So_Luong.HasValue)
+                        {
+                            topping.So_Luong += toppingDetail.So_Luong.Value * qty;
+                            _context.Topping.Update(topping);
+                        }
+                    }
+                }
+
+                // Xử lý KhachHangVoucher
+                if (hd.HoaDonVouchers != null && hd.HoaDonVouchers.Any())
+                {
+                    var khachHangVoucher = hd.KhachHang?.KhachHangVouchers
+                        .FirstOrDefault(khv => khv.ID_Voucher == hd.HoaDonVouchers.First().ID_Voucher);
+                    if (khachHangVoucher != null)
+                    {
+                        khachHangVoucher.Trang_Thai = true; // Đánh dấu trạng thái KhachHangVoucher
+                        _context.KhachHang_Voucher.Update(khachHangVoucher);
+                    }
                 }
             }
 
@@ -299,7 +503,6 @@
             await tx.CommitAsync();
             return true;
         }
-
 
 
 
