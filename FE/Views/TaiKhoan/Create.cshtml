@@ -5,129 +5,191 @@
 
     var nhanViens = ViewBag.NhanViens as IEnumerable<BE.models.NhanVien>;
     var searchNhanVien = ViewBag.SearchNhanVien as string ?? "";
+    var soNhanVienChuaCoTK = ViewBag.SoNhanVienChuaCoTK as int? ?? 0;
+    var soNhanVienDaCoTK = ViewBag.SoNhanVienDaCoTK as int? ?? 0;
 }
 
 <style>
-
-    .btn-gradient {
-        background: linear-gradient(45deg, #4facfe, #00f2fe);
-        color: white;
-        border: none;
-        transition: all 0.3s ease-in-out;
-        box-shadow: 0 4px 10px rgba(0, 150, 255, 0.3);
+    .card-custom {
+        background: #fff;
+        border-radius: 10px;
+        padding: 20px;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        transition: transform 0.3s ease;
     }
 
-        .btn-gradient:hover {
-            background: linear-gradient(45deg, #00f2fe, #4facfe);
-            transform: translateY(-2px);
-            box-shadow: 0 6px 15px rgba(0, 150, 255, 0.5);
+        .card-custom:hover {
+            transform: translateY(-3px);
         }
 
-        .btn-gradient:active {
-            transform: scale(0.95);
-            box-shadow: 0 3px 6px rgba(0, 150, 255, 0.4);
-        }
+    .card-title-custom {
+        font-size: 1.2rem;
+        font-weight: 700;
+        color: #007bff;
+        margin-bottom: 20px;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
 
-    .btn-secondary {
+    .btn-gradient {
+        background: linear-gradient(135deg, #007bff, #0056b3);
+        color: white !important;
+        border: none;
+        border-radius: 30px;
+        padding: 8px 20px;
+        font-weight: 600;
         transition: all 0.3s ease;
     }
 
-        .btn-secondary:hover {
-            background-color: #6c757d;
-            color: #fff;
+        .btn-gradient:hover {
+            background: linear-gradient(135deg, #0056b3, #004085);
+            transform: translateY(-2px);
+            box-shadow: 0 6px 14px rgba(0, 0, 0, 0.2);
+        }
+
+    .form-control {
+        border-radius: 8px;
+        padding: 10px;
+        border: 1px solid #dee2e6;
+        transition: all 0.3s ease;
+    }
+
+        .form-control:focus {
+            border-color: #007bff;
+            box-shadow: 0 0 6px rgba(0,123,255,0.3);
+        }
+
+    .search-form {
+        display: flex;
+        gap: 10px;
+        margin-bottom: 15px;
+    }
+
+        .search-form input {
+            flex: 1;
+            border-radius: 8px;
+        }
+
+    .btn-search {
+        background: linear-gradient(135deg, #007bff, #0056b3);
+        color: #fff;
+        border-radius: 8px;
+        padding: 8px 18px;
+        font-weight: 600;
+        transition: all 0.3s ease;
+    }
+
+        .btn-search:hover {
+            background: linear-gradient(135deg, #0056b3, #004085);
             transform: translateY(-2px);
         }
 
-    .card {
-        border-radius: 20px;
-        background: #ffffff;
-        box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+    .table-nhanvien th {
+        background: linear-gradient(135deg, #007bff, #00c6ff);
+        color: #fff;
+        text-align: center;
     }
 
-    .table-nhanvien {
-        margin-top: 20px;
+    .table-hover tbody tr:hover {
+        background-color: #f1f3f5;
     }
-
-        .table-nhanvien tr:hover {
-            background-color: #f8f9fa;
-            cursor: pointer;
-        }
 
     .btn-select {
-        background: linear-gradient(45deg, #28a745, #20c997);
+        background: linear-gradient(135deg, #28a745, #218838);
         color: white;
         border: none;
+        border-radius: 20px;
+        padding: 6px 14px;
+        font-size: 0.85rem;
         transition: all 0.3s ease;
     }
 
         .btn-select:hover {
-            background: linear-gradient(45deg, #20c997, #28a745);
+            background: linear-gradient(135deg, #218838, #1e7e34);
             transform: translateY(-2px);
         }
 
-    .search-form-nhanvien {
-        margin-bottom: 20px;
+    .statistics-box {
+        display: flex;
+        gap: 15px;
+        margin-bottom: 15px;
     }
 
-        .search-form-nhanvien input {
-            border-radius: 5px;
-            transition: border-color 0.3s ease;
+    .stat-card {
+        flex: 1;
+        background: #fff;
+        border-radius: 10px;
+        padding: 15px;
+        text-align: center;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        transition: transform 0.3s ease;
+    }
+
+        .stat-card:hover {
+            transform: translateY(-3px);
         }
 
-            .search-form-nhanvien input:focus {
-                border-color: #00f2fe;
-                box-shadow: 0 0 0 0.2rem rgba(0, 150, 255, 0.25);
-            }
-
-        .search-form-nhanvien .btn-search {
-            background: linear-gradient(45deg, #007bff, #0056b3);
-            color: white;
-            border: none;
+        .stat-card i {
+            font-size: 1.6rem;
+            color: #007bff;
+            margin-bottom: 8px;
         }
 
-            .search-form-nhanvien .btn-search:hover {
-                background: linear-gradient(45deg, #0056b3, #004085);
-                transform: translateY(-2px);
-            }
+        .stat-card span {
+            font-size: 1.4rem;
+            font-weight: 700;
+            color: #007bff;
+        }
 </style>
 
-<div class="row">
-    <div class="row">
-        <div class="col-md-6">
-            <div class="card shadow border-0 p-4">
-                <h4 class="mb-4"><i class="fas fa-user-plus me-2 text-primary"></i> Thêm tài khoản mới</h4>
+<div class="container">
+    <div class="row g-4">
+        <!-- Form thêm tài khoản -->
+        <div class="col-lg-6">
+            <div class="card-custom">
+                <h4 class="card-title-custom"><i class="fas fa-user-plus"></i> Thêm tài khoản mới</h4>
 
                 @if (ViewBag.Error != null)
                 {
-                    <div class="alert alert-danger">@ViewBag.Error</div>
+                    <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                        @ViewBag.Error
+                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                    </div>
                 }
 
                 <form asp-action="Create" method="post">
-                    <div asp-validation-summary="All" class="text-danger mb-3"></div> <!-- Hiển thị tất cả lỗi validation -->
+                    <div asp-validation-summary="All" class="text-danger mb-3"></div>
 
                     <input type="hidden" asp-for="ID_Nhan_Vien" id="selectedNhanVienId" />
 
                     <div class="mb-3">
-                        <label asp-for="Ten_Nguoi_Dung" class="form-label fw-semibold"><i class="fas fa-user me-2 text-primary"></i>Tên người dùng</label>
-                        <input asp-for="Ten_Nguoi_Dung" id="tenNguoiDung" class="form-control" />
+                        <label asp-for="Ten_Nguoi_Dung" class="form-label">
+                            <i class="fas fa-user me-2 text-primary"></i>Tên người dùng
+                        </label>
+                        <input asp-for="Ten_Nguoi_Dung" id="tenNguoiDung" class="form-control" placeholder="Nhập tên người dùng" />
                         <span asp-validation-for="Ten_Nguoi_Dung" class="text-danger"></span>
                     </div>
                     <div class="mb-3">
-                        <label asp-for="Email" class="form-label fw-semibold"><i class="fas fa-envelope me-2 text-primary"></i>Email</label>
-                        <input asp-for="Email" id="email" class="form-control" />
+                        <label asp-for="Email" class="form-label">
+                            <i class="fas fa-envelope me-2 text-primary"></i>Email
+                        </label>
+                        <input asp-for="Email" id="email" class="form-control" placeholder="Nhập email" />
                         <span asp-validation-for="Email" class="text-danger"></span>
                     </div>
                     <div class="mb-3">
-                        <label asp-for="Mat_Khau" class="form-label fw-semibold"><i class="fas fa-lock me-2 text-primary"></i>Mật khẩu</label>
-                        <input asp-for="Mat_Khau" class="form-control" type="password" />
+                        <label asp-for="Mat_Khau" class="form-label">
+                            <i class="fas fa-lock me-2 text-primary"></i>Mật khẩu
+                        </label>
+                        <input asp-for="Mat_Khau" class="form-control" type="password" placeholder="Nhập mật khẩu" />
                         <span asp-validation-for="Mat_Khau" class="text-danger"></span>
                     </div>
 
                     <div class="d-flex justify-content-between mt-4">
-                        <a asp-action="Index" class="btn btn-secondary rounded-pill">
+                        <a asp-action="Index" class="btn btn-secondary">
                             <i class="fas fa-arrow-left me-1"></i> Quay lại
                         </a>
-                        <button type="submit" class="btn btn-gradient rounded-pill px-4">
+                        <button type="submit" class="btn btn-gradient">
                             <i class="fas fa-save me-1"></i> Lưu
                         </button>
                     </div>
@@ -135,59 +197,74 @@
             </div>
         </div>
 
-    <div class="col-md-6">
-        <div class="card shadow border-0 p-4">
-            <h4 class="mb-4"><i class="fas fa-users me-2 text-primary"></i> Danh sách nhân viên chưa có tài khoản</h4>
+        <!-- Danh sách nhân viên -->
+        <div class="col-lg-6">
+            <div class="card-custom">
+                <h4 class="card-title-custom"><i class="fas fa-users"></i> Nhân viên chưa có tài khoản</h4>
 
-            <form asp-action="Create" method="get" class="row g-2 search-form-nhanvien">
-                <div class="col-md-8">
+                <div class="statistics-box">
+                    <div class="stat-card">
+                        <i class="fas fa-user-check"></i>
+                        <h6>Đã có tài khoản</h6>
+                        <span>@soNhanVienDaCoTK</span>
+                    </div>
+                    <div class="stat-card">
+                        <i class="fas fa-user-times"></i>
+                        <h6>Chưa có tài khoản</h6>
+                        <span>@soNhanVienChuaCoTK</span>
+                    </div>
+                </div>
+
+                <form asp-action="Create" method="get" class="search-form">
                     <input type="text" name="searchNhanVien" class="form-control"
-                           placeholder="Tìm kiếm theo tên hoặc email..."
-                           value="@searchNhanVien" />
-                </div>
-                <div class="col-md-4">
-                    <button type="submit" class="btn btn-search w-100"><i class="fas fa-search me-1"></i> Tìm</button>
-                </div>
-            </form>
+                           placeholder="Tìm kiếm theo tên hoặc email..." value="@searchNhanVien" />
+                    <button type="submit" class="btn btn-search">
+                        <i class="fas fa-search me-1"></i> Tìm
+                    </button>
+                </form>
 
-            @if (nhanViens != null && nhanViens.Any())
-            {
-                <div class="table-responsive table-nhanvien">
-                    <table class="table table-hover align-middle">
-                        <thead class="table-primary">
-                            <tr>
-                                <th>#</th>
-                                <th>Tên nhân viên</th>
-                                <th>Email</th>
-                                <th>Thao tác</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            @{
-                                int stt = 1;
-                            }
-                            @foreach (var nv in nhanViens)
-                            {
+                @if (nhanViens != null && nhanViens.Any())
+                {
+                    <div class="table-responsive table-nhanvien">
+                        <table class="table table-hover align-middle">
+                            <thead>
                                 <tr>
-                                    <td>@stt</td>
-                                    <td>@nv.Ho_Ten/td> 
-                                    <td>@nv.Email</td> 
-                                    <td>
-                                        <button class="btn btn-select btn-sm" onclick="selectNhanVien(@nv.ID_Nhan_Vien, '@nv.Ho_Ten', '@nv.Email')">
-                                            <i class="fas fa-check me-1"></i> Chọn
-                                        </button>
-                                    </td>
+                                    <th>#</th>
+                                    <th>Tên nhân viên</th>
+                                    <th>Email</th>
+                                    <th class="text-center">Thao tác</th>
                                 </tr>
-                                stt++;
-                            }
-                        </tbody>
-                    </table>
-                </div>
-            }
-            else
-            {
-                <p class="text-muted">Không có nhân viên nào chưa có tài khoản hoặc không tìm thấy kết quả.</p>
-            }
+                            </thead>
+                            <tbody>
+                                @{
+                                    int stt = 1;
+                                }
+                                @foreach (var nv in nhanViens)
+                                {
+                                    <tr>
+                                        <td class="text-center">@stt</td>
+                                        <td>@nv.Ho_Ten</td>
+                                        <td>@nv.Email</td>
+                                        <td class="text-center">
+                                            <button type="button" class="btn btn-select"
+                                                    onclick="selectNhanVien(@nv.ID_Nhan_Vien, '@nv.Ho_Ten', '@nv.Email')">
+                                                <i class="fas fa-check me-1"></i> Chọn
+                                            </button>
+                                        </td>
+                                    </tr>
+                                    stt++;
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                }
+                else
+                {
+                    <p class="text-muted text-center mt-3">
+                        Không có nhân viên nào chưa có tài khoản hoặc không tìm thấy kết quả.
+                    </p>
+                }
+            </div>
         </div>
     </div>
 </div>

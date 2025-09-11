@@ -2,6 +2,9 @@
 using FE.Filters;
 using Microsoft.AspNetCore.Mvc;
 using Service.IService;
+using System.Linq;
+using ClosedXML.Excel;
+using System.IO;
 
 namespace FE.Controllers
 {
@@ -33,6 +36,11 @@ namespace FE.Controllers
                     .ToList();
             }
 
+            // Thống kê
+            ViewBag.TongTaiKhoan = taiKhoans.Count();
+            ViewBag.TaiKhoanHoatDong = taiKhoans.Count(t => t.Trang_Thai);
+            ViewBag.TaiKhoanKhoa = taiKhoans.Count(t => !t.Trang_Thai);
+
             ViewData["Search"] = search;
 
             return View(taiKhoans);
@@ -42,7 +50,17 @@ namespace FE.Controllers
         public async Task<IActionResult> Create(string? searchNhanVien)
         {
             var nhanViens = await _nhanVienService.GetAllAsync();
+            var taiKhoans = await _taiKhoanService.GetAllAsync();
 
+            // Lấy danh sách ID_Nhan_Vien đã có tài khoản
+            var nhanVienDaCoTK = taiKhoans.Select(t => t.ID_Nhan_Vien).ToHashSet();
+
+            // Lọc ra nhân viên chưa có tài khoản
+            nhanViens = nhanViens
+                .Where(nv => !nhanVienDaCoTK.Contains(nv.ID_Nhan_Vien))
+                .ToList();
+
+            // Tìm kiếm nếu có search
             if (!string.IsNullOrWhiteSpace(searchNhanVien))
             {
                 nhanViens = nhanViens
@@ -55,6 +73,11 @@ namespace FE.Controllers
 
             ViewBag.NhanViens = nhanViens;
             ViewBag.SearchNhanVien = searchNhanVien;
+
+            // 📊 Thống kê
+            ViewBag.SoNhanVienChuaCoTK = nhanViens.Count();
+            ViewBag.SoNhanVienDaCoTK = taiKhoans.Count();
+
             return View(new TaiKhoan());
         }
 
@@ -140,6 +163,63 @@ namespace FE.Controllers
         {
             await _taiKhoanService.DeleteAsync(id);
             return RedirectToAction("Index");
+        }
+
+        [HttpGet]
+        public async Task<IActionResult> ExportToExcel(string? search)
+        {
+            var taiKhoans = await _taiKhoanService.GetAllAsync();
+
+            if (!string.IsNullOrWhiteSpace(search))
+            {
+                taiKhoans = taiKhoans
+                    .Where(t =>
+                        t.Ten_Nguoi_Dung.Contains(search, StringComparison.OrdinalIgnoreCase) ||
+                        (!string.IsNullOrEmpty(t.Email) && t.Email.Contains(search, StringComparison.OrdinalIgnoreCase))
+                    )
+                    .ToList();
+            }
+
+            using (var workbook = new XLWorkbook())
+            {
+                var worksheet = workbook.Worksheets.Add("TaiKhoan");
+
+                // Headers
+                worksheet.Cell("A1").Value = "#";
+                worksheet.Cell("B1").Value = "Tên người dùng";
+                worksheet.Cell("C1").Value = "Email";
+                worksheet.Cell("D1").Value = "Mật khẩu";
+                worksheet.Cell("E1").Value = "Trạng thái";
+                worksheet.Cell("F1").Value = "Ngày tạo";
+
+                // Format headers
+                worksheet.Range("A1:F1").Style.Font.Bold = true;
+                worksheet.Range("A1:F1").Style.Fill.BackgroundColor = XLColor.LightBlue;
+                worksheet.Range("A1:F1").Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Center;
+
+                int row = 2;
+                int stt = 1;
+                foreach (var item in taiKhoans)
+                {
+                    worksheet.Cell(row, 1).Value = stt;
+                    worksheet.Cell(row, 2).Value = item.Ten_Nguoi_Dung;
+                    worksheet.Cell(row, 3).Value = item.Email;
+                    worksheet.Cell(row, 4).Value = "******"; // Không xuất mật khẩu thực
+                    worksheet.Cell(row, 5).Value = item.Trang_Thai ? "Hoạt động" : "Khóa";
+                    worksheet.Cell(row, 6).Value = item.Ngay_Tao.ToString("dd/MM/yyyy");
+                    row++;
+                    stt++;
+                }
+
+                // Auto-fit columns
+                worksheet.Columns().AdjustToContents();
+
+                using (var stream = new MemoryStream())
+                {
+                    workbook.SaveAs(stream);
+                    return File(stream.ToArray(), "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", "DanhSachTaiKhoan.xlsx");
+                }
+            }
         }
     }
 }
