@@ -65,11 +65,11 @@
                                 <div class="mb-3">
                                     <label asp-for="So_Tien_Dat_Yeu_Cau" class="form-label">Yêu Cầu Tối Thiểu (VNĐ)</label>
                                     <div class="input-group">
-                                        <input asp-for="So_Tien_Dat_Yeu_Cau" class="form-control" type="number" min="0" step="0.01" id="soTienDatYeuCau" placeholder="Nhập số tiền tối thiểu" />
+                                        <input asp-for="So_Tien_Dat_Yeu_Cau" class="form-control" type="number" min="0" step="0.01" id="soTienDatYeuCau" value="0" placeholder="0" />
                                         <span class="input-group-text">VNĐ</span>
                                     </div>
                                     <span asp-validation-for="So_Tien_Dat_Yeu_Cau" class="text-danger"></span>
-                                    <div class="form-text">Số tiền đơn hàng tối thiểu để sử dụng voucher (để trống nếu không yêu cầu)</div>
+                                    <div class="form-text">Số tiền đơn hàng tối thiểu để sử dụng voucher (0 = không yêu cầu)</div>
                                 </div>
 
                                 <div class="mb-3">
@@ -253,16 +253,11 @@
                 }
             }
 
-            // Kiểm tra validation cho yêu cầu tối thiểu (tùy chọn, nếu nhập thì phải >= 0)
+            // Kiểm tra validation cho yêu cầu tối thiểu (phải là số >= 0, cho phép thập phân)
             const soTienDatYeuCau = parseFloat($('#soTienDatYeuCau').val());
-            if ($('#soTienDatYeuCau').val() && (isNaN(soTienDatYeuCau) || soTienDatYeuCau < 0)) {
-                isValid = false;
-                $('#soTienDatYeuCau').addClass('input-validation-error');
-                $('span[data-valmsg-for="So_Tien_Dat_Yeu_Cau"]').removeClass('field-validation-valid').addClass('field-validation-error')
-                    .text('Yêu cầu tối thiểu phải là số không âm.');
-                if (!firstErrorField) {
-                    firstErrorField = $('#soTienDatYeuCau');
-                }
+            if (isNaN(soTienDatYeuCau) || soTienDatYeuCau < 0) {
+                // Tự động set về 0 nếu không hợp lệ
+                $('#soTienDatYeuCau').val('0');
             }
 
             // Kiểm tra logic ngày tháng
@@ -355,6 +350,45 @@
         $('input').on('input', function() {
             if ($('#voucherPreview').is(':visible')) {
                 updatePreview();
+            }
+        });
+
+        // Xử lý trường yêu cầu tối thiểu - cho phép số thập phân với giới hạn
+        $('#soTienDatYeuCau').on('input', function() {
+            let value = parseFloat($(this).val());
+
+            // Kiểm tra giới hạn tối đa trong real-time
+            if (value > 999999999) {
+                $(this).val('999999999');
+                showToast('Giá trị tối đa là 999,999,999 VNĐ', 'warning');
+            }
+        });
+
+        $('#soTienDatYeuCau').on('blur', function() {
+            let value = $(this).val();
+
+            // Nếu trống hoặc không phải số hợp lệ, set về 0
+            if (value === '' || value === null || isNaN(value) || parseFloat(value) < 0) {
+                $(this).val('0');
+            }
+        });
+
+        // Cho phép nhập số thập phân cho trường yêu cầu tối thiểu
+        $('#soTienDatYeuCau').on('keypress', function(e) {
+            // Chỉ cho phép số, dấu chấm thập phân, backspace, delete, tab, escape, enter
+            if ($.inArray(e.keyCode, [46, 8, 9, 27, 13]) !== -1 ||
+                // Cho phép Ctrl+A, Ctrl+C, Ctrl+V, Ctrl+X
+                (e.keyCode === 65 && e.ctrlKey === true) ||
+                (e.keyCode === 67 && e.ctrlKey === true) ||
+                (e.keyCode === 86 && e.ctrlKey === true) ||
+                (e.keyCode === 88 && e.ctrlKey === true) ||
+                // Cho phép dấu chấm (.), nhưng chỉ một dấu chấm
+                (e.keyCode === 190 && $(this).val().indexOf('.') === -1)) {
+                return;
+            }
+            // Đảm bảo chỉ là số
+            if ((e.shiftKey || (e.keyCode < 48 || e.keyCode > 57)) && (e.keyCode < 96 || e.keyCode > 105)) {
+                e.preventDefault();
             }
         });
     });
@@ -461,7 +495,7 @@
         $('#previewTen').text(tenVoucher);
         $('#previewGiam').text(`${giaTriGiam}%`);
 
-        const yeuCauText = soTienDatYeuCau ?
+        const yeuCauText = soTienDatYeuCau && parseFloat(soTienDatYeuCau) > 0 ?
             `Đơn hàng tối thiểu: ${parseFloat(soTienDatYeuCau).toLocaleString('vi-VN')} VNĐ` :
             'Không yêu cầu tối thiểu';
         $('#previewYeuCau').text(yeuCauText);
@@ -574,23 +608,20 @@
     }
 
     @@media (max-width: 768px) {
-        .d-flex.justify-content-between
+        .d-flex.justify-content-between {
+            flex-direction: column;
+            gap: 15px;
+        }
 
-    {
-        flex-direction: column;
-        gap: 15px;
-    }
+            .d-flex.justify-content-between > div {
+                display: flex;
+                gap: 10px;
+                justify-content: center;
+            }
 
-    .d-flex.justify-content-between > div {
-        display: flex;
-        gap: 10px;
-        justify-content: center;
-    }
-
-    .btn {
-        flex: 1;
-    }
-
+        .btn {
+            flex: 1;
+        }
     }
 </style>
 
