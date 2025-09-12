@@ -26,59 +26,6 @@ namespace BE.Controllers
         }
 
         // ---------- GET ALL ----------
-        //[HttpGet]
-        //[ProducesResponseType(typeof(IEnumerable<object>), StatusCodes.Status200OK)]
-        //public async Task<ActionResult> GetAllSanPham()
-        //{
-        //    var sanPhams = await _sanPhamRepository.GetAllWithDetailsAsync();
-        //    var result = sanPhams.Select(sp => new
-        //    {
-        //        iD_San_Pham = sp.ID_San_Pham,
-        //        ten_San_Pham = sp.Ten_San_Pham,
-        //        gia = sp.Gia,
-        //        so_Luong = sp.So_Luong,
-        //        hinh_Anh = sp.Hinh_Anh,
-        //        mo_Ta = sp.Mo_Ta,
-        //        trang_Thai = sp.Trang_Thai,
-        //        sizes = sp.SanPhamSizes.Select(sps => new
-        //        {
-        //            iD_Size = sps.Size.ID_Size,
-        //            sizeName = sps.Size.SizeName,
-        //            trang_Thai = sps.Size.Trang_Thai
-        //        }).ToList(),
-        //        luongDas = sp.SanPhamLuongDas.Select(spld => new
-        //        {
-        //            iD_LuongDa = spld.LuongDa.ID_LuongDa,
-        //            ten_LuongDa = spld.LuongDa.Ten_LuongDa,
-        //            trang_Thai = spld.LuongDa.Trang_Thai
-        //        }).ToList(),
-        //        doNgots = sp.SanPhamDoNgots.Select(spdn => new
-        //        {
-        //            iD_DoNgot = spdn.DoNgot.ID_DoNgot,
-        //            muc_Do = spdn.DoNgot.Muc_Do,
-        //            trang_Thai = spdn.DoNgot.Trang_Thai
-        //        }).ToList(),
-        //        toppings = sp.SanPhamToppings.Select(spt => new
-        //        {
-        //            iD_Topping = spt.Topping.ID_Topping,
-        //            ten = spt.Topping.Ten,
-        //            so_Luong = spt.Topping.So_Luong,
-        //            gia = spt.Topping.Gia,
-        //            trang_Thai = spt.Topping.Trang_Thai
-        //        }).ToList(),
-        //        khuyenMais = sp.SanPhamKhuyenMais.Select(spkm => new
-        //        {
-        //            gia_Giam = spkm.Gia_Giam,
-        //            ten_Khuyen_Mai = spkm.BangKhuyenMai.Ten_Khuyen_Mai,
-        //            ngay_Bat_Dau = spkm.BangKhuyenMai.Ngay_Bat_Dau,
-        //            ngay_Ket_Thuc = spkm.BangKhuyenMai.Ngay_Ket_Thuc
-        //        }).ToList()
-        //    }).ToList();
-
-        //    return Ok(result);
-        //}
-
-
         [HttpGet]
         [ProducesResponseType(typeof(IEnumerable<object>), StatusCodes.Status200OK)]
         public async Task<ActionResult> GetAllSanPham()
@@ -121,7 +68,7 @@ namespace BE.Controllers
                 }).ToList(),
                 khuyenMais = sp.SanPhamKhuyenMais.Select(spkm => new
                 {
-                    iD_Khuyen_Mai = spkm.ID_Khuyen_Mai, // Thêm ID khuyến mãi
+                    iD_Khuyen_Mai = spkm.ID_Khuyen_Mai,
                     gia_Giam = spkm.Gia_Giam,
                     ten_Khuyen_Mai = spkm.BangKhuyenMai.Ten_Khuyen_Mai,
                     ngay_Bat_Dau = spkm.BangKhuyenMai.Ngay_Bat_Dau,
@@ -285,7 +232,18 @@ namespace BE.Controllers
 
             var errors = new List<string>();
 
-            foreach (var it in items)
+            // Gộp theo ID_San_Pham để check đúng tổng số lượng đặt
+            var grouped = items
+                .Where(x => x != null)
+                .GroupBy(x => x.ID_San_Pham)
+                .Select(g => new AdjustStockItem
+                {
+                    ID_San_Pham = g.Key,
+                    SoLuongTru = g.Sum(x => Math.Max(0, x.SoLuongTru))
+                })
+                .ToList();
+
+            foreach (var it in grouped)
             {
                 if (it.SoLuongTru <= 0)
                 {
@@ -311,7 +269,7 @@ namespace BE.Controllers
         }
 
         /// <summary>
-        /// Trừ tồn kho theo danh sách sản phẩm.
+        /// Trừ tồn kho theo danh sách sản phẩm (AN TOÀN – chỉ cập nhật cột So_Luong).
         /// FE nên gọi cái này ngay sau khi tạo hóa đơn thành công.
         /// </summary>
         [HttpPost("tru-ton")]
@@ -320,11 +278,22 @@ namespace BE.Controllers
             if (items == null || items.Count == 0)
                 return BadRequest(new { success = false, message = "Danh sách trống." });
 
+            // Gộp items theo sản phẩm để tránh trừ lặp
+            var grouped = items
+                .Where(x => x != null)
+                .GroupBy(x => x.ID_San_Pham)
+                .Select(g => new AdjustStockItem
+                {
+                    ID_San_Pham = g.Key,
+                    SoLuongTru = g.Sum(x => Math.Max(0, x.SoLuongTru))
+                })
+                .ToList();
+
             var errors = new List<string>();
             var updated = new List<object>();
 
-            // kiểm tra trước
-            foreach (var it in items)
+            // 1) Kiểm tra đủ tồn trước
+            foreach (var it in grouped)
             {
                 if (it.SoLuongTru <= 0)
                 {
@@ -340,38 +309,38 @@ namespace BE.Controllers
                 }
 
                 if (sp.So_Luong < it.SoLuongTru)
-                {
                     errors.Add($"\"{sp.Ten_San_Pham}\": tồn {sp.So_Luong} < trừ {it.SoLuongTru}");
-                    continue;
-                }
             }
 
             if (errors.Any())
                 return BadRequest(new { success = false, message = string.Join("\n", errors) });
 
-            // cập nhật tồn
-            foreach (var it in items)
+            // 2) Cập nhật tồn – CHỈ đổi cột So_Luong (không đụng navigation)
+            foreach (var it in grouped)
             {
                 var sp = await _sanPhamRepository.GetByIdWithDetailsAsync(it.ID_San_Pham);
                 if (sp == null) continue;
 
                 var newQty = sp.So_Luong - it.SoLuongTru;
+                if (newQty < 0) newQty = 0;
 
-                // Dùng UpdateSanPhamAsync để chỉ đổi So_Luong, giữ nguyên field khác
-                var dto = new SanPhamDTO
+                // === QUAN TRỌNG: dùng method chỉ update tồn ===
+                // YÊU CẦU trong ISanPhamRepository:
+                // Task<bool> UpdateStockOnlyAsync(int sanPhamId, int newQty);
+                var ok = await _sanPhamRepository.UpdateStockOnlyAsync(sp.ID_San_Pham, newQty);
+
+                if (!ok)
                 {
-                    ID_San_Pham = sp.ID_San_Pham,
-                    Ten_San_Pham = sp.Ten_San_Pham,
-                    Gia = sp.Gia,
-                    So_Luong = newQty,
-                    Hinh_Anh = sp.Hinh_Anh,
-                    Mo_Ta = sp.Mo_Ta,
-                    Trang_Thai = sp.Trang_Thai
-                };
-
-                var after = await _sanPhamRepository.UpdateSanPhamAsync(sp.ID_San_Pham, dto, sp.Hinh_Anh);
-                updated.Add(new { id = sp.ID_San_Pham, old = sp.So_Luong, @new = after?.So_Luong ?? newQty });
+                    errors.Add($"Cập nhật tồn thất bại cho SP#{sp.ID_San_Pham}.");
+                }
+                else
+                {
+                    updated.Add(new { id = sp.ID_San_Pham, old = sp.So_Luong, @new = newQty });
+                }
             }
+
+            if (errors.Any())
+                return StatusCode(StatusCodes.Status500InternalServerError, new { success = false, message = string.Join("\n", errors) });
 
             return Ok(new { success = true, message = "Đã trừ tồn.", updated });
         }

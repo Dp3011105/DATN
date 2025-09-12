@@ -9,6 +9,8 @@ namespace BE.Repository.IRepository
         Task<SanPham> GetByIdWithDetailsAsync(int id);
         Task<SanPhamDTO> CreateSanPhamAsync(SanPhamDTO sanPhamDTO, string imagePath);
         Task<SanPhamDTO> UpdateSanPhamAsync(int id, SanPhamDTO sanPhamDTO, string imagePath);
+        Task<bool> UpdateStockOnlyAsync(int sanPhamId, int newQty);
+
 
         Task<List<SanPham>?> GetTop10MostPurchasedProductsAsync();
 

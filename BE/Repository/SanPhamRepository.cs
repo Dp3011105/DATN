@@ -280,6 +280,15 @@ namespace BE.Repository
                 Toppings = sanPhamDTO.Toppings
             };
         }
+        public async Task<bool> UpdateStockOnlyAsync(int sanPhamId, int newQty)
+        {
+            var sp = new SanPham { ID_San_Pham = sanPhamId };
+            _context.Attach(sp);
+            sp.So_Luong = newQty;
+            _context.Entry(sp).Property(x => x.So_Luong).IsModified = true;
+            return await _context.SaveChangesAsync() > 0;
+        }
+
 
         public async Task<SanPhamDTO> UpdateSanPhamAsync(int id, SanPhamDTO sanPhamDTO, string imagePath)
         {

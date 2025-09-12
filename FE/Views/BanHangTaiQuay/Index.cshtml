@@ -8,7 +8,47 @@
 
     var jsonOpt = new JsonSerializerOptions { PropertyNamingPolicy = null, WriteIndented = false };
 
-    var productsJson = JsonSerializer.Serialize(ViewBag.Products ?? new List<SanPham>(), jsonOpt);
+    // ====== TÍNH KHUYẾN MÃI Ở SERVER, PROJECT RA JSON ======
+    var now = DateTime.Now;
+    var rawProducts = (ViewBag.Products as List<SanPham>) ?? new List<SanPham>();
+
+    var projectedProducts = rawProducts.Select(product =>
+    {
+        bool hasActivePromotion = false;
+        decimal basePrice = product.Gia ;
+        string promotionName = null;
+
+        if (product.KhuyenMais != null && product.KhuyenMais.Any())
+        {
+            foreach (var km in product.KhuyenMais)
+            {
+                if (now >= km.Ngay_Bat_Dau && now <= km.Ngay_Ket_Thuc)
+                {
+                    hasActivePromotion = true;
+                    // Lưu ý: Gia_Giam trong DB của bạn đang là GIÁ SAU KHUYẾN MÃI
+                    basePrice = km.Gia_Giam ?? (product.Gia );
+                    promotionName = km.Ten_Khuyen_Mai;
+                    break;
+                }
+            }
+        }
+
+        return new
+        {
+            product.ID_San_Pham,
+            product.Ten_San_Pham,
+          
+            product.Gia,
+            product.Hinh_Anh,
+            product.So_Luong,
+            product.KhuyenMais,
+            __HasPromo = hasActivePromotion,
+            __PriceAfterPromo = basePrice,
+            __PromoName = promotionName
+        };
+    }).ToList();
+
+    var productsJson = JsonSerializer.Serialize(projectedProducts, jsonOpt);
     var doNgotsJson = JsonSerializer.Serialize(ViewBag.DoNgots ?? new List<DoNgot>(), jsonOpt);
     var luongDasJson = JsonSerializer.Serialize(ViewBag.LuongDas ?? new List<LuongDa>(), jsonOpt);
     var toppingsJson = JsonSerializer.Serialize(ViewBag.Toppings ?? new List<Topping>(), jsonOpt);
@@ -36,7 +76,10 @@
         position: relative;
         overflow: hidden
     }
-    .product-card:hover { box-shadow: 0 2px 10px rgba(0,0,0,.08) }
+
+        .product-card:hover {
+            box-shadow: 0 2px 10px rgba(0,0,0,.08)
+        }
 
     .product-img {
         width: 100%;
@@ -60,7 +103,9 @@
         font-size: .8rem
     }
 
-    .money { font-weight: 600 }
+    .money {
+        font-weight: 600
+    }
 
     .promo-badge {
         position: absolute;
@@ -72,33 +117,99 @@
         padding: .25rem .5rem;
         border-radius: .5rem;
         max-width: 90%;
-        text-overflow: ellipsis; white-space: nowrap; overflow: hidden
+        text-overflow: ellipsis;
+        white-space: nowrap;
+        overflow: hidden
     }
 
-    .price-line { display: flex; gap: .5rem; align-items: baseline }
-    .old-price { color: #888; text-decoration: line-through; font-weight: 400 }
-    .off-tag { font-size: .75rem; border: 1px dashed #dc2626; color: #dc2626; border-radius: .5rem; padding: 0 .4rem }
+    .price-line {
+        display: flex;
+        gap: .5rem;
+        align-items: baseline
+    }
+
+    .old-price {
+        color: #888;
+        text-decoration: line-through;
+        font-weight: 400
+    }
+
+    .off-tag {
+        font-size: .75rem;
+        border: 1px dashed #dc2626;
+        color: #dc2626;
+        border-radius: .5rem;
+        padding: 0 .4rem
+    }
 
     .stock-badge {
-        position: absolute; top: 8px; right: 8px;
-        background: #111827; color: #fff; font-size: .75rem;
-        padding: .25rem .5rem; border-radius: .5rem; opacity: .9
+        position: absolute;
+        top: 8px;
+        right: 8px;
+        background: #111827;
+        color: #fff;
+        font-size: .75rem;
+        padding: .25rem .5rem;
+        border-radius: .5rem;
+        opacity: .9
     }
-    .out-of-stock { opacity: .5; pointer-events: none }
+
+    .out-of-stock {
+        opacity: .5;
+        pointer-events: none
+    }
 
     /* Invoice */
     .invoice {
         font-family: system-ui,-apple-system,Segoe UI,Roboto,'Helvetica Neue',Arial,'Noto Sans','Liberation Sans',sans-serif;
-        max-width: 780px; margin: 0 auto; color: #111827; font-size: 13px; background: #fff
+        max-width: 780px;
+        margin: 0 auto;
+        color: #111827;
+        font-size: 13px;
+        background: #fff
     }
-    .invoice h1,.invoice h2,.invoice h3{ margin:0 }
-    .invoice .muted { color:#6b7280 }
-    .invoice .row { display:flex; justify-content:space-between; gap:1rem }
-    .invoice table { width:100%; border-collapse:collapse }
-    .invoice th,.invoice td { border-bottom:1px dashed #e5e7eb; padding:.5rem .25rem; vertical-align:top }
-    .invoice .totals td { border:0; padding:.25rem 0 }
-    .invoice .money { font-weight:600 }
-    .invoice .badge { display:inline-block; border:1px solid #ddd; border-radius:8px; padding:.1rem .4rem; font-size:.75rem }
+
+        .invoice h1, .invoice h2, .invoice h3 {
+            margin: 0
+        }
+
+        .invoice .muted {
+            color: #6b7280
+        }
+
+        .invoice .row {
+            display: flex;
+            justify-content: space-between;
+            gap: 1rem
+        }
+
+        .invoice table {
+            width: 100%;
+            border-collapse: collapse
+        }
+
+        .invoice th, .invoice td {
+            border-bottom: 1px dashed #e5e7eb;
+            padding: .5rem .25rem;
+            vertical-align: top
+        }
+
+        .invoice .totals td {
+            border: 0;
+            padding: .25rem 0
+        }
+
+        .invoice .money {
+            font-weight: 600
+        }
+
+        .invoice .badge {
+            display: inline-block;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            padding: .1rem .4rem;
+            font-size: .75rem
+        }
 </style>
 
 <div class="container-fluid py-3">
@@ -107,8 +218,12 @@
     <div class="pos-wrap">
         <!-- LEFT -->
         <div>
-            <div class="d-flex gap-2 mb-2">
+            <div class="d-flex align-items-center gap-2 mb-2">
                 <input id="txtSearch" class="form-control" style="max-width:360px" placeholder="Tìm sản phẩm... (tên/mã)">
+                <label class="d-flex align-items-center gap-1 small">
+                    <input type="checkbox" id="chkOnlyPromo" class="form-check-input" onchange="searchProducts(1)">
+                    Chỉ hiển thị khuyến mãi
+                </label>
                 <button class="btn btn-secondary" onclick="searchProducts(1)">Tìm</button>
                 <button class="btn btn-outline-secondary" onclick="resetSearch()">Xoá</button>
             </div>
@@ -201,9 +316,7 @@
                 <input type="hidden" id="mdlIndex" />
                 <div class="mb-2">
                     <label class="form-label">Size</label>
-                    <div class="btn-group w-100" role="group" id="mdlSizes">
-                        <!-- sẽ render 3 nút: Cơ bản / Large / XL -->
-                    </div>
+                    <div class="btn-group w-100" role="group" id="mdlSizes"></div>
                 </div>
                 <div class="mb-2">
                     <label class="form-label">Độ ngọt</label>
@@ -337,96 +450,82 @@
       return 0;
     };
 
+    // ==== KM: ĐÃ TÍNH Ở SERVER; fallback nếu cần
     const CURRENT_DATE = new Date();
-    const promoListOf = p => {
-      const cands = [p?.KhuyenMais, p?.KhuyenMai, p?.DanhSachKhuyenMai, p?.dsKhuyenMai];
-      for (const x of cands) if (Array.isArray(x) && x.length) return x;
-      return [];
-    };
-    function parseD(v){
-      if (!v) return null;
-      if (v instanceof Date && !isNaN(+v)) return v;
-      const m = String(v).match(/\/Date\((\d+)\)\//);
-      if (m) { const d = new Date(Number(m[1])); return isNaN(+d) ? null : d; }
-      const m2 = String(v).match(/^(\d{1,2})[\/-](\d{1,2})[\/-](\d{4})(?:[ T](\d{1,2}):(\d{1,2})(?::(\d{1,2}))?)?$/);
-      if (m2){
-        const [_, dd, mm, yyyy, HH='0', MM='0', SS='0'] = m2;
-        const d = new Date(Number(yyyy), Number(mm)-1, Number(dd), Number(HH), Number(MM), Number(SS));
-        return isNaN(+d) ? null : d;
-      }
-      const iso = new Date(v);
-      return isNaN(+iso) ? null : iso;
-    }
-    function getActivePromotion(p, now = CURRENT_DATE) {
-      const list = promoListOf(p);
-      const origin = toNumber(p?.Gia ?? 0);
-      let result = { has:false, price:origin, name:null };
-      if (!list.length) return result;
-      let best = origin, bestName = null;
-      for (const km of list) {
-        const s = parseD(km?.Ngay_Bat_Dau);
-        const e = parseD(km?.Ngay_Ket_Thuc);
-        if (!s || !e) continue;
-        if (now >= s && now <= e) {
-          const promoPrice = toNumber(km?.Gia_Giam ?? origin); // ở DB bạn Gia_Giam là GIÁ SAU KM
-          if (promoPrice < best) { best = promoPrice; bestName = km?.Ten_Khuyen_Mai || "Khuyến mãi"; }
-        }
-      }
-      if (best < origin) return { has:true, price:best, name:bestName };
-      return result;
-    }
     const fmtVND = n => { try { return (toNumber(n)||0).toLocaleString('vi-VN',{style:'currency',currency:'VND'}) } catch { return n } };
+    const calcOffPct = (orig, promo) => {
+      const o = toNumber(orig), p = toNumber(promo);
+      if (!o || o <= 0 || !p || p >= o) return null;
+      const pct = Math.round((1 - (p / o)) * 100);
+      return pct>0 ? pct : null;
+    };
 
-    // ===== SOURCE
-    let SOURCE = (window.__DATA.products || []).map(p => {
-      const promo = getActivePromotion(p, CURRENT_DATE);
-      return {
-        ...p,
-        __Stock: pickStock(p),
-        __HasPromo: promo.has,
-        __PriceAfterPromo: Number.isFinite(promo.price) ? promo.price : toNumber(p?.Gia ?? 0),
-        __PromoName: promo.name || null
-      };
-    });
+    // ===== SOURCE & FILTERED
+    let SOURCE = (window.__DATA.products || []).map(p => ({
+      ...p,
+      __Stock: pickStock(p)
+    }));
     let FILTERED = SOURCE.slice();
 
-    // ===== OPTIONS
+    // ===== OPTIONS (global lists)
     const OPTIONS = {
       doNgots : window.__DATA.doNgots  || [],
       luongDas: window.__DATA.luongDas || [],
       toppings: window.__DATA.toppings || []
     };
 
-    // ===== CART
+    // ===== LẤY OPTION HỢP LỆ THEO SẢN PHẨM (cache)
+    const __ALLOWED_CACHE = {};
+    async function fetchAllowedOptions(productId){
+      if (__ALLOWED_CACHE[productId]) return __ALLOWED_CACHE[productId];
+      try{
+        const res = await fetch(`${BE_BASE}/api/SanPham/${productId}`);
+        if(!res.ok) throw new Error(await res.text());
+        const p = await res.json();
+        const allowed = {
+          sizeIds   : (p.sizes    || []).filter(x => x.trang_Thai).map(x => x.iD_Size),
+          doNgotIds : (p.doNgots  || []).filter(x => x.trang_Thai).map(x => x.iD_DoNgot),
+          luongDaIds: (p.luongDas || []).filter(x => x.trang_Thai).map(x => x.iD_LuongDa),
+          toppingIds: (p.toppings || []).filter(x => x.trang_Thai && (x.so_Luong??0)>0).map(x => x.iD_Topping),
+        };
+        if (!allowed.sizeIds.length) allowed.sizeIds = [1]; // luôn có size cơ bản
+        __ALLOWED_CACHE[productId] = allowed;
+        return allowed;
+      }catch(e){
+        console.warn('fetchAllowedOptions error', e);
+        return { sizeIds:[1], doNgotIds:[], luongDaIds:[], toppingIds:[] };
+      }
+    }
+
+    // ===== CART / VOUCHER
     let CART = [];
     let VOUCHER=null, DISCOUNT=0;
     let PAYABLE = 0;
-
     const cartQtyOf = productId => CART.filter(x=>x.sanPhamId==productId).reduce((s,x)=>s+x.soLuong,0);
 
-    const resetSearch = ()=>{ document.getElementById('txtSearch').value=''; searchProducts(1); };
+    const resetSearch = ()=>{ document.getElementById('txtSearch').value=''; const cb=document.getElementById('chkOnlyPromo'); if(cb) cb.checked=false; searchProducts(1); };
     const prevPage = ()=>{ if(PAGE>1) searchProducts(PAGE-1) };
     const nextPage = ()=>{ if(PAGE<Math.ceil(TOTAL/PAGE_SIZE)) searchProducts(PAGE+1) };
-
-    const calcOffPct = (orig, promo) => {
-      const o = toNumber(orig), p = toNumber(promo);
-      if (!o || o <= 0) return null;
-      if (!p || p >= o) return null;
-      const pct = Math.round((1 - (p / o)) * 100);
-      return pct>0 ? pct : null;
-    };
 
     function searchProducts(page){
       PAGE = page||1;
       const q = (document.getElementById('txtSearch').value||'').trim().toLowerCase();
+      const onlyPromo = document.getElementById('chkOnlyPromo')?.checked;
 
-      FILTERED = !q ? SOURCE.slice() :
-        SOURCE.filter(p =>
+      let list = SOURCE;
+      if (q) {
+        list = list.filter(p =>
           (p.Ten_San_Pham||'').toLowerCase().includes(q) ||
           ((p.Ma_San_Pham||('SP'+p.ID_San_Pham))).toLowerCase().includes(q)
         );
+      }
+      if (onlyPromo) {
+        list = list.filter(p => !!p.__HasPromo);
+      }
 
-      TOTAL = FILTERED.length;
+      TOTAL = list.length;
+      FILTERED = list.slice();
+
       const grid = document.getElementById('gridProducts');
       grid.innerHTML = '';
       const start=(PAGE-1)*PAGE_SIZE;
@@ -441,7 +540,7 @@
 
         const col = document.createElement('div'); col.className='col-6 col-md-4 col-lg-3';
         col.innerHTML = `
-          <div class="product-card ${disabled?'out-of-stock':''}" ${disabled?'':'data-id="'+p.ID_San_Pham+'" data-name="'+esc(p.Ten_San_Pham||'')+'"'}>
+          <div class="product-card ${disabled?'out-of-stock':''}" ${disabled?'':'data-id="'+p.ID_San_Pham+'" data-name="'+esc(p.Ten_San_Pham||'')+'"'} >
             ${p.__HasPromo ? `<div class="promo-badge" title="${esc(p.__PromoName||'')}">${esc(p.__PromoName||'Khuyến mãi')}</div>` : ``}
             <div class="stock-badge" title="Tồn kho">Tồn: ${p.__Stock ?? 0}</div>
             <img class="product-img" src="${img}" onerror="this.src='https://placehold.co/400x400?text=Drink';" />
@@ -476,17 +575,20 @@
 
     function basePriceAfterPromo(productId){
       const prod = SOURCE.find(x => x.ID_San_Pham == productId);
-      const promo = getActivePromotion(prod, CURRENT_DATE);
-      return Number.isFinite(promo.price) ? promo.price : toNumber(prod?.Gia ?? 0);
+      const price = (prod && prod.__PriceAfterPromo != null) ? toNumber(prod.__PriceAfterPromo) : toNumber(prod?.Gia ?? 0);
+      return price;
     }
 
-    // Thêm sản phẩm: mặc định size Cơ bản, tinh chỉnh size ở modal
-    function addToCart(id, name){
+    async function addToCart(id, name){
       const base = toNumber(basePriceAfterPromo(id));
       if(!ensureNotOverStock(id, 1)) return;
+
+      const allowed = await fetchAllowedOptions(id);
+      const defaultSize = allowed.sizeIds.length ? allowed.sizeIds[0] : 1;
+
       CART.push({
         sanPhamId:id, ten:name,
-        sizeId:1, sizeName: SIZE_META[1].name, sizeExtra: SIZE_META[1].extra,
+        sizeId: defaultSize, sizeName: (SIZE_META[defaultSize]?.name || 'Cơ bản'), sizeExtra: (SIZE_META[defaultSize]?.extra || 0),
         donGia: base, // sau KM (chưa size/topping)
         soLuong:1, doNgotId:null, luongDaId:null, toppingIds:[], tienTopping:0
       });
@@ -516,8 +618,8 @@
       renderCart();
     };
 
-    // Modal cấu hình (chọn size tại đây)
-    function openConfig(idx){
+    // Modal cấu hình
+    async function openConfig(idx){
       const it = CART[idx];
       document.getElementById('mdlIndex').value = idx;
       document.getElementById('mdlTitle').textContent = it.ten;
@@ -528,48 +630,66 @@
       const maxAllow = Math.max(1, stock - othersInCart);
       document.getElementById('mdlQtyHint').textContent = `Số lượng tối đa có thể chọn: ${maxAllow}`;
 
-      // Size buttons
+      const allowed = await fetchAllowedOptions(it.sanPhamId);
+
+      // Size buttons (chỉ allowed)
       const sizesWrap = document.getElementById('mdlSizes');
       sizesWrap.innerHTML = '';
-      [1,2,3].forEach(sid=>{
+      const sizeList = (allowed.sizeIds && allowed.sizeIds.length ? allowed.sizeIds : [1]);
+      sizeList.forEach(sid=>{
         const btn = document.createElement('button');
         btn.type="button";
         btn.className = `btn btn-outline-primary ${sid===it.sizeId?'active':''}`;
-        const label = `${SIZE_META[sid].name}${SIZE_META[sid].extra>0 ? ' +' + (SIZE_META[sid].extra/1000).toFixed(0) + 'k' : ''}`;
+        const label = `${SIZE_META[sid]?.name || ('Size '+sid)}${(SIZE_META[sid]?.extra||0)>0 ? ' +' + (SIZE_META[sid].extra/1000).toFixed(0) + 'k' : ''}`;
         btn.textContent = label;
         btn.dataset.sid = String(sid);
         btn.onclick = () => {
           sizesWrap.querySelectorAll('button').forEach(b=>b.classList.remove('active'));
           btn.classList.add('active');
-          calcModalMoney(); // cập nhật tiền size/tạm tính
+          calcModalMoney();
         };
         sizesWrap.appendChild(btn);
       });
 
-      // Độ ngọt / Lượng đá
+      // Độ ngọt theo allowed
       const selSweet = document.getElementById('mdlDoNgot');
-      selSweet.innerHTML = (OPTIONS.doNgots||[]).map(d=>`<option value="${d.ID_DoNgot}" ${it.doNgotId==d.ID_DoNgot?'selected':''}>${esc(d.Muc_Do)}</option>`).join('');
+      const dnSet = new Set(allowed.doNgotIds || []);
+      const dnList = (OPTIONS.doNgots||[]).filter(d => dnSet.size ? dnSet.has(d.ID_DoNgot) : false);
+      selSweet.innerHTML = dnList.length
+        ? dnList.map(d=>`<option value="${d.ID_DoNgot}" ${it.doNgotId==d.ID_DoNgot?'selected':''}>${esc(d.Muc_Do)}</option>`).join('')
+        : `<option value="">Không có độ ngọt</option>`;
 
+      // Lượng đá theo allowed
       const selIce = document.getElementById('mdlLuongDa');
-      selIce.innerHTML = (OPTIONS.luongDas||[]).map(d=>{
-        const label = d.Ten_LuongDa || d.Muc_Da || '';
-        return `<option value="${d.ID_LuongDa}" ${it.luongDaId==d.ID_LuongDa?'selected':''}>${esc(label)}</option>`;
-      }).join('');
+      const ldSet = new Set(allowed.luongDaIds || []);
+      const ldList = (OPTIONS.luongDas||[]).filter(d => ldSet.size ? ldSet.has(d.ID_LuongDa) : false);
+      selIce.innerHTML = ldList.length
+        ? ldList.map(d=>{
+            const label = d.Ten_LuongDa || d.Muc_Da || '';
+            return `<option value="${d.ID_LuongDa}" ${it.luongDaId==d.ID_LuongDa?'selected':''}>${esc(label)}</option>`;
+          }).join('')
+        : `<option value="">Không có lượng đá</option>`;
 
-      // Topping
+      // Topping theo allowed
       const topWrap = document.getElementById('mdlToppings');
       topWrap.innerHTML = '';
-      (OPTIONS.toppings||[]).forEach(t=>{
-        const gia = toNumber(t.Gia ?? t.Gia_Topping ?? 0);
-        const name= t.Ten ?? t.Ten_Topping ?? '';
-        const div = document.createElement('div');
-        div.innerHTML = `
-          <label class="chip">
-            <input type="checkbox" class="form-check-input me-1" value="${t.ID_Topping}" data-price="${gia}" ${it.toppingIds.includes(t.ID_Topping)?'checked':''}>
-            ${esc(name)} (+${fmtVND(gia)})
-          </label>`;
-        topWrap.appendChild(div);
-      });
+      const topSet = new Set(allowed.toppingIds || []);
+      const tops = (OPTIONS.toppings||[]).filter(t => topSet.size ? topSet.has(t.ID_Topping) : false);
+      if (!tops.length) {
+        topWrap.innerHTML = `<div class="text-muted">Không có topping</div>`;
+      } else {
+        tops.forEach(t=>{
+          const gia = toNumber(t.Gia ?? t.Gia_Topping ?? 0);
+          const name= t.Ten ?? t.Ten_Topping ?? '';
+          const div = document.createElement('div');
+          div.innerHTML = `
+            <label class="chip">
+              <input type="checkbox" class="form-check-input me-1" value="${t.ID_Topping}" data-price="${gia}" ${it.toppingIds.includes(t.ID_Topping)?'checked':''}>
+              ${esc(name)} (+${fmtVND(gia)})
+            </label>`;
+          topWrap.appendChild(div);
+        });
+      }
 
       document.getElementById('mdlQty').value = it.soLuong;
       calcModalMoney();
@@ -716,7 +836,7 @@
       recalcTotals();
     }
 
-       function recalcTotals(){
+    function recalcTotals(){
       const tam = CART.reduce((s,it)=> s + (it.donGia + it.sizeExtra + it.tienTopping)*it.soLuong, 0);
 
       let giam = 0;
@@ -725,7 +845,7 @@
           const pct = Number(VOUCHER.pct) || 0;
           giam = tam * (pct / 100);
         } else if (VOUCHER.type === 'fixed') {
-          giam = Number(VOUCHER.amount) || 0; // phòng trường hợp có loại giảm cố định sau này
+          giam = Number(VOUCHER.amount) || 0;
         }
 
         // điều kiện tối thiểu (nếu có)
@@ -748,7 +868,8 @@
       document.getElementById('lblThanhToan').textContent = fmtVND(pay);
     }
 
-        async function applyVoucher(){
+    // ==== Voucher
+    async function applyVoucher(){
       const code = (document.getElementById('txtVoucher').value||'').trim();
       const msg  = document.getElementById('voucherMsg');
 
@@ -771,14 +892,13 @@
         const text = await res.text();
         let data; try { data = JSON.parse(text) } catch { data = {}; }
 
-        // Hỗ trợ camelCase/PascalCase
         const success    = data.Success    ?? data.success;
         const message    = data.Message    ?? data.message;
         const discount   = Number(data.Discount ?? data.discount) || 0;
         const voucherId  = data.VoucherId  ?? data.voucherId ?? data.id_Voucher ?? data.ID_Voucher ?? 0;
         const codeReturn = data.Code       ?? data.code      ?? data.ma_Voucher ?? data.Ma_Voucher ?? code;
-        const pct        = Number(data.Percentage ?? data.percentage) || 0;
-        const minOrder   = Number(data.MinOrder   ?? data.minOrder)   || 0;
+        let pct          = Number(data.Percentage ?? data.percentage ?? data.Phan_Tram_Giam) || 0;
+        const minOrder   = Number(data.MinOrder   ?? data.minOrder ?? data.Yeu_Cau_Toi_Thieu) || 0;
 
         if(!res.ok || !success){
           VOUCHER=null; DISCOUNT=0;
@@ -787,9 +907,12 @@
           return;
         }
 
-        // Lưu meta để tính động mỗi lần tổng thay đổi
+        if (!pct && tam > 0) {
+          pct = Math.round((discount / tam) * 100); // ước lượng % nếu BE chỉ trả số tiền
+        }
+
         VOUCHER = { id: voucherId, code: codeReturn, pct, minOrder, type:'percent' };
-        DISCOUNT = discount; // hiển thị tức thời, recalcTotals sẽ tính lại theo %.
+        DISCOUNT = discount; // hiển thị tức thời, recalcTotals sẽ tính lại theo %
         msg.textContent = `${message || 'Áp dụng voucher thành công.'} Giảm ${fmtVND(DISCOUNT)}.`;
         recalcTotals();
 
@@ -799,7 +922,6 @@
         recalcTotals();
       }
     }
-
 
     const clearCart = ()=>{ CART=[]; VOUCHER=null; DISCOUNT=0; document.getElementById('txtVoucher').value=''; document.getElementById('voucherMsg').textContent=''; renderCart(); };
 
@@ -922,7 +1044,7 @@
       await reallyCreateHoaDon();
     }
 
-     async function reallyCreateHoaDon(){
+    async function reallyCreateHoaDon(){
       const btn = document.getElementById('btnCreate');
       btn.disabled = true;
 
@@ -937,7 +1059,7 @@
         return;
       }
 
-      // --- chỉnh ở đây: gom SĐT vào GhiChu ---
+      // Gộp SĐT vào ghi chú
       const phoneRaw = (document.getElementById('txtPhone').value || '').trim();
       const noteRaw  = (document.getElementById('txtNote').value  || '').trim();
       const noteCombined = phoneRaw ? `[SDT: ${phoneRaw}] ${noteRaw}` : noteRaw;
@@ -945,11 +1067,11 @@
       const payload = {
         HinhThucThanhToanId: parseInt(document.getElementById('selPay').value,10) || 1,
         LoaiHoaDon: loai,
-        KhachHang_SDT: null,  // model BE không có SĐT nên để null
-        GhiChu: noteCombined, // nếu nhập SĐT thì sẽ nằm ở đây
+        KhachHang_SDT: null,
+        GhiChu: noteCombined,
         VoucherId: VOUCHER?.id || null,
         VoucherCode: VOUCHER?.code || (document.getElementById('txtVoucher').value || '').trim() || null,
-        TongTien: tam,   // server sẽ tính lại
+        TongTien: tam,
         TienGiam: giam,
         DiaChiTuNhap: loai === 'GiaoHang' ? shipAddr : null,
         Items: CART.map(it=>({
@@ -958,8 +1080,8 @@
           DonGia: it.donGia,
           DoNgotId: it.doNgotId,
           LuongDaId: it.luongDaId,
-          ToppingIds: it.toppingIds,
-          SizeId: it.sizeId
+          SizeId: it.sizeId,
+          ToppingIds: it.toppingIds
         }))
       };
 
@@ -978,14 +1100,14 @@
           return;
         }
 
-        // Hiển thị hoá đơn
+        // Preview
         const inv = {
           ID: data.id || null, Code: data.code || null, NgayLap: new Date(),
-          KhachHang_SDT: null,              // bỏ hẳn vì model không có
+          KhachHang_SDT: null,
           LoaiHoaDon: payload.LoaiHoaDon,
           DiaChi: payload.DiaChiTuNhap,
           HinhThucThanhToanId: payload.HinhThucThanhToanId,
-          GhiChu: payload.GhiChu,           // ghi chú đã bao gồm SĐT nếu có
+          GhiChu: payload.GhiChu,
           VoucherCode: (VOUCHER?.code || null),
           Tong: tam, Giam: giam, ThanhToan: tam - giam,
           Items: CART.map(it=>({
@@ -1000,19 +1122,17 @@
           }))
         };
 
-        // Trừ tồn UI
+        // Trừ tồn & refresh
         CART.forEach(it=>{
           const prod = SOURCE.find(p=>p.ID_San_Pham==it.sanPhamId);
           if (prod) { prod.__Stock = Math.max(0, (prod.__Stock||0) - it.soLuong); }
         });
         searchProducts(PAGE);
 
-        // Clear
         clearCart();
         const addr = document.getElementById('txtShipAddress'); if (addr) addr.value='';
         onLoaiChange();
 
-        // In
         openPrintModal(inv);
 
       }catch(e){
@@ -1021,7 +1141,6 @@
         btn.disabled = false;
       }
     }
-
 
     window.addEventListener('DOMContentLoaded', ()=>{
       searchProducts(1);
