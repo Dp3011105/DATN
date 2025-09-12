@@ -53,15 +53,15 @@
                             </div>
 
                             <div class="col-md-6">
-                                <!-- SỬA: Yêu cầu tối thiểu không giới hạn, cho phép số thập phân -->
+                                <!-- SỬA: Yêu cầu tối thiểu giới hạn 999999999, mặc định 0, không thể xóa số 0 -->
                                 <div class="mb-3">
                                     <label asp-for="So_Tien_Dat_Yeu_Cau" class="form-label">Yêu Cầu Tối Thiểu (VNĐ)</label>
                                     <div class="input-group">
-                                        <input asp-for="So_Tien_Dat_Yeu_Cau" class="form-control" type="number" min="0" step="0.01" />
+                                        <input asp-for="So_Tien_Dat_Yeu_Cau" class="form-control" type="number" min="0" max="999999999" step="1" id="soTienInput" />
                                         <span class="input-group-text">VNĐ</span>
                                     </div>
                                     <span asp-validation-for="So_Tien_Dat_Yeu_Cau" class="text-danger"></span>
-                                    <div class="form-text">Số tiền đơn hàng tối thiểu để sử dụng voucher (để trống hoặc 0 nếu không có yêu cầu)</div>
+                                    <div class="form-text">Số tiền đơn hàng tối thiểu để sử dụng voucher (tối đa 999,999,999 VNĐ)</div>
                                 </div>
 
                                 <div class="mb-3">
@@ -144,6 +144,74 @@
                 endDateInput.val(formatDateTimeLocal(endDate));
             }
         }
+
+        // THÊM: Xử lý input số tiền yêu cầu tối thiểu
+        const soTienInput = $('#soTienInput');
+
+        // Đặt giá trị mặc định là 0 nếu input trống hoặc không hợp lệ
+        if (!soTienInput.val() || soTienInput.val() === '' || isNaN(soTienInput.val()) || parseFloat(soTienInput.val()) < 0) {
+            soTienInput.val('0');
+        }
+
+        // Xử lý khi blur (rời khỏi input)
+        soTienInput.on('blur', function() {
+            let value = $(this).val();
+
+            // Nếu trống hoặc không hợp lệ, đặt về 0
+            if (!value || value === '' || isNaN(value) || parseFloat(value) < 0) {
+                $(this).val('0');
+            }
+            // Nếu vượt quá giới hạn, đặt về giá trị tối đa
+            else if (parseFloat(value) > 999999999) {
+                $(this).val('999999999');
+            }
+            // Nếu là số thập phân, làm tròn thành số nguyên
+            else if (value.includes('.')) {
+                $(this).val(Math.floor(parseFloat(value)));
+            }
+        });
+
+        // Xử lý khi nhập (không cho xóa số 0 đầu tiên)
+        soTienInput.on('input', function() {
+            let value = $(this).val();
+
+            // Nếu người dùng xóa hết và để trống, tự động đặt về 0
+            if (!value || value === '') {
+                $(this).val('0');
+                // Đặt con trô chuột về cuối
+                setTimeout(() => {
+                    this.setSelectionRange(1, 1);
+                }, 0);
+            }
+            // Nếu giá trị bắt đầu bằng 0 và có ký tự khác theo sau (như 01, 02...)
+            else if (value.length > 1 && value.charAt(0) === '0' && value.charAt(1) !== '.') {
+                // Loại bỏ số 0 đầu
+                $(this).val(value.substring(1));
+            }
+        });
+
+        // Xử lý khi keydown (ngăn không cho xóa số 0 khi chỉ có 1 ký tự)
+        soTienInput.on('keydown', function(e) {
+            let value = $(this).val();
+            let selectionStart = this.selectionStart;
+            let selectionEnd = this.selectionEnd;
+
+            // Nếu đang cố gắng xóa và chỉ còn '0'
+            if ((e.key === 'Backspace' || e.key === 'Delete') && value === '0') {
+                e.preventDefault();
+                return false;
+            }
+
+            // Nếu đang cố gắng xóa tất cả nội dung bằng cách select all + delete
+            if ((e.key === 'Backspace' || e.key === 'Delete') && selectionStart === 0 && selectionEnd === value.length) {
+                e.preventDefault();
+                $(this).val('0');
+                setTimeout(() => {
+                    this.setSelectionRange(1, 1);
+                }, 0);
+                return false;
+            }
+        });
     });
 
     function formatDateTimeLocal(date) {
@@ -161,11 +229,19 @@
         const startDate = new Date($('#Ngay_Bat_Dau').val());
         const endDate = new Date($('#Ngay_Ket_Thuc').val());
         const giaTriGiam = parseFloat($('#Gia_Tri_Giam').val());
+        const soTienYeuCau = parseFloat($('#soTienInput').val());
 
         // SỬA: Validate phần trăm giảm từ 1-50%
         if (giaTriGiam && (giaTriGiam < 1 || giaTriGiam > 50)) {
             e.preventDefault();
             alert('Phần trăm giảm phải từ 1% đến 50%!');
+            return false;
+        }
+
+        // THÊM: Validate số tiền yêu cầu tối thiểu
+        if (soTienYeuCau > 999999999) {
+            e.preventDefault();
+            alert('Số tiền yêu cầu tối thiểu không được vượt quá 999,999,999 VNĐ!');
             return false;
         }
 
