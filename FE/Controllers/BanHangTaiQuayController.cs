@@ -27,7 +27,7 @@ namespace FE.Controllers
 
         // ⚠️ Endpoint này ở BE hiện có khả năng làm mất dữ liệu chi tiết -> tạm tắt bằng flag
         private const string AdjustStockEndpoint = "/api/SanPham/tru-ton";
-        private const bool CALL_ADJUST_STOCK_AFTER_CREATE = false; // => đổi true khi BE đã sửa
+        private const bool CALL_ADJUST_STOCK_AFTER_CREATE = true; // => đổi true khi BE đã sửa
 
         // Voucher BE routes
         private const string VoucherByCodeRoute = "/api/Voucher/code/{code}";
