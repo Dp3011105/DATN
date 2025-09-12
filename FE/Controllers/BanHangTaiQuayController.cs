@@ -10,7 +10,7 @@ using System.Text.RegularExpressions;
 
 namespace FE.Controllers
 {
-    [RoleAuthorize(2, 3)] // Trang cho phép cả vai trò 2 và 3// Phương thức này đươc để trong thư mục Filters nhé ae
+    [RoleAuthorize(2, 3)]
     [AutoValidateAntiforgeryToken]
     public class BanHangTaiQuayController : Controller
     {
@@ -25,7 +25,9 @@ namespace FE.Controllers
             "/api/hoa-don/create"
         };
 
+        // ⚠️ Endpoint này ở BE hiện có khả năng làm mất dữ liệu chi tiết -> tạm tắt bằng flag
         private const string AdjustStockEndpoint = "/api/SanPham/tru-ton";
+        private const bool CALL_ADJUST_STOCK_AFTER_CREATE = false; // => đổi true khi BE đã sửa
 
         // Voucher BE routes
         private const string VoucherByCodeRoute = "/api/Voucher/code/{code}";
@@ -161,7 +163,6 @@ namespace FE.Controllers
             public decimal Percentage { get; set; } // % giảm thực tế
         }
 
-        // ====== CHECK VOUCHER (theo JSON thực tế BE) ======
         [HttpPost]
         [Produces("application/json")]
         public async Task<IActionResult> CheckVoucher([FromBody] CheckVoucherRequest req)
@@ -212,7 +213,6 @@ namespace FE.Controllers
                     : (root.TryGetProperty("ID_Voucher", out var pId2) && pId2.TryGetInt32(out var id2)) ? id2
                     : (int?)null;
 
-                // Trang_Thai: nhận bool true/false hoặc number 1/0
                 bool trangThai =
                     (root.TryGetProperty("trang_Thai", out var pSt1) && (
                         pSt1.ValueKind == JsonValueKind.True ||
@@ -301,7 +301,6 @@ namespace FE.Controllers
                 var prodMap = allProducts.ToDictionary(p => p.ID_San_Pham, p => p);
                 var toppingMap = toppingsAll.ToDictionary(t => t.ID_Topping, t => t);
 
-                // --- Validate tồn + tính tiền ---
                 var utcNow = DateTime.UtcNow;
                 var overList = new List<string>();
                 decimal tamTinh = 0m;
@@ -319,6 +318,15 @@ namespace FE.Controllers
                         continue;
                     }
 
+                    // ===== GỌI CHI TIẾT SẢN PHẨM TỪ BE ĐỂ LỌC OPTION HỢP LỆ =====
+                    var allowed = await GetAllowedOptionsFromSanPhamApi(it.SanPhamId);
+
+                    var sizeId = (it.SizeId.HasValue && allowed.SizeIds.Contains(it.SizeId.Value)) ? it.SizeId.Value : 1;
+                    var doNgotId = (it.DoNgotId.HasValue && allowed.DoNgotIds.Contains(it.DoNgotId.Value)) ? it.DoNgotId.Value : DEFAULT_DONNGOT_ID;
+                    var luongDaId = (it.LuongDaId.HasValue && allowed.LuongDaIds.Contains(it.LuongDaId.Value)) ? it.LuongDaId.Value : DEFAULT_LUONGDA_ID;
+
+                    var topIds = (it.ToppingIds ?? new List<int>()).Distinct().Where(id => allowed.ToppingIds.Contains(id)).ToList();
+
                     var sl = it.SoLuong <= 0 ? 1 : it.SoLuong;
 
                     // Check tồn
@@ -329,13 +337,10 @@ namespace FE.Controllers
                     // Giá sau KM
                     var giaSauKm = CalcPriceAfterPromo(sp, utcNow);
 
-                    // Size
-                    var sizeId = it.SizeId ?? 1;
+                    // Size + Topping
                     var sizeExtra = SIZE_META.TryGetValue(sizeId, out var meta) ? meta.extra : 0m;
 
-                    // Topping
                     decimal tienTopOne = 0m;
-                    var topIds = (it.ToppingIds ?? new List<int>()).Distinct().ToList();
                     var topPayload = new List<object>();
                     foreach (var tid in topIds)
                     {
@@ -353,14 +358,14 @@ namespace FE.Controllers
                     // Mã chi tiết duy nhất
                     var maCt = NewChiTietCode(lineNo);
 
-                    // Build chi tiết cho BE
+                    // Build chi tiết cho BE — KHỚP EXACT tên trường của BE
                     chiTietList.Add(new
                     {
                         ID_HoaDon_ChiTiet = 0,
                         ID_San_Pham = it.SanPhamId,
                         ID_Size = sizeId,
-                        ID_SanPham_DoNgot = it.DoNgotId ?? DEFAULT_DONNGOT_ID,
-                        ID_LuongDa = it.LuongDaId ?? DEFAULT_LUONGDA_ID,
+                        ID_SanPham_DoNgot = doNgotId,
+                        ID_LuongDa = luongDaId,
 
                         Ma_HoaDon_ChiTiet = maCt,
 
@@ -385,7 +390,6 @@ namespace FE.Controllers
                 var allow = new HashSet<string>(StringComparer.OrdinalIgnoreCase) { "TaiQuay", "Online", "GiaoHang" };
                 if (!allow.Contains(loai)) loai = "TaiQuay";
 
-                // ÉP ĐỊA CHỈ KHI TẠI QUẦY
                 string diaChiForBE = loai.Equals("TaiQuay", StringComparison.OrdinalIgnoreCase)
                     ? "Tại quầy"
                     : (req.DiaChiTuNhap ?? "");
@@ -471,34 +475,37 @@ namespace FE.Controllers
                 }
                 catch { /* ignore */ }
 
-                // Trừ tồn sau khi tạo HĐ (nếu BE chưa gom transaction)
-                try
+                // ===== Trừ tồn kho — tắt mặc định để tránh mất dữ liệu do BE =====
+                if (CALL_ADJUST_STOCK_AFTER_CREATE)
                 {
-                    var adjustBody = req.Items.Select(it => new { ID_San_Pham = it.SanPhamId, SoLuongTru = Math.Max(1, it.SoLuong) }).ToList();
-                    var stockResp = await http.PostAsJsonAsync(AdjustStockEndpoint, adjustBody);
-                    if (!stockResp.IsSuccessStatusCode)
+                    try
                     {
-                        var stockText = await stockResp.Content.ReadAsStringAsync();
+                        var adjustBody = req.Items.Select(it => new { ID_San_Pham = it.SanPhamId, SoLuongTru = Math.Max(1, it.SoLuong) }).ToList();
+                        var stockResp = await http.PostAsJsonAsync(AdjustStockEndpoint, adjustBody);
+                        if (!stockResp.IsSuccessStatusCode)
+                        {
+                            var stockText = await stockResp.Content.ReadAsStringAsync();
+                            return Json(new
+                            {
+                                success = true,
+                                message = "Tạo hoá đơn thành công, nhưng trừ tồn kho thất bại (khuyến nghị gộp transaction ở BE).",
+                                be = new { endpoint = usedEndpoint, status = (int)resp.StatusCode },
+                                adjust = new { status = (int)stockResp.StatusCode, body = stockText },
+                                id = returnedId,
+                                code = returnedCode
+                            });
+                        }
+                    }
+                    catch (Exception exAdj)
+                    {
                         return Json(new
                         {
                             success = true,
-                            message = "Tạo hoá đơn thành công, nhưng trừ tồn kho thất bại (nên gộp transaction ở BE).",
-                            be = new { endpoint = usedEndpoint, status = (int)resp.StatusCode },
-                            adjust = new { status = (int)stockResp.StatusCode, body = stockText },
+                            message = "Tạo hoá đơn thành công, nhưng lỗi khi trừ tồn kho (khuyến nghị gộp transaction ở BE): " + exAdj.Message,
                             id = returnedId,
                             code = returnedCode
                         });
                     }
-                }
-                catch (Exception exAdj)
-                {
-                    return Json(new
-                    {
-                        success = true,
-                        message = "Tạo hoá đơn thành công, nhưng gặp lỗi khi trừ tồn kho (nên gộp transaction ở BE): " + exAdj.Message,
-                        id = returnedId,
-                        code = returnedCode
-                    });
                 }
 
                 // ==== Giảm So_Luong voucher (-1) nếu có áp dụng ====
@@ -508,14 +515,12 @@ namespace FE.Controllers
                     {
                         HttpResponseMessage? consumeResp = null;
 
-                        // 1) Ưu tiên theo ID (nếu có)
                         if (req.VoucherId.HasValue)
                         {
                             var urlById = $"/api/Voucher/consume/{req.VoucherId.Value}?qty=1";
                             consumeResp = await http.PostAsync(urlById, null);
                         }
 
-                        // 2) Fallback theo CODE (nếu chưa thành công hoặc không có ID)
                         if ((consumeResp == null || !consumeResp.IsSuccessStatusCode) &&
                             !string.IsNullOrWhiteSpace(req.VoucherCode))
                         {
@@ -523,14 +528,13 @@ namespace FE.Controllers
                             consumeResp = await http.PostAsync(urlByCode, null);
                         }
 
-                        // 3) Nếu vẫn lỗi → trả thông tin để bạn thấy ngay trong FE
                         if (consumeResp == null || !consumeResp.IsSuccessStatusCode)
                         {
                             var tx = consumeResp != null ? await consumeResp.Content.ReadAsStringAsync() : "no-response";
                             return Json(new
                             {
                                 success = true,
-                                message = "Tạo hoá đơn & trừ tồn OK, nhưng trừ So_Luong voucher thất bại.",
+                                message = "Tạo hoá đơn OK, nhưng trừ So_Luong voucher thất bại.",
                                 id = returnedId,
                                 code = returnedCode,
                                 voucher_consume_status = consumeResp != null ? (int)consumeResp.StatusCode : 0,
@@ -543,7 +547,7 @@ namespace FE.Controllers
                         return Json(new
                         {
                             success = true,
-                            message = "Tạo hoá đơn & trừ tồn OK, nhưng lỗi khi gọi consume voucher.",
+                            message = "Tạo hoá đơn OK, nhưng lỗi khi gọi consume voucher.",
                             id = returnedId,
                             code = returnedCode,
                             voucher_consume_error = exV.Message
@@ -554,7 +558,7 @@ namespace FE.Controllers
                 return Json(new
                 {
                     success = true,
-                    message = "Tạo hoá đơn & trừ tồn (và trừ voucher nếu có) thành công.",
+                    message = "Tạo hoá đơn thành công.",
                     id = returnedId,
                     code = returnedCode
                 });
@@ -573,7 +577,8 @@ namespace FE.Controllers
                     return Json(new { success = false, message = "Thiếu dữ liệu trừ tồn." });
 
                 using var http = new HttpClient { BaseAddress = new Uri(BeBaseUrl), Timeout = TimeSpan.FromSeconds(15) };
-                var resp = await http.PostAsJsonAsync(AdjustStockEndpoint, rows.Select(r => new { ID_San_Pham = r.ID_San_Pham, SoLuongTru = r.SoLuongTru }));
+                var resp = await http.PostAsJsonAsync(AdjustStockEndpoint,
+                    rows.Select(r => new { ID_San_Pham = r.ID_San_Pham, SoLuongTru = r.SoLuongTru }));
                 var tx = await resp.Content.ReadAsStringAsync();
                 if (!resp.IsSuccessStatusCode) return Json(new { success = false, message = $"BE {(int)resp.StatusCode}: {tx}" });
                 return Json(new { success = true });
@@ -614,6 +619,91 @@ namespace FE.Controllers
         {
             public int ID_San_Pham { get; set; }
             public int SoLuongTru { get; set; }
+        }
+
+        // ==================== LẤY OPTION HỢP LỆ TỪ BE =====================
+        private class ProductOptionsDTO
+        {
+            public List<int> SizeIds { get; set; } = new() { 1, 2, 3 };
+            public List<int> DoNgotIds { get; set; } = new();
+            public List<int> LuongDaIds { get; set; } = new();
+            public List<int> ToppingIds { get; set; } = new();
+        }
+
+        private async Task<ProductOptionsDTO> GetAllowedOptionsFromSanPhamApi(int productId)
+        {
+            var dto = new ProductOptionsDTO();
+            try
+            {
+                using var http = new HttpClient { BaseAddress = new Uri(BeBaseUrl), Timeout = TimeSpan.FromSeconds(10) };
+                var res = await http.GetAsync($"/api/SanPham/{productId}");
+                if (!res.IsSuccessStatusCode) return dto;
+
+                var json = await res.Content.ReadAsStringAsync();
+                using var doc = JsonDocument.Parse(json);
+                var root = doc.RootElement;
+
+                // sizes
+                if (root.TryGetProperty("sizes", out var sizes) && sizes.ValueKind == JsonValueKind.Array)
+                {
+                    var lst = new List<int>();
+                    foreach (var el in sizes.EnumerateArray())
+                    {
+                        var active = el.TryGetProperty("trang_Thai", out var st) ? st.GetBoolean() :
+                                     el.TryGetProperty("Trang_Thai", out var st2) ? st2.GetBoolean() : true;
+                        if (!active) continue;
+                        if (el.TryGetProperty("iD_Size", out var id) && id.TryGetInt32(out var v)) lst.Add(v);
+                    }
+                    if (lst.Count > 0) dto.SizeIds = lst.Distinct().ToList();
+                }
+
+                // doNgots
+                if (root.TryGetProperty("doNgots", out var dng) && dng.ValueKind == JsonValueKind.Array)
+                {
+                    foreach (var el in dng.EnumerateArray())
+                    {
+                        var active = el.TryGetProperty("trang_Thai", out var st) ? st.GetBoolean() :
+                                     el.TryGetProperty("Trang_Thai", out var st2) ? st2.GetBoolean() : true;
+                        if (!active) continue;
+                        if (el.TryGetProperty("iD_DoNgot", out var id) && id.TryGetInt32(out var v)) dto.DoNgotIds.Add(v);
+                    }
+                    dto.DoNgotIds = dto.DoNgotIds.Distinct().ToList();
+                }
+
+                // luongDas
+                if (root.TryGetProperty("luongDas", out var lda) && lda.ValueKind == JsonValueKind.Array)
+                {
+                    foreach (var el in lda.EnumerateArray())
+                    {
+                        var active = el.TryGetProperty("trang_Thai", out var st) ? st.GetBoolean() :
+                                     el.TryGetProperty("Trang_Thai", out var st2) ? st2.GetBoolean() : true;
+                        if (!active) continue;
+                        if (el.TryGetProperty("iD_LuongDa", out var id) && id.TryGetInt32(out var v)) dto.LuongDaIds.Add(v);
+                    }
+                    dto.LuongDaIds = dto.LuongDaIds.Distinct().ToList();
+                }
+
+                // toppings
+                if (root.TryGetProperty("toppings", out var tops) && tops.ValueKind == JsonValueKind.Array)
+                {
+                    foreach (var el in tops.EnumerateArray())
+                    {
+                        var active = el.TryGetProperty("trang_Thai", out var st) ? st.GetBoolean() :
+                                     el.TryGetProperty("Trang_Thai", out var st2) ? st2.GetBoolean() : true;
+                        if (!active) continue;
+
+                        // phải còn hàng
+                        if (el.TryGetProperty("so_Luong", out var sl) && sl.ValueKind == JsonValueKind.Number && sl.GetInt32() <= 0)
+                            continue;
+
+                        if (el.TryGetProperty("iD_Topping", out var id) && id.TryGetInt32(out var v)) dto.ToppingIds.Add(v);
+                    }
+                    dto.ToppingIds = dto.ToppingIds.Distinct().ToList();
+                }
+            }
+            catch { /* dùng default */ }
+
+            return dto;
         }
     }
 }
