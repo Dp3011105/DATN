@@ -225,6 +225,38 @@ namespace FE.Controllers
 
 
 
+        [HttpGet("checkouttk/vnpaydone")]
+        public IActionResult VnpayDone(string orderId, string transactionId, bool success, string code)
+        {
+            var model = new PaymentResultViewModel
+            {
+                OrderId = orderId,
+                TransactionId = transactionId,
+                Success = success,
+                VnPayResponseCode = code
+            };
+
+            return View(model);
+        }
+
+
+
+
     }
+
+
+
+    public class PaymentResultViewModel
+    {
+        public string OrderId { get; set; }
+        public string TransactionId { get; set; }
+        public bool Success { get; set; }
+        public string VnPayResponseCode { get; set; }
+        public string Message { get; set; } // thêm trường mô tả trạng thái
+
+    }
+
+
+
 }
 

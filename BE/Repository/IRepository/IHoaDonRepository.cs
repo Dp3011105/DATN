@@ -31,5 +31,11 @@
             string lyDoHuy,
             IEnumerable<(int chiTietId, int quantity)> selections
         );
+
+
+        // VNPAY THỰC HIỆN ĐỔI TRẠNG THÁI HÓA ĐƠN 
+
+        Task<HoaDon?> GetByMaHoaDonAsync(string maHoaDon);
+        Task UpdateAsync(HoaDon hoaDon, string? vnPayResponseCode = null);
     }
 }

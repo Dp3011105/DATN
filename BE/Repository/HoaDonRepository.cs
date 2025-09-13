@@ -392,7 +392,7 @@
        int hoaDonId,
        string lyDoHuy,
        IEnumerable<(int chiTietId, int quantity)> selections
-   )
+         )
         {
             using var tx = await _context.Database.BeginTransactionAsync();
 
@@ -504,6 +504,65 @@
             return true;
         }
 
+
+
+        // thay đổi trạng thái theo VNPAY (đã thanh toán thành công, chờ xác nhận)
+        public async Task<HoaDon?> GetByMaHoaDonAsync(string maHoaDon)
+        {
+            return await _context.Hoa_Don.FirstOrDefaultAsync(x => x.Ma_Hoa_Don == maHoaDon);
+        }
+
+        //public async Task UpdateAsync(HoaDon hoaDon)
+        //{
+        //    _context.Hoa_Don.Update(hoaDon);
+        //    await _context.SaveChangesAsync();
+        //}
+
+
+
+        public async Task UpdateAsync(HoaDon hoaDon, string? vnPayResponseCode = null)
+        {
+            using var tx = await _context.Database.BeginTransactionAsync();
+
+            // Load đầy đủ dữ liệu liên quan để xử lý voucher
+            var hd = await _context.Hoa_Don
+                .Include(h => h.KhachHang)
+                .ThenInclude(kh => kh.KhachHangVouchers)
+                .Include(h => h.HoaDonVouchers)
+                .ThenInclude(hdv => hdv.Voucher)
+                .FirstOrDefaultAsync(h => h.ID_Hoa_Don == hoaDon.ID_Hoa_Don);
+
+            if (hd == null) return;
+
+            if (!string.IsNullOrEmpty(vnPayResponseCode) && vnPayResponseCode == "00")
+            {
+                // ✅ Giao dịch thành công
+                hd.Trang_Thai = "Chua_Xac_Nhan";
+            }
+            else
+            {
+                // ❌ Giao dịch thất bại hoặc bị hủy
+                hd.Trang_Thai = "Huy_Don";
+                hd.LyDoHuyDon = "Hủy Thanh Toán VNPAY";
+
+                // Hoàn trả voucher nếu có
+                if (hd.HoaDonVouchers != null && hd.HoaDonVouchers.Any())
+                {
+                    var khachHangVoucher = hd.KhachHang?.KhachHangVouchers
+                        .FirstOrDefault(khv => khv.ID_Voucher == hd.HoaDonVouchers.First().ID_Voucher);
+
+                    if (khachHangVoucher != null)
+                    {
+                        khachHangVoucher.Trang_Thai = true; // Trả lại quyền sử dụng voucher
+                        _context.KhachHang_Voucher.Update(khachHangVoucher);
+                    }
+                }
+            }
+
+            _context.Hoa_Don.Update(hd);
+            await _context.SaveChangesAsync();
+            await tx.CommitAsync();
+        }
 
 
     }
