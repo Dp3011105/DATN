@@ -73,7 +73,7 @@
             <thead class="table-light">
                 <tr>
                     <th>Mã đơn</th>
-                    <th>Khách hàng</th>
+                    <th>Khách hàng</th> @* đã giữ nguyên tiêu đề, SĐT sẽ hiển thị nhỏ bên dưới *@
                     <th>Ngày tạo</th>
                     <th>Thanh toán</th>
                     <th>Loại HD</th>
@@ -93,6 +93,8 @@
                     foreach (var hd in Model.DanhSachHoaDon)
                     {
                         var dbStatus = hd.Trang_Thai ?? "";
+                        var tenKhach = hd.KhachHang?.Ho_Ten;
+                        var sdt = hd.KhachHang?.So_Dien_Thoai;
 
                         <tr>
                             <td>
@@ -102,26 +104,25 @@
                                 </a>
                             </td>
 
-                            <td>@(hd.KhachHang?.Ho_Ten ?? "Khách lẻ")</td>
+                            <td>
+                                <div>@(string.IsNullOrWhiteSpace(tenKhach) ? "Khách lẻ" : tenKhach)</div>
+                                <div class="small text-muted">
+                                    @(string.IsNullOrWhiteSpace(sdt) ? "—" : sdt)
+                                </div>
+                            </td>
+
                             <td>@hd.Ngay_Tao.ToString("dd/MM/yyyy HH:mm")</td>
                             <td>@PayText(hd.ID_Hinh_Thuc_Thanh_Toan)</td>
                             <td>@(string.IsNullOrWhiteSpace(hd.Loai_Hoa_Don) ? "—" : hd.Loai_Hoa_Don)</td>
 
                             <td>
                                 @{
-                                    // Ưu tiên hiển thị "Tại quầy" nếu là đơn tại quầy
                                     string diaChiHienThi =
-                                    string.Equals(hd.Loai_Hoa_Don, "TaiQuay", StringComparison.OrdinalIgnoreCase)
-                                    ? "Tại quầy"
-                                    : (
-                                    // Nếu có ID_Dia_Chi và navigation DiaChi không rỗng -> lấy từ bảng Dia_Chi
-                                    (hd.ID_Dia_Chi.HasValue
-                                    && hd.DiaChi != null
-                                    && !string.IsNullOrWhiteSpace(hd.DiaChi.Dia_Chi))
-                                    ? hd.DiaChi.Dia_Chi
-                                    // fallback: dùng địa chỉ tự nhập (nếu rỗng thì '—')
-                                    : (string.IsNullOrWhiteSpace(hd.Dia_Chi_Tu_Nhap) ? "—" : hd.Dia_Chi_Tu_Nhap)
-                                    );
+                                        string.Equals(hd.Loai_Hoa_Don, "TaiQuay", StringComparison.OrdinalIgnoreCase)
+                                        ? "Tại quầy"
+                                        : ((hd.ID_Dia_Chi.HasValue && hd.DiaChi != null && !string.IsNullOrWhiteSpace(hd.DiaChi.Dia_Chi))
+                                            ? hd.DiaChi.Dia_Chi
+                                            : (string.IsNullOrWhiteSpace(hd.Dia_Chi_Tu_Nhap) ? "—" : hd.Dia_Chi_Tu_Nhap));
                                 }
                                 @diaChiHienThi
                             </td>
@@ -133,7 +134,7 @@
                                 <a class="btn btn-sm btn-outline-secondary me-1"
                                    href="@Url.Action("ChiTiet", "QuanLyDonHang", new { id = hd.ID_Hoa_Don })">Chi tiết</a>
 
-                                @* Bước 1: Xác nhận từ Chưa xác nhận -> Đã xác nhận *@
+                                @* Bước 1: Xác nhận *@
                                 @if (string.Equals(dbStatus, "Chua_Xac_Nhan", StringComparison.OrdinalIgnoreCase))
                                 {
                                     <form method="post" class="d-inline" action="@Url.Action("XacNhan","QuanLyDonHang")">
@@ -143,7 +144,7 @@
                                     </form>
                                 }
 
-                                @* Bước 2: Bắt đầu xử lý từ Đã xác nhận -> Đang xử lý *@
+                                @* Bước 2: Bắt đầu xử lý *@
                                 @if (string.Equals(dbStatus, "Da_Xac_Nhan", StringComparison.OrdinalIgnoreCase))
                                 {
                                     <form method="post" class="d-inline" action="@Url.Action("BatDauXuLy","QuanLyDonHang")">
@@ -153,7 +154,7 @@
                                     </form>
                                 }
 
-                                @* Bước 3: Bắt đầu giao từ Đang xử lý -> Đang giao hàng *@
+                                @* Bước 3: Bắt đầu giao *@
                                 @if (string.Equals(dbStatus, "Dang_Xu_Ly", StringComparison.OrdinalIgnoreCase))
                                 {
                                     <form method="post" class="d-inline" action="@Url.Action("BatDauGiaoHang","QuanLyDonHang")">
@@ -163,7 +164,7 @@
                                     </form>
                                 }
 
-                                @* Bước 4: Hoàn tất giao từ Đang giao -> Hoàn thành *@
+                                @* Bước 4: Giao thành công *@
                                 @if (string.Equals(dbStatus, "Dang_Giao_Hang", StringComparison.OrdinalIgnoreCase))
                                 {
                                     <form method="post" class="d-inline" action="@Url.Action("GiaoHangThanhCong","QuanLyDonHang")">
@@ -173,9 +174,9 @@
                                     </form>
                                 }
 
-                                @* Hủy: cho phép khi chưa hoàn thành và chưa hủy *@
+                                @* Hủy *@
                                 @if (!string.Equals(dbStatus, "Hoan_Thanh", StringComparison.OrdinalIgnoreCase)
-                                                        && !string.Equals(dbStatus, "Huy_Don", StringComparison.OrdinalIgnoreCase))
+                                    && !string.Equals(dbStatus, "Huy_Don", StringComparison.OrdinalIgnoreCase))
                                 {
                                     <button type="button" class="btn btn-sm btn-outline-danger"
                                             data-bs-toggle="modal"
@@ -191,67 +192,6 @@
                 }
             </tbody>
         </table>
-    </div>
-</div>
-
-<!-- Modal Hủy đơn -->
-<div class="modal fade" id="modalHuyDon" tabindex="-1" aria-hidden="true">
-    <div class="modal-dialog modal-lg">
-        <form method="post" asp-action="Huy" id="form-huy-don">
-            @Html.AntiForgeryToken()
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title">
-                        Hủy đơn hàng
-                        <small class="text-muted ms-2" id="huy-mahd"></small>
-                    </h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Đóng"></button>
-                </div>
-
-                <div class="modal-body">
-                    <input type="hidden" name="id" id="huy-id" />
-
-                    <div class="mb-3">
-                        <label class="form-label">Lý do hủy <span class="text-danger">*</span></label>
-                        <textarea name="lyDo" id="huy-lydo" class="form-control" rows="2"
-                                  placeholder="Nhập lý do hủy đơn..." required maxlength="500"></textarea>
-                    </div>
-
-                    <div class="border rounded p-2">
-                        <div class="d-flex justify-content-between align-items-center mb-2">
-                            <strong>Các cốc có thể khôi phục</strong>
-                            <small class="text-muted">Chọn cốc và nhập số lượng muốn khôi phục (tối đa bằng số đã đặt)</small>
-                        </div>
-
-                        <div class="table-responsive">
-                            <table class="table table-sm align-middle" id="tbl-kphoiphuc">
-                                <thead class="table-light">
-                                    <tr>
-                                        <th style="width:40px"><input type="checkbox" id="chk-all" /></th>
-                                        <th>Sản phẩm</th>
-                                        <th class="text-end" style="width:140px">Số lượng đặt</th>
-                                        <th class="text-end" style="width:160px">Số lượng khôi phục</th>
-                                        <th style="width:100px">Đã làm?</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    <!-- nạp bằng JS -->
-                                </tbody>
-                            </table>
-                        </div>
-                    </div>
-
-                    <div class="form-text mt-2">
-                        Gợi ý: thường tick sẵn các cốc <em>chưa làm</em>. Nếu khách hủy muộn, bỏ chọn hoặc giảm số lượng khôi phục đối với những cốc đã làm.
-                    </div>
-                </div>
-
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Đóng</button>
-                    <button type="submit" class="btn btn-danger" id="btn-huy">Xác nhận hủy</button>
-                </div>
-            </div>
-        </form>
     </div>
 </div>
 
