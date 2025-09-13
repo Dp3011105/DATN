@@ -72,9 +72,11 @@ builder.Services.AddScoped<IBanHangTKRepository, BanHangTKRepository>();
 builder.Services.AddScoped<IDonHangTKRepository, DonHangTKRepository>();
 builder.Services.AddScoped<IAIRepository, AIRepository>();
 builder.Services.AddScoped<AIChatService>();
-
+builder.Services.AddScoped<IVnPayService, VnPayService>();
 // THÊM LẠI: EmailService cần thiết cho GanVoucher
-builder.Services.AddSingleton<EmailService>();
+builder.Services.AddSingleton<EmailService>();// dùng để gửi gmail nha mấy guy
+
+builder.Services.AddHostedService<VnPayTimeoutBackgroundService>();// dùng để check timeout vnpay Khách nào không thanh toán trong 15 phút thì hủy đơn hàng ok em 
 
 // Configure CORS - Cập nhật để hỗ trợ FE
 builder.Services.AddCors(options =>

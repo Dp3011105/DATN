@@ -1,0 +1,36 @@
+﻿@model FE.Controllers.PaymentResultViewModel
+
+@{
+    ViewData["Title"] = "Kết quả thanh toán VNPAY";
+}
+
+<div style="max-width:600px; margin:50px auto; font-family:Arial, sans-serif; padding:20px; border:1px solid #ddd; border-radius:10px; text-align:center;">
+    <h2 style="color:green;">🎉 Thanh toán thành công!</h2>
+   
+    <p>Cảm ơn bạn đã thanh toán qua VNPAY. Đơn hàng của bạn đang được xử lý.</p>
+
+    <p style="margin-top:20px;">
+        <a href="/Home"
+           style="color:white; background:#007bff; padding:10px 20px; text-decoration:none; border-radius:5px;">
+            Bấm vào đây để quay lại Trang Chủ ngay
+        </a>
+    </p>
+
+    <p style="margin-top:15px; font-size:14px; color:#555;">
+        Bạn sẽ được tự động chuyển hướng về <strong>Trang Chủ</strong> sau <span id="countdown">8</span> giây...
+    </p>
+</div>
+
+<script>
+    let seconds = 8;
+    const countdown = document.getElementById("countdown");
+
+    const timer = setInterval(() => {
+        seconds--;
+        countdown.textContent = seconds;
+        if (seconds <= 0) {
+            clearInterval(timer);
+            window.location.href = "/Home";
+        }
+    }, 1000);
+</script>
