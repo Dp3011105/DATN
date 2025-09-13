@@ -1,5 +1,7 @@
-﻿using System.ComponentModel.DataAnnotations;
+﻿using Microsoft.AspNetCore.Mvc.ModelBinding.Validation;
+using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+using System.Text.Json.Serialization;
 
 namespace BE.models
 {
@@ -16,10 +18,14 @@ namespace BE.models
 
         public decimal? Gia_Topping { get; set; }
 
-        [ForeignKey("ID_HoaDon_ChiTiet")]
+
+        [ForeignKey(nameof(ID_HoaDon_ChiTiet))]
+        [JsonIgnore, ValidateNever]
         public virtual HoaDonChiTiet HoaDonChiTiet { get; set; }
 
-        [ForeignKey("ID_Topping")]
+        [ForeignKey(nameof(ID_Topping))]
+        [JsonIgnore, ValidateNever]
         public virtual Topping Topping { get; set; }
+
     }
 }
