@@ -1,4 +1,4 @@
-﻿@model UpdateProductViewModel
+﻿@* @model UpdateProductViewModel
 @{
     Layout = "~/Views/Shared/_AdminLayout.cshtml";
 }
@@ -223,6 +223,281 @@
 
     .form-check {
         margin-bottom: 0.5rem;
+    }
+
+    .text-danger.small {
+        font-size: 0.85rem;
+    }
+
+    .form-switch .form-check-input {
+        height: 1.5em;
+        width: 3em;
+    }
+</style> *@
+
+
+
+
+
+@model UpdateProductViewModel
+@{
+    Layout = "~/Views/Shared/_AdminLayout.cshtml";
+    ViewData["Title"] = "Cập nhật sản phẩm";
+}
+
+<div class="container-fluid my-5">
+    <!-- Notifications -->
+    @if (TempData["Success"] != null)
+    {
+        <div class="alert alert-success alert-dismissible fade show animate__animated animate__fadeInDown" role="alert">
+            @TempData["Success"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    }
+    @if (TempData["Error"] != null)
+    {
+        <div class="alert alert-danger alert-dismissible fade show animate__animated animate__fadeInDown" role="alert">
+            @TempData["Error"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    }
+
+    <!-- Edit Form -->
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card shadow-sm border-0">
+                <div class="card-body p-5">
+                    <h2 class="text-center mb-4 fw-bold text-dark">Cập Nhật Sản Phẩm</h2>
+                    <form asp-action="EditProduct" enctype="multipart/form-data" id="editProductForm">
+                        <input type="hidden" asp-for="ID_San_Pham" />
+                        <input type="hidden" asp-for="CurrentImagePath" />
+                        <div asp-validation-summary="ModelOnly" class="text-danger mb-3 text-center"></div>
+
+                        <div class="form-floating mb-3">
+                            <input asp-for="TenSanPham" class="form-control shadow-sm" id="tenSanPham" placeholder="Tên sản phẩm" required />
+                            <label asp-for="TenSanPham" class="form-label">Tên sản phẩm</label>
+                            <span asp-validation-for="TenSanPham" class="text-danger small"></span>
+                        </div>
+
+                        <div class="form-floating mb-3">
+                            <input asp-for="Gia" class="form-control shadow-sm" type="number" id="gia" placeholder="Giá" required />
+                            <label asp-for="Gia" class="form-label">Giá</label>
+                            <span asp-validation-for="Gia" class="text-danger small"></span>
+                        </div>
+
+                        <div class="form-floating mb-3">
+                            <input asp-for="SoLuong" class="form-control shadow-sm" type="number" id="soLuong" placeholder="Số lượng" required />
+                            <label asp-for="SoLuong" class="form-label">Số lượng</label>
+                            <span asp-validation-for="SoLuong" class="text-danger small"></span>
+                        </div>
+
+                        <div class="form-floating mb-3">
+                            <textarea asp-for="MoTa" class="form-control shadow-sm" id="moTa" placeholder="Mô tả" style="height: 100px;"></textarea>
+                            <label asp-for="MoTa" class="form-label">Mô tả</label>
+                            <span asp-validation-for="MoTa" class="text-danger small"></span>
+                        </div>
+
+                        <div class="form-floating mb-3">
+                            <select asp-for="TrangThai" class="form-select shadow-sm" id="trangThai" required>
+                                <option value="true" selected="@(Model.TrangThai ? "selected" : null)">Hoạt động</option>
+                                <option value="false" selected="@(Model.TrangThai ? null : "selected")">Không hoạt động</option>
+                            </select>
+                            <label for="trangThai" class="form-label">Trạng thái</label>
+                            <span asp-validation-for="TrangThai" class="text-danger small"></span>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">Hình ảnh hiện tại</label>
+                            @if (!string.IsNullOrEmpty(Model.CurrentImagePath))
+                            {
+                                <div class="mb-2">
+                                    <img src="@("https://localhost:7169" + Model.CurrentImagePath)" alt="Hình ảnh hiện tại" class="img-fluid shadow" style="max-width: 200px; aspect-ratio: 4/3; object-fit: cover;" />
+                                </div>
+                            }
+                            <div class="form-check form-switch mb-3">
+                                <input class="form-check-input" type="checkbox" id="changeImageSwitch" />
+                                <label class="form-check-label" for="changeImageSwitch">Thay đổi hình ảnh</label>
+                            </div>
+                            <div id="imageUploadSection" style="display: none;">
+                                <label asp-for="Image" class="form-label">Chọn hình ảnh mới</label>
+                                <input asp-for="Image" type="file" class="form-control shadow-sm" accept="image/*" />
+                                <span asp-validation-for="Image" class="text-danger small"></span>
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <div class="d-flex justify-content-between align-items-center mb-2">
+                                <label class="form-label fw-bold">Kích thước</label>
+                                <button type="button" class="btn btn-outline-primary btn-sm select-all" data-prefix="size">Chọn tất cả</button>
+                            </div>
+                            <div class="row">
+                                @foreach (var size in ViewBag.Sizes)
+                                {
+                                    <div class="col-md-4 form-check">
+                                        <input type="checkbox" name="SelectedSizes" value="@size.ID_Size" class="form-check-input size-checkbox" id="size_@size.ID_Size" @(Model.SelectedSizes.Contains(size.ID_Size) ? "checked" : "") />
+                                        <label class="form-check-label" for="size_@size.ID_Size">@size.SizeName @(size.Trang_Thai ? "" : "(Không hoạt động)")</label>
+                                    </div>
+                                }
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">Topping</label>
+                            <div class="row">
+                                @foreach (var topping in ViewBag.Toppings)
+                                {
+                                    <div class="col-md-4 form-check">
+                                        <input type="checkbox" name="SelectedToppings" value="@topping.ID_Topping" class="form-check-input" id="topping_@topping.ID_Topping" @(Model.SelectedToppings.Contains(topping.ID_Topping) ? "checked" : "") />
+                                        <label class="form-check-label" for="topping_@topping.ID_Topping">@topping.Ten @(topping.Trang_Thai ? "" : "(Không hoạt động)")</label>
+                                    </div>
+                                }
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <div class="d-flex justify-content-between align-items-center mb-2">
+                                <label class="form-label fw-bold">Lượng đá</label>
+                                <button type="button" class="btn btn-outline-primary btn-sm select-all" data-prefix="luongDa">Chọn tất cả</button>
+                            </div>
+                            <div class="row">
+                                @foreach (var luongDa in ViewBag.LuongDas)
+                                {
+                                    <div class="col-md-4 form-check">
+                                        <input type="checkbox" name="SelectedLuongDas" value="@luongDa.ID_LuongDa" class="form-check-input luongDa-checkbox" id="luongDa_@luongDa.ID_LuongDa" @(Model.SelectedLuongDas.Contains(luongDa.ID_LuongDa) ? "checked" : "") />
+                                        <label class="form-check-label" for="luongDa_@luongDa.ID_LuongDa">@luongDa.Ten_LuongDa @(luongDa.Trang_Thai ? "" : "(Không hoạt động)")</label>
+                                    </div>
+                                }
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <div class="d-flex justify-content-between align-items-center mb-2">
+                                <label class="form-label fw-bold">Độ ngọt</label>
+                                <button type="button" class="btn btn-outline-primary btn-sm select-all" data-prefix="doNgot">Chọn tất cả</button>
+                            </div>
+                            <div class="row">
+                                @foreach (var doNgot in ViewBag.DoNgots)
+                                {
+                                    <div class="col-md-4 form-check">
+                                        <input type="checkbox" name="SelectedDoNgots" value="@doNgot.ID_DoNgot" class="form-check-input doNgot-checkbox" id="doNgot_@doNgot.ID_DoNgot" @(Model.SelectedDoNgots.Contains(doNgot.ID_DoNgot) ? "checked" : "") />
+                                        <label class="form-check-label" for="doNgot_@doNgot.ID_DoNgot">@doNgot.Muc_Do @(doNgot.Trang_Thai ? "" : "(Không hoạt động)")</label>
+                                    </div>
+                                }
+                            </div>
+                        </div>
+
+                        <div class="d-flex justify-content-between">
+                            <a asp-action="Index" class="btn btn-outline-secondary">
+                                <i class="bi bi-arrow-left me-2"></i>Quay lại
+                            </a>
+                            <button type="submit" class="btn btn-primary shadow-sm">
+                                <i class="bi bi-check-circle me-2"></i>Cập nhật
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <!-- Load jQuery first -->
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js" integrity="sha256-/xUj+3OJU5yExlq6GSYGSHk7tPXikynS7ogEvDej/m4=" crossorigin="anonymous"></script>
+    <!-- Load validation libraries after jQuery -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-validate/1.19.5/jquery.validate.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-validation-unobtrusive/3.2.12/jquery.validate.unobtrusive.min.js"></script>
+    <script>
+        $(document).ready(function () {
+            $("#editProductForm").validate({
+                errorClass: "text-danger",
+                highlight: function (element) {
+                    $(element).addClass("is-invalid").removeClass("is-valid");
+                },
+                unhighlight: function (element) {
+                    $(element).removeClass("is-invalid").addClass("is-valid");
+                },
+                errorPlacement: function (error, element) {
+                    error.insertAfter(element);
+                },
+                rules: {
+                    Image: {
+                        required: false // Không yêu cầu trường Image
+                    }
+                },
+                messages: {
+                    Image: {
+                        required: "" // Không hiển thị thông báo lỗi nếu Image trống
+                    }
+                }
+            });
+
+            // Hiển thị trường upload khi người dùng bật nút "Thay đổi hình ảnh"
+            $('#changeImageSwitch').on('change', function () {
+                if ($(this).is(':checked')) {
+                    $('#imageUploadSection').show();
+                    $('#Image').attr('required', 'required'); // Bắt buộc nếu chọn thay đổi
+                } else {
+                    $('#imageUploadSection').hide();
+                    $('#Image').removeAttr('required'); // Không bắt buộc nếu giữ ảnh cũ
+                }
+            });
+
+            // Select all functionality
+            $('.select-all').on('click', function () {
+                const prefix = $(this).data('prefix');
+                const checkboxes = $(`input[id^="${prefix}_"]`);
+                const allChecked = checkboxes.toArray().every(cb => cb.checked);
+                checkboxes.prop('checked', !allChecked);
+            });
+        });
+    </script>
+}
+
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css" />
+
+<style>
+    .form-control.is-invalid, .form-control-file.is-invalid, .form-select.is-invalid {
+        border-color: #dc3545;
+        box-shadow: 0 0 5px rgba(220, 53, 69, 0.3);
+    }
+
+    .form-control.is-valid, .form-control-file.is-valid, .form-select.is-valid {
+        border-color: #28a745;
+        box-shadow: 0 0 5px rgba(40, 167, 69, 0.3);
+    }
+
+    .form-floating label {
+        color: #495057;
+    }
+
+    .btn-primary, .btn-outline-secondary, .btn-outline-primary {
+        border-radius: 4px;
+        transition: background-color 0.3s ease, transform 0.2s ease;
+    }
+
+        .btn-primary:hover, .btn-outline-secondary:hover, .btn-outline-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+        }
+
+    .card {
+        border-radius: 8px;
+    }
+
+    .form-control, .form-control-file, .form-select {
+        border-radius: 4px;
+        border: 1px solid #ced4da;
+        transition: border-color 0.3s ease;
+    }
+
+    .form-check {
+        margin-bottom: 0.5rem;
+    }
+
+    .btn-sm {
+        padding: 0.25rem 0.5rem;
+        font-size: 0.875rem;
     }
 
     .text-danger.small {

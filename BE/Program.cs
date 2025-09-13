@@ -2,6 +2,7 @@ using BE.Data;
 using BE.Repository;
 using BE.Repository.IRepository;
 using BE.Service; // Thêm này để sử dụng EmailService
+using BE.Services;
 using Microsoft.AspNetCore.Http.Features;
 using Microsoft.EntityFrameworkCore;
 using Repository;
@@ -63,7 +64,8 @@ builder.Services.AddScoped<IKhuyenMaiSanPhamRepository, KhuyenMaiSanPhamReposito
 builder.Services.AddScoped<IKhuyenMaiRepository, KhuyenMaiRepository>();
 builder.Services.AddScoped<IBanHangTKRepository, BanHangTKRepository>();
 builder.Services.AddScoped<IDonHangTKRepository, DonHangTKRepository>();
-
+builder.Services.AddScoped<IAIRepository, AIRepository>();
+builder.Services.AddScoped<AIChatService>();
 
 // THÊM LẠI: EmailService cần thiết cho GanVoucher
 builder.Services.AddSingleton<EmailService>();

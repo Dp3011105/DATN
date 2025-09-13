@@ -124,5 +124,29 @@ namespace FE.Service
                 return false;
             }
         }
+
+
+
+
+        // Method mới: Gọi API most-purchased, trả về 10 sản phẩm
+        public async Task<List<SanPham>> GetMostPurchasedProductsAsync()
+        {
+            try
+            {
+                return await _httpClient.GetFromJsonAsync<List<SanPham>>($"{BaseUrl}SanPham/most-purchased") ?? new List<SanPham>();
+            }
+            catch (HttpRequestException ex)
+            {
+                // Log error nếu cần
+                Console.WriteLine($"Lỗi khi gọi API most-purchased: {ex.Message}");
+                return new List<SanPham>(); // Graceful fallback
+            }
+        }
+
+
+
     }
+
+
+
 }
