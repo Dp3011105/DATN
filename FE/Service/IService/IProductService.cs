@@ -24,5 +24,9 @@ namespace FE.Service.IService
         Task<bool> AddProductAsync(AddProductViewModel model);
         Task<bool> UpdateProductAsync(UpdateProductViewModel model);
 
+
+
+        Task<List<SanPham>> GetMostPurchasedProductsAsync(); // Method mới cho API 10 sản phẩm phổ biến
+
     }
 }

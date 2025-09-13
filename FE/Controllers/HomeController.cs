@@ -19,10 +19,21 @@ namespace FE.Controllers
             _logger = logger;
         }
 
+        //public async Task<IActionResult> Index()
+        //{
+        //    var products = await _productService.GetAllProductsAsync();
+        //    return View(products);
+        //}
+
+
         public async Task<IActionResult> Index()
         {
-            var products = await _productService.GetAllProductsAsync();
-            return View(products);
+            var viewModel = new ProductViewModel
+            {
+                AllProducts = await _productService.GetAllProductsAsync(),
+                MostPurchasedProducts = await _productService.GetMostPurchasedProductsAsync()
+            };
+            return View(viewModel);
         }
 
 

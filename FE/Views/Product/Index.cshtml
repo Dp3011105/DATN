@@ -1,4 +1,4 @@
-﻿@model List<FE.Models.SanPham>
+﻿@* @model List<FE.Models.SanPham>
 @{
     Layout = "~/Views/Shared/_AdminLayout.cshtml";
 
@@ -439,5 +439,424 @@
 
     .text-muted {
         color: #6c757d !important;
+    }
+</style> *@
+
+
+
+
+
+
+@model List<FE.Models.SanPham>
+@{
+    Layout = "~/Views/Shared/_AdminLayout.cshtml";
+    ViewData["Title"] = "Danh sách sản phẩm";
+
+    // Sort products by ID in descending order (newest first)
+    var sortedProducts = Model.OrderByDescending(p => p.ID_San_Pham).ToList();
+    var activeProducts = sortedProducts.Where(p => p.Trang_Thai).ToList();
+    var inactiveProducts = sortedProducts.Where(p => !p.Trang_Thai).ToList();
+
+    // Get current date in Vietnam time zone
+    TimeZoneInfo vnTimeZone;
+    try
+    {
+        vnTimeZone = TimeZoneInfo.FindSystemTimeZoneById("SE Asia Standard Time");
+    }
+    catch
+    {
+        vnTimeZone = TimeZoneInfo.FindSystemTimeZoneById("Asia/Ho_Chi_Minh");
+    }
+    var currentDate = TimeZoneInfo.ConvertTimeFromUtc(DateTime.UtcNow, vnTimeZone);
+}
+
+<div class="container-fluid my-5">
+    <!-- Notifications -->
+    @if (TempData["Success"] != null)
+    {
+        <div class="alert alert-success alert-dismissible fade show animate__animated animate__fadeInDown" role="alert">
+            <i class="bi bi-check-circle-fill me-2"></i>@TempData["Success"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    }
+    @if (TempData["Error"] != null)
+    {
+        <div class="alert alert-danger alert-dismissible fade show animate__animated animate__fadeInDown" role="alert">
+            <i class="bi bi-exclamation-circle-fill me-2"></i>@TempData["Error"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    }
+
+    <!-- Search Bar -->
+    <div class="mb-4">
+        <div class="input-group shadow-sm">
+            <span class="input-group-text bg-light border-0"><i class="bi bi-search"></i></span>
+            <input type="text" id="searchInput" class="form-control border-0" placeholder="Tìm kiếm sản phẩm theo tên..." aria-label="Search" style="border-radius: 4px;">
+            <button class="btn btn-primary ms-2" type="button" id="searchButton" style="border-radius: 4px;">Tìm kiếm</button>
+        </div>
+    </div>
+
+    <!-- Product Details Link -->
+    <div class="mb-4 text-center">
+        <a asp-controller="ProductDetails" asp-action="Index" class="btn btn-primary shadow-sm" style="border-radius: 4px;">
+            <i class="bi bi-arrow-right-circle me-2"></i>Đến Trang Chi Tiết Sản Phẩm
+        </a>
+    </div>
+
+    <!-- Toggle Buttons -->
+    <div class="mb-4 d-flex justify-content-center gap-3">
+        <button id="showActive" class="btn btn-primary active" style="border-radius: 4px;">Sản Phẩm Hoạt Động</button>
+        <button id="showInactive" class="btn btn-outline-primary" style="border-radius: 4px;">Sản Phẩm Ngừng Hoạt Động</button>
+    </div>
+
+    <!-- Active Products -->
+    <div id="activeProducts" class="card shadow-sm border-0 mb-4">
+        <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center" style="border-radius: 4px 4px 0 0;">
+            <h5 class="mb-0">Sản Phẩm Hoạt Động</h5>
+            <a asp-action="AddProduct" class="btn btn-light btn-sm" style="border-radius: 4px;">
+                <i class="bi bi-plus-circle me-2"></i>Thêm Sản Phẩm
+            </a>
+        </div>
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-hover table-striped align-middle" id="activeTable">
+                    <thead class="bg-light">
+                        <tr>
+                            <th class="py-3 px-4">ID</th>
+                            <th class="py-3 px-4">Tên Sản Phẩm</th>
+                            <th class="py-3 px-4">Giá</th>
+                            <th class="py-3 px-4">Số Lượng</th>
+                            <th class="py-3 px-4">Hình Ảnh</th>
+                            <th class="py-3 px-4">Mô Tả</th>
+                            <th class="py-3 px-4">Trạng Thái</th>
+                            <th class="py-3 px-4">Hành Động</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var product in activeProducts)
+                        {
+                            bool hasActivePromotion = false;
+                            decimal basePrice = product.Gia;
+                            string promotionName = "";
+                            if (product.KhuyenMais != null && product.KhuyenMais.Any())
+                            {
+                                foreach (var km in product.KhuyenMais)
+                                {
+                                    if (currentDate >= km.Ngay_Bat_Dau && currentDate <= km.Ngay_Ket_Thuc)
+                                    {
+                                        hasActivePromotion = true;
+                                        basePrice = km.Gia_Giam ?? product.Gia;
+                                        promotionName = km.Ten_Khuyen_Mai;
+                                        break;
+                                    }
+                                }
+                            }
+                            <tr class="product-row" data-name="@(product.Ten_San_Pham?.ToLower() ?? "")">
+                                <td class="py-3 px-4">@product.ID_San_Pham</td>
+                                <td class="py-3 px-4">@(product.Ten_San_Pham ?? "Không có tên")</td>
+                                <td class="py-3 px-4">
+                                    @if (hasActivePromotion)
+                                    {
+                                        <span class="text-muted text-decoration-line-through me-2">@string.Format("{0:N0} đ", product.Gia)</span>
+                                        <span class="text-danger fw-bold">@string.Format("{0:N0} đ", basePrice)</span>
+                                        <span class="badge bg-warning text-dark ms-2">@promotionName</span>
+                                    }
+                                    else
+                                    {
+                                        <span class="text-primary fw-bold">@string.Format("{0:N0} đ", product.Gia)</span>
+                                    }
+                                </td>
+                                <td class="py-3 px-4">@product.So_Luong</td>
+                                <td class="py-3 px-4">
+                                    <img src="@("https://localhost:7169" + (product.Hinh_Anh ?? "/images/placeholder.jpg"))" alt="@(product.Ten_San_Pham ?? "Sản phẩm")" class="img-fluid shadow" style="max-width: 80px; aspect-ratio: 4/3; object-fit: cover; border-radius: 4px;" />
+                                </td>
+                                <td class="py-3 px-4 text-truncate" style="max-width: 250px;">@(product.Mo_Ta ?? "Không có mô tả")</td>
+                                <td class="py-3 px-4">
+                                    <span class="badge bg-success">Hoạt động</span>
+                                </td>
+                                <td class="py-3 px-4">
+                                    <a asp-action="Details" asp-route-id="@product.ID_San_Pham" class="btn btn-outline-primary btn-sm me-2" style="border-radius: 4px;">
+                                        <i class="bi bi-eye"></i> Chi tiết
+                                    </a>
+                                    <a asp-action="EditProduct" asp-route-id="@product.ID_San_Pham" class="btn btn-outline-primary btn-sm" style="border-radius: 4px;">
+                                        <i class="bi bi-pencil"></i> Sửa
+                                    </a>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- Inactive Products -->
+    <div id="inactiveProducts" class="card shadow-sm border-0 mb-4 d-none">
+        <div class="card-header bg-secondary text-white" style="border-radius: 4px 4px 0 0;">
+            <h5 class="mb-0">Sản Phẩm Ngừng Hoạt Động</h5>
+        </div>
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-hover table-striped align-middle" id="inactiveTable">
+                    <thead class="bg-light">
+                        <tr>
+                            <th class="py-3 px-4">ID</th>
+                            <th class="py-3 px-4">Tên Sản Phẩm</th>
+                            <th class="py-3 px-4">Giá</th>
+                            <th class="py-3 px-4">Số Lượng</th>
+                            <th class="py-3 px-4">Hình Ảnh</th>
+                            <th class="py-3 px-4">Mô Tả</th>
+                            <th class="py-3 px-4">Trạng Thái</th>
+                            <th class="py-3 px-4">Hành Động</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var product in inactiveProducts)
+                        {
+                            bool hasActivePromotion = false;
+                            decimal basePrice = product.Gia;
+                            string promotionName = "";
+                            if (product.KhuyenMais != null && product.KhuyenMais.Any())
+                            {
+                                foreach (var km in product.KhuyenMais)
+                                {
+                                    if (currentDate >= km.Ngay_Bat_Dau && currentDate <= km.Ngay_Ket_Thuc)
+                                    {
+                                        hasActivePromotion = true;
+                                        basePrice = km.Gia_Giam ?? product.Gia;
+                                        promotionName = km.Ten_Khuyen_Mai;
+                                        break;
+                                    }
+                                }
+                            }
+                            <tr class="product-row" data-name="@(product.Ten_San_Pham?.ToLower() ?? "")">
+                                <td class="py-3 px-4">@product.ID_San_Pham</td>
+                                <td class="py-3 px-4">@(product.Ten_San_Pham ?? "Không có tên")</td>
+                                <td class="py-3 px-4">
+                                    @if (hasActivePromotion)
+                                    {
+                                        <span class="text-muted text-decoration-line-through me-2">@string.Format("{0:N0} đ", product.Gia)</span>
+                                        <span class="text-danger fw-bold">@string.Format("{0:N0} đ", basePrice)</span>
+                                        <span class="badge bg-warning text-dark ms-2">@promotionName</span>
+                                    }
+                                    else
+                                    {
+                                        <span class="text-primary fw-bold">@string.Format("{0:N0} đ", product.Gia)</span>
+                                    }
+                                </td>
+                                <td class="py-3 px-4">@product.So_Luong</td>
+                                <td class="py-3 px-4">
+                                    <img src="@("https://localhost:7169" + (product.Hinh_Anh ?? "/images/placeholder.jpg"))" alt="@(product.Ten_San_Pham ?? "Sản phẩm")" class="img-fluid shadow" style="max-width: 80px; aspect-ratio: 4/3; object-fit: cover; border-radius: 4px;" />
+                                </td>
+                                <td class="py-3 px-4 text-truncate" style="max-width: 250px;">@(product.Mo_Ta ?? "Không có mô tả")</td>
+                                <td class="py-3 px-4">
+                                    <span class="badge bg-danger">Không hoạt động</span>
+                                </td>
+                                <td class="py-3 px-4">
+                                    <a asp-action="Details" asp-route-id="@product.ID_San_Pham" class="btn btn-outline-primary btn-sm me-2" style="border-radius: 4px;">
+                                        <i class="bi bi-eye"></i> Chi tiết
+                                    </a>
+                                    <a asp-action="EditProduct" asp-route-id="@product.ID_San_Pham" class="btn btn-outline-primary btn-sm" style="border-radius: 4px;">
+                                        <i class="bi bi-pencil"></i> Sửa
+                                    </a>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <!-- Load jQuery -->
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js" integrity="sha256-/xUj+3OJU5yExlq6GSYGSHk7tPXikynS7ogEvDej/m4=" crossorigin="anonymous"></script>
+    <script>
+        $(document).ready(function () {
+            const searchInput = $('#searchInput');
+            const searchButton = $('#searchButton');
+            const showActive = $('#showActive');
+            const showInactive = $('#showInactive');
+            const activeProducts = $('#activeProducts');
+            const inactiveProducts = $('#inactiveProducts');
+            const tables = [$('#activeTable'), $('#inactiveTable')];
+
+            function filterProducts() {
+                const searchTerm = searchInput.val().toLowerCase().trim();
+                tables.forEach(table => {
+                    table.find('.product-row').each(function () {
+                        const name = $(this).data('name') || '';
+                        $(this).toggle(name.includes(searchTerm));
+                    });
+                });
+            }
+
+            searchButton.on('click', filterProducts);
+            searchInput.on('keyup', function (e) {
+                if (e.key === 'Enter') filterProducts();
+            });
+
+            showActive.on('click', function () {
+                activeProducts.removeClass('d-none');
+                inactiveProducts.addClass('d-none');
+                showActive.addClass('btn-primary active').removeClass('btn-outline-primary');
+                showInactive.addClass('btn-outline-primary').removeClass('btn-primary active');
+            });
+
+            showInactive.on('click', function () {
+                inactiveProducts.removeClass('d-none');
+                activeProducts.addClass('d-none');
+                showInactive.addClass('btn-primary active').removeClass('btn-outline-primary');
+                showActive.addClass('btn-outline-primary').removeClass('btn-primary active');
+            });
+        });
+    </script>
+}
+
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css" />
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css">
+
+<style>
+    body {
+        font-family: 'Inter', sans-serif;
+        background-color: #f8f9fa;
+    }
+
+    .container-fluid {
+        max-width: 1400px;
+    }
+
+    .card {
+        border-radius: 8px;
+        overflow: hidden;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    }
+
+    .card-header {
+        padding: 1rem 1.5rem;
+        border-bottom: 1px solid #dee2e6;
+    }
+
+    .table {
+        margin-bottom: 0;
+        border-collapse: separate;
+        border-spacing: 0;
+    }
+
+        .table th, .table td {
+            vertical-align: middle;
+            border-top: 1px solid #dee2e6;
+            border-bottom: 1px solid #dee2e6;
+        }
+
+        .table thead th {
+            font-weight: 600;
+            color: #1a1a1a;
+            background-color: #e9ecef;
+        }
+
+        .table tbody tr:hover {
+            background-color: #f1f3f5;
+        }
+
+    .table-responsive {
+        border-radius: 4px;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+    }
+
+    .btn {
+        border-radius: 4px;
+        padding: 0.5rem 1rem;
+        font-weight: 500;
+        transition: all 0.2s ease;
+    }
+
+    .btn-primary {
+        background-color: #0052cc;
+        border-color: #0052cc;
+    }
+
+        .btn-primary:hover {
+            background-color: #003d99;
+            border-color: #003d99;
+            transform: translateY(-2px);
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+        }
+
+    .btn-outline-primary {
+        border-color: #0052cc;
+        color: #0052cc;
+    }
+
+        .btn-outline-primary:hover {
+            background-color: #0052cc;
+            color: white;
+            transform: translateY(-2px);
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+        }
+
+    .btn.active {
+        background-color: #003d99 !important;
+        border-color: #003d99 !important;
+        color: white !important;
+    }
+
+    .input-group-text {
+        border-radius: 4px 0 0 4px;
+        background-color: #e9ecef;
+        border-color: #ced4da;
+    }
+
+    .form-control {
+        border-radius: 0 4px 4px 0;
+        border-color: #ced4da;
+        box-shadow: none;
+    }
+
+        .form-control:focus {
+            border-color: #0052cc;
+            box-shadow: 0 0 0 3px rgba(0, 82, 204, 0.1);
+        }
+
+    .badge {
+        font-size: 0.85rem;
+        padding: 0.4rem 0.8rem;
+        border-radius: 4px;
+    }
+
+    .alert {
+        border-radius: 4px;
+        border-left: 4px solid;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+    }
+
+    .alert-success {
+        border-color: #28a745;
+    }
+
+    .alert-danger {
+        border-color: #dc3545;
+    }
+
+    .img-fluid {
+        border-radius: 4px;
+    }
+
+    .text-danger {
+        color: #dc3545 !important;
+    }
+
+    .text-primary {
+        color: #0052cc !important;
+    }
+
+    .text-muted {
+        color: #6c757d !important;
+    }
+
+    .fw-bold {
+        font-weight: 600 !important;
     }
 </style>

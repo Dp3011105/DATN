@@ -25,6 +25,10 @@
         font-family: 'Roboto', sans-serif;
         background-color: var(--light-bg);
         color: var(--text-primary);
+        margin: 0;
+        min-height: 100vh;
+        display: flex;
+        flex-direction: column;
     }
 
     .modal {
@@ -36,12 +40,13 @@
         height: 100%;
         background-color: rgba(0, 0, 0, 0.5);
         z-index: 1000;
+        overflow-y: auto;
     }
 
     .modal-content {
         background: linear-gradient(135deg, #FFFFFF 0%, #F9FAFB 100%);
-        margin: 10% auto;
-        padding: 1.5rem;
+        margin: 5% auto;
+        padding: 2rem;
         border: none;
         width: 90%;
         max-width: 600px;
@@ -57,15 +62,15 @@
     }
 
     .form-group {
-        margin-bottom: 1.25rem;
+        margin-bottom: 1.5rem;
     }
 
     .cart-item {
         display: flex;
         align-items: flex-start;
-        padding: 1rem;
+        padding: 1.25rem;
         border-bottom: 1px solid #E5E7EB;
-        transition: all 0.2s ease;
+        transition: background-color 0.2s ease;
     }
 
         .cart-item:hover {
@@ -73,11 +78,11 @@
         }
 
     .cart-item-image {
-        width: 64px;
-        height: 64px;
+        width: 80px;
+        height: 80px;
         object-fit: cover;
-        border-radius: 8px;
-        margin-right: 1rem;
+        border-radius: 12px;
+        margin-right: 1.25rem;
     }
 
     .cart-item-details {
@@ -85,74 +90,75 @@
     }
 
     .cart-item-name {
-        font-size: 1rem;
+        font-size: 1.1rem;
         font-weight: 600;
         color: var(--text-primary);
     }
 
     .cart-item-options {
-        font-size: 0.85rem;
+        font-size: 0.9rem;
         color: var(--text-secondary);
-        margin-top: 0.5rem;
+        margin-top: 0.75rem;
     }
 
     .cart-item-price {
-        font-size: 1rem;
+        font-size: 1.1rem;
         font-weight: 600;
         color: var(--primary);
     }
 
     .cart-total {
         font-weight: 700;
-        font-size: 1.25rem;
+        font-size: 1.3rem;
         color: var(--text-primary);
-        margin-top: 1.5rem;
+        margin-top: 2rem;
+        text-align: right;
     }
 
     .original-price {
         text-decoration: line-through;
         color: var(--text-secondary);
-        font-size: 0.9rem;
+        font-size: 0.95rem;
         margin-right: 0.5rem;
     }
 
     .discounted-price {
         color: var(--danger);
         font-weight: 600;
-        font-size: 1rem;
+        font-size: 1.1rem;
     }
 
     .regular-price {
         color: var(--primary);
         font-weight: 600;
-        font-size: 1rem;
+        font-size: 1.1rem;
     }
 
     .cart-item-controls {
         display: flex;
         align-items: center;
         justify-content: flex-end;
-        min-width: 60px;
-        font-size: 0.9rem;
+        min-width: 70px;
+        font-size: 0.95rem;
         font-weight: 500;
         color: var(--text-primary);
     }
 
         .cart-item-controls .quantity {
-            margin-left: 0.5rem;
+            margin-left: 0.75rem;
             font-weight: 600;
         }
 
     .form-group label {
-        font-size: 0.9rem;
+        font-size: 0.95rem;
         font-weight: 500;
         color: var(--text-primary);
-        margin-bottom: 0.5rem;
+        margin-bottom: 0.75rem;
         display: block;
     }
 
     .form-group input[type="radio"] {
-        margin-right: 0.5rem;
+        margin-right: 0.75rem;
     }
 
         .form-group input[type="radio"]:checked + .radio-label {
@@ -167,18 +173,24 @@
     .add-address-btn, .submit-btn, .edit-address-btn, .add-phone-btn, .edit-phone-btn {
         background: linear-gradient(135deg, var(--primary), var(--primary-dark));
         color: white;
-        padding: 0.75rem 1.5rem;
-        border-radius: 8px;
+        padding: 0.85rem 1.75rem;
+        border-radius: 10px;
         border: none;
-        font-size: 0.9rem;
+        font-size: 0.95rem;
         font-weight: 500;
         transition: all 0.2s ease;
         position: relative;
+        width: 100%;
     }
 
         .add-address-btn:hover, .submit-btn:hover, .edit-address-btn:hover, .add-phone-btn:hover, .edit-phone-btn:hover {
-            transform: translateY(-1px);
-            box-shadow: 0 4px 8px rgba(59, 130, 246, 0.25);
+            transform: translateY(-2px);
+            box-shadow: 0 6px 12px rgba(59, 130, 246, 0.3);
+        }
+
+        .submit-btn:disabled, .add-phone-btn:disabled, .edit-phone-btn:disabled {
+            background: #A1A1AA;
+            cursor: not-allowed;
         }
 
         .submit-btn.loading::after, .add-phone-btn.loading::after, .edit-phone-btn.loading::after {
@@ -187,45 +199,45 @@
             border: 3px solid #ffffff;
             border-top: 3px solid var(--primary);
             border-radius: 50%;
-            width: 16px;
-            height: 16px;
+            width: 18px;
+            height: 18px;
             animation: spin 1s linear infinite;
             position: absolute;
-            right: 1rem;
+            right: 1.25rem;
             top: 50%;
             transform: translateY(-50%);
         }
 
     .alert-notification {
-        border-radius: 8px;
-        padding: 0.75rem 1rem;
-        margin-bottom: 1rem;
+        border-radius: 10px;
+        padding: 1rem 1.5rem;
+        margin-bottom: 1.5rem;
         display: flex;
         align-items: center;
-        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
         animation: slideIn 0.4s ease-out;
     }
 
     .alert-error {
         background-color: #FEF2F2;
         color: #991B1B;
-        border-left: 3px solid var(--danger);
+        border-left: 4px solid var(--danger);
     }
 
     .alert-success {
         background-color: #ECFDF5;
         color: #065F46;
-        border-left: 3px solid var(--success);
+        border-left: 4px solid var(--success);
     }
 
     .close-button {
         background: none;
         border: none;
-        font-size: 1.2rem;
+        font-size: 1.3rem;
         color: var(--text-secondary);
         transition: all 0.2s ease;
-        width: 32px;
-        height: 32px;
+        width: 36px;
+        height: 36px;
         display: flex;
         align-items: center;
         justify-content: center;
@@ -237,18 +249,18 @@
             color: var(--text-primary);
         }
 
-    select {
+    select, input[type="text"], input[type="tel"] {
         width: 100%;
-        padding: 0.75rem;
+        padding: 0.85rem;
         border: 1px solid #E5E7EB;
-        border-radius: 8px;
-        font-size: 0.9rem;
+        border-radius: 10px;
+        font-size: 0.95rem;
     }
 
-        select:focus {
+        select:focus, input:focus {
             outline: none;
             border-color: var(--primary);
-            box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.25);
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.25);
         }
 
         select:disabled {
@@ -258,53 +270,53 @@
 
     .section-container {
         background: var(--card-bg);
-        border-radius: 12px;
-        padding: 1.5rem;
-        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
-        margin-bottom: 1.5rem;
+        border-radius: 14px;
+        padding: 2rem;
+        box-shadow: 0 6px 10px rgba(0, 0, 0, 0.08);
+        margin-bottom: 2rem;
     }
 
     .radio-label {
         display: block;
-        padding: 0.75rem;
+        padding: 1rem;
         border: 1px solid #E5E7EB;
-        border-radius: 8px;
+        border-radius: 10px;
         cursor: pointer;
         transition: all 0.2s ease;
     }
 
         .radio-label:hover {
             border-color: var(--primary);
-            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.15);
         }
 
     .qr-code-container {
         text-align: center;
-        margin: 1.5rem 0;
-        padding: 1rem;
+        margin: 2rem 0;
+        padding: 1.5rem;
         background-color: #fff;
-        border-radius: 12px;
-        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        border-radius: 14px;
+        box-shadow: 0 6px 14px rgba(0, 0, 0, 0.12);
     }
 
     .qr-code-image {
-        max-width: 280px;
+        max-width: 300px;
         width: 100%;
         border-radius: 12px;
         border: 1px solid #E5E7EB;
-        padding: 0.5rem;
+        padding: 0.75rem;
         background-color: #fff;
     }
 
     .qr-info {
-        font-size: 1rem;
+        font-size: 1.1rem;
         color: var(--text-primary);
-        margin-top: 1.5rem;
+        margin-top: 1.75rem;
         text-align: left;
     }
 
         .qr-info p {
-            margin-bottom: 0.75rem;
+            margin-bottom: 1rem;
             display: flex;
             justify-content: space-between;
         }
@@ -315,32 +327,32 @@
         }
 
     .qr-header {
-        font-size: 1.1rem;
+        font-size: 1.2rem;
         font-weight: 600;
-        margin-bottom: 1rem;
+        margin-bottom: 1.25rem;
         color: var(--text-primary);
     }
 
     .loading-spinner {
         display: none;
-        border: 4px solid #f3f3f3;
-        border-top: 4px solid var(--primary);
+        border: 5px solid #f3f3f3;
+        border-top: 5px solid var(--primary);
         border-radius: 50%;
-        width: 32px;
-        height: 32px;
+        width: 40px;
+        height: 40px;
         animation: spin 1s linear infinite;
-        margin: 2rem auto;
+        margin: 2.5rem auto;
     }
 
     #cartItemsContainer {
-        max-height: 500px;
+        max-height: 550px;
         overflow-y: auto;
         scrollbar-width: thin;
         scrollbar-color: var(--primary) #f1f1f1;
     }
 
         #cartItemsContainer::-webkit-scrollbar {
-            width: 6px;
+            width: 8px;
         }
 
         #cartItemsContainer::-webkit-scrollbar-track {
@@ -349,10 +361,11 @@
 
         #cartItemsContainer::-webkit-scrollbar-thumb {
             background: var(--primary);
-            border-radius: 3px;
+            border-radius: 4px;
         }
 
-    
+    keyframes spin {
+        0%
 
     {
         transform: rotate(0deg);
@@ -364,6 +377,8 @@
 
     }
 
+    keyframes slideIn {
+        from
 
     {
         transform: translateY(-20px);
@@ -376,9 +391,128 @@
     }
 
     }
+
+    /* Footer CSS */
+    .footer {
+        background: linear-gradient(135deg, #1F2937 0%, #111827 100%);
+        color: white;
+        padding: 3rem 1rem;
+        width: 100vw;
+        margin-left: calc(-50vw + 50%);
+        flex-shrink: 0;
+        margin-top: auto;
+    }
+
+    .footer-container {
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 0 1.5rem;
+    }
+
+    .footer-section {
+        margin-bottom: 2.5rem;
+    }
+
+    .footer-title {
+        font-size: 1.25rem;
+        font-weight: 600;
+        margin-bottom: 1.25rem;
+        color: var(--secondary);
+    }
+
+    .footer-link {
+        display: block;
+        color: #D1D5DB;
+        text-decoration: none;
+        font-size: 0.95rem;
+        transition: color 0.2s ease;
+        margin-bottom: 0.75rem;
+    }
+
+        .footer-link:hover {
+            color: var(--primary);
+        }
+
+    .footer-social {
+        display: flex;
+        gap: 1.25rem;
+    }
+
+    .social-icon {
+        width: 44px;
+        height: 44px;
+        background: var(--primary);
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+        text-decoration: none;
+        transition: background 0.2s ease;
+    }
+
+        .social-icon:hover {
+            background: var(--primary-dark);
+        }
+
+    .footer-bottom {
+        border-top: 1px solid #374151;
+        padding-top: 2rem;
+        text-align: center;
+        color: #9CA3AF;
+        font-size: 0.9rem;
+    }
+
+    /* Responsive Footer */
+    media (max-width: 768px) {
+        .footer
+
+    {
+        padding: 2rem 1rem;
+    }
+
+    .footer-social {
+        justify-content: center;
+    }
+
+    }
+
+    /* Responsive General */
+    media (max-width: 768px) {
+        .grid-cols-1.lg\:grid-cols-2
+
+    {
+        grid-template-columns: 1fr;
+    }
+
+    .cart-item-image {
+        width: 60px;
+        height: 60px;
+    }
+
+    }
+
+    media (max-width: 480px) {
+        .cart-item
+
+    {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+
+    .cart-item-image {
+        margin-bottom: 1rem;
+    }
+
+    .cart-item-controls {
+        width: 100%;
+        justify-content: flex-start;
+    }
+
+    }
 </style>
 
-<div class="container mx-auto py-8 px-4 sm:px-6 lg:px-8">
+<div class="container mx-auto py-10 px-4 sm:px-6 lg:px-8 max-w-7xl">
     <h2 class="text-3xl font-bold text-gray-800 mb-8">Thanh Toán</h2>
 
     <!-- Notifications -->
@@ -411,7 +545,7 @@
                 @if (Model.CartItems != null && Model.CartItems.Any())
                 {
                     <div id="cartItemsContainer"></div>
-                    <div class="cart-total text-right">
+                    <div class="cart-total">
                         Tổng cộng: <span id="cartTotal">0 đ</span>
                     </div>
                 }
@@ -462,7 +596,7 @@
                         }
                     </div>
                     <span id="addressError" class="error-message">Vui lòng chọn một địa chỉ.</span>
-                    <button type="button" class="add-address-btn mb-6 w-full" onclick="openAddAddressModal()"><i class="bi bi-plus-circle mr-2"></i>Thêm Địa Chỉ Mới</button>
+                    <button type="button" class="add-address-btn mb-6" onclick="openAddAddressModal()"><i class="bi bi-plus-circle mr-2"></i>Thêm Địa Chỉ Mới</button>
 
                     <h4 class="text-lg font-semibold text-gray-800 mb-3">Chọn Voucher</h4>
                     <select name="selectedVoucher" id="voucherSelect" class="mb-6" onchange="applyVoucher()">
@@ -482,7 +616,7 @@
                         @{
                             var paymentMethods = new Dictionary<int, (string Name, string Icon)> {
                                                 { 4, ("Thanh toán khi nhận hàng", "bi-truck") },
-                                                { 5, ("Thanh toán Momo", "bi-wallet2") },
+                                                { 5, ("Thanh toán VNPAY", "bi-wallet2") },
                                                 { 3, ("Thanh toán QR", "bi-qr-code") }
                                                 };
                         }
@@ -514,7 +648,7 @@
                     </div>
                     <span id="paymentError" class="error-message">Vui lòng chọn một phương thức thanh toán.</span>
 
-                    <button type="submit" id="submitBtn" class="submit-btn w-full mt-4" onclick="return validateForm()"><i class="bi bi-check-circle mr-2"></i>Xác Nhận Thanh Toán</button>
+                    <button type="submit" id="submitBtn" class="submit-btn mt-6" disabled onclick="return validateForm()"><i class="bi bi-check-circle mr-2"></i>Xác Nhận Thanh Toán</button>
                 </form>
             </div>
         </div>
@@ -529,30 +663,30 @@
                 @Html.AntiForgeryToken()
                 <div class="form-group">
                     <label for="add_District">Quận/Huyện:</label>
-                    <select id="add_District" name="District" class="w-full p-2 border border-gray-300 rounded" onchange="updateAddWards()" required>
+                    <select id="add_District" name="District" class="w-full" onchange="updateAddWards()" required>
                         <option value="">Chọn Quận/Huyện</option>
                     </select>
                 </div>
                 <div class="form-group">
                     <label for="add_Ward">Phường/Xã:</label>
-                    <select id="add_Ward" name="Ward" class="w-full p-2 border border-gray-300 rounded" required>
+                    <select id="add_Ward" name="Ward" class="w-full" required>
                         <option value="">Chọn Phường/Xã</option>
                     </select>
                 </div>
                 <div class="form-group">
                     <label for="add_Tinh_Thanh">Tỉnh/Thành:</label>
-                    <input id="add_Tinh_Thanh" name="Tinh_Thanh" class="w-full p-2 border border-gray-300 rounded" value="Hà Nội" readonly />
+                    <input id="add_Tinh_Thanh" name="Tinh_Thanh" class="w-full" value="Hà Nội" readonly />
                 </div>
                 <div class="form-group">
                     <label for="add_Ghi_Chu">Địa chỉ chi tiết (Bắt buộc):</label>
-                    <input id="add_Ghi_Chu" name="Ghi_Chu" class="w-full p-2 border border-gray-300 rounded" required />
+                    <input id="add_Ghi_Chu" name="Ghi_Chu" class="w-full" required />
                 </div>
                 <div class="form-group">
                     <label for="add_Ghi_Chu_KhachHang">Ghi Chú Khách Hàng:</label>
-                    <input id="add_Ghi_Chu_KhachHang" name="Ghi_Chu_KhachHang" class="w-full p-2 border border-gray-300 rounded" />
+                    <input id="add_Ghi_Chu_KhachHang" name="Ghi_Chu_KhachHang" class="w-full" />
                 </div>
                 <input type="hidden" id="add_Dia_Chi" name="Dia_Chi" />
-                <div class="flex justify-end gap-2">
+                <div class="flex justify-end gap-3 mt-4">
                     <button type="submit" class="submit-btn">Thêm</button>
                     <button type="button" class="close-button" onclick="closeAddAddressModal()">Hủy</button>
                 </div>
@@ -570,31 +704,31 @@
                 <input type="hidden" id="edit_ID_Dia_Chi" name="ID_Dia_Chi" />
                 <div class="form-group">
                     <label for="edit_District">Quận/Huyện:</label>
-                    <select id="edit_District" name="District" class="w-full p-2 border border-gray-300 rounded" onchange="updateEditWards()" required>
+                    <select id="edit_District" name="District" class="w-full" onchange="updateEditWards()" required>
                         <option value="">Chọn Quận/Huyện</option>
                     </select>
                 </div>
                 <div class="form-group">
                     <label for="edit_Ward">Phường/Xã:</label>
-                    <select id="edit_Ward" name="Ward" class="w-full p-2 border border-gray-300 rounded" required>
+                    <select id="edit_Ward" name="Ward" class="w-full" required>
                         <option value="">Chọn Phường/Xã</option>
                     </select>
                 </div>
                 <div class="form-group">
                     <label for="edit_Tinh_Thanh">Tỉnh/Thành:</label>
-                    <input id="edit_Tinh_Thanh" name="Tinh_Thanh" class="w-full p-2 border border-gray-300 rounded" value="Hà Nội" readonly />
+                    <input id="edit_Tinh_Thanh" name="Tinh_Thanh" class="w-full" value="Hà Nội" readonly />
                 </div>
                 <div class="form-group">
                     <label for="edit_Ghi_Chu">Địa chỉ chi tiết (Bắt buộc):</label>
-                    <input id="edit_Ghi_Chu" name="Ghi_Chu" class="w-full p-2 border border-gray-300 rounded" required />
+                    <input id="edit_Ghi_Chu" name="Ghi_Chu" class="w-full" required />
                 </div>
                 <div class="form-group">
                     <label for="edit_Ghi_Chu_KhachHang">Ghi Chú Khách Hàng:</label>
-                    <input id="edit_Ghi_Chu_KhachHang" name="Ghi_Chu_KhachHang" class="w-full p-2 border border-gray-300 rounded" />
+                    <input id="edit_Ghi_Chu_KhachHang" name="Ghi_Chu_KhachHang" class="w-full" />
                 </div>
                 <input type="hidden" id="edit_Dia_Chi" name="Dia_Chi" />
                 <input type="hidden" name="Trang_Thai" value="true" />
-                <div class="flex justify-end gap-2">
+                <div class="flex justify-end gap-3 mt-4">
                     <button type="submit" class="submit-btn">Cập Nhật</button>
                     <button type="button" class="close-button" onclick="closeEditModal()">Hủy</button>
                 </div>
@@ -611,9 +745,9 @@
                 <input type="hidden" id="add_ID_Khach_Hang" name="iD_Khach_Hang" />
                 <div class="form-group">
                     <label for="add_So_Dien_Thoai">Số Điện Thoại:</label>
-                    <input id="add_So_Dien_Thoai" name="so_Dien_Thoai" class="w-full p-2 border border-gray-300 rounded" required pattern="[0-9]{10}" title="Số điện thoại phải là 10 chữ số" />
+                    <input id="add_So_Dien_Thoai" name="so_Dien_Thoai" type="tel" class="w-full" required pattern="[0-9]{10}" title="Số điện thoại phải là 10 chữ số" />
                 </div>
-                <div class="flex justify-end gap-2">
+                <div class="flex justify-end gap-3 mt-4">
                     <button type="submit" class="add-phone-btn">Thêm</button>
                     <button type="button" class="close-button" onclick="closeAddPhoneModal()">Hủy</button>
                 </div>
@@ -630,9 +764,9 @@
                 <input type="hidden" id="edit_ID_Khach_Hang" name="iD_Khach_Hang" />
                 <div class="form-group">
                     <label for="edit_So_Dien_Thoai">Số Điện Thoại:</label>
-                    <input id="edit_So_Dien_Thoai" name="so_Dien_Thoai" class="w-full p-2 border border-gray-300 rounded" required pattern="[0-9]{10}" title="Số điện thoại phải là 10 chữ số" />
+                    <input id="edit_So_Dien_Thoai" name="so_Dien_Thoai" type="tel" class="w-full" required pattern="[0-9]{10}" title="Số điện thoại phải là 10 chữ số" />
                 </div>
-                <div class="flex justify-end gap-2">
+                <div class="flex justify-end gap-3 mt-4">
                     <button type="submit" class="edit-phone-btn">Cập Nhật</button>
                     <button type="button" class="close-button" onclick="closeEditPhoneModal()">Hủy</button>
                 </div>
@@ -659,6 +793,73 @@
             </div>
         </div>
     </div>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="footer-container">
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-6">
+                <!-- Thông tin cửa hàng -->
+                <div class="footer-section">
+                    <h3 class="footer-title">TheBoy Trà Sữa</h3>
+                    <p class="text-sm text-gray-300 mb-4">Cửa hàng trà sữa tươi ngon, nguyên liệu chất lượng cao. Mang đến những ly trà sữa thơm ngon, đậm đà hương vị Việt Nam.</p>
+                    <div class="flex items-center gap-4">
+                        <i class="bi bi-geo-alt text-primary text-lg"></i>
+                        <span class="text-sm">123 Đường ABC, Quận 1, TP. HCM</span>
+                    </div>
+                    <div class="flex items-center gap-4 mt-2">
+                        <i class="bi bi-telephone text-primary text-lg"></i>
+                        <span class="text-sm">+84 123 456 789</span>
+                    </div>
+                    <div class="flex items-center gap-4 mt-2">
+                        <i class="bi bi-envelope text-primary text-lg"></i>
+                        <span class="text-sm">theboy@trasua.vn</span>
+                    </div>
+                </div>
+
+                <!-- Menu nhanh -->
+                <div class="footer-section">
+                    <h3 class="footer-title">Menu</h3>
+                    <a href="/" class="footer-link">Trang chủ</a>
+                    <a href="/SanPham" class="footer-link">Sản phẩm</a>
+                    <a href="/GioiThieu" class="footer-link">Giới thiệu</a>
+                    <a href="/LienHe" class="footer-link">Liên hệ</a>
+                    <a href="/KhuyenMai" class="footer-link">Khuyến mãi</a>
+                </div>
+
+                <!-- Dịch vụ -->
+                <div class="footer-section">
+                    <h3 class="footer-title">Dịch vụ</h3>
+                    <a href="/GiaoHang" class="footer-link">Giao hàng</a>
+                    <a href="/ThanhToan" class="footer-link">Thanh toán</a>
+                    <a href="/ChinhSach" class="footer-link">Chính sách</a>
+                    <a href="/HoiDap" class="footer-link">Hỏi đáp</a>
+                </div>
+
+                <!-- Mạng xã hội -->
+                <div class="footer-section">
+                    <h3 class="footer-title">Theo dõi chúng tôi</h3>
+                    <div class="footer-social">
+                        <a href="https://facebook.com/theboytrasua" class="social-icon" target="_blank" rel="noopener">
+                            <i class="bi bi-facebook"></i>
+                        </a>
+                        <a href="https://instagram.com/theboytrasua" class="social-icon" target="_blank" rel="noopener">
+                            <i class="bi bi-instagram"></i>
+                        </a>
+                        <a href="https://tiktok.com/theboytrasua" class="social-icon" target="_blank" rel="noopener">
+                            <i class="bi bi-tiktok"></i>
+                        </a>
+                        <a href="https://zalo.me/theboytrasua" class="social-icon" target="_blank" rel="noopener">
+                            <i class="bi bi-chat-dots"></i>
+                        </a>
+                    </div>
+                    <p class="text-sm text-gray-300 mt-4">Nhận ưu đãi đặc biệt qua app!</p>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <p>&copy; 2025 TheBoy Trà Sữa. Tất cả quyền được bảo lưu. | Thiết kế bởi xAI</p>
+            </div>
+        </div>
+    </footer>
 
     <script>
         const wardsData = {
@@ -697,13 +898,6 @@
             });
         }
 
-        // Lấy dữ liệu từ cookie
-        const selectedItemsCookie = '@Html.Raw(ViewBag.SelectedItems)';
-        let selectedItems = [];
-        let cartTotal = 0;
-        let sizes = [];
-        let hasPhoneNumber = false;
-
         // Fetch size prices from API
         async function fetchSizes() {
             try {
@@ -726,7 +920,7 @@
             return size ? size.gia : 0;
         }
 
-        // Check phone number existence
+        // Check phone number existence and update button state
         async function checkPhoneNumber() {
             const customerId = parseInt(document.getElementById('customerId').value) || 0;
             const submitBtn = document.getElementById('submitBtn');
@@ -759,13 +953,11 @@
                     phoneNumberDisplay.textContent = `Số điện thoại: ${phoneData.soDienThoai}`;
                     addPhoneBtn.classList.add('hidden');
                     editPhoneBtn.classList.remove('hidden');
-                    submitBtn.disabled = false;
                     phoneError.style.display = 'none';
                 } else {
                     phoneNumberDisplay.textContent = 'Chưa có số điện thoại.';
                     addPhoneBtn.classList.remove('hidden');
                     editPhoneBtn.classList.add('hidden');
-                    submitBtn.disabled = true;
                     phoneError.style.display = 'block';
                 }
             } catch (e) {
@@ -776,6 +968,7 @@
                 editPhoneBtn.classList.add('hidden');
                 submitBtn.disabled = true;
             }
+            updateSubmitButtonState();
         }
 
         // Open add phone modal
@@ -918,7 +1111,7 @@
 
                 showAlert('Thêm địa chỉ thành công!', 'success');
                 closeAddAddressModal();
-                window.location.reload(); // Reload để cập nhật danh sách địa chỉ
+                window.location.reload();
             } catch (e) {
                 console.error('Error adding address:', e);
                 showAlert('Lỗi khi thêm địa chỉ. Vui lòng thử lại.', 'error');
@@ -956,7 +1149,7 @@
 
                 showAlert('Cập nhật địa chỉ thành công!', 'success');
                 closeEditModal();
-                window.location.reload(); // Reload để cập nhật danh sách địa chỉ
+                window.location.reload();
             } catch (e) {
                 console.error('Error updating address:', e);
                 showAlert('Lỗi khi cập nhật địa chỉ. Vui lòng thử lại.', 'error');
@@ -1016,17 +1209,22 @@
             });
 
             cartTotalElement.textContent = cartTotal.toLocaleString('vi-VN') + ' đ';
+            updateSubmitButtonState();
         }
 
         // Initialize cart and districts
+        let selectedItems = [];
+        let cartTotal = 0;
+        let sizes = [];
+        let hasPhoneNumber = false;
         try {
-            selectedItems = JSON.parse(decodeURIComponent(selectedItemsCookie));
+            selectedItems = JSON.parse(decodeURIComponent('@Html.Raw(ViewBag.SelectedItems)'));
             console.log('Selected Items from Cookie:', selectedItems);
             renderCartItems();
             checkPhoneNumber();
             populateDistricts();
         } catch (e) {
-            console.error('Error parsing selectedItemsCookie:', e, 'Input:', selectedItemsCookie);
+            console.error('Error parsing selectedItemsCookie:', e);
             showAlert('Lỗi khi xử lý dữ liệu giỏ hàng. Vui lòng thử lại.', 'error');
             selectedItems = [];
             document.getElementById('cartItemsContainer').innerHTML = '<p class="cart-empty text-gray-500">Không có sản phẩm nào được chọn để thanh toán. Vui lòng kiểm tra lại.</p>';
@@ -1079,6 +1277,7 @@
                     wardSelect.appendChild(option);
                 });
             }
+            updateSubmitButtonState();
         }
 
         function updateEditWards() {
@@ -1146,6 +1345,7 @@
             } else {
                 closeQRCodeModal();
             }
+            updateSubmitButtonState();
         }
 
         function applyVoucher() {
@@ -1224,6 +1424,14 @@
                 showAlert('Lỗi khi xóa giỏ hàng. Một số mục có thể vẫn còn.', 'error');
                 return false;
             }
+        }
+
+        function updateSubmitButtonState() {
+            const paymentSelected = document.querySelector('input[name="selectedPaymentMethod"]:checked');
+            const addressSelected = document.querySelector('input[name="selectedAddress"]:checked');
+            const submitBtn = document.getElementById('submitBtn');
+
+            submitBtn.disabled = !(hasPhoneNumber && paymentSelected && addressSelected && selectedItems.length > 0);
         }
 
         async function validateForm() {
@@ -1357,4 +1565,15 @@
                 }
             }, 3000);
         }
+
+        // Add event listeners for real-time validation
+        document.querySelectorAll('input[name="selectedAddress"]').forEach(input => {
+            input.addEventListener('change', updateSubmitButtonState);
+        });
+        document.querySelectorAll('input[name="selectedPaymentMethod"]').forEach(input => {
+            input.addEventListener('change', updateSubmitButtonState);
+        });
     </script>
+
+
+

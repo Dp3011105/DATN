@@ -1,4 +1,4 @@
-﻿@model SanPham
+﻿@* @model SanPham
 @{
     Layout = "~/Views/Shared/_AdminLayout.cshtml";
 }
@@ -146,5 +146,191 @@
 
     dl dt {
         color: #007bff;
+    }
+</style> *@
+
+
+
+
+
+@model SanPham
+@{
+    Layout = "~/Views/Shared/_AdminLayout.cshtml";
+    ViewData["Title"] = "Chi tiết sản phẩm";
+}
+
+<div class="container-fluid my-5">
+    <!-- Notifications -->
+    @if (TempData["Success"] != null)
+    {
+        <div class="alert alert-success alert-dismissible fade show animate__animated animate__fadeInDown" role="alert">
+            @TempData["Success"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    }
+    @if (TempData["Error"] != null)
+    {
+        <div class="alert alert-danger alert-dismissible fade show animate__animated animate__fadeInDown" role="alert">
+            @TempData["Error"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    }
+
+    <!-- Product Details -->
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card shadow-sm border-0">
+                <div class="card-body p-5">
+                    <h2 class="text-center mb-4 fw-bold text-dark">@Model.Ten_San_Pham</h2>
+                    <hr class="mb-4" />
+                    <dl class="row">
+                        <dt class="col-sm-3 fw-bold text-muted">ID</dt>
+                        <dd class="col-sm-9">@Model.ID_San_Pham</dd>
+
+                        <dt class="col-sm-3 fw-bold text-muted">Giá</dt>
+                        <dd class="col-sm-9">@string.Format("{0:N0} đ", Model.Gia)</dd>
+
+                        <dt class="col-sm-3 fw-bold text-muted">Số lượng</dt>
+                        <dd class="col-sm-9">@Model.So_Luong</dd>
+
+                        <dt class="col-sm-3 fw-bold text-muted">Hình ảnh</dt>
+                        <dd class="col-sm-9">
+                            <img src="@("https://localhost:7169" + Model.Hinh_Anh)" alt="@Model.Ten_San_Pham" class="img-fluid shadow" style="max-width: 200px; aspect-ratio: 4/3; object-fit: cover; border-radius: 4px;" />
+                        </dd>
+
+                        <dt class="col-sm-3 fw-bold text-muted">Mô tả</dt>
+                        <dd class="col-sm-9">@Model.Mo_Ta</dd>
+
+                        <dt class="col-sm-3 fw-bold text-muted">Trạng thái</dt>
+                        <dd class="col-sm-9">
+                            <span class="badge bg-@(Model.Trang_Thai ? "success" : "danger")">
+                                @(Model.Trang_Thai ? "Hoạt động" : "Không hoạt động")
+                            </span>
+                        </dd>
+
+                        <dt class="col-sm-3 fw-bold text-muted">Kích thước</dt>
+                        <dd class="col-sm-9">
+                            @if (Model.Sizes.Any())
+                            {
+                                <ul class="list-group list-group-flush">
+                                    @foreach (var size in Model.Sizes)
+                                    {
+                                        <li class="list-group-item">@size.SizeName (@(size.Trang_Thai ? "Hoạt động" : "Không hoạt động"))</li>
+                                    }
+                                </ul>
+                            }
+                            else
+                            {
+                                <span>Không có kích thước</span>
+                            }
+                        </dd>
+
+                        <dt class="col-sm-3 fw-bold text-muted">Lượng đá</dt>
+                        <dd class="col-sm-9">
+                            @if (Model.LuongDas.Any())
+                            {
+                                <ul class="list-group list-group-flush">
+                                    @foreach (var luongDa in Model.LuongDas)
+                                    {
+                                        <li class="list-group-item">@luongDa.Ten_LuongDa (@(luongDa.Trang_Thai ? "Hoạt động" : "Không hoạt động"))</li>
+                                    }
+                                </ul>
+                            }
+                            else
+                            {
+                                <span>Không có lượng đá</span>
+                            }
+                        </dd>
+
+                        <dt class="col-sm-3 fw-bold text-muted">Độ ngọt</dt>
+                        <dd class="col-sm-9">
+                            @if (Model.DoNgots.Any())
+                            {
+                                <ul class="list-group list-group-flush">
+                                    @foreach (var doNgot in Model.DoNgots)
+                                    {
+                                        <li class="list-group-item">@doNgot.Muc_Do (@(doNgot.Trang_Thai ? "Hoạt động" : "Không hoạt động"))</li>
+                                    }
+                                </ul>
+                            }
+                            else
+                            {
+                                <span>Không có độ ngọt</span>
+                            }
+                        </dd>
+
+                        <dt class="col-sm-3 fw-bold text-muted">Topping</dt>
+                        <dd class="col-sm-9">
+                            @if (Model.Toppings.Any())
+                            {
+                                <ul class="list-group list-group-flush">
+                                    @foreach (var topping in Model.Toppings)
+                                    {
+                                        <li class="list-group-item">@topping.Ten (Giá: @string.Format("{0:N0} đ", topping.Gia), Số lượng: @topping.So_Luong, @(topping.Trang_Thai ? "Hoạt động" : "Không hoạt động"))</li>
+                                    }
+                                </ul>
+                            }
+                            else
+                            {
+                                <span>Không có topping</span>
+                            }
+                        </dd>
+                    </dl>
+                    <div class="d-flex justify-content-between mt-4">
+                        <a asp-action="EditProduct" asp-route-id="@Model.ID_San_Pham" class="btn btn-outline-warning">
+                            <i class="bi bi-pencil me-2"></i>Sửa
+                        </a>
+                        <a asp-action="Index" class="btn btn-outline-secondary">
+                            <i class="bi bi-arrow-left me-2"></i>Quay lại
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css" />
+
+<style>
+    .card {
+        border-radius: 8px;
+    }
+
+    .btn-outline-warning, .btn-outline-secondary {
+        border-radius: 4px;
+        transition: background-color 0.3s ease, transform 0.2s ease;
+    }
+
+        .btn-outline-warning:hover, .btn-outline-secondary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+        }
+
+    .img-fluid {
+        border-radius: 4px;
+    }
+
+    .badge {
+        font-size: 0.9rem;
+        padding: 0.5em 1em;
+    }
+
+    dl dt {
+        color: #495057;
+    }
+
+    .list-group-item {
+        border: none;
+        padding: 0.5rem 0;
+        font-size: 0.95rem;
+    }
+
+    hr {
+        border-color: #e9ecef;
+    }
+
+    .text-muted {
+        color: #495057 !important;
     }
 </style>
