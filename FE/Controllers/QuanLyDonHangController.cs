@@ -1,8 +1,8 @@
-﻿using BE.models;
+﻿using BE.models;                 // HoaDon, HoaDonChiTiet ...
 using FE.Filters;
-using FE.Service.IService;
+using FE.Service.IService;       // IProductService
 using Microsoft.AspNetCore.Mvc;
-using Service.IService;
+using Service.IService;          // IHoaDonService
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -11,7 +11,6 @@ using System.Threading.Tasks;
 namespace FE.Controllers
 {
     [RoleAuthorize(2, 3)] // Trang cho phép cả vai trò 2 và 3
-    // Phương thức này đươc để trong thư mục Filters nhé ae
     public class QuanLyDonHangController : Controller
     {
         private readonly IHoaDonService _hoaDonService;
@@ -90,6 +89,47 @@ namespace FE.Controllers
         {
             var hd = await _hoaDonService.GetByIdAsync(id);
             if (hd == null) return NotFound();
+
+            // 🔥 NẠP DANH MỤC TOPPING LÀM FALLBACK (Tên + Giá) NẾU BE KHÔNG INCLUDE Topping
+            var allToppings = await _productService.GetToppingsAsync() ?? new List<FE.Models.Topping>();
+
+            // ——— Helpers lấy tên/giá an toàn cho các schema khác nhau (Ten/Ten_Topping/Name, Gia/Gia_Topping/Price) ———
+            static string GetTopName(object t, int id)
+            {
+                var tp = t.GetType();
+                var pi = tp.GetProperty("Ten") ?? tp.GetProperty("Ten_Topping") ?? tp.GetProperty("Name");
+                var val = pi?.GetValue(t) as string;
+                return string.IsNullOrWhiteSpace(val) ? $"T#{id}" : val.Trim();
+            }
+            static decimal GetTopPrice(object t)
+            {
+                var tp = t.GetType();
+                var pi = tp.GetProperty("Gia") ?? tp.GetProperty("Gia_Topping") ?? tp.GetProperty("Price");
+                var v = pi?.GetValue(t);
+                return v switch
+                {
+                    decimal d => d,
+                    double d => (decimal)d,
+                    float f => (decimal)f,
+                    int i => i,
+                    long l => l,
+                    _ => 0m
+                };
+            }
+
+            // Map: ID_Topping -> (Ten, Gia)
+            var toppingMap = allToppings
+                .GroupBy(x => x.ID_Topping)
+                .ToDictionary(
+                    g => g.Key,
+                    g =>
+                    {
+                        var last = g.Last(); // phòng trùng id
+                        return (Ten: GetTopName(last, last.ID_Topping), Gia: GetTopPrice(last));
+                    });
+
+            // 👇 Bơm vào ViewBag để View đọc khi navigation t.Topping == null
+            ViewBag.ToppingMap = toppingMap;
 
             var vm = new ChiTietHoaDonViewModel
             {
@@ -180,7 +220,6 @@ namespace FE.Controllers
         }
 
         // ============== STATE TRANSITIONS ==============
-        // Bước 1: Chưa xác nhận -> Đã xác nhận
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> XacNhan(int id)
@@ -202,7 +241,6 @@ namespace FE.Controllers
             return RedirectToAction(nameof(Index));
         }
 
-        // Bước 2: Đã xác nhận -> Đang xử lý
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> BatDauXuLy(int id)
@@ -224,7 +262,6 @@ namespace FE.Controllers
             return RedirectToAction(nameof(Index));
         }
 
-        // Bước 3: Đang xử lý -> Đang giao hàng
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> BatDauGiaoHang(int id)
@@ -246,7 +283,6 @@ namespace FE.Controllers
             return RedirectToAction(nameof(Index));
         }
 
-        // Bước 4: Đang giao hàng -> Hoàn thành
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> GiaoHangThanhCong(int id)

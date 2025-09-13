@@ -51,10 +51,11 @@ namespace BE.models
         [ForeignKey(nameof(ID_LuongDa))]
         [JsonIgnore, ValidateNever] public virtual LuongDa? LuongDa { get; set; }
 
-        [JsonIgnore, ValidateNever]
+        [ ValidateNever]
         public virtual List<HoaDonChiTietTopping> HoaDonChiTietToppings { get; set; } = new();
 
         [JsonIgnore, ValidateNever]
         public virtual List<HoaDonChiTietThue> HoaDonChiTietThues { get; set; } = new();
+
     }
 }

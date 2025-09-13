@@ -347,7 +347,9 @@ namespace FE.Controllers
                         if (!toppingMap.TryGetValue(tid, out var top)) continue;
                         var g = top?.Gia ?? 0m;
                         tienTopOne += g;
-                        topPayload.Add(new { ID_Topping = tid, Gia = g });
+                        // cũ: topPayload.Add(new { ID_Topping = tid, Gia = g });
+                        topPayload.Add(new { ID_Topping = tid, So_Luong = 1, Gia_Topping = g });
+
                     }
 
                     // Đơn giá 1 sản phẩm (sau KM) + size + topping
