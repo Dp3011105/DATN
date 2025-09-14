@@ -1,4 +1,4 @@
-﻿@model FE.Models.RegisterModel
+﻿@* @model FE.Models.RegisterModel
 
 @{
     ViewData["Title"] = "Đăng ký";
@@ -240,5 +240,185 @@
     .form-label {
         font-weight: 500;
         color: #495057;
+    }
+</style> *@
+
+
+
+
+
+
+
+
+
+
+
+
+
+@model FE.Models.RegisterModel
+
+@{
+    ViewData["Title"] = "Đăng ký";
+}
+
+<div class="register-container d-flex justify-content-center align-items-center min-vh-100">
+    <!-- Register Card -->
+    <div class="glass-card p-5 shadow-lg">
+        <h2 class="text-center mb-4 fw-bold text-white">Đăng Ký</h2>
+
+        <!-- Notifications -->
+        @if (TempData["Success"] != null)
+        {
+            <div class="alert alert-success alert-dismissible fade show" role="alert">
+                <i class="bi bi-check-circle-fill me-2"></i>
+                <span>@TempData["Success"]</span>
+                <p class="mt-1 mb-0">Tài khoản đã được tạo. <a href="@Url.Action("Login", "Account")" class="text-primary fw-bold">Đăng nhập ngay</a> để bắt đầu trải nghiệm!</p>
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+        }
+        @if (TempData["Error"] != null)
+        {
+            <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                <i class="bi bi-exclamation-triangle-fill me-2"></i>
+                <span>@TempData["Error"]</span>
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+        }
+
+        <form asp-action="Register" method="post" id="registerForm" class="mt-3">
+            <div asp-validation-summary="ModelOnly" class="text-danger mb-3 text-center"></div>
+
+            <div class="mb-3">
+                <label asp-for="Email" class="form-label text-white">Email</label>
+                <input asp-for="Email" class="form-control shadow-sm" id="email" placeholder="user@example.com" required />
+                <span asp-validation-for="Email" class="text-danger small"></span>
+            </div>
+
+            <div class="mb-3">
+                <label asp-for="Ho_Ten" class="form-label text-white">Họ tên</label>
+                <input asp-for="Ho_Ten" class="form-control shadow-sm" id="fullname" placeholder="Nguyễn Văn A" required />
+                <span asp-validation-for="Ho_Ten" class="text-danger small"></span>
+            </div>
+
+            <div class="mb-3">
+                <label asp-for="Ten_Nguoi_Dung" class="form-label text-white">Tên Đăng nhập</label>
+                <input asp-for="Ten_Nguoi_Dung" class="form-control shadow-sm" id="username" placeholder="user123" required />
+                <span asp-validation-for="Ten_Nguoi_Dung" class="text-danger small"></span>
+            </div>
+
+            <button type="submit" class="btn btn-glass w-100 mb-2" id="submitButton" disabled>
+                <i class="bi bi-person-plus-fill me-2"></i>Đăng ký
+            </button>
+
+            <div class="text-center mt-3 text-white">
+                <p>Đã có tài khoản? <a href="@Url.Action("Login", "Account")" class="text-primary fw-bold">Đăng nhập ngay</a></p>
+            </div>
+        </form>
+    </div>
+</div>
+
+@section Scripts {
+    <script src="~/lib/jquery/dist/jquery.min.js"></script>
+    <script src="~/lib/jquery-validation/dist/jquery.validate.min.js"></script>
+    <script src="~/lib/jquery-validation-unobtrusive/jquery.validate.unobtrusive.min.js"></script>
+    <script>
+        $(document).ready(function () {
+            // Chuyển thông báo validation sang tiếng Việt
+            $.extend($.validator.messages, {
+                required: "Trường này là bắt buộc.",
+                email: "Vui lòng nhập địa chỉ email hợp lệ.",
+                minlength: $.validator.format("Nhập ít nhất {0} ký tự."),
+                maxlength: $.validator.format("Không được vượt quá {0} ký tự.")
+            });
+
+            // Custom validation cho username
+            $.validator.addMethod("usernameFormat", function (value, element) {
+                return this.optional(element) || /^[a-zA-Z0-9_.]+$/.test(value) && !/\s/.test(value);
+            }, "Tên đăng nhập chỉ chứa chữ cái, số, dấu chấm (.) hoặc dấu gạch dưới (_), không chứa khoảng trắng.");
+
+            var form = $("#registerForm").validate({
+                errorClass: "text-danger",
+                highlight: function (element) { $(element).addClass("is-invalid").removeClass("is-valid"); },
+                unhighlight: function (element) { $(element).removeClass("is-invalid").addClass("is-valid"); },
+                rules: {
+                    Email: { required: true, email: true, maxlength: 100 },
+                    Ho_Ten: { required: true, minlength: 2, maxlength: 100 },
+                    Ten_Nguoi_Dung: { required: true, usernameFormat: true, minlength: 3, maxlength: 50 }
+                }
+            });
+
+            $("#registerForm input").on("input blur", function () {
+                $("#submitButton").prop("disabled", !form.valid());
+            });
+
+            $("#registerForm").validate().form();
+        });
+    </script>
+}
+
+<style scoped>
+    /* Glassmorphism Card */
+    .glass-card {
+        background: rgba(255, 255, 255, 0.15);
+        backdrop-filter: blur(12px);
+        -webkit-backdrop-filter: blur(12px);
+        border-radius: 20px;
+        border: 1px solid rgba(255, 255, 255, 0.3);
+        max-width: 400px;
+        width: 100%;
+        color: #fff;
+    }
+
+    /* Buttons */
+    .btn-glass {
+        background: rgba(255, 255, 255, 0.2);
+        color: #fff;
+        border: 1px solid rgba(255, 255, 255, 0.3);
+        border-radius: 8px;
+        padding: 10px;
+        font-size: 1.05rem;
+        transition: all 0.3s ease;
+    }
+
+        .btn-glass:hover {
+            background: rgba(255, 255, 255, 0.35);
+            transform: scale(1.02);
+        }
+
+    /* Form controls */
+    .form-control {
+        border-radius: 8px;
+        border: none;
+        padding: 10px;
+        font-size: 1rem;
+        background: rgba(255, 255, 255, 0.15);
+        color: #fff;
+        backdrop-filter: blur(10px);
+    }
+
+        .form-control::placeholder {
+            color: rgba(255, 255, 255, 0.7);
+        }
+
+        .form-control.is-invalid {
+            border-color: #ff6b6b;
+            box-shadow: 0 0 5px rgba(255, 107, 107, 0.5);
+        }
+
+        .form-control.is-valid {
+            border-color: #4ade80;
+            box-shadow: 0 0 5px rgba(74, 222, 128, 0.5);
+        }
+
+    /* Alerts */
+    .alert {
+        border-radius: 10px;
+        text-align: center;
+        font-weight: 500;
+    }
+
+    /* Page background */
+    body {
+        background: linear-gradient(135deg, #667eea, #764ba2);
     }
 </style>

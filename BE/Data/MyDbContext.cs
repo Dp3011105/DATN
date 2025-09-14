@@ -426,7 +426,7 @@ namespace BE.Data
               new HinhThucThanhToan { ID_Hinh_Thuc_Thanh_Toan = 2, Phuong_Thuc_Thanh_Toan = "The", Cong_Thanh_Toan = "Card", Trang_Thai = true },
               new HinhThucThanhToan { ID_Hinh_Thuc_Thanh_Toan = 3, Phuong_Thuc_Thanh_Toan = "ChuyenKhoan", Cong_Thanh_Toan = "Bank", Trang_Thai = true },
               new HinhThucThanhToan { ID_Hinh_Thuc_Thanh_Toan = 4, Phuong_Thuc_Thanh_Toan = "Thanh Toan Khi Nhan Hang", Cong_Thanh_Toan = "Cash", Trang_Thai = true },
-              new HinhThucThanhToan { ID_Hinh_Thuc_Thanh_Toan = 5, Phuong_Thuc_Thanh_Toan = "Thanh Toan MoMo", Cong_Thanh_Toan = "Bank", Trang_Thai = true }
+              new HinhThucThanhToan { ID_Hinh_Thuc_Thanh_Toan = 5, Phuong_Thuc_Thanh_Toan = "Thanh Toán VNPAY", Cong_Thanh_Toan = "Bank", Trang_Thai = true }
 
 
           );

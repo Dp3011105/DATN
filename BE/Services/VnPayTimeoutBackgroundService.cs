@@ -17,16 +17,15 @@ namespace BE.Services
 
         protected override Task ExecuteAsync(CancellationToken stoppingToken)
         {
-            // Chạy kiểm tra mỗi 5 phút (có thể điều chỉnh)
             var timer = new Timer(DoWork, null, TimeSpan.Zero, TimeSpan.FromMinutes(5)); //5 phút thực hiện check 1 lần
-            //var timer = new Timer(DoWork, null, TimeSpan.Zero, TimeSpan.FromSeconds(10)); ////10 giây thực hiện check 1 lần (test)
+            //var timer = new Timer(DoWork, null, TimeSpan.Zero, TimeSpan.FromSeconds(5)); ////5 giây thực hiện check 1 lần (test)
             return Task.CompletedTask;
         }
 
         private async void DoWork(object? state)
         {
             using var scope = _serviceProvider.CreateScope();
-            var context = scope.ServiceProvider.GetRequiredService<MyDbContext>(); // Thay bằng tên DbContext thực tế của bạn
+            var context = scope.ServiceProvider.GetRequiredService<MyDbContext>(); 
 
             try
             {
@@ -34,7 +33,8 @@ namespace BE.Services
                 var vietnamTimeZone = TimeZoneInfo.FindSystemTimeZoneById("SE Asia Standard Time");
                 var vietnamNow = TimeZoneInfo.ConvertTimeFromUtc(DateTime.UtcNow, vietnamTimeZone);
                 var timeoutThreshold = vietnamNow.AddMinutes(-15);// sau 15 phút đặt hàng mà người dùng không thanh toán và không hủy đơn thì sẽ tự động hủy 
-                //var timeoutThreshold = vietnamNow.AddSeconds(-30);//30 giây mà không thanh toán hủy luôn (test)
+                //var timeoutThreshold = vietnamNow.AddSeconds(-10);//10 giây mà không thanh toán hủy luôn (test)
+
                 // Truy vấn các hóa đơn VNPAY đang chờ quá 15 phút
                 var pendingInvoices = await context.Hoa_Don
                     .Include(h => h.KhachHang)

@@ -585,6 +585,66 @@
         }
 
         }
+
+
+
+
+        /* CSS cho chat bubble và chat frame */
+        .chat-bubble {
+            position: fixed;
+            bottom: 1rem; /* Khoảng cách từ đáy */
+            right: 1rem; /* Khoảng cách từ bên phải */
+            z-index: 50;
+            cursor: pointer;
+            background-color: #3B82F6; /* Màu xanh */
+            color: white;
+            border-radius: 50%;
+            padding: 1rem; /* Tăng padding để biểu tượng lớn hơn */
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+            transition: background-color 0.3s;
+        }
+
+            .chat-bubble:hover {
+                background-color: #2563EB; /* Màu xanh đậm khi hover */
+            }
+
+        .chat-frame {
+            position: fixed;
+            bottom: 0; /* Đặt khung ở đáy */
+            right: 0; /* Đặt khung ở bên phải */
+            z-index: 50;
+            width: 23rem; /* Chiều rộng */
+            height: 35rem; /* Chiều cao */
+            background-color: white;
+            border-radius: 1rem; /* Bo góc tinh tế */
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+            overflow: hidden;
+            display: none; /* Ẩn mặc định */
+        }
+
+        .close-chat {
+            position: absolute;
+            top: 0.5rem; /* Khoảng cách từ trên */
+            right: 0.5rem; /* Khoảng cách từ bên phải */
+            background: red; /* Màu đỏ */
+            border: none;
+            border-radius: 50%; /* Bo tròn */
+            width: 30px; /* Chiều rộng */
+            height: 30px; /* Chiều cao */
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+        }
+
+            .close-chat i {
+                font-size: 1rem; /* Kích thước biểu tượng */
+                color: white; /* Màu chữ */
+            }
+
+        .chat-bubble i {
+            font-size: 2rem; /* Kích thước biểu tượng chat lớn hơn */
+        }
     </style>
 </head>
 <body>
@@ -948,6 +1008,8 @@
                     <a href="/HoiDap" class="footer-link">Hỏi đáp</a>
                 </div>
 
+
+
                 <!-- Mạng xã hội -->
                 <div class="footer-section">
                     <h3 class="footer-title">Theo dõi chúng tôi</h3>
@@ -973,6 +1035,21 @@
             </div>
         </div>
     </footer>
+
+
+    <!-- Chat Bubble -->
+    <div id="chatBubble" class="chat-bubble">
+        <i class="bi bi-chat-dots text-2xl"></i> <!-- Icon chat từ Bootstrap Icons -->
+    </div>
+
+    <!-- Chat Frame (ẩn mặc định) -->
+    <div id="chatFrame" class="chat-frame">
+        <button id="closeChat" class="close-chat">
+            <i class="bi bi-x"></i>
+        </button>
+        <iframe src="https://localhost:7081/chat/chatai" class="w-full h-full border-none"></iframe>
+    </div>
+
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script>
@@ -1064,6 +1141,24 @@
                     console.error('Lỗi fetch most purchased:', error);
                 }
             }
+
+
+
+
+
+        const chatBubble = document.getElementById('chatBubble');
+               const chatFrame = document.getElementById('chatFrame');
+               const closeChat = document.getElementById('closeChat');
+
+               // Hiện chat frame khi nhấp vào chat bubble
+               chatBubble.addEventListener('click', () => {
+                   chatFrame.style.display = chatFrame.style.display === 'none' ? 'block' : 'none';
+               });
+
+               // Đóng chat frame
+               closeChat.addEventListener('click', () => {
+                   chatFrame.style.display = 'none';
+               });
 
             Promise.all([fetchProducts(), fetchSizes(), fetchMostPurchased()]);
 
@@ -1726,6 +1821,7 @@
     }
     var currentDate = TimeZoneInfo.ConvertTimeFromUtc(DateTime.UtcNow, vnTimeZone);
 }
+@Html.Partial("_ShopClosedNotice")
 
 <!DOCTYPE html>
 <html lang="vi">
@@ -1905,6 +2001,16 @@
             padding: 3px 8px;
             border-radius: 16px;
             z-index: 10;
+        }
+
+        /* Price Styles */
+        .original-price {
+            text-decoration: line-through;
+            color: var(--text-secondary);
+        }
+
+        .discounted-price {
+            font-weight: bold;
         }
 
         /* Cart Container */
@@ -2296,9 +2402,6 @@
         }
 
         }
-
-
-
 
         /* CSS cho chat bubble và chat frame */
         .chat-bubble {
@@ -2719,8 +2822,6 @@
                     <a href="/HoiDap" class="footer-link">Hỏi đáp</a>
                 </div>
 
-
-
                 <!-- Mạng xã hội -->
                 <div class="footer-section">
                     <h3 class="footer-title">Theo dõi chúng tôi</h3>
@@ -2747,7 +2848,6 @@
         </div>
     </footer>
 
-
     <!-- Chat Bubble -->
     <div id="chatBubble" class="chat-bubble">
         <i class="bi bi-chat-dots text-2xl"></i> <!-- Icon chat từ Bootstrap Icons -->
@@ -2760,7 +2860,6 @@
         </button>
         <iframe src="https://localhost:7081/chat/chatai" class="w-full h-full border-none"></iframe>
     </div>
-
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script>
@@ -2788,21 +2887,21 @@
             let userId = null;
             @if (Context.Request.Cookies["UserData"] != null)
             {
-                            <text>
-                            try {
-                                const userData = JSON.parse('@Html.Raw(Context.Request.Cookies["UserData"])');
-                                userId = userData.ID_Khach_Hang;
-                                console.log('Parsed userId from UserData cookie:', userId);
-                            } catch (e) {
-                                console.error('Error parsing UserData cookie:', e);
-                            }
-                            </text>
+                                <text>
+                                try {
+                                    const userData = JSON.parse('@Html.Raw(Context.Request.Cookies["UserData"])');
+                                    userId = userData.ID_Khach_Hang;
+                                    console.log('Parsed userId from UserData cookie:', userId);
+                                } catch (e) {
+                                    console.error('Error parsing UserData cookie:', e);
+                                }
+                                </text>
             }
             else
             {
-                            <text>
-                            console.log('No UserData cookie found');
-                            </text>
+                                <text>
+                                console.log('No UserData cookie found');
+                                </text>
             }
 
             let productsData = [];
@@ -2853,23 +2952,19 @@
                 }
             }
 
+            const chatBubble = document.getElementById('chatBubble');
+            const chatFrame = document.getElementById('chatFrame');
+            const closeChat = document.getElementById('closeChat');
 
+            // Hiện chat frame khi nhấp vào chat bubble
+            chatBubble.addEventListener('click', () => {
+                chatFrame.style.display = chatFrame.style.display === 'none' ? 'block' : 'none';
+            });
 
-
-
-        const chatBubble = document.getElementById('chatBubble');
-               const chatFrame = document.getElementById('chatFrame');
-               const closeChat = document.getElementById('closeChat');
-
-               // Hiện chat frame khi nhấp vào chat bubble
-               chatBubble.addEventListener('click', () => {
-                   chatFrame.style.display = chatFrame.style.display === 'none' ? 'block' : 'none';
-               });
-
-               // Đóng chat frame
-               closeChat.addEventListener('click', () => {
-                   chatFrame.style.display = 'none';
-               });
+            // Đóng chat frame
+            closeChat.addEventListener('click', () => {
+                chatFrame.style.display = 'none';
+            });
 
             Promise.all([fetchProducts(), fetchSizes(), fetchMostPurchased()]);
 
