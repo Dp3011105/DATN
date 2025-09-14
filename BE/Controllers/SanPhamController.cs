@@ -26,6 +26,62 @@ namespace BE.Controllers
         }
 
         // ---------- GET ALL ----------
+        //[HttpGet]
+        //[ProducesResponseType(typeof(IEnumerable<object>), StatusCodes.Status200OK)]
+        //public async Task<ActionResult> GetAllSanPham()
+        //{
+        //    var sanPhams = await _sanPhamRepository.GetAllWithDetailsAsync();
+        //    var result = sanPhams.Select(sp => new
+        //    {
+        //        iD_San_Pham = sp.ID_San_Pham,
+        //        ten_San_Pham = sp.Ten_San_Pham,
+        //        gia = sp.Gia,
+        //        so_Luong = sp.So_Luong,
+        //        hinh_Anh = sp.Hinh_Anh,
+        //        mo_Ta = sp.Mo_Ta,
+        //        trang_Thai = sp.Trang_Thai,
+        //        sizes = sp.SanPhamSizes.Select(sps => new
+        //        {
+        //            iD_Size = sps.Size.ID_Size,
+        //            sizeName = sps.Size.SizeName,
+        //            trang_Thai = sps.Size.Trang_Thai
+        //        }).ToList(),
+        //        luongDas = sp.SanPhamLuongDas.Select(spld => new
+        //        {
+        //            iD_LuongDa = spld.LuongDa.ID_LuongDa,
+        //            ten_LuongDa = spld.LuongDa.Ten_LuongDa,
+        //            trang_Thai = spld.LuongDa.Trang_Thai
+        //        }).ToList(),
+        //        doNgots = sp.SanPhamDoNgots.Select(spdn => new
+        //        {
+        //            iD_DoNgot = spdn.DoNgot.ID_DoNgot,
+        //            muc_Do = spdn.DoNgot.Muc_Do,
+        //            trang_Thai = spdn.DoNgot.Trang_Thai
+        //        }).ToList(),
+        //        toppings = sp.SanPhamToppings.Select(spt => new
+        //        {
+        //            iD_Topping = spt.Topping.ID_Topping,
+        //            ten = spt.Topping.Ten,
+        //            so_Luong = spt.Topping.So_Luong,
+        //            gia = spt.Topping.Gia,
+        //            trang_Thai = spt.Topping.Trang_Thai
+        //        }).ToList(),
+        //        khuyenMais = sp.SanPhamKhuyenMais.Select(spkm => new
+        //        {
+        //            iD_Khuyen_Mai = spkm.ID_Khuyen_Mai,
+        //            gia_Giam = spkm.Gia_Giam,
+        //            ten_Khuyen_Mai = spkm.BangKhuyenMai.Ten_Khuyen_Mai,
+        //            ngay_Bat_Dau = spkm.BangKhuyenMai.Ngay_Bat_Dau,
+        //            ngay_Ket_Thuc = spkm.BangKhuyenMai.Ngay_Ket_Thuc
+        //        }).ToList()
+        //    }).ToList();
+
+        //    return Ok(result);
+        //}
+
+
+
+        // ---------- GET ALL ----------
         [HttpGet]
         [ProducesResponseType(typeof(IEnumerable<object>), StatusCodes.Status200OK)]
         public async Task<ActionResult> GetAllSanPham()
@@ -66,19 +122,20 @@ namespace BE.Controllers
                     gia = spt.Topping.Gia,
                     trang_Thai = spt.Topping.Trang_Thai
                 }).ToList(),
-                khuyenMais = sp.SanPhamKhuyenMais.Select(spkm => new
-                {
-                    iD_Khuyen_Mai = spkm.ID_Khuyen_Mai,
-                    gia_Giam = spkm.Gia_Giam,
-                    ten_Khuyen_Mai = spkm.BangKhuyenMai.Ten_Khuyen_Mai,
-                    ngay_Bat_Dau = spkm.BangKhuyenMai.Ngay_Bat_Dau,
-                    ngay_Ket_Thuc = spkm.BangKhuyenMai.Ngay_Ket_Thuc
-                }).ToList()
+                khuyenMais = sp.SanPhamKhuyenMais
+                    .Where(spkm => spkm.BangKhuyenMai.Trang_Thai)
+                    .Select(spkm => new
+                    {
+                        iD_Khuyen_Mai = spkm.ID_Khuyen_Mai,
+                        gia_Giam = spkm.Gia_Giam,
+                        ten_Khuyen_Mai = spkm.BangKhuyenMai.Ten_Khuyen_Mai,
+                        ngay_Bat_Dau = spkm.BangKhuyenMai.Ngay_Bat_Dau,
+                        ngay_Ket_Thuc = spkm.BangKhuyenMai.Ngay_Ket_Thuc
+                    }).ToList()
             }).ToList();
 
             return Ok(result);
         }
-
 
         // ---------- GET BY ID ----------
         [HttpGet("{id}")]
