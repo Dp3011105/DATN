@@ -512,11 +512,53 @@
             return await _context.Hoa_Don.FirstOrDefaultAsync(x => x.Ma_Hoa_Don == maHoaDon);
         }
 
-        //public async Task UpdateAsync(HoaDon hoaDon)
+
+
+
+        //public async Task UpdateAsync(HoaDon hoaDon, string? vnPayResponseCode = null)
         //{
-        //    _context.Hoa_Don.Update(hoaDon);
+        //    using var tx = await _context.Database.BeginTransactionAsync();
+
+        //    // Load đầy đủ dữ liệu liên quan để xử lý voucher
+        //    var hd = await _context.Hoa_Don
+        //        .Include(h => h.KhachHang)
+        //        .ThenInclude(kh => kh.KhachHangVouchers)
+        //        .Include(h => h.HoaDonVouchers)
+        //        .ThenInclude(hdv => hdv.Voucher)
+        //        .FirstOrDefaultAsync(h => h.ID_Hoa_Don == hoaDon.ID_Hoa_Don);
+
+        //    if (hd == null) return;
+
+        //    if (!string.IsNullOrEmpty(vnPayResponseCode) && vnPayResponseCode == "00")
+        //    {
+        //        // ✅ Giao dịch thành công
+        //        hd.Trang_Thai = "Da_Xac_Nhan";
+        //    }
+        //    else
+        //    {
+        //        // ❌ Giao dịch thất bại hoặc bị hủy
+        //        hd.Trang_Thai = "Huy_Don";
+        //        hd.LyDoHuyDon = "Hủy Thanh Toán VNPAY";
+
+        //        // Hoàn trả voucher nếu có
+        //        if (hd.HoaDonVouchers != null && hd.HoaDonVouchers.Any())
+        //        {
+        //            var khachHangVoucher = hd.KhachHang?.KhachHangVouchers
+        //                .FirstOrDefault(khv => khv.ID_Voucher == hd.HoaDonVouchers.First().ID_Voucher);
+
+        //            if (khachHangVoucher != null)
+        //            {
+        //                khachHangVoucher.Trang_Thai = true; // Trả lại quyền sử dụng voucher
+        //                _context.KhachHang_Voucher.Update(khachHangVoucher);
+        //            }
+        //        }
+        //    }
+
+        //    _context.Hoa_Don.Update(hd);
         //    await _context.SaveChangesAsync();
+        //    await tx.CommitAsync();
         //}
+
 
 
 
@@ -524,12 +566,17 @@
         {
             using var tx = await _context.Database.BeginTransactionAsync();
 
-            // Load đầy đủ dữ liệu liên quan để xử lý voucher
+            // Load đầy đủ dữ liệu liên quan để xử lý voucher VÀ chi tiết hóa đơn (sản phẩm + topping)
             var hd = await _context.Hoa_Don
                 .Include(h => h.KhachHang)
                 .ThenInclude(kh => kh.KhachHangVouchers)
                 .Include(h => h.HoaDonVouchers)
                 .ThenInclude(hdv => hdv.Voucher)
+                .Include(h => h.HoaDonChiTiets)  // ✅ Load chi tiết hóa đơn
+                    .ThenInclude(hdct => hdct.SanPham)  // ✅ Branch 1: Load sản phẩm từ HoaDonChiTiet
+                .Include(h => h.HoaDonChiTiets)  // ✅ Load lại để branch 2 (EF Core cho phép multiple Include cho cùng entity)
+                    .ThenInclude(hdct => hdct.HoaDonChiTietToppings)  // ✅ Branch 2: Load topping chi tiết từ HoaDonChiTiet
+                    .ThenInclude(hdctt => hdctt.Topping)  // ✅ Load topping để trừ kho
                 .FirstOrDefaultAsync(h => h.ID_Hoa_Don == hoaDon.ID_Hoa_Don);
 
             if (hd == null) return;
@@ -537,15 +584,38 @@
             if (!string.IsNullOrEmpty(vnPayResponseCode) && vnPayResponseCode == "00")
             {
                 // ✅ Giao dịch thành công
-                hd.Trang_Thai = "Chua_Xac_Nhan";
+                hd.Trang_Thai = "Da_Xac_Nhan";
+
+                // ✅ Truy vấn và trừ số lượng sản phẩm + topping
+                foreach (var hdct in hd.HoaDonChiTiets)
+                {
+                    // Trừ số lượng sản phẩm
+                    if (hdct.SanPham != null)
+                    {
+                        hdct.SanPham.So_Luong -= hdct.So_Luong;
+                        _context.San_Pham.Update(hdct.SanPham);
+                    }
+
+                    // Truy vấn và trừ số lượng topping (lặp qua từng topping trong chi tiết)
+                    foreach (var hdctt in hdct.HoaDonChiTietToppings)
+                    {
+                        if (hdctt.Topping != null)
+                        {
+                            // ✅ Sử dụng So_Luong từ model mới (nullable, nên dùng ?? 0)
+                            int soLuongTopping = hdctt.So_Luong ?? 0;
+                            hdctt.Topping.So_Luong -= soLuongTopping;
+                            _context.Topping.Update(hdctt.Topping);
+                        }
+                    }
+                }
             }
             else
             {
-                // ❌ Giao dịch thất bại hoặc bị hủy
+                // ❌ Giao dịch thất bại hoặc bị hủy (giữ nguyên)
                 hd.Trang_Thai = "Huy_Don";
                 hd.LyDoHuyDon = "Hủy Thanh Toán VNPAY";
 
-                // Hoàn trả voucher nếu có
+                // Hoàn trả voucher nếu có (giữ nguyên)
                 if (hd.HoaDonVouchers != null && hd.HoaDonVouchers.Any())
                 {
                     var khachHangVoucher = hd.KhachHang?.KhachHangVouchers
@@ -563,7 +633,6 @@
             await _context.SaveChangesAsync();
             await tx.CommitAsync();
         }
-
 
     }
 }

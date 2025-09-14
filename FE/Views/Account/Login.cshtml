@@ -179,78 +179,70 @@
     }
 </style> *@
 
+
+
 @model FE.Models.LoginModel
 
 @{
     ViewData["Title"] = "Đăng nhập";
 }
 
-<div class="login-container my-5">
-    <!-- Success/Error Notifications -->
-    @if (TempData["Success"] != null)
-    {
-        <div class="alert alert-success alert-dismissible fade show" role="alert">
-            <div class="d-flex align-items-center">
-                <i class="bi bi-check-circle-fill me-3" style="font-size: 1.5rem;"></i>
-                <div>
-                    <strong>Thành công!</strong>
-                    <p class="mb-0">@TempData["Success"]</p>
-                </div>
-            </div>
-            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-        </div>
-    }
-    @if (TempData["Error"] != null)
-    {
-        <div class="alert alert-danger alert-dismissible fade show" role="alert">
-            <div class="d-flex align-items-center">
-                <i class="bi bi-exclamation-triangle-fill me-3" style="font-size: 1.5rem;"></i>
-                <div>
-                    <strong>Lỗi!</strong>
-                    <p class="mb-0">@TempData["Error"]</p>
-                </div>
-            </div>
-            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-        </div>
-    }
+<div class="login-container d-flex justify-content-center align-items-center min-vh-100">
+    <!-- Login Card -->
+    <div class="glass-card p-5 shadow-lg">
+        <h2 class="text-center mb-4 fw-bold text-white">Đăng Nhập</h2>
 
-    <!-- Login Form -->
-    <div class="row justify-content-center">
-        <div class="col-md-6 col-lg-4">
-            <div class="card shadow-sm border-0">
-                <div class="card-body p-4">
-                    <h2 class="text-center mb-4 fw-bold text-dark">Đăng Nhập</h2>
-                    <form asp-action="Login" method="post" id="loginForm">
-                        <div asp-validation-summary="ModelOnly" class="text-danger mb-3 text-center"></div>
-                        <div class="mb-3">
-                            <label asp-for="Ten_Nguoi_Dung" class="form-label">Tên Đăng Nhập</label>
-                            <input asp-for="Ten_Nguoi_Dung" class="form-control shadow-sm" id="username"
-                                   placeholder="Ví dụ: user123, john_doe"
-                                   title="Tên đăng nhập chỉ chứa chữ cái, số, dấu chấm (.) hoặc dấu gạch dưới (_), không chứa dấu."
-                                   required />
-                            <span asp-validation-for="Ten_Nguoi_Dung" class="text-danger small"></span>
-                        </div>
-                        <div class="mb-3">
-                            <label asp-for="Mat_Khau" class="form-label">Mật khẩu</label>
-                            <input asp-for="Mat_Khau" class="form-control shadow-sm" type="password"
-                                   id="password" placeholder="Nhập mật khẩu"
-                                   title="Mật khẩu phải từ 6 đến 100 ký tự."
-                                   required />
-                            <span asp-validation-for="Mat_Khau" class="text-danger small"></span>
-                        </div>
-                        <button type="submit" class="btn btn-primary btn-lg w-100 mb-2" id="submitButton" disabled>
-                            <i class="bi bi-box-arrow-in-right me-2"></i>Đăng nhập
-                        </button>
-                        <a href="@Url.Action("ForgotPassword", "Account")" class="btn btn-outline-primary btn-lg w-100">
-                            <i class="bi bi-envelope-fill me-2"></i>Quên mật khẩu?
-                        </a>
-                    </form>
-                    <div class="text-center mt-3">
-                        <p>Chưa có tài khoản? <a href="@Url.Action("Register", "Account")" class="text-primary">Đăng ký ngay</a></p>
-                    </div>
-                </div>
+        <!-- Notifications -->
+        @if (TempData["Success"] != null)
+        {
+            <div class="alert alert-success alert-dismissible fade show" role="alert">
+                <i class="bi bi-check-circle-fill me-2"></i>
+                @TempData["Success"]
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
             </div>
-        </div>
+        }
+        @if (TempData["Error"] != null)
+        {
+            <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                <i class="bi bi-exclamation-triangle-fill me-2"></i>
+                @TempData["Error"]
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+        }
+
+        <form asp-action="Login" method="post" id="loginForm" class="mt-3">
+            <div asp-validation-summary="ModelOnly" class="text-danger mb-3 text-center"></div>
+
+            <div class="mb-3">
+                <label asp-for="Ten_Nguoi_Dung" class="form-label text-white">Tên Đăng Nhập</label>
+                <input asp-for="Ten_Nguoi_Dung" class="form-control shadow-sm" id="username"
+                       placeholder="Ví dụ: user123, john_doe"
+                       title="Tên đăng nhập chỉ chứa chữ cái, số, dấu chấm (.) hoặc dấu gạch dưới (_), không chứa dấu."
+                       required />
+                <span asp-validation-for="Ten_Nguoi_Dung" class="text-danger small"></span>
+            </div>
+
+            <div class="mb-2">
+                <label asp-for="Mat_Khau" class="form-label text-white">Mật khẩu</label>
+                <input asp-for="Mat_Khau" class="form-control shadow-sm" type="password"
+                       id="password" placeholder="Nhập mật khẩu"
+                       title="Mật khẩu phải từ 6 đến 100 ký tự."
+                       required />
+                <span asp-validation-for="Mat_Khau" class="text-danger small"></span>
+            </div>
+
+            <div class="d-flex justify-content-end mb-3">
+                <a href="@Url.Action("ForgotPassword", "Account")" class="small text-light text-decoration-underline">Quên mật khẩu?</a>
+            </div>
+
+            <button type="submit" class="btn btn-glass w-100 mb-2" id="submitButton" disabled>
+                <i class="bi bi-box-arrow-in-right me-2"></i>Đăng nhập
+            </button>
+
+            <div class="text-center mt-3 text-white">
+                <p>Chưa có tài khoản? <a href="@Url.Action("Register", "Account")" class="text-primary fw-bold">Đăng ký ngay</a></p>
+            </div>
+        </form>
     </div>
 </div>
 
@@ -260,35 +252,24 @@
     <script src="~/lib/jquery-validation-unobtrusive/jquery.validate.unobtrusive.min.js"></script>
     <script>
         $(document).ready(function () {
-            // Add custom validation method for username
+            // Thay đổi thông báo validation sang tiếng Việt
+            $.extend($.validator.messages, {
+                required: "Trường này là bắt buộc.",
+                minlength: $.validator.format("Nhập ít nhất {0} ký tự."),
+                maxlength: $.validator.format("Không được vượt quá {0} ký tự.")
+            });
+
             $.validator.addMethod("usernameFormat", function (value, element) {
                 return this.optional(element) || /^[a-zA-Z0-9_.]+$/.test(value);
-            }, "Tên đăng nhập chỉ được chứa chữ cái, số, dấu chấm (.) hoặc dấu gạch dưới (_), không chứa dấu hoặc ký tự đặc biệt.");
+            }, "Tên đăng nhập chỉ được chứa chữ cái, số, dấu chấm (.) hoặc dấu gạch dưới (_).");
 
-            // Apply validation to the form
             $("#loginForm").validate({
                 errorClass: "text-danger",
-                highlight: function (element) {
-                    $(element).addClass("is-invalid").removeClass("is-valid");
-                },
-                unhighlight: function (element) {
-                    $(element).removeClass("is-invalid").addClass("is-valid");
-                },
-                errorPlacement: function (error, element) {
-                    error.insertAfter(element);
-                },
+                highlight: function (element) { $(element).addClass("is-invalid").removeClass("is-valid"); },
+                unhighlight: function (element) { $(element).removeClass("is-invalid").addClass("is-valid"); },
                 rules: {
-                    Ten_Nguoi_Dung: {
-                        required: true,
-                        usernameFormat: true,
-                        minlength: 3,
-                        maxlength: 50
-                    },
-                    Mat_Khau: {
-                        required: true,
-                        minlength: 6,
-                        maxlength: 100
-                    }
+                    Ten_Nguoi_Dung: { required: true, usernameFormat: true, minlength: 3, maxlength: 50 },
+                    Mat_Khau: { required: true, minlength: 6, maxlength: 100 }
                 },
                 messages: {
                     Ten_Nguoi_Dung: {
@@ -304,122 +285,83 @@
                 }
             });
 
-            // Real-time validation to enable/disable submit button
             $("#loginForm input").on("input blur", function () {
-                if ($("#loginForm").valid()) {
-                    $("#submitButton").prop("disabled", false);
-                } else {
-                    $("#submitButton").prop("disabled", true);
-                }
+                $("#submitButton").prop("disabled", !$("#loginForm").valid());
             });
 
-            // Trigger validation on form load
             $("#loginForm").validate().form();
         });
     </script>
 }
 
 <style scoped>
-    /* Scoped styles to avoid affecting _Layout.cshtml */
-    .login-container {
-        max-width: 1200px;
-        margin-left: auto;
-        margin-right: auto;
-        padding: 0 15px;
+    /* Glassmorphism Card */
+    .glass-card {
+        background: rgba(255, 255, 255, 0.15);
+        backdrop-filter: blur(12px);
+        -webkit-backdrop-filter: blur(12px);
+        border-radius: 20px;
+        border: 1px solid rgba(255, 255, 255, 0.3);
+        max-width: 400px;
+        width: 100%;
+        color: #fff;
     }
 
-    .card {
+    /* Buttons */
+    .btn-glass {
+        background: rgba(255, 255, 255, 0.2);
+        color: #fff;
+        border: 1px solid rgba(255, 255, 255, 0.3);
         border-radius: 8px;
-        background-color: #ffffff;
-        transition: transform 0.3s ease, box-shadow 0.3s ease;
+        padding: 10px;
+        font-size: 1.05rem;
+        transition: all 0.3s ease;
     }
 
-        .card:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1) !important;
+        .btn-glass:hover {
+            background: rgba(255, 255, 255, 0.35);
+            transform: scale(1.02);
         }
 
+    /* Form controls */
     .form-control {
-        border-radius: 6px;
-        border: 1px solid #ced4da;
+        border-radius: 8px;
+        border: none;
         padding: 10px;
         font-size: 1rem;
-        transition: border-color 0.3s ease, box-shadow 0.3s ease;
+        background: rgba(255, 255, 255, 0.15);
+        color: #fff;
+        backdrop-filter: blur(10px);
     }
 
-        .form-control:focus {
-            border-color: #007bff;
-            box-shadow: 0 0 5px rgba(0, 123, 255, 0.3);
-            outline: none;
+        .form-control::placeholder {
+            color: rgba(255, 255, 255, 0.7);
         }
 
         .form-control.is-invalid {
-            border-color: #dc3545;
-            box-shadow: 0 0 5px rgba(220, 53, 69, 0.3);
+            border-color: #ff6b6b;
+            box-shadow: 0 0 5px rgba(255, 107, 107, 0.5);
         }
 
         .form-control.is-valid {
-            border-color: #28a745;
-            box-shadow: 0 0 5px rgba(40, 167, 69, 0.3);
+            border-color: #4ade80;
+            box-shadow: 0 0 5px rgba(74, 222, 128, 0.5);
         }
 
-    .btn-primary {
-        border-radius: 6px;
-        background-color: #007bff;
-        border: none;
-        padding: 12px;
-        font-size: 1.1rem;
-        transition: background-color 0.3s ease, transform 0.2s ease;
-    }
-
-        .btn-primary:hover {
-            background-color: #0056b3;
-            transform: scale(1.02);
-        }
-
-        .btn-primary:disabled {
-            background-color: #6c757d;
-            cursor: not-allowed;
-        }
-
-    .btn-outline-primary {
-        border-radius: 6px;
-        padding: 12px;
-        font-size: 1.1rem;
-        transition: background-color 0.3s ease, transform 0.2s ease;
-    }
-
-        .btn-outline-primary:hover {
-            background-color: rgba(0, 123, 255, 0.1);
-            transform: scale(1.02);
-        }
-
+    /* Alerts */
     .alert {
-        border-radius: 6px;
-        margin-bottom: 1.5rem;
-        max-width: 400px;
-        margin-left: auto;
-        margin-right: auto;
-    }
-
-    .alert-success {
-        background-color: #d4edda;
-        border-color: #c3e6cb;
-        color: #155724;
-    }
-
-    .alert-danger {
-        background-color: #f8d7da;
-        border-color: #f5c6cb;
-        color: #721c24;
-    }
-
-    .text-primary {
-        color: #007bff !important;
-    }
-
-    .form-label {
+        border-radius: 10px;
+        text-align: center;
         font-weight: 500;
-        color: #495057;
+    }
+
+    /* Quên mật khẩu nhỏ gọn */
+    a.small {
+        font-size: 0.85rem;
+    }
+
+    /* Page background */
+    body {
+        background: linear-gradient(135deg, #667eea, #764ba2);
     }
 </style>
