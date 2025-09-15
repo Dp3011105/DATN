@@ -364,6 +364,79 @@ namespace FE.Controllers
         }
 
         // ============== HỦY + KHÔI PHỤC TỒN ==============
+        //[HttpPost]
+        //[ValidateAntiForgeryToken]
+        //public async Task<IActionResult> Huy(int id, string lyDo, int[] khoiPhucIds, int[] khoiPhucQtys)
+        //{
+        //    if (string.IsNullOrWhiteSpace(lyDo))
+        //    {
+        //        TempData["msg"] = "Vui lòng nhập lý do hủy.";
+        //        return RedirectToAction(nameof(Index));
+        //    }
+
+        //    var hd = await _hoaDonService.GetByIdAsync(id);
+        //    if (hd == null) return NotFound();
+
+        //    if (string.Equals(hd.Trang_Thai, "Hoan_Thanh", StringComparison.OrdinalIgnoreCase) ||
+        //        string.Equals(hd.Trang_Thai, "Huy_Don", StringComparison.OrdinalIgnoreCase))
+        //    {
+        //        TempData["msg"] = "Đơn đã hoàn tất hoặc đã huỷ. Không thể huỷ.";
+        //        return RedirectToAction(nameof(Index));
+        //    }
+
+        //    var mapCt = (hd.HoaDonChiTiets ?? new List<HoaDonChiTiet>())
+        //                .ToDictionary(x => x.ID_HoaDon_ChiTiet, x => x);
+
+        //    // Lấy selections từ form (chi tiết được tick)
+        //    var selections = new List<(int chiTietId, int soLuong)>();
+        //    if (khoiPhucIds != null && khoiPhucQtys != null && khoiPhucIds.Length == khoiPhucQtys.Length)
+        //    {
+        //        for (int i = 0; i < khoiPhucIds.Length; i++)
+        //        {
+        //            var cid = khoiPhucIds[i];
+        //            var q = Math.Max(0, khoiPhucQtys[i]);
+        //            if (cid <= 0 || q <= 0) continue;
+
+        //            if (!mapCt.TryGetValue(cid, out var ct)) continue;
+
+        //            var max = Math.Max(0, ct.So_Luong);
+        //            if (q > max) q = max;
+        //            if (q > 0) selections.Add((cid, q));
+        //        }
+        //    }
+
+        //    // ✅ Gộp theo sản phẩm để cộng tồn
+        //    var restockByProduct = selections
+        //        .Select(sel =>
+        //        {
+        //            var ct = mapCt[sel.chiTietId];
+        //            return new { productId = ct.ID_San_Pham, qty = sel.soLuong };
+        //        })
+        //        .Where(x => x.productId > 0 && x.qty > 0)
+        //        .GroupBy(x => x.productId)
+        //        .Select(g => (productId: g.Key, quantity: g.Sum(z => z.qty)))
+        //        .ToList();
+
+        //    bool restockOk = true;
+        //    if (restockByProduct.Count > 0)
+        //    {
+        //        restockOk = await _productService.RestockBatchAsync(restockByProduct);
+        //    }
+
+        //    // Cập nhật trạng thái hủy
+        //    var updateOk = await _hoaDonService.UpdateTrangThaiAsync(id, "Huy_Don", lyDo.Trim());
+
+        //    var totalQty = restockByProduct.Sum(x => x.quantity);
+        //    TempData["msg"] = (updateOk && restockOk)
+        //        ? $"Đã huỷ đơn và khôi phục tồn ({totalQty} sp)."
+        //        : (updateOk ? "Đã huỷ đơn nhưng KHÔNG khôi phục tồn (lỗi khi cập nhật sản phẩm)."
+        //                    : "Hủy đơn thất bại.");
+
+        //    return RedirectToAction(nameof(Index));
+        //}
+
+
+
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Huy(int id, string lyDo, int[] khoiPhucIds, int[] khoiPhucQtys)
@@ -377,6 +450,7 @@ namespace FE.Controllers
             var hd = await _hoaDonService.GetByIdAsync(id);
             if (hd == null) return NotFound();
 
+            // Không cho hủy nếu đã hoàn thành hoặc đã hủy
             if (string.Equals(hd.Trang_Thai, "Hoan_Thanh", StringComparison.OrdinalIgnoreCase) ||
                 string.Equals(hd.Trang_Thai, "Huy_Don", StringComparison.OrdinalIgnoreCase))
             {
@@ -384,10 +458,20 @@ namespace FE.Controllers
                 return RedirectToAction(nameof(Index));
             }
 
+            // Map chi tiết đơn hàng
             var mapCt = (hd.HoaDonChiTiets ?? new List<HoaDonChiTiet>())
                         .ToDictionary(x => x.ID_HoaDon_ChiTiet, x => x);
 
-            // Lấy selections từ form (chi tiết được tick)
+            // Nếu trạng thái = "Chua_Xac_Nhan" → KHÔNG hồi số lượng sản phẩm / topping
+            if (string.Equals(hd.Trang_Thai, "Chua_Xac_Nhan", StringComparison.OrdinalIgnoreCase))
+            {
+                var updateOk = await _hoaDonService.UpdateTrangThaiAsync(id, "Huy_Don", lyDo.Trim());
+                TempData["msg"] = updateOk ? "Đã hủy đơn (chưa xác nhận, không khôi phục tồn)."
+                                           : "Hủy đơn thất bại.";
+                return RedirectToAction(nameof(Index));
+            }
+
+            // Nếu trạng thái = "Da_Xac_Nhan" → tiến hành hồi số lượng
             var selections = new List<(int chiTietId, int soLuong)>();
             if (khoiPhucIds != null && khoiPhucQtys != null && khoiPhucIds.Length == khoiPhucQtys.Length)
             {
@@ -405,7 +489,7 @@ namespace FE.Controllers
                 }
             }
 
-            // ✅ Gộp theo sản phẩm để cộng tồn
+            // Gộp theo sản phẩm để cộng trả tồn kho
             var restockByProduct = selections
                 .Select(sel =>
                 {
@@ -424,19 +508,31 @@ namespace FE.Controllers
             }
 
             // Cập nhật trạng thái hủy
-            var updateOk = await _hoaDonService.UpdateTrangThaiAsync(id, "Huy_Don", lyDo.Trim());
+            var updateStatusOk = await _hoaDonService.UpdateTrangThaiAsync(id, "Huy_Don", lyDo.Trim());
 
             var totalQty = restockByProduct.Sum(x => x.quantity);
-            TempData["msg"] = (updateOk && restockOk)
+            TempData["msg"] = (updateStatusOk && restockOk)
                 ? $"Đã huỷ đơn và khôi phục tồn ({totalQty} sp)."
-                : (updateOk ? "Đã huỷ đơn nhưng KHÔNG khôi phục tồn (lỗi khi cập nhật sản phẩm)."
-                            : "Hủy đơn thất bại.");
+                : (updateStatusOk ? "Đã huỷ đơn nhưng KHÔNG khôi phục tồn (lỗi khi cập nhật sản phẩm)."
+                                  : "Hủy đơn thất bại.");
 
             return RedirectToAction(nameof(Index));
         }
+
+
+
+
+
+
+
+
+
+
+
+
     }
-        // ============== ViewModels ==============
-        public class QuanLyDonHangViewModel
+    // ============== ViewModels ==============
+    public class QuanLyDonHangViewModel
     {
         public List<HoaDon> DanhSachHoaDon { get; set; } = new();
         public string TuKhoa { get; set; } = "";

@@ -75,7 +75,6 @@ namespace BE.Controllers
             {
                 if (response.Success && response.VnPayResponseCode == "00")
                 {
-                    // ✅ Thanh toán thành công: Gọi UpdateAsync với code "00" để set "Da_Xac_Nhan" và trừ kho
                     await _hoaDonRepository.UpdateAsync(hoaDon, "00");
 
                     return Redirect("https://localhost:7081/CheckOutTk/vnpaydone");
