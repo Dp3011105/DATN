@@ -5,7 +5,7 @@ using Service.IService;
 
 namespace FE.Controllers
 {
-    [RoleAuthorize(2,3)] // Trang cho phép cả vai trò 2,3
+    [RoleAuthorize(2, 3)] // Trang cho phép cả vai trò 2,3
     // Phương thức này đươc để trong thư mục Filters nhé ae
     public class ThongKeController : Controller
     {
@@ -16,6 +16,7 @@ namespace FE.Controllers
             _hoaDonService = hoaDonService;
         }
 
+        // Trang chính thống kê
         public async Task<IActionResult> Index()
         {
             try
@@ -29,6 +30,7 @@ namespace FE.Controllers
             }
         }
 
+        // Giữ nguyên nếu bạn cần view phụ theo trạng thái
         public async Task<IActionResult> ThongKeTheoTrangThai()
         {
             try
@@ -42,6 +44,7 @@ namespace FE.Controllers
             }
         }
 
+        // Trang chi tiết đơn
         public async Task<IActionResult> ChiTietHoaDon(int id)
         {
             var hoaDon = await _hoaDonService.GetByIdAsync(id);
@@ -49,6 +52,7 @@ namespace FE.Controllers
             return View(hoaDon);
         }
 
+        // API JSON nếu cần lấy lại dữ liệu bằng AJAX
         [HttpGet]
         public async Task<IActionResult> GetThongKeData()
         {
