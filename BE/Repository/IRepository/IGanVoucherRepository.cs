@@ -13,5 +13,7 @@ namespace BE.Repository.IRepository
 
         // Thêm method mới
         Task<List<KhachHang>> GetTop10KhachHangVipAsync();
+        // Method mới để lấy tất cả voucher assignments
+        Task<Dictionary<int, List<int>>> GetAllCustomerVoucherAssignmentsAsync();
     }
 }

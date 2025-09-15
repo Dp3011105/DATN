@@ -239,5 +239,24 @@ namespace BE.Controllers
                 return BadRequest(new { message = $"Lỗi khi kiểm tra voucher: {ex.Message}" });
             }
         }
+
+        [HttpGet("customer-voucher-assignments")]
+        public async Task<IActionResult> GetAllCustomerVoucherAssignments()
+        {
+            try
+            {
+                var assignments = await _repo.GetAllCustomerVoucherAssignmentsAsync();
+                return Ok(assignments);
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new
+                {
+                    message = $"Lỗi khi lấy danh sách voucher assignments: {ex.Message}",
+                    success = false
+                });
+            }
+        }
+
     }
 }
