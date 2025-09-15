@@ -1,439 +1,551 @@
-﻿@model IEnumerable<BE.models.NhanVien>
+﻿```cshtml
+@model IEnumerable<BE.models.NhanVien>
 @{
-	ViewData["Title"] = "Danh sách nhân viên";
-	Layout = "_AdminLayout";
+    ViewData["Title"] = "Danh sách nhân viên";
+    Layout = "_AdminLayout";
 }
 
 <style>
-	/* Container chính */
-	.employee-container {
-		background: linear-gradient(135deg, #f8fafc, #e2e8f0);
-		border-radius: 18px;
-		padding: 25px;
-		box-shadow: 0 12px 35px rgba(0, 0, 0, 0.1);
-		margin-bottom: 25px;
-	}
+    /* Container chính */
+    .employee-container {
+        background: linear-gradient(135deg, #f8fafc, #e2e8f0);
+        border-radius: 18px;
+        padding: 25px;
+        box-shadow: 0 12px 35px rgba(0, 0, 0, 0.1);
+        margin-bottom: 25px;
+    }
 
-	/* Thống kê nhân viên */
-	.stats-container {
-		display: grid;
-		grid-template-columns: repeat(4, 1fr);
-		gap: 18px;
-		margin-bottom: 25px;
-	}
+    /* Thống kê nhân viên */
+    .stats-container {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 18px;
+        margin-bottom: 25px;
+    }
 
-	.stat-card {
-		padding: 25px 15px;
-		border-radius: 18px;
-		text-align: center;
-		font-weight: 600;
-		font-size: 1rem;
-		color: #fff;
-		cursor: pointer;
-		position: relative;
-		overflow: hidden;
-		transition: all 0.4s ease;
-	}
+    .stat-card {
+        padding: 25px 15px;
+        border-radius: 18px;
+        text-align: center;
+        font-weight: 600;
+        font-size: 1rem;
+        color: #fff;
+        cursor: pointer;
+        position: relative;
+        overflow: hidden;
+        transition: all 0.4s ease;
+    }
 
-		.stat-card i {
-			font-size: 1.8rem;
-			margin-bottom: 10px;
-			opacity: 0.9;
-		}
+        .stat-card i {
+            font-size: 1.8rem;
+            margin-bottom: 10px;
+            opacity: 0.9;
+        }
 
-		.stat-card strong {
-			display: block;
-			font-size: 1.5rem;
-			margin-top: 5px;
-		}
+        .stat-card strong {
+            display: block;
+            font-size: 1.5rem;
+            margin-top: 5px;
+        }
 
-		.stat-card:hover {
-			transform: translateY(-6px) scale(1.05);
-			box-shadow: 0 10px 25px rgba(0,0,0,0.2);
-		}
+        .stat-card:hover {
+            transform: translateY(-6px) scale(1.05);
+            box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+        }
 
-	.stat-total {
-		background: linear-gradient(135deg, #2563eb, #3b82f6);
-	}
+    .stat-total {
+        background: linear-gradient(135deg, #2563eb, #3b82f6);
+    }
 
-	.stat-working {
-		background: linear-gradient(135deg, #059669, #10b981);
-	}
+    .stat-working {
+        background: linear-gradient(135deg, #059669, #10b981);
+    }
 
-	.stat-new {
-		background: linear-gradient(135deg, #f59e0b, #fbbf24);
-	}
+    .stat-new {
+        background: linear-gradient(135deg, #f59e0b, #fbbf24);
+    }
 
-	.stat-leaving {
-		background: linear-gradient(135deg, #dc2626, #ef4444);
-	}
+    .stat-leaving {
+        background: linear-gradient(135deg, #dc2626, #ef4444);
+    }
 
-	/* Thanh tìm kiếm */
-	.search-filter {
-		display: flex;
-		flex-wrap: wrap;
-		gap: 15px;
-		background: #fff;
-		padding: 15px;
-		border-radius: 12px;
-		box-shadow: 0 6px 15px rgba(0,0,0,0.05);
-		margin-bottom: 20px;
-	}
+    /* Thanh tìm kiếm */
+    .search-filter {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 15px;
+        background: #fff;
+        padding: 15px;
+        border-radius: 12px;
+        box-shadow: 0 6px 15px rgba(0, 0, 0, 0.05);
+        margin-bottom: 20px;
+    }
 
-		.search-filter input, .search-filter select {
-			border-radius: 8px;
-			box-shadow: inset 0 2px 5px rgba(0,0,0,0.08);
-		}
+        .search-filter input, .search-filter select {
+            border-radius: 8px;
+            box-shadow: inset 0 2px 5px rgba(0, 0, 0, 0.08);
+            border: 1px solid #d1d5db;
+            padding: 10px 15px;
+            width: 350px;
+            height: 42px;
+            font-size: 0.95rem;
+            color: #1f2937;
+            background: #f9fafb;
+            transition: all 0.3s ease;
+        }
 
-	/* Bảng */
-	.table-custom {
-		border-radius: 12px;
-		overflow: hidden;
-		background: #fff;
-		box-shadow: 0 8px 20px rgba(0,0,0,0.08);
-	}
+            .search-filter input:focus {
+                outline: none;
+                border-color: #3b82f6;
+                box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+                background: #fff;
+            }
 
-		.table-custom thead {
-			background: linear-gradient(135deg, #1e40af, #3b82f6);
-			color: #fff;
-		}
+            .search-filter input::placeholder {
+                color: #6b7280;
+                font-size: 0.9rem;
+                opacity: 1;
+            }
 
-		.table-custom tbody tr {
-			transition: all 0.3s ease;
-		}
+        .search-filter .btn-outline-primary {
+            border-radius: 8px;
+            padding: 0.35rem 0.9rem;
+            font-weight: 500;
+            transition: all 0.3s ease;
+        }
 
-			.table-custom tbody tr:hover {
-				background: rgba(59, 130, 246, 0.08);
-				transform: translateX(5px);
-			}
+            .search-filter .btn-outline-primary:hover {
+                transform: translateY(-3px) scale(1.05);
+                box-shadow: 0 6px 15px rgba(0,0,0,0.2);
+            }
 
-	/* Checkbox */
-	.custom-checkbox {
-		width: 20px;
-		height: 20px;
-		border-radius: 6px;
-		border: 2px solid #3b82f6;
-		cursor: pointer;
-		position: relative;
-		transition: all 0.3s;
-	}
+    /* Bảng */
+    .table-custom {
+        border-radius: 12px;
+        overflow: hidden;
+        background: #fff;
+        box-shadow: 0 8px 20px rgba(0,0,0,0.08);
+    }
 
-		.custom-checkbox:checked {
-			background: linear-gradient(135deg, #2563eb, #3b82f6);
-			border-color: #2563eb;
-		}
+        .table-custom thead {
+            background: linear-gradient(135deg, #1e40af, #3b82f6);
+            color: #fff;
+        }
 
-			.custom-checkbox:checked::after {
-				content: '\2713';
-				color: #fff;
-				position: absolute;
-				top: 50%;
-				left: 50%;
-				transform: translate(-50%, -50%);
-				font-weight: bold;
-				font-size: 14px;
-			}
+        .table-custom tbody tr {
+            transition: all 0.3s ease;
+        }
 
-	/* Nút bấm */
-	.btn-sm {
-		border-radius: 25px;
-		font-weight: 500;
-		padding: 0.35rem 0.9rem;
-		transition: all 0.3s ease;
-	}
+            .table-custom tbody tr:hover {
+                background: rgba(59, 130, 246, 0.08);
+                transform: translateX(5px);
+            }
 
-		.btn-sm:hover {
-			transform: translateY(-3px) scale(1.05);
-			box-shadow: 0 6px 15px rgba(0,0,0,0.2);
-		}
+    /* Checkbox */
+    .custom-checkbox {
+        width: 20px;
+        height: 20px;
+        border-radius: 6px;
+        border: 2px solid #3b82f6;
+        cursor: pointer;
+        position: relative;
+        transition: all 0.3s;
+    }
 
-	/* Badge trạng thái */
-	.badge {
-		padding: 0.4em 0.7em;
-		border-radius: 10px;
-		font-size: 0.85rem;
-		font-weight: 600;
-	}
+        .custom-checkbox:checked {
+            background: linear-gradient(135deg, #2563eb, #3b82f6);
+            border-color: #2563eb;
+        }
 
-	/* Modal chi tiết */
-	.modal-custom {
-		display: none;
-		position: fixed;
-		inset: 0;
-		background: rgba(0,0,0,0.65);
-		backdrop-filter: blur(5px);
-		z-index: 1050;
-	}
+            .custom-checkbox:checked::after {
+                content: '\2713';
+                color: #fff;
+                position: absolute;
+                top: 50%;
+                left: 50%;
+                transform: translate(-50%, -50%);
+                font-weight: bold;
+                font-size: 14px;
+            }
 
-	.modal-content-custom {
-		background: #fff;
-		border-radius: 15px;
-		padding: 25px;
-		width: 50%;
-		margin: 8% auto;
-		box-shadow: 0 15px 40px rgba(0,0,0,0.25);
-		animation: fadeIn 0.3s ease;
-		position: relative;
-	}
+    /* Nút bấm */
+    .btn-sm {
+        border-radius: 4px; /* Điều chỉnh để giống trang sản phẩm */
+        font-weight: 500;
+        padding: 0.35rem 0.9rem;
+        transition: all 0.3s ease;
+    }
 
-		.modal-content-custom h3 {
-			margin-bottom: 15px;
-			color: #1e3a8a;
-		}
+        .btn-sm:hover {
+            transform: translateY(-3px) scale(1.05);
+            box-shadow: 0 6px 15px rgba(0,0,0,0.2);
+        }
 
-		.modal-content-custom .close {
-			position: absolute;
-			top: 12px;
-			right: 18px;
-			font-size: 28px;
-			cursor: pointer;
-			color: #ef4444;
-			transition: 0.3s;
-		}
+    /* Badge trạng thái */
+    .badge {
+        padding: 0.4em 0.7em;
+        border-radius: 10px;
+        font-size: 0.85rem;
+        font-weight: 600;
+    }
 
-			.modal-content-custom .close:hover {
-				color: #dc2626;
-				transform: scale(1.2) rotate(90deg);
-			}
+    /* Modal chi tiết */
+    .modal-custom {
+        display: none;
+        position: fixed;
+        inset: 0;
+        background: rgba(0,0,0,0.65);
+        backdrop-filter: blur(5px);
+        z-index: 1050;
+    }
 
-	keyframes fadeIn {
-		from
+    .modal-content-custom {
+        background: #fff;
+        border-radius: 15px;
+        padding: 25px;
+        width: 50%;
+        margin: 8% auto;
+        box-shadow: 0 15px 40px rgba(0,0,0,0.25);
+        animation: fadeIn 0.3s ease;
+        position: relative;
+    }
 
-	{
-		opacity: 0;
-		transform: scale(0.9);
-	}
+        .modal-content-custom h3 {
+            margin-bottom: 15px;
+            color: #1e3a8a;
+        }
 
-	to {
-		opacity: 1;
-		transform: scale(1);
-	}
+        .modal-content-custom .close {
+            position: absolute;
+            top: 12px;
+            right: 18px;
+            font-size: 28px;
+            cursor: pointer;
+            color: #ef4444;
+            transition: 0.3s;
+        }
 
-	}
+            .modal-content-custom .close:hover {
+                color: #dc2626;
+                transform: scale(1.2) rotate(90deg);
+            }
+
+    /* Keyframes cho modal */
+    keyframes fadeIn {
+        from
+
+    {
+        opacity: 0;
+        transform: scale(0.9);
+    }
+
+    to {
+        opacity: 1;
+        transform: scale(1);
+    }
+
+    }
+
+    /* Pagination styles */
+    .pagination-container {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        margin-top: 20px;
+        padding: 10px 0;
+    }
+
+    .pagination {
+        display: flex;
+        list-style: none;
+        padding: 0;
+        margin: 0;
+        gap: 8px;
+    }
+
+        .pagination li {
+            display: inline-block;
+        }
+
+            .pagination li a {
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                width: 38px;
+                height: 38px;
+                border-radius: 8px;
+                text-decoration: none;
+                color: #1e40af;
+                background: #fff;
+                border: 1px solid #e2e8f0;
+                font-weight: 500;
+                transition: all 0.3s ease;
+            }
+
+                .pagination li a:hover {
+                    background: #3b82f6;
+                    color: #fff;
+                    border-color: #3b82f6;
+                    transform: translateY(-2px);
+                }
+
+            .pagination li.active a {
+                background: #2563eb;
+                color: #fff;
+                border-color: #2563eb;
+                font-weight: 600;
+            }
+
+            .pagination li.disabled a {
+                color: #94a3b8;
+                cursor: not-allowed;
+                border-color: #e2e8f0;
+                background: #f8fafc;
+            }
 </style>
 
 <div class="employee-container">
+    <!-- Thống kê -->
+    <div class="stats-container">
+        <button class="stat-card stat-total" onclick="filterStatus('all')">
+            <i class="fas fa-users"></i>
+            Tổng nhân viên
+            <strong>@ViewBag.TotalEmployees</strong>
+        </button>
+        <button class="stat-card stat-working" onclick="filterStatus('working')">
+            <i class="fas fa-briefcase"></i>
+            Đang làm việc
+            <strong>@ViewBag.WorkingEmployees</strong>
+        </button>
+        <button class="stat-card stat-new" onclick="goToCreate()">
+            <i class="fas fa-user-plus"></i>
+            Nhân viên mới
+            <strong>@ViewBag.NewEmployees</strong>
+        </button>
+        <button class="stat-card stat-leaving" onclick="filterStatus('leaving')">
+            <i class="fas fa-user-slash"></i>
+            Đã nghỉ việc
+            <strong>@ViewBag.LeavingEmployees</strong>
+        </button>
+    </div>
 
-	<!-- Thống kê -->
-	<div class="stats-container">
-		<button class="stat-card stat-total" onclick="filterStatus('all')">
-			<i class="fas fa-users"></i>
-			Tổng nhân viên
-			<strong>@ViewBag.TotalEmployees</strong>
-		</button>
-		<button class="stat-card stat-working" onclick="filterStatus('working')">
-			<i class="fas fa-briefcase"></i>
-			Đang làm việc
-			<strong>@ViewBag.WorkingEmployees</strong>
-		</button>
-		<button class="stat-card stat-new" onclick="goToCreate()">
-			<i class="fas fa-user-plus"></i>
-			Nhân viên mới
-			<strong>@ViewBag.NewEmployees</strong>
-		</button>
-		<button class="stat-card stat-leaving" onclick="filterStatus('leaving')">
-			<i class="fas fa-user-slash"></i>
-			Đã nghỉ việc
-			<strong>@ViewBag.LeavingEmployees</strong>
-		</button>
-	</div>
+    <!-- Tìm kiếm & thao tác -->
+    <div class="search-filter">
+        <form asp-action="Index" method="get" class="d-flex gap-1 flex-grow-1">
+            <input type="text" name="searchTerm" id="searchTerm" class="form-control" placeholder="Tìm theo họ tên, email, số điện thoại..." value="@ViewBag.SearchTerm" />
+            <input type="hidden" name="statusFilter" value="@ViewBag.StatusFilter" />
+            <input type="hidden" name="page" value="1" />
+            <button type="submit" class="btn btn-outline-primary btn-sm rounded-pill">
+                <i class="fas fa-search"></i>
+            </button>
+        </form>
+        <div class="action-group">
+            <button id="selectAllBtn" class="btn btn-secondary btn-sm"><i class="fas fa-check-square"></i> Chọn tất cả</button>
+            <button id="deleteSelectedBtn" class="btn btn-danger btn-sm"><i class="fas fa-trash"></i> Xóa chọn</button>
+            <a asp-action="Create" class="btn btn-success btn-sm"><i class="fas fa-plus"></i> Thêm</a>
+            <a asp-action="ExportToExcel" asp-route-searchTerm="@ViewBag.SearchTerm" asp-route-statusFilter="@ViewBag.StatusFilter" class="btn btn-info btn-sm"><i class="fas fa-file-export"></i> Xuất Excel</a>
+            <form asp-action="ImportFromExcel" asp-controller="NhanVien" method="post" enctype="multipart/form-data" class="d-inline">
+                <input type="file" name="file" class="form-control d-none" id="importFile" accept=".xlsx,.xls" required />
+                <button type="button" class="btn btn-primary btn-sm" onclick="document.getElementById('importFile').click()">
+                    <i class="fas fa-file-import"></i> Import Excel
+                </button>
+                <button type="submit" class="d-none" id="importSubmit"></button>
+            </form>
+        </div>
+    </div>
 
-	<!-- Tìm kiếm & thao tác -->
-	<div class="search-filter">
-		<input type="text" id="searchTerm" class="form-control" placeholder="Tìm theo họ tên, email, số điện thoại..." value="@ViewBag.SearchTerm" />
-		<button id="filterBtn" class="btn btn-warning btn-sm"><i class="fas fa-filter"></i> Lọc</button>
-		<button id="selectAllBtn" class="btn btn-secondary btn-sm"><i class="fas fa-check-square"></i> Chọn tất cả</button>
-		<button id="deleteSelectedBtn" class="btn btn-danger btn-sm"><i class="fas fa-trash"></i> Xóa chọn</button>
-		<a asp-action="Create" class="btn btn-success btn-sm ms-auto"><i class="fas fa-plus"></i> Thêm</a>
-		<a asp-action="ExportToExcel" asp-route-searchTerm="@ViewBag.SearchTerm" asp-route-statusFilter="@ViewBag.StatusFilter" class="btn btn-info btn-sm ms-2"><i class="fas fa-file-export"></i> Xuất Excel</a>
-		<button type="button" class="btn btn-primary btn-sm ms-2" data-bs-toggle="modal" data-bs-target="#importModal">
-			<i class="fas fa-file-import"></i> Import Excel
-		</button>
-	</div>
+    <!-- Bảng danh sách -->
+    <table class="table table-bordered table-hover text-center table-custom">
+        <thead>
+            <tr>
+                <th></th>
+                <th>Mã NV</th>
+                <th>Họ tên</th>
+                <th>Email</th>
+                <th>Điện thoại</th>
+                <th>Giới tính</th>
+                <th>Năm sinh</th>
+                <th>Địa chỉ</th>
+                <th>Trạng thái</th>
+                <th>Ảnh</th>
+                <th>Thao tác</th>
+            </tr>
+        </thead>
+        <tbody>
+            @if (Model.Any())
+            {
+                foreach (var nv in Model)
+                {
+                    <tr data-id="@nv.ID_Nhan_Vien" class="detail-trigger">
+                        <td><input type="checkbox" class="custom-checkbox employee-checkbox" data-id="@nv.ID_Nhan_Vien"></td>
+                        <td>@nv.ID_Nhan_Vien</td>
+                        <td>@nv.Ho_Ten</td>
+                        <td>@nv.Email</td>
+                        <td>@nv.So_Dien_Thoai</td>
+                        <td>@(nv.GioiTinh == true ? "Nam" : nv.GioiTinh == false ? "Nữ" : "Khác")</td>
+                        <td>@nv.NamSinh.ToString("yyyy-MM-dd")</td>
+                        <td>@nv.Dia_Chi</td>
+                        <td>
+                            <span class="badge bg-@(nv.Trang_Thai == true ? "success" : "secondary")">
+                                @(nv.Trang_Thai == true ? "Đang làm" : "Nghỉ")
+                            </span>
+                        </td>
+                        <td>
+                            @if (!string.IsNullOrEmpty(nv.AnhNhanVien))
+                            {
+                                <img src="@nv.AnhNhanVien" style="width:40px; height:40px; border-radius:50%; object-fit:cover;" />
+                            }
+                            else
+                            {
+                                <span class="text-muted">Chưa có</span>
+                            }
+                        </td>
+                        <td>
+                            <a asp-action="Edit" asp-route-id="@nv.ID_Nhan_Vien" class="btn btn-warning btn-sm"><i class="fas fa-edit"></i></a>
+                            <form asp-action="Delete" asp-route-id="@nv.ID_Nhan_Vien" method="post" style="display:inline-block" onsubmit="return confirm('Bạn có chắc muốn xoá?');">
+                                <button class="btn btn-danger btn-sm"><i class="fas fa-trash"></i></button>
+                            </form>
+                        </td>
+                    </tr>
+                }
+            }
+            else
+            {
+                <tr><td colspan="11">Không có dữ liệu</td></tr>
+            }
+        </tbody>
+    </table>
 
-	<!-- Bảng danh sách -->
-	<table class="table table-bordered table-hover text-center table-custom">
-		<thead>
-			<tr>
-				<th></th>
-				<th>Mã NV</th>
-				<th>Họ tên</th>
-				<th>Email</th>
-				<th>Điện thoại</th>
-				<th>Giới tính</th>
-				<th>Năm sinh</th>
-				<th>Địa chỉ</th>
-				<th>Trạng thái</th>
-				<th>Ảnh</th>
-				<th>Thao tác</th>
-			</tr>
-		</thead>
-		<tbody>
-			@if (Model.Any())
-			{
-				foreach (var nv in Model)
-				{
-					<tr data-id="@nv.ID_Nhan_Vien" class="detail-trigger">
-						<td><input type="checkbox" class="custom-checkbox employee-checkbox" data-id="@nv.ID_Nhan_Vien"></td>
-						<td>@nv.ID_Nhan_Vien</td>
-						<td>@nv.Ho_Ten</td>
-						<td>@nv.Email</td>
-						<td>@nv.So_Dien_Thoai</td>
-						<td>@(nv.GioiTinh == true ? "Nam" : nv.GioiTinh == false ? "Nữ" : "Khác")</td>
-						<td>@nv.NamSinh.ToString("yyyy-MM-dd")</td>
-						<td>@nv.Dia_Chi</td>
-						<td>
-							<span class="badge bg-@(nv.Trang_Thai == true ? "success" : "secondary")">
-								@(nv.Trang_Thai == true ? "Đang làm" : "Nghỉ")
-							</span>
-						</td>
-						<td>
-							@if (!string.IsNullOrEmpty(nv.AnhNhanVien))
-							{
-								<img src="@nv.AnhNhanVien" style="width:40px; height:40px; border-radius:50%; object-fit:cover;" />
-							}
-							else
-							{
-
-								<span class="text-muted">Chưa có</span>
-							}
-						</td>
-						<td>
-							<a asp-action="Edit" asp-route-id="@nv.ID_Nhan_Vien" class="btn btn-warning btn-sm"><i class="fas fa-edit"></i></a>
-							<form asp-action="Delete" asp-route-id="@nv.ID_Nhan_Vien" method="post" style="display:inline-block" onsubmit="return confirm('Bạn có chắc muốn xoá?');">
-								<button class="btn btn-danger btn-sm"><i class="fas fa-trash"></i></button>
-							</form>
-						</td>
-					</tr>
-				}
-			}
-			else
-			{
-				<tr><td colspan="11">Không có dữ liệu</td></tr>
-			}
-		</tbody>
-	</table>
-
-	<!-- Phân trang -->
-	@{
-		var totalPages = ViewBag.TotalPages ?? 1;
-		var currentPage = ViewBag.CurrentPage ?? 1;
-		var searchTerm = ViewBag.SearchTerm ?? "";
-		var statusFilter = ViewBag.StatusFilter;
-	}
-	<nav aria-label="Page navigation">
-		<ul class="pagination justify-content-center mt-3">
-			<li class="page-item @(currentPage == 1 ? "disabled" : "")">
-				<a class="page-link" href="@Url.Action("Index", new { searchTerm, statusFilter, page = currentPage - 1 })">Trước</a>
-			</li>
-			@for (int i = 1; i <= totalPages; i++)
-			{
-				<li class="page-item @(i == currentPage ? "active" : "")">
-					<a class="page-link" href="@Url.Action("Index", new { searchTerm, statusFilter, page = i })">@i</a>
-				</li>
-			}
-			<li class="page-item @(currentPage == totalPages ? "disabled" : "")">
-				<a class="page-link" href="@Url.Action("Index", new { searchTerm, statusFilter, page = currentPage + 1 })">Sau</a>
-			</li>
-		</ul>
-	</nav>
+    <!-- Phân trang -->
+    @{
+        var totalPages = ViewBag.TotalPages ?? 1;
+        var currentPage = ViewBag.CurrentPage ?? 1;
+        var searchTerm = ViewBag.SearchTerm ?? "";
+        var statusFilter = ViewBag.StatusFilter;
+    }
+    <div class="pagination-container">
+        <ul class="pagination">
+            <li class="@(currentPage == 1 ? "disabled" : "")">
+                <a href="@Url.Action("Index", new { searchTerm, statusFilter, page = currentPage - 1 })">&laquo;</a>
+            </li>
+            @for (int i = 1; i <= totalPages; i++)
+            {
+                <li class="@(i == currentPage ? "active" : "")">
+                    <a href="@Url.Action("Index", new { searchTerm, statusFilter, page = i })">@i</a>
+                </li>
+            }
+            <li class="@(currentPage == totalPages ? "disabled" : "")">
+                <a href="@Url.Action("Index", new { searchTerm, statusFilter, page = currentPage + 1 })">&raquo;</a>
+            </li>
+        </ul>
+    </div>
 </div>
 
 <!-- Modal chi tiết -->
 <div id="detailModal" class="modal-custom">
-	<div class="modal-content-custom">
-		<span class="close">&times;</span>
-		<h3>Thông tin chi tiết</h3>
-		<div id="modalBody"></div>
-	</div>
+    <div class="modal-content-custom">
+        <span class="close">&times;</span>
+        <h3>Thông tin chi tiết</h3>
+        <div id="modalBody"></div>
+    </div>
 </div>
 
 <!-- Modal Import -->
 <div class="modal fade" id="importModal" tabindex="-1" aria-labelledby="importModalLabel" aria-hidden="true">
-	<div class="modal-dialog modal-dialog-centered">
-		<div class="modal-content">
-			<div class="modal-header bg-primary text-white">
-				<h5 class="modal-title" id="importModalLabel">Import Excel</h5>
-				<button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-			</div>
-			<div class="modal-body">
-				<form asp-action="ImportFromExcel" asp-controller="NhanVien" method="post" enctype="multipart/form-data">
-					<div class="mb-3">
-						<label for="fileExcel" class="form-label">Chọn file</label>
-						<input type="file" name="file" id="fileExcel" class="form-control" accept=".xlsx,.xls" required />
-					</div>
-					<div class="modal-footer">
-						<button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Hủy</button>
-						<button type="submit" class="btn btn-primary btn-sm"><i class="fas fa-upload"></i> Tải lên</button>
-					</div>
-				</form>
-			</div>
-		</div>
-	</div>
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header bg-primary text-white">
+                <h5 class="modal-title" id="importModalLabel">Import Excel</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form asp-action="ImportFromExcel" asp-controller="NhanVien" method="post" enctype="multipart/form-data">
+                    <div class="mb-3">
+                        <label for="fileExcel" class="form-label">Chọn file</label>
+                        <input type="file" name="file" id="fileExcel" class="form-control" accept=".xlsx,.xls" required />
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Hủy</button>
+                        <button type="submit" class="btn btn-primary btn-sm"><i class="fas fa-upload"></i> Tải lên</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
 </div>
 
 @section Scripts {
-	<script>
-		document.addEventListener('DOMContentLoaded', function () {
-			const modal = document.getElementById('detailModal');
-			const closeBtn = document.querySelector('.modal-content-custom .close');
-			const triggers = document.querySelectorAll('.detail-trigger');
-			const checkboxes = document.querySelectorAll('.employee-checkbox');
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js" integrity="sha256-/xUj+3OJU5yExlq6GSYGSHk7tPXikynS7ogEvDej/m4=" crossorigin="anonymous"></script>
+    <script>
+        $(document).ready(function () {
+            const modal = document.getElementById('detailModal');
+            const closeBtn = document.querySelector('.modal-content-custom .close');
+            const triggers = document.querySelectorAll('.detail-trigger');
+            const checkboxes = document.querySelectorAll('.employee-checkbox');
+            const searchInput = $('#searchTerm');
 
-			// Chi tiết NV
-			triggers.forEach(tr => {
-				tr.addEventListener('click', function (e) {
-					if (e.target.closest("a,button,input")) return; // tránh conflict click
-					const id = this.getAttribute('data-id');
-					document.getElementById('modalBody').innerHTML = "Đang tải...";
-					fetch(`/NhanVien/Details/${id}`)
-						.then(r => r.text())
-						.then(data => {
-							document.getElementById('modalBody').innerHTML = data;
-							modal.style.display = 'block';
-						});
-				});
-			});
-			closeBtn.addEventListener('click', () => modal.style.display = 'none');
-			window.addEventListener('click', e => { if (e.target == modal) modal.style.display = 'none'; });
+            // Chi tiết NV
+            triggers.forEach(tr => {
+                tr.addEventListener('click', function (e) {
+                    if (e.target.closest("a,button,input")) return; // tránh conflict click
+                    const id = this.getAttribute('data-id');
+                    document.getElementById('modalBody').innerHTML = "Đang tải...";
+                    fetch(`/NhanVien/Details/${id}`)
+                        .then(r => r.text())
+                        .then(data => {
+                            document.getElementById('modalBody').innerHTML = data;
+                            modal.style.display = 'block';
+                        });
+                });
+            });
+            closeBtn.addEventListener('click', () => modal.style.display = 'none');
+            window.addEventListener('click', e => { if (e.target == modal) modal.style.display = 'none'; });
 
-			// Lọc
-			document.getElementById('filterBtn').addEventListener('click', () => {
-				const searchTerm = document.getElementById('searchTerm').value;
-				const statusFilter = document.getElementById('statusFilter').value || "";
-				window.location.href = `@Url.Action("Index", "NhanVien")?searchTerm=${searchTerm}&statusFilter=${statusFilter}`;
-			});
+            // Chọn tất cả
+            document.getElementById('selectAllBtn').addEventListener('click', () => {
+                checkboxes.forEach(c => c.checked = !c.checked);
+            });
 
-			// Chọn tất cả
-			document.getElementById('selectAllBtn').addEventListener('click', () => {
-				checkboxes.forEach(c => c.checked = !c.checked);
-			});
+            // Xóa nhiều
+            document.getElementById('deleteSelectedBtn').addEventListener('click', () => {
+                const ids = Array.from(checkboxes).filter(c => c.checked).map(c => c.dataset.id);
+                if (ids.length > 0 && confirm("Xóa các nhân viên đã chọn?")) {
+                    fetch('/NhanVien/DeleteSelected', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(ids)
+                    }).then(r => r.json()).then(data => {
+                        if (data.success) location.reload();
+                        else alert("Có lỗi xảy ra");
+                    });
+                }
+            });
 
-			// Xóa nhiều
-			document.getElementById('deleteSelectedBtn').addEventListener('click', () => {
-				const ids = Array.from(checkboxes).filter(c => c.checked).map(c => c.dataset.id);
-				if (ids.length > 0 && confirm("Xóa các nhân viên đã chọn?")) {
-					fetch('/NhanVien/DeleteSelected', {
-						method: 'POST',
-						headers: { 'Content-Type': 'application/json' },
-						body: JSON.stringify(ids)
-					}).then(r => r.json()).then(data => {
-						if (data.success) location.reload();
-						else alert("Có lỗi xảy ra");
-					});
-				}
-			});
-		});
+            // Tìm kiếm khi nhấn Enter
+            searchInput.on('keyup', function (e) {
+                if (e.key === 'Enter') {
+                    performSearch();
+                }
+            });
+        });
 
-		function filterStatus(type) {
-			let url = '@Url.Action("Index", "NhanVien")';
-			let search = document.getElementById('searchTerm').value || "";
-			if (type === 'all') window.location.href = `${url}?searchTerm=${search}&statusFilter=`;
-			else if (type === 'working') window.location.href = `${url}?searchTerm=${search}&statusFilter=true`;
-			else if (type === 'leaving') window.location.href = `${url}?searchTerm=${search}&statusFilter=false`;
-		}
-		function goToCreate() {
-			window.location.href = '@Url.Action("Create", "NhanVien")';
-		}
-	</script>
+        function performSearch() {
+            const searchTerm = $('#searchTerm').val().trim();
+            const statusFilter = '@ViewBag.StatusFilter' || '';
+            window.location.href = `@Url.Action("Index", "NhanVien")?searchTerm=${encodeURIComponent(searchTerm)}&statusFilter=${statusFilter}&page=1`;
+        }
+
+        function filterStatus(type) {
+            let url = '@Url.Action("Index", "NhanVien")';
+            let search = document.getElementById('searchTerm').value || "";
+            if (type === 'all') window.location.href = `${url}?searchTerm=${encodeURIComponent(search)}&statusFilter=&page=1`;
+            else if (type === 'working') window.location.href = `${url}?searchTerm=${encodeURIComponent(search)}&statusFilter=true&page=1`;
+            else if (type === 'leaving') window.location.href = `${url}?searchTerm=${encodeURIComponent(search)}&statusFilter=false&page=1`;
+        }
+
+        function goToCreate() {
+            window.location.href = '@Url.Action("Create", "NhanVien")';
+        }
+    </script>
 }
+```

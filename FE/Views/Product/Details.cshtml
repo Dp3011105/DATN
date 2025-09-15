@@ -1,311 +1,204 @@
-﻿@* @model SanPham
-@{
-    Layout = "~/Views/Shared/_AdminLayout.cshtml";
-}
+﻿@model SanPham
 
-<div class="container-fluid my-5">
-    <!-- Notifications -->
-    @if (TempData["Success"] != null)
-    {
-        <div class="alert alert-success alert-dismissible fade show animate__animated animate__fadeInDown" role="alert">
-            @TempData["Success"]
-            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-        </div>
-    }
-    @if (TempData["Error"] != null)
-    {
-        <div class="alert alert-danger alert-dismissible fade show animate__animated animate__fadeInDown" role="alert">
-            @TempData["Error"]
-            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-        </div>
-    }
-
-    <!-- Product Details -->
-    <div class="row justify-content-center">
-        <div class="col-md-8">
-            <div class="card shadow-lg border-0 rounded animate__animated animate__fadeInUp">
-                <div class="card-body p-5">
-                    <h2 class="text-center mb-4 fw-bold text-primary">@Model.Ten_San_Pham</h2>
-                    <hr />
-                    <dl class="row">
-                        <dt class="col-sm-3 fw-bold">ID</dt>
-                        <dd class="col-sm-9">@Model.ID_San_Pham</dd>
-
-                        <dt class="col-sm-3 fw-bold">Giá</dt>
-                        <dd class="col-sm-9">@string.Format("{0:N0} đ", Model.Gia)</dd>
-
-                        <dt class="col-sm-3 fw-bold">Số lượng</dt>
-                        <dd class="col-sm-9">@Model.So_Luong</dd>
-
-                        <dt class="col-sm-3 fw-bold">Hình ảnh</dt>
-                        <dd class="col-sm-9">
-                            <img src="@("https://localhost:7169" + Model.Hinh_Anh)" alt="@Model.Ten_San_Pham" class="img-fluid rounded shadow hover-scale" style="max-width: 200px; aspect-ratio: 4/3; object-fit: cover;" />
-                        </dd>
-
-                        <dt class="col-sm-3 fw-bold">Mô tả</dt>
-                        <dd class="col-sm-9">@Model.Mo_Ta</dd>
-
-                        <dt class="col-sm-3 fw-bold">Trạng thái</dt>
-                        <dd class="col-sm-9">
-                            <span class="badge bg-@(Model.Trang_Thai ? "success" : "danger")">
-                                @(Model.Trang_Thai ? "Hoạt động" : "Không hoạt động")
-                            </span>
-                        </dd>
-
-                        <dt class="col-sm-3 fw-bold">Kích thước</dt>
-                        <dd class="col-sm-9">
-                            @if (Model.Sizes.Any())
-                            {
-                                foreach (var size in Model.Sizes)
-                                {
-                                    <span class="badge bg-primary me-1 mb-1">@size.SizeName (@(size.Trang_Thai ? "Hoạt động" : "Không hoạt động"))</span>
-                                }
-                            }
-                            else
-                            {
-                                <span>Không có kích thước</span>
-                            }
-                        </dd>
-
-                        <dt class="col-sm-3 fw-bold">Lượng đá</dt>
-                        <dd class="col-sm-9">
-                            @if (Model.LuongDas.Any())
-                            {
-                                foreach (var luongDa in Model.LuongDas)
-                                {
-                                    <span class="badge bg-primary me-1 mb-1">@luongDa.Ten_LuongDa (@(luongDa.Trang_Thai ? "Hoạt động" : "Không hoạt động"))</span>
-                                }
-                            }
-                            else
-                            {
-                                <span>Không có lượng đá</span>
-                            }
-                        </dd>
-
-                        <dt class="col-sm-3 fw-bold">Độ ngọt</dt>
-                        <dd class="col-sm-9">
-                            @if (Model.DoNgots.Any())
-                            {
-                                foreach (var doNgot in Model.DoNgots)
-                                {
-                                    <span class="badge bg-primary me-1 mb-1">@doNgot.Muc_Do (@(doNgot.Trang_Thai ? "Hoạt động" : "Không hoạt động"))</span>
-                                }
-                            }
-                            else
-                            {
-                                <span>Không có độ ngọt</span>
-                            }
-                        </dd>
-
-                        <dt class="col-sm-3 fw-bold">Topping</dt>
-                        <dd class="col-sm-9">
-                            @if (Model.Toppings.Any())
-                            {
-                                foreach (var topping in Model.Toppings)
-                                {
-                                    <span class="badge bg-primary me-1 mb-1">@topping.Ten (Giá: @string.Format("{0:N0} đ", topping.Gia), Số lượng: @topping.So_Luong, @(topping.Trang_Thai ? "Hoạt động" : "Không hoạt động"))</span>
-                                }
-                            }
-                            else
-                            {
-                                <span>Không có topping</span>
-                            }
-                        </dd>
-                    </dl>
-                    <div class="d-flex justify-content-between mt-4">
-                        <a asp-action="EditProduct" asp-route-id="@Model.ID_San_Pham" class="btn btn-outline-warning rounded-pill">
-                            <i class="bi bi-pencil me-2"></i>Sửa
-                        </a>
-                        <a asp-action="Index" class="btn btn-outline-secondary rounded-pill">
-                            <i class="bi bi-arrow-left me-2"></i>Quay lại
-                        </a>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-</div>
-
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css" />
-
-<style>
-    .hover-scale:hover {
-        transform: scale(1.1);
-        transition: transform 0.3s ease;
-    }
-
-    .btn-outline-warning:hover, .btn-outline-secondary:hover {
-        transform: scale(1.05);
-        transition: transform 0.3s ease;
-    }
-
-    .badge {
-        font-size: 0.9rem;
-        padding: 0.5em 1em;
-    }
-
-    dl dt {
-        color: #007bff;
-    }
-</style> *@
-
-
-
-
-
-@model SanPham
 @{
     Layout = "~/Views/Shared/_AdminLayout.cshtml";
     ViewData["Title"] = "Chi tiết sản phẩm";
 }
 
-<div class="container-fluid my-5">
-    <!-- Notifications -->
-    @if (TempData["Success"] != null)
-    {
-        <div class="alert alert-success alert-dismissible fade show animate__animated animate__fadeInDown" role="alert">
-            @TempData["Success"]
-            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-        </div>
-    }
-    @if (TempData["Error"] != null)
-    {
-        <div class="alert alert-danger alert-dismissible fade show animate__animated animate__fadeInDown" role="alert">
-            @TempData["Error"]
-            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-        </div>
-    }
-
-    <!-- Product Details -->
-    <div class="row justify-content-center">
-        <div class="col-md-8">
-            <div class="card shadow-sm border-0">
-                <div class="card-body p-5">
-                    <h2 class="text-center mb-4 fw-bold text-dark">@Model.Ten_San_Pham</h2>
-                    <hr class="mb-4" />
-                    <dl class="row">
-                        <dt class="col-sm-3 fw-bold text-muted">ID</dt>
-                        <dd class="col-sm-9">@Model.ID_San_Pham</dd>
-
-                        <dt class="col-sm-3 fw-bold text-muted">Giá</dt>
-                        <dd class="col-sm-9">@string.Format("{0:N0} đ", Model.Gia)</dd>
-
-                        <dt class="col-sm-3 fw-bold text-muted">Số lượng</dt>
-                        <dd class="col-sm-9">@Model.So_Luong</dd>
-
-                        <dt class="col-sm-3 fw-bold text-muted">Hình ảnh</dt>
-                        <dd class="col-sm-9">
-                            <img src="@("https://localhost:7169" + Model.Hinh_Anh)" alt="@Model.Ten_San_Pham" class="img-fluid shadow" style="max-width: 200px; aspect-ratio: 4/3; object-fit: cover; border-radius: 4px;" />
-                        </dd>
-
-                        <dt class="col-sm-3 fw-bold text-muted">Mô tả</dt>
-                        <dd class="col-sm-9">@Model.Mo_Ta</dd>
-
-                        <dt class="col-sm-3 fw-bold text-muted">Trạng thái</dt>
-                        <dd class="col-sm-9">
-                            <span class="badge bg-@(Model.Trang_Thai ? "success" : "danger")">
-                                @(Model.Trang_Thai ? "Hoạt động" : "Không hoạt động")
-                            </span>
-                        </dd>
-
-                        <dt class="col-sm-3 fw-bold text-muted">Kích thước</dt>
-                        <dd class="col-sm-9">
-                            @if (Model.Sizes.Any())
-                            {
-                                <ul class="list-group list-group-flush">
-                                    @foreach (var size in Model.Sizes)
-                                    {
-                                        <li class="list-group-item">@size.SizeName (@(size.Trang_Thai ? "Hoạt động" : "Không hoạt động"))</li>
-                                    }
-                                </ul>
-                            }
-                            else
-                            {
-                                <span>Không có kích thước</span>
-                            }
-                        </dd>
-
-                        <dt class="col-sm-3 fw-bold text-muted">Lượng đá</dt>
-                        <dd class="col-sm-9">
-                            @if (Model.LuongDas.Any())
-                            {
-                                <ul class="list-group list-group-flush">
-                                    @foreach (var luongDa in Model.LuongDas)
-                                    {
-                                        <li class="list-group-item">@luongDa.Ten_LuongDa (@(luongDa.Trang_Thai ? "Hoạt động" : "Không hoạt động"))</li>
-                                    }
-                                </ul>
-                            }
-                            else
-                            {
-                                <span>Không có lượng đá</span>
-                            }
-                        </dd>
-
-                        <dt class="col-sm-3 fw-bold text-muted">Độ ngọt</dt>
-                        <dd class="col-sm-9">
-                            @if (Model.DoNgots.Any())
-                            {
-                                <ul class="list-group list-group-flush">
-                                    @foreach (var doNgot in Model.DoNgots)
-                                    {
-                                        <li class="list-group-item">@doNgot.Muc_Do (@(doNgot.Trang_Thai ? "Hoạt động" : "Không hoạt động"))</li>
-                                    }
-                                </ul>
-                            }
-                            else
-                            {
-                                <span>Không có độ ngọt</span>
-                            }
-                        </dd>
-
-                        <dt class="col-sm-3 fw-bold text-muted">Topping</dt>
-                        <dd class="col-sm-9">
-                            @if (Model.Toppings.Any())
-                            {
-                                <ul class="list-group list-group-flush">
-                                    @foreach (var topping in Model.Toppings)
-                                    {
-                                        <li class="list-group-item">@topping.Ten (Giá: @string.Format("{0:N0} đ", topping.Gia), Số lượng: @topping.So_Luong, @(topping.Trang_Thai ? "Hoạt động" : "Không hoạt động"))</li>
-                                    }
-                                </ul>
-                            }
-                            else
-                            {
-                                <span>Không có topping</span>
-                            }
-                        </dd>
-                    </dl>
-                    <div class="d-flex justify-content-between mt-4">
-                        <a asp-action="EditProduct" asp-route-id="@Model.ID_San_Pham" class="btn btn-outline-warning">
-                            <i class="bi bi-pencil me-2"></i>Sửa
-                        </a>
-                        <a asp-action="Index" class="btn btn-outline-secondary">
-                            <i class="bi bi-arrow-left me-2"></i>Quay lại
-                        </a>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-</div>
-
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css" />
-
 <style>
+    /* Container chính */
+    .employee-container {
+        background: linear-gradient(135deg, #f8fafc, #e2e8f0);
+        border-radius: 18px;
+        padding: 25px;
+        box-shadow: 0 12px 35px rgba(0, 0, 0, 0.1);
+        margin-bottom: 25px;
+    }
+
+    /* Product Detail Card */
+    .product-detail-card {
+        border-radius: 18px;
+        overflow: hidden;
+        box-shadow: 0 12px 35px rgba(0, 0, 0, 0.1);
+        background: #fff;
+        padding: 15px; /* Thêm padding cho card để tránh sát viền */
+    }
+
+    .product-header {
+        background: linear-gradient(135deg, #1e40af, #f687b3);
+        color: #fff;
+        padding: 25px;
+        text-align: center;
+        position: relative;
+        overflow: hidden;
+        border-top-left-radius: 18px;
+        border-top-right-radius: 18px;
+    }
+
+        .product-header::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(255, 255, 255, 0.1);
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .product-header:hover::before {
+            opacity: 1;
+        }
+
+    .product-image {
+        width: 100%;
+        max-width: 400px;
+        height: 300px;
+        object-fit: cover;
+        border-radius: 12px;
+        box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
+        transition: transform 0.3s ease;
+        cursor: pointer;
+        margin: 15px auto; /* Thêm margin để cách viền */
+    }
+
+        .product-image:hover {
+            transform: scale(1.02);
+        }
+
+    .product-info {
+        padding: 30px;
+    }
+
+    .product-price {
+        font-size: 1.8rem;
+        font-weight: bold;
+        color: #059669;
+        margin-bottom: 10px;
+    }
+
+    .product-badge {
+        padding: 0.5em 1em;
+        border-radius: 20px;
+        font-size: 0.9rem;
+        font-weight: 600;
+        margin-right: 10px;
+        margin-bottom: 10px;
+    }
+
+    .product-description {
+        font-size: 1.1rem;
+        line-height: 1.6;
+        color: #374151;
+        margin-bottom: 25px;
+    }
+
+    .product-attribute-section {
+        margin-bottom: 30px;
+        padding: 20px;
+        border-radius: 12px;
+        background: #f8fafc;
+        border-left: 4px solid #3b82f6;
+        margin-top: 15px; /* Thêm margin-top để cách viền trên */
+    }
+
+        .product-attribute-section h6 {
+            color: #1e40af;
+            margin-bottom: 15px;
+            font-weight: 600;
+        }
+
+    .product-attribute-list {
+        list-style: none;
+        padding: 0;
+    }
+
+        .product-attribute-list li {
+            padding: 8px 0;
+            border-bottom: 1px solid #e5e7eb;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+            .product-attribute-list li:last-child {
+                border-bottom: none;
+            }
+
+            .product-attribute-list li strong {
+                color: #374151;
+            }
+
+            .product-attribute-list li .badge {
+                font-size: 0.8rem;
+            }
+
+    .action-buttons {
+        display: flex;
+        justify-content: space-between;
+        gap: 15px;
+        margin-top: 30px; /* Đảm bảo cách các phần trên */
+        padding: 0 15px 15px 15px; /* Thêm padding dưới cùng để tránh sát viền */
+    }
+
+    .btn-custom {
+        border-radius: 12px;
+        padding: 12px 24px;
+        font-weight: 600;
+        transition: all 0.3s ease;
+        flex: 1;
+        text-align: center;
+    }
+
+        .btn-custom:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 15px rgba(0, 0, 0, 0.15);
+        }
+
+    .btn-edit {
+        background: linear-gradient(135deg, #f59e0b, #f687b3);
+        border: none;
+        color: #fff;
+    }
+
+    .btn-back {
+        background: linear-gradient(135deg, #6b7280, #9ca3af);
+        border: none;
+        color: #fff;
+    }
+
+    /* Responsive */
+    media (max-width: 768px) {
+        .product-detail-card
+
+    {
+        padding: 10px; /* Giảm padding trên mobile */
+    }
+
+    .product-image {
+        max-width: 100%;
+        height: 250px;
+    }
+
+    .action-buttons {
+        flex-direction: column;
+    }
+
+    }
+
+    body {
+        font-family: 'Inter', sans-serif;
+        background-color: #f8f9fa;
+    }
+
+    .container-fluid {
+        max-width: 1400px;
+    }
+
     .card {
         border-radius: 8px;
     }
-
-    .btn-outline-warning, .btn-outline-secondary {
-        border-radius: 4px;
-        transition: background-color 0.3s ease, transform 0.2s ease;
-    }
-
-        .btn-outline-warning:hover, .btn-outline-secondary:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
-        }
 
     .img-fluid {
         border-radius: 4px;
@@ -333,4 +226,181 @@
     .text-muted {
         color: #495057 !important;
     }
+
+    .text-primary {
+        color: #0052cc !important;
+    }
+
+    .text-danger {
+        color: #dc3545 !important;
+    }
+
+    .fw-bold {
+        font-weight: 600 !important;
+    }
 </style>
+
+<div class="employee-container">
+    <!-- Notifications -->
+    @if (TempData["Success"] != null)
+    {
+        <div class="alert alert-success alert-dismissible fade show" role="alert">
+            <i class="bi bi-check-circle-fill me-2"></i>@TempData["Success"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    }
+    @if (TempData["Error"] != null)
+    {
+        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+            <i class="bi bi-exclamation-circle-fill me-2"></i>@TempData["Error"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    }
+
+    <div class="product-detail-card">
+        <div class="product-header">
+            <h1 class="mb-0 fw-bold display-5">@Model.Ten_San_Pham</h1>
+            <p class="mb-0 opacity-75">ID: @Model.ID_San_Pham</p>
+        </div>
+
+        <div class="row g-4">
+            <!-- Product Image -->
+            <div class="col-lg-4 text-center">
+                <img src="@("https://localhost:7169" + (Model.Hinh_Anh ?? "/images/placeholder.jpg"))" alt="@Model.Ten_San_Pham" class="product-image" />
+                <p class="mt-2 text-muted small">Hình ảnh sản phẩm</p>
+            </div>
+
+            <!-- Product Basic Info -->
+            <div class="col-lg-8">
+                <div class="product-info">
+                    <!-- Price and Status -->
+                    <div class="d-flex justify-content-between align-items-center mb-4">
+                        <div>
+                            <span class="product-price">@string.Format("{0:N0} đ", Model.Gia)</span>
+                            <span class="badge bg-success ms-2">Hoạt động</span>
+                        </div>
+                        <div class="text-end">
+                            <span class="text-muted small">Số lượng tồn kho: <strong>@Model.So_Luong</strong></span>
+                        </div>
+                    </div>
+
+                    <!-- Description -->
+                    <div class="product-description">
+                        @Model.Mo_Ta
+                    </div>
+
+                    <!-- Attributes Sections -->
+                    <div class="row g-4">
+                        <!-- Sizes -->
+                        <div class="col-lg-6">
+                            <div class="product-attribute-section">
+                                <h6><i class="bi bi-rulers me-2"></i>Kích thước</h6>
+                                <ul class="product-attribute-list">
+                                    @if (Model.Sizes.Any())
+                                    {
+                                        @foreach (var size in Model.Sizes)
+                                        {
+                                            <li>
+                                                <strong>@size.SizeName</strong>
+                                                <span class="badge bg-@(size.Trang_Thai ? "success" : "secondary")">@(size.Trang_Thai ? "Hoạt động" : "Không hoạt động")</span>
+                                            </li>
+                                        }
+                                    }
+                                    else
+                                    {
+                                        <li class="text-muted">Không có kích thước nào.</li>
+                                    }
+                                </ul>
+                            </div>
+                        </div>
+
+                        <!-- LuongDas -->
+                        <div class="col-lg-6">
+                            <div class="product-attribute-section">
+                                <h6><i class="bi bi-cup-hot me-2"></i>Lượng đá</h6>
+                                <ul class="product-attribute-list">
+                                    @if (Model.LuongDas.Any())
+                                    {
+                                        @foreach (var luongDa in Model.LuongDas)
+                                        {
+                                            <li>
+                                                <strong>@luongDa.Ten_LuongDa</strong>
+                                                <span class="badge bg-@(luongDa.Trang_Thai ? "success" : "secondary")">@(luongDa.Trang_Thai ? "Hoạt động" : "Không hoạt động")</span>
+                                            </li>
+                                        }
+                                    }
+                                    else
+                                    {
+                                        <li class="text-muted">Không có lượng đá nào.</li>
+                                    }
+                                </ul>
+                            </div>
+                        </div>
+
+                        <!-- DoNgots -->
+                        <div class="col-lg-6">
+                            <div class="product-attribute-section">
+                                <h6><i class="bi bi-sweet me-2"></i>Độ ngọt</h6>
+                                <ul class="product-attribute-list">
+                                    @if (Model.DoNgots.Any())
+                                    {
+                                        @foreach (var doNgot in Model.DoNgots)
+                                        {
+                                            <li>
+                                                <strong>@doNgot.Muc_Do</strong>
+                                                <span class="badge bg-@(doNgot.Trang_Thai ? "success" : "secondary")">@(doNgot.Trang_Thai ? "Hoạt động" : "Không hoạt động")</span>
+                                            </li>
+                                        }
+                                    }
+                                    else
+                                    {
+                                        <li class="text-muted">Không có độ ngọt nào.</li>
+                                    }
+                                </ul>
+                            </div>
+                        </div>
+
+                        <!-- Toppings -->
+                        <div class="col-lg-6">
+                            <div class="product-attribute-section">
+                                <h6><i class="bi bi-stars me-2"></i>Topping</h6>
+                                <ul class="product-attribute-list">
+                                    @if (Model.Toppings.Any())
+                                    {
+                                        @foreach (var topping in Model.Toppings)
+                                        {
+                                            <li>
+                                                <strong>@topping.Ten</strong>
+                                                <span class="text-primary small">Giá: @string.Format("{0:N0} đ", topping.Gia) | SL: @topping.So_Luong</span>
+                                                <span class="badge bg-@(topping.Trang_Thai ? "success" : "secondary") ms-2">@(topping.Trang_Thai ? "Hoạt động" : "Không hoạt động")</span>
+                                            </li>
+                                        }
+                                    }
+                                    else
+                                    {
+                                        <li class="text-muted">Không có topping nào.</li>
+                                    }
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Quick Actions (Di chuyển xuống dưới) -->
+                    <div class="action-buttons">
+                        <a asp-action="EditProduct" asp-route-id="@Model.ID_San_Pham" class="btn-custom btn-edit">
+                            <i class="bi bi-pencil me-2"></i>Sửa sản phẩm
+                        </a>
+                        <a asp-action="Index" class="btn-custom btn-back">
+                            <i class="bi bi-arrow-left me-2"></i>Quay lại danh sách
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css" />
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet" />
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css" />
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" />

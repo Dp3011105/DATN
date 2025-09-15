@@ -255,7 +255,7 @@
 
 
 
-@model FE.Models.RegisterModel
+@* @model FE.Models.RegisterModel
 
 @{
     ViewData["Title"] = "Đăng ký";
@@ -422,3 +422,484 @@
         background: linear-gradient(135deg, #667eea, #764ba2);
     }
 </style>
+ *@
+
+
+
+
+
+
+@model FE.Models.RegisterModel
+
+@{
+    ViewData["Title"] = "Đăng ký";
+}
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@ViewData["Title"] - Trà Sữa Ngon</title>
+
+    <!-- Bootstrap & Icons -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css" />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css" />
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
+    <style>
+        body {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+            font-family: 'Poppins', 'Segoe UI', sans-serif;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+        }
+
+        .register-container {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            width: 100%;
+            padding: 20px;
+            background: linear-gradient(to right, #667eea, #ff4d6d);
+        }
+
+        .register-card {
+            display: flex;
+            background: rgba(255, 255, 255, 0.15);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border-radius: 20px;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            overflow: hidden;
+            width: 900px;
+            height: 600px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+        }
+
+        .register-form {
+            flex: 1;
+            padding: 40px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
+
+        .register-image {
+            flex: 1;
+            background: linear-gradient(135deg, #e8f5e8, #f0f8ff);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            position: relative;
+        }
+
+        /* Logo + Giới thiệu - giống login */
+        .logo-section {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            text-align: center;
+            padding: 30px 25px;
+            max-width: 300px;
+        }
+
+        .logo-container {
+            position: relative;
+            margin-bottom: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .logo-img {
+            width: 80px;
+            height: 80px;
+            background: linear-gradient(135deg, #ff6b6b, #4ecdc4);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 2rem;
+            color: white;
+            font-weight: 600;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+            margin-bottom: 12px;
+            transition: transform 0.3s ease;
+        }
+
+            .logo-img:hover {
+                transform: scale(1.05);
+            }
+
+        .brand-name {
+            font-size: 1.8rem;
+            font-weight: 700;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 15px;
+            letter-spacing: 1px;
+        }
+
+        .shop-intro {
+            background: rgba(255, 255, 255, 0.8);
+            padding: 20px;
+            border-radius: 15px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            backdrop-filter: blur(10px);
+        }
+
+        .shop-desc {
+            font-size: 0.9rem;
+            line-height: 1.6;
+            color: #444;
+            font-weight: 400;
+            text-align: center;
+        }
+
+        .highlight-text {
+            color: #667eea;
+            font-weight: 600;
+        }
+
+        /* Thêm icon trang trí */
+        .decorative-icons {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            color: rgba(102, 126, 234, 0.3);
+            font-size: 1.5rem;
+        }
+
+            .decorative-icons i {
+                margin-left: 10px;
+                animation: float 3s ease-in-out infinite;
+            }
+
+                .decorative-icons i:nth-child(2) {
+                    animation-delay: 0.5s;
+                }
+
+                .decorative-icons i:nth-child(3) {
+                    animation-delay: 1s;
+                }
+
+        keyframes float {
+            0%, 100%
+
+        {
+            transform: translateY(0px);
+        }
+
+        50% {
+            transform: translateY(-10px);
+        }
+
+        }
+
+        h2 {
+            color: #fff;
+            text-align: center;
+            margin-bottom: 30px;
+            font-weight: 600;
+            font-size: 1.8rem;
+        }
+
+        .form-label {
+            color: rgba(255, 255, 255, 0.9);
+            font-weight: 500;
+            margin-bottom: 8px;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        /* Glassmorphism Card */
+        .glass-card {
+            background: rgba(255, 255, 255, 0.15);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border-radius: 20px;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            max-width: 400px;
+            width: 100%;
+            color: #fff;
+        }
+
+        /* Form controls */
+        .form-control {
+            border-radius: 10px;
+            border: none;
+            padding: 12px 15px;
+            font-size: 1rem;
+            background: rgba(255, 255, 255, 0.15);
+            color: #fff;
+            backdrop-filter: blur(10px);
+            transition: all 0.3s ease;
+        }
+
+            .form-control:focus {
+                background: rgba(255, 255, 255, 0.25);
+                box-shadow: 0 0 0 0.2rem rgba(255, 255, 255, 0.25);
+                outline: none;
+                color: #fff;
+            }
+
+            .form-control::placeholder {
+                color: rgba(255, 255, 255, 0.7);
+            }
+
+            .form-control.is-invalid {
+                border-color: #ff6b6b;
+                box-shadow: 0 0 5px rgba(255, 107, 107, 0.5);
+            }
+
+            .form-control.is-valid {
+                border-color: #4ade80;
+                box-shadow: 0 0 5px rgba(74, 222, 128, 0.5);
+            }
+
+        /* Buttons */
+        .btn-glass {
+            background: rgba(255, 255, 255, 0.2);
+            color: #fff;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            border-radius: 10px;
+            padding: 12px;
+            font-size: 1.05rem;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+            .btn-glass:hover:not(:disabled) {
+                background: rgba(255, 255, 255, 0.35);
+                transform: translateY(-2px);
+                box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+                color: #fff;
+            }
+
+            .btn-glass:disabled {
+                background: rgba(255, 255, 255, 0.1);
+                color: rgba(255, 255, 255, 0.5);
+                cursor: not-allowed;
+                transform: none;
+            }
+
+        /* Alerts */
+        .alert {
+            border-radius: 10px;
+            text-align: center;
+            font-weight: 500;
+            margin-bottom: 20px;
+        }
+
+        .alert-success {
+            background: rgba(34, 197, 94, 0.2);
+            border: 1px solid rgba(34, 197, 94, 0.3);
+            color: #fff;
+        }
+
+        .alert-danger {
+            background: rgba(239, 68, 68, 0.2);
+            border: 1px solid rgba(239, 68, 68, 0.3);
+            color: #fff;
+        }
+
+        .text-danger {
+            color: #ff6b6b !important;
+        }
+
+        .text-primary {
+            color: #60a5fa !important;
+        }
+
+        .login-link {
+            text-align: center;
+            color: rgba(255, 255, 255, 0.9);
+            margin-top: 25px;
+            font-size: 0.95rem;
+        }
+
+            .login-link a {
+                color: #ff6b6b;
+                text-decoration: none;
+                font-weight: 600;
+                transition: color 0.3s ease;
+            }
+
+                .login-link a:hover {
+                    color: #ff5252;
+                    text-decoration: underline;
+                }
+
+        /* Responsive */
+        media (max-width: 768px) {
+            .register-card
+
+        {
+            flex-direction: column;
+            height: auto;
+            width: 90%;
+        }
+
+        .register-form {
+            padding: 30px 25px;
+        }
+
+        .logo-section {
+            padding: 20px;
+        }
+
+        .brand-name {
+            font-size: 1.5rem;
+        }
+
+        .logo-img {
+            width: 60px;
+            height: 60px;
+            font-size: 1.5rem;
+        }
+
+        }
+    </style>
+</head>
+<body>
+    <div class="register-container">
+        <div class="register-card">
+            <!-- Form đăng ký -->
+            <div class="register-form">
+                <h2 class="text-center mb-4 fw-bold text-white">Đăng Ký</h2>
+
+                <!-- Notifications - GIỮ NGUYÊN -->
+                @if (TempData["Success"] != null)
+                {
+                    <div class="alert alert-success alert-dismissible fade show" role="alert">
+                        <i class="bi bi-check-circle-fill me-2"></i>
+                        <span>@TempData["Success"]</span>
+                        <p class="mt-1 mb-0">Tài khoản đã được tạo. <a href="@Url.Action("Login", "Account")" class="text-primary fw-bold">Đăng nhập ngay</a> để bắt đầu trải nghiệm!</p>
+                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                    </div>
+                }
+                @if (TempData["Error"] != null)
+                {
+                    <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                        <i class="bi bi-exclamation-triangle-fill me-2"></i>
+                        <span>@TempData["Error"]</span>
+                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                    </div>
+                }
+
+                <form asp-action="Register" method="post" id="registerForm" class="mt-3">
+                    <div asp-validation-summary="ModelOnly" class="text-danger mb-3 text-center"></div>
+
+                    <div class="mb-3">
+                        <label asp-for="Email" class="form-label text-white">Email</label>
+                        <input asp-for="Email" class="form-control shadow-sm" id="email" placeholder="user@example.com" required />
+                        <span asp-validation-for="Email" class="text-danger small"></span>
+                    </div>
+
+                    <div class="mb-3">
+                        <label asp-for="Ho_Ten" class="form-label text-white">Họ tên</label>
+                        <input asp-for="Ho_Ten" class="form-control shadow-sm" id="fullname" placeholder="Nguyễn Văn A" required />
+                        <span asp-validation-for="Ho_Ten" class="text-danger small"></span>
+                    </div>
+
+                    <div class="mb-3">
+                        <label asp-for="Ten_Nguoi_Dung" class="form-label text-white">Tên Đăng nhập</label>
+                        <input asp-for="Ten_Nguoi_Dung" class="form-control shadow-sm" id="username" placeholder="user123" required />
+                        <span asp-validation-for="Ten_Nguoi_Dung" class="text-danger small"></span>
+                    </div>
+
+                    <button type="submit" class="btn btn-glass w-100 mb-2" id="submitButton" disabled>
+                        <i class="bi bi-person-plus-fill me-2"></i>Đăng ký
+                    </button>
+
+                    <div class="login-link">
+                        <p>Đã có tài khoản? <a href="@Url.Action("Login", "Account")">Đăng nhập ngay</a></p>
+                    </div>
+                </form>
+            </div>
+
+            <!-- Logo + Giới thiệu - giống như login -->
+            <div class="register-image">
+                <div class="decorative-icons">
+                    <i class="fas fa-user-plus"></i>
+                    <i class="fas fa-heart"></i>
+                    <i class="fas fa-star"></i>
+                </div>
+
+                <div class="logo-section">
+                    <div class="logo-container">
+                        <div class="logo-img">
+                            TB
+                        </div>
+                        <h3 class="brand-name">The Boy</h3>
+                    </div>
+
+                    <div class="shop-intro">
+                        <p class="shop-desc">
+                            Tham gia cộng đồng <span class="highlight-text">The Boy</span> -
+                            Khám phá thế giới trà sữa tuyệt vời!<br><br>
+
+                            🎁 <strong>Ưu đãi thành viên mới</strong><br>
+                            🌟 <strong>Tích điểm đổi quà</strong><br>
+                            📱 <strong>Đặt hàng dễ dàng</strong><br><br>
+
+                            <em>Đăng ký ngay để không bỏ lỡ những ưu đãi đặc biệt!</em>
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    @section Scripts {
+        <script src="~/lib/jquery/dist/jquery.min.js"></script>
+        <script src="~/lib/jquery-validation/dist/jquery.validate.min.js"></script>
+        <script src="~/lib/jquery-validation-unobtrusive/jquery.validate.unobtrusive.min.js"></script>
+        <script>
+            // GIỮ NGUYÊN TOÀN BỘ LOGIC CŨ
+            $(document).ready(function () {
+                // Chuyển thông báo validation sang tiếng Việt
+                $.extend($.validator.messages, {
+                    required: "Trường này là bắt buộc.",
+                    email: "Vui lòng nhập địa chỉ email hợp lệ.",
+                    minlength: $.validator.format("Nhập ít nhất {0} ký tự."),
+                    maxlength: $.validator.format("Không được vượt quá {0} ký tự.")
+                });
+
+                // Custom validation cho username
+                $.validator.addMethod("usernameFormat", function (value, element) {
+                    return this.optional(element) || /^[a-zA-Z0-9_.]+$/.test(value) && !/\s/.test(value);
+                }, "Tên đăng nhập chỉ chứa chữ cái, số, dấu chấm (.) hoặc dấu gạch dưới (_), không chứa khoảng trắng.");
+
+                var form = $("#registerForm").validate({
+                    errorClass: "text-danger",
+                    highlight: function (element) { $(element).addClass("is-invalid").removeClass("is-valid"); },
+                    unhighlight: function (element) { $(element).removeClass("is-invalid").addClass("is-valid"); },
+                    rules: {
+                        Email: { required: true, email: true, maxlength: 100 },
+                        Ho_Ten: { required: true, minlength: 2, maxlength: 100 },
+                        Ten_Nguoi_Dung: { required: true, usernameFormat: true, minlength: 3, maxlength: 50 }
+                    }
+                });
+
+                $("#registerForm input").on("input blur", function () {
+                    $("#submitButton").prop("disabled", !form.valid());
+                });
+
+                $("#registerForm").validate().form();
+            });
+        </script>
+    }
+</body>
+</html></html>

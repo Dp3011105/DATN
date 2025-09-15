@@ -605,7 +605,7 @@
 
 
 
-@{
+@* @{
     Layout = "~/Views/Shared/_AdminLayout.cshtml";
 }
 
@@ -1224,6 +1224,773 @@
             // Initial fetch
             await fetchPromotions();
             await fetchProducts();
+        });
+    </script>
+</body>
+</html> *@
+@{
+    Layout = "~/Views/Shared/_AdminLayout.cshtml";
+}
+
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gán Khuyến Mãi Sản Phẩm</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css" />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css">
+    <style>
+        :root {
+            --primary: #3B82F6;
+            --primary-dark: #2563EB;
+            --secondary: #F59E0B;
+            --light-bg: #F8FAFC;
+            --card-bg: #FFFFFF;
+            --text-primary: #1F2937;
+            --text-secondary: #6B7280;
+            --success: #10B981;
+            --danger: #EF4444;
+        }
+
+        body {
+            font-family: 'Roboto', sans-serif;
+            background-color: var(--light-bg);
+            color: var(--text-primary);
+        }
+
+        .promotion-container {
+            background: linear-gradient(135deg, #f8fafc, #e2e8f0);
+            border-radius: 18px;
+            padding: 25px;
+            box-shadow: 0 12px 35px rgba(0, 0, 0, 0.1);
+            margin-bottom: 25px;
+        }
+
+        /* Thống kê khuyến mãi */
+        .stats-container {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 18px;
+            margin-bottom: 25px;
+        }
+
+        .stat-card {
+            padding: 25px 15px;
+            border-radius: 18px;
+            text-align: center;
+            font-weight: 600;
+            font-size: 1rem;
+            color: #fff;
+            cursor: pointer;
+            position: relative;
+            overflow: hidden;
+            transition: all 0.4s ease;
+        }
+
+            .stat-card i {
+                font-size: 1.8rem;
+                margin-bottom: 10px;
+                opacity: 0.9;
+            }
+
+            .stat-card strong {
+                display: block;
+                font-size: 1.5rem;
+                margin-top: 5px;
+            }
+
+            .stat-card:hover {
+                transform: translateY(-6px) scale(1.05);
+                box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+            }
+
+        .stat-total {
+            background: linear-gradient(135deg, #2563eb, #3b82f6);
+        }
+
+        .stat-no-promo {
+            background: linear-gradient(135deg, #059669, #10b981);
+        }
+
+        .stat-has-promo {
+            background: linear-gradient(135deg, #f59e0b, #fbbf24);
+        }
+
+        .stat-expired-promo {
+            background: linear-gradient(135deg, #dc2626, #ef4444);
+        }
+
+        .product-row {
+            transition: all 0.2s ease;
+            border-radius: 8px;
+            background: var(--card-bg);
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+            padding: 1rem;
+            margin-bottom: 0.5rem;
+        }
+
+            .product-row:hover {
+                transform: translateY(-2px);
+                box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            }
+
+        .promotion-badge {
+            background: linear-gradient(135deg, var(--secondary), #F97316);
+            color: white;
+            font-size: 0.75rem;
+            font-weight: 600;
+            padding: 0.3rem 0.6rem;
+            border-radius: 12px;
+        }
+
+        .search-container {
+            position: relative;
+            max-width: 500px;
+            margin-bottom: 1.5rem;
+        }
+
+        .search-input {
+            width: 100%;
+            padding: 0.75rem 1rem 0.75rem 2.5rem;
+            border-radius: 50px;
+            border: 1px solid #E5E7EB;
+            background: white;
+            font-size: 0.9rem;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.03);
+            transition: all 0.2s ease;
+        }
+
+            .search-input:focus {
+                outline: none;
+                box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.25);
+                border-color: var(--primary);
+            }
+
+        .search-icon {
+            position: absolute;
+            left: 1rem;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #9CA3AF;
+            font-size: 0.9rem;
+        }
+
+        .search-button {
+            position: absolute;
+            right: 0.25rem;
+            top: 50%;
+            transform: translateY(-50%);
+            background: var(--primary);
+            color: white;
+            border: none;
+            padding: 0.5rem 1rem;
+            border-radius: 50px;
+            font-size: 0.8rem;
+            font-weight: 500;
+            transition: all 0.2s ease;
+        }
+
+            .search-button:hover {
+                background: var(--primary-dark);
+            }
+
+        .alert-notification {
+            border-radius: 8px;
+            padding: 0.75rem 1rem;
+            margin-bottom: 1rem;
+            display: flex;
+            align-items: center;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+            animation: slideIn 0.4s ease-out;
+        }
+
+        .alert-success {
+            background-color: #ECFDF5;
+            color: #065F46;
+            border-left: 3px solid #10B981;
+        }
+
+        .alert-error {
+            background-color: #FEF2F2;
+            color: #991B1B;
+            border-left: 3px solid #EF4444;
+        }
+
+        .price-container {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .original-price {
+            text-decoration: line-through;
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+        }
+
+        .discounted-price {
+            color: var(--danger);
+            font-weight: 600;
+            font-size: 1rem;
+        }
+
+        .regular-price {
+            color: var(--primary);
+            font-weight: 600;
+            font-size: 1rem;
+        }
+
+        .promotion-select, .promotion-filter, .percent-input {
+            padding: 0.75rem;
+            border-radius: 8px;
+            border: 1px solid #E5E7EB;
+            font-size: 0.9rem;
+            background: white;
+            transition: all 0.2s ease;
+        }
+
+            .promotion-select:focus, .promotion-filter:focus, .percent-input:focus {
+                outline: none;
+                border-color: var(--primary);
+                box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.25);
+            }
+
+        .apply-promotion-btn, .cancel-promotion-btn {
+            background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+            color: white;
+            padding: 0.75rem 1.5rem;
+            border-radius: 8px;
+            font-size: 0.9rem;
+            font-weight: 500;
+            transition: all 0.2s ease;
+        }
+
+            .apply-promotion-btn:hover, .cancel-promotion-btn:hover {
+                transform: translateY(-1px);
+                box-shadow: 0 2px 4px rgba(59, 130, 246, 0.25);
+            }
+
+        .cancel-promotion-btn {
+            background: linear-gradient(135deg, var(--danger), #DC2626);
+        }
+
+        .close-button {
+            background: none;
+            border: none;
+            font-size: 1.2rem;
+            color: var(--text-secondary);
+            transition: all 0.2s ease;
+        }
+
+            .close-button:hover {
+                color: var(--text-primary);
+            }
+
+        .tab-button {
+            background: var(--light-bg);
+            color: var(--text-primary);
+            padding: 0.75rem 1.5rem;
+            border-radius: 6px 6px 0 0;
+            font-weight: 500;
+            transition: all 0.2s ease;
+        }
+
+            .tab-button.active {
+                background: var(--card-bg);
+                box-shadow: 0 -2px 4px rgba(0,0,0,0.05);
+            }
+
+        .tab-content {
+            display: none;
+            background: var(--card-bg);
+            padding: 1.5rem;
+            border-radius: 0 0 6px 6px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+        }
+
+            .tab-content.active {
+                display: block;
+            }
+
+        .select-all-container {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        /* Phân trang */
+        .pagination {
+            display: flex;
+            justify-content: center;
+            gap: 5px;
+            margin-top: 20px;
+        }
+
+        .page-item {
+            list-style: none;
+        }
+
+        .page-link {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            border-radius: 50px;
+            background: var(--card-bg);
+            color: var(--text-primary);
+            text-decoration: none;
+            transition: all 0.2s ease;
+        }
+
+            .page-link:hover {
+                background: var(--primary);
+                color: white;
+            }
+
+        .page-item.active .page-link {
+            background: var(--primary);
+            color: white;
+            cursor: default;
+        }
+
+        .page-item.disabled .page-link {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+    </style>
+</head>
+<body class="min-h-screen bg-gray-50">
+    <div class="promotion-container">
+        <!-- Notifications -->
+        <div id="notifications"></div>
+
+        <!-- Header -->
+        <div class="text-center mb-6">
+            <h1 class="text-2xl md:text-3xl font-bold text-gray-800 mb-3">Gán Khuyến Mãi Sản Phẩm</h1>
+            <p class="text-gray-600 text-sm max-w-xl mx-auto">Quản lý khuyến mãi cho các sản phẩm</p>
+        </div>
+
+        <!-- Thống kê -->
+        <div class="stats-container">
+            <button class="stat-card stat-total" onclick="filterStatus('all')">
+                <i class="fas fa-box-open"></i>
+                Tổng sản phẩm
+                <strong>@ViewBag.TotalProducts</strong>
+            </button>
+            <button class="stat-card stat-no-promo" onclick="filterStatus('no-promo')">
+                <i class="fas fa-ban"></i>
+                Chưa có KM
+                <strong>@ViewBag.NoPromoProducts</strong>
+            </button>
+            <button class="stat-card stat-has-promo" onclick="filterStatus('has-promo')">
+                <i class="fas fa-gift"></i>
+                Đang có KM
+                <strong>@ViewBag.HasPromoProducts</strong>
+            </button>
+            <button class="stat-card stat-expired-promo" onclick="filterStatus('expired')">
+                <i class="fas fa-clock"></i>
+                Hết KM
+                <strong>@ViewBag.ExpiredPromoProducts</strong>
+            </button>
+        </div>
+
+        <!-- Tabs -->
+        <div class="mb-4">
+            <button class="tab-button active" data-tab="no-promotion">Sản phẩm chưa có khuyến mãi</button>
+            <button class="tab-button" data-tab="has-promotion">Sản phẩm đang có khuyến mãi</button>
+        </div>
+
+        <!-- Tab Content: No Promotion -->
+        <div id="no-promotion" class="tab-content active">
+            <!-- Apply Promotion Form -->
+            <div class="mt-6 bg-white p-4 rounded-lg shadow-sm mb-4">
+                <div class="flex flex-col sm:flex-row sm:items-center sm:space-x-4">
+                    <div class="select-all-container mb-2 sm:mb-0">
+                        <input type="checkbox" id="selectAll" class="form-checkbox h-5 w-5 text-primary">
+                        <label for="selectAll" class="text-sm font-medium text-gray-700">Chọn tất cả</label>
+                    </div>
+                    <select id="promotionSelect" class="promotion-select flex-1">
+                        <option value="">Chọn khuyến mãi</option>
+                    </select>
+                    <input type="number" id="percentDiscount" class="percent-input w-full sm:w-40" placeholder="Phần trăm giảm (0-50)" min="0" max="50" step="1">
+                    <button id="applyPromotionBtn" class="apply-promotion-btn">Áp dụng khuyến mãi</button>
+                </div>
+            </div>
+
+            <!-- Search Bar -->
+            <div class="search-container mb-4">
+                <i class="bi bi-search search-icon"></i>
+                <input type="text" id="searchNoPromo" class="search-input" placeholder="Tìm kiếm sản phẩm..." value="@ViewBag.SearchTerm">
+                <button id="searchNoPromoBtn" class="search-button">Tìm</button>
+            </div>
+
+            <!-- Product List -->
+            <div class="space-y-2" id="noPromoList"></div>
+
+            <!-- No results -->
+            <div id="noResultsNoPromo" class="hidden text-center py-8">
+                <i class="bi bi-search text-3xl text-gray-300 mb-3"></i>
+                <h3 class="text-lg font-medium text-gray-500">Không tìm thấy sản phẩm</h3>
+                <p class="text-gray-400 text-sm mt-1">Thử từ khóa khác</p>
+            </div>
+        </div>
+
+        <!-- Tab Content: Has Promotion -->
+        <div id="has-promotion" class="tab-content">
+            <!-- Search Bar and Promotion Filter -->
+            <div class="flex flex-col sm:flex-row sm:items-center sm:space-x-4 mb-4">
+                <div class="search-container flex-1">
+                    <i class="bi bi-search search-icon"></i>
+                    <input type="text" id="searchHasPromo" class="search-input" placeholder="Tìm kiếm sản phẩm..." value="@ViewBag.SearchTerm">
+                    <button id="searchHasPromoBtn" class="search-button">Tìm</button>
+                </div>
+                <select id="promotionFilter" class="promotion-filter mt-2 sm:mt-0">
+                    <option value="">Tất cả khuyến mãi</option>
+                </select>
+            </div>
+
+            <!-- Product List -->
+            <div class="space-y-2" id="hasPromoList"></div>
+
+            <!-- No results -->
+            <div id="noResultsHasPromo" class="hidden text-center py-8">
+                <i class="bi bi-search text-3xl text-gray-300 mb-3"></i>
+                <h3 class="text-lg font-medium text-gray-500">Không tìm thấy sản phẩm</h3>
+                <p class="text-gray-400 text-sm mt-1">Thử từ khóa khác hoặc thay đổi bộ lọc</p>
+            </div>
+        </div>
+
+        <!-- Phân trang -->
+        @{
+            var totalPages = ViewBag.TotalPages ?? 1;
+            var currentPage = ViewBag.CurrentPage ?? 1;
+            var searchTerm = ViewBag.SearchTerm ?? "";
+            var statusFilter = ViewBag.StatusFilter ?? "";
+        }
+        <nav aria-label="Page navigation">
+            <ul class="pagination">
+                <li class="page-item @(currentPage == 1 ? "disabled" : "")">
+                    <a class="page-link" href="@Url.Action("Index", new { searchTerm, statusFilter, page = currentPage - 1 })">Trước</a>
+                </li>
+                @for (int i = 1; i <= totalPages; i++)
+                {
+                    <li class="page-item @(i == currentPage ? "active" : "")">
+                        <a class="page-link" href="@Url.Action("Index", new { searchTerm, statusFilter, page = i })">@i</a>
+                    </li>
+                }
+                <li class="page-item @(currentPage == totalPages ? "disabled" : "")">
+                    <a class="page-link" href="@Url.Action("Index", new { searchTerm, statusFilter, page = currentPage + 1 })">Sau</a>
+                </li>
+            </ul>
+        </nav>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://kit.fontawesome.com/a076d05399.js" crossorigin="anonymous"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', async () => {
+            const currentDate = new Date();
+
+            // Show alert
+            function showAlert(message, type) {
+                const alert = document.createElement('div');
+                alert.className = `alert-notification alert-${type} animate__animated animate__slideInRight fixed top-4 right-4 z-50 max-w-sm`;
+                alert.innerHTML = `
+                    <i class="bi bi-${type === 'success' ? 'check-circle-fill' : 'exclamation-circle-fill'} mr-2 text-lg"></i>
+                    <div>${message}</div>
+                    <button type="button" class="close-button" onclick="this.parentElement.remove()">
+                        <i class="bi bi-x"></i>
+                    </button>
+                `;
+                document.getElementById('notifications').appendChild(alert);
+                setTimeout(() => {
+                    if (alert.parentElement) {
+                        alert.remove();
+                    }
+                }, 3000);
+            }
+
+            // Format currency
+            function formatCurrency(amount) {
+                return new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(amount).replace('₫', 'đ');
+            }
+
+            // Fetch promotions
+            async function fetchPromotions() {
+                try {
+                    const response = await fetch('https://localhost:7169/api/KhuyenMai', {
+                        method: 'GET',
+                        headers: { 'Content-Type': 'application/json' }
+                    });
+                    if (!response.ok) throw new Error('Không thể lấy danh sách khuyến mãi');
+                    const promotions = await response.json();
+                    const select = document.getElementById('promotionSelect');
+                    const filter = document.getElementById('promotionFilter');
+                    select.innerHTML = '<option value="">Chọn khuyến mãi</option>';
+                    filter.innerHTML = '<option value="">Tất cả khuyến mãi</option>';
+                    promotions.forEach(promo => {
+                        if (promo.trang_Thai && new Date(promo.ngay_Bat_Dau) <= currentDate && new Date(promo.ngay_Ket_Thuc) >= currentDate) {
+                            const optionSelect = document.createElement('option');
+                            optionSelect.value = promo.iD_Khuyen_Mai;
+                            optionSelect.textContent = promo.ten_Khuyen_Mai;
+                            select.appendChild(optionSelect);
+
+                            const optionFilter = document.createElement('option');
+                            optionFilter.value = promo.iD_Khuyen_Mai;
+                            optionFilter.textContent = promo.ten_Khuyen_Mai;
+                            filter.appendChild(optionFilter);
+                        }
+                    });
+                } catch (error) {
+                    console.error('Lỗi khi lấy khuyến mãi:', error);
+                    showAlert('Lỗi khi lấy danh sách khuyến mãi!', 'error');
+                }
+            }
+
+            // Fetch products and render
+            async function fetchProducts(page = 1, pageSize = 10, searchTerm = '', statusFilter = '') {
+                try {
+                    const response = await fetch(`https://localhost:7169/api/SanPham?page=${page}&pageSize=${pageSize}&searchTerm=${searchTerm}&statusFilter=${statusFilter}`, {
+                        method: 'GET',
+                        headers: { 'Content-Type': 'application/json' }
+                    });
+                    if (!response.ok) throw new Error('Không thể lấy danh sách sản phẩm');
+                    const data = await response.json();
+                    const noPromoList = document.getElementById('noPromoList');
+                    const hasPromoList = document.getElementById('hasPromoList');
+                    const noResultsNoPromo = document.getElementById('noResultsNoPromo');
+                    const noResultsHasPromo = document.getElementById('noResultsHasPromo');
+
+                    const noPromotionProducts = data.noPromotionProducts || [];
+                    const hasPromotionProducts = data.hasPromotionProducts || [];
+
+                    // Render no-promotion products
+                    noPromoList.innerHTML = '';
+                    noPromotionProducts.forEach(product => {
+                        const productHtml = `
+                            <div class="product-row animate__animated animate__fadeIn" data-name="${product.ten_San_Pham.toLowerCase()}" data-id="${product.iD_San_Pham}">
+                                <div class="flex items-center justify-between">
+                                    <div class="flex items-center space-x-4">
+                                        <input type="checkbox" class="select-product form-checkbox h-5 w-5 text-primary" data-id="${product.iD_San_Pham}">
+                                        <img src="https://localhost:7169${product.hinh_Anh}" alt="${product.ten_San_Pham}" class="w-16 h-16 object-cover rounded-lg" />
+                                        <div>
+                                            <h3 class="text-lg font-semibold text-gray-800">${product.ten_San_Pham}</h3>
+                                            <p class="text-gray-600 text-sm">${product.mo_Ta.length > 100 ? product.mo_Ta.substring(0, 100) + '...' : product.mo_Ta}</p>
+                                            <div class="price-container mt-1">
+                                                <span class="regular-price">${formatCurrency(product.gia)}</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>`;
+                        noPromoList.innerHTML += productHtml;
+                    });
+
+                    // Render has-promotion products
+                    hasPromoList.innerHTML = '';
+                    hasPromotionProducts.forEach(product => {
+                        let promotionName = '';
+                        let promotionId = 0;
+                        let basePrice = product.gia;
+                        if (product.khuyenMais && product.khuyenMais.length > 0) {
+                            for (const km of product.khuyenMais) {
+                                if (currentDate >= new Date(km.ngay_Bat_Dau) && currentDate <= new Date(km.ngay_Ket_Thuc)) {
+                                    basePrice = km.gia_Giam || product.gia;
+                                    promotionName = km.ten_Khuyen_Mai;
+                                    promotionId = km.iD_Khuyen_Mai;
+                                    break;
+                                }
+                            }
+                        }
+                        const productHtml = `
+                            <div class="product-row animate__animated animate__fadeIn" data-name="${product.ten_San_Pham.toLowerCase()}" data-id="${product.iD_San_Pham}" data-km="${promotionId}">
+                                <div class="flex items-center justify-between">
+                                    <div class="flex items-center space-x-4">
+                                        <img src="https://localhost:7169${product.hinh_Anh}" alt="${product.ten_San_Pham}" class="w-16 h-16 object-cover rounded-lg" />
+                                        <div>
+                                            <h3 class="text-lg font-semibold text-gray-800">${product.ten_San_Pham}</h3>
+                                            <p class="text-gray-600 text-sm">${product.mo_Ta.length > 100 ? product.mo_Ta.substring(0, 100) + '...' : product.mo_Ta}</p>
+                                            <div class="price-container mt-1">
+                                                <span class="original-price">${formatCurrency(product.gia)}</span>
+                                                <span class="discounted-price">${formatCurrency(basePrice)}</span>
+                                                <span class="promotion-badge ml-2">${promotionName}</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <button class="cancel-promotion-btn" data-id="${product.iD_San_Pham}" data-km="${promotionId}">Hủy khuyến mãi</button>
+                                </div>
+                            </div>`;
+                        hasPromoList.innerHTML += productHtml;
+                    });
+
+                    noResultsNoPromo.classList.toggle('hidden', noPromotionProducts.length > 0);
+                    noResultsHasPromo.classList.toggle('hidden', hasPromotionProducts.length > 0);
+
+                    // Re-attach cancel promotion event listeners
+                    attachCancelPromotionListeners();
+                } catch (error) {
+                    console.error('Lỗi khi lấy sản phẩm:', error);
+                    showAlert('Lỗi khi lấy danh sách sản phẩm!', 'error');
+                }
+            }
+
+            // Attach cancel promotion listeners
+            function attachCancelPromotionListeners() {
+                document.querySelectorAll('.cancel-promotion-btn').forEach(btn => {
+                    btn.addEventListener('click', async () => {
+                        const productId = parseInt(btn.dataset.id);
+                        const promotionId = parseInt(btn.dataset.km);
+
+                        try {
+                            const response = await fetch(`https://localhost:7169/api/KhuyenMaiSanPham/${productId}/${promotionId}`, {
+                                method: 'DELETE',
+                                headers: { 'Content-Type': 'application/json' }
+                            });
+                            if (!response.ok) throw new Error('Không thể hủy khuyến mãi');
+                            showAlert('Hủy khuyến mãi thành công!', 'success');
+                            await fetchProducts(); // Reload products
+                        } catch (error) {
+                            console.error('Lỗi khi hủy khuyến mãi:', error);
+                            showAlert('Lỗi khi hủy khuyến mãi!', 'error');
+                        }
+                    });
+                });
+            }
+
+            // Select all checkboxes
+            document.getElementById('selectAll').addEventListener('change', (e) => {
+                const checkboxes = document.querySelectorAll('.select-product');
+                checkboxes.forEach(checkbox => {
+                    checkbox.checked = e.target.checked;
+                });
+            });
+
+            // Apply promotion
+            document.getElementById('applyPromotionBtn').addEventListener('click', async () => {
+                const selectedProducts = document.querySelectorAll('.select-product:checked');
+                const productIds = Array.from(selectedProducts).map(cb => parseInt(cb.dataset.id));
+                const promotionId = parseInt(document.getElementById('promotionSelect').value);
+                const percentDiscount = parseInt(document.getElementById('percentDiscount').value);
+
+                if (productIds.length === 0 || !promotionId || isNaN(percentDiscount) || percentDiscount < 0 || percentDiscount > 50) {
+                    showAlert('Vui lòng chọn sản phẩm, khuyến mãi và phần trăm giảm giá hợp lệ (0-50%)', 'error');
+                    return;
+                }
+
+                try {
+                    const response = await fetch('https://localhost:7169/api/KhuyenMaiSanPham/assign', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            iD_Khuyen_Mai: promotionId,
+                            iD_San_Phams: productIds,
+                            phan_Tram_Giam: percentDiscount
+                        })
+                    });
+                    if (!response.ok) throw new Error('Không thể áp dụng khuyến mãi');
+                    showAlert('Áp dụng khuyến mãi thành công!', 'success');
+                    document.getElementById('selectAll').checked = false; // Reset select all
+                    await fetchProducts(); // Reload products
+                } catch (error) {
+                    console.error('Lỗi khi áp dụng khuyến mãi:', error);
+                    showAlert('Lỗi khi áp dụng khuyến mãi!', 'error');
+                }
+            });
+
+            // Search and filter functionality for no-promotion tab
+            const searchNoPromo = document.getElementById('searchNoPromo');
+            const searchNoPromoBtn = document.getElementById('searchNoPromoBtn');
+            const noPromoList = document.getElementById('noPromoList');
+            const noResultsNoPromo = document.getElementById('noResultsNoPromo');
+
+            function filterNoPromo() {
+                const searchTerm = searchNoPromo.value.toLowerCase().trim();
+                let visibleCount = 0;
+                noPromoList.querySelectorAll('.product-row').forEach(row => {
+                    const name = row.getAttribute('data-name');
+                    if (name.includes(searchTerm)) {
+                        row.style.display = 'block';
+                        row.classList.add('animate__fadeIn');
+                        visibleCount++;
+                    } else {
+                        row.style.display = 'none';
+                    }
+                });
+                noResultsNoPromo.classList.toggle('hidden', visibleCount > 0 || searchTerm === '');
+            }
+
+            searchNoPromoBtn.addEventListener('click', filterNoPromo);
+            searchNoPromo.addEventListener('keyup', e => {
+                if (e.key === 'Enter') filterNoPromo();
+            });
+
+            // Search and filter functionality for has-promotion tab
+            const searchHasPromo = document.getElementById('searchHasPromo');
+            const searchHasPromoBtn = document.getElementById('searchHasPromoBtn');
+            const promotionFilter = document.getElementById('promotionFilter');
+            const hasPromoList = document.getElementById('hasPromoList');
+            const noResultsHasPromo = document.getElementById('noResultsHasPromo');
+
+            function filterHasPromo() {
+                const searchTerm = searchHasPromo.value.toLowerCase().trim();
+                const selectedPromoId = promotionFilter.value ? parseInt(promotionFilter.value) : null;
+                let visibleCount = 0;
+
+                hasPromoList.querySelectorAll('.product-row').forEach(row => {
+                    const name = row.getAttribute('data-name');
+                    const promoId = parseInt(row.getAttribute('data-km'));
+                    const matchesSearch = name.includes(searchTerm);
+                    const matchesPromo = selectedPromoId ? promoId === selectedPromoId : true;
+
+                    if (matchesSearch && matchesPromo) {
+                        row.style.display = 'block';
+                        row.classList.add('animate__fadeIn');
+                        visibleCount++;
+                    } else {
+                        row.style.display = 'none';
+                    }
+                });
+
+                noResultsHasPromo.classList.toggle('hidden', visibleCount > 0 || (searchTerm === '' && !selectedPromoId));
+            }
+
+            searchHasPromoBtn.addEventListener('click', filterHasPromo);
+            searchHasPromo.addEventListener('keyup', e => {
+                if (e.key === 'Enter') filterHasPromo();
+            });
+            promotionFilter.addEventListener('change', filterHasPromo);
+
+            // Tab switching
+            const tabButtons = document.querySelectorAll('.tab-button');
+            const tabContents = document.querySelectorAll('.tab-content');
+
+            tabButtons.forEach(btn => {
+                btn.addEventListener('click', () => {
+                    tabButtons.forEach(b => b.classList.remove('active'));
+                    tabContents.forEach(c => c.classList.remove('active'));
+                    btn.classList.add('active');
+                    document.getElementById(btn.dataset.tab).classList.add('active');
+                });
+            });
+
+            // Load initial data with pagination
+            const urlParams = new URLSearchParams(window.location.search);
+            const page = parseInt(urlParams.get('page')) || 1;
+            const searchTerm = urlParams.get('searchTerm') || '';
+            const statusFilter = urlParams.get('statusFilter') || '';
+            await fetchPromotions();
+            await fetchProducts(page, 10, searchTerm, statusFilter);
+
+            // Filter by status
+            window.filterStatus = function (type) {
+                let url = '@Url.Action("Index", "KhuyenMaiSanPham")';
+                let search = document.getElementById('searchNoPromo').value || '';
+                if (type === 'all') window.location.href = `${url}?searchTerm=${search}&statusFilter=`;
+                else if (type === 'no-promo') window.location.href = `${url}?searchTerm=${search}&statusFilter=no-promo`;
+                else if (type === 'has-promo') window.location.href = `${url}?searchTerm=${search}&statusFilter=has-promo`;
+                else if (type === 'expired') window.location.href = `${url}?searchTerm=${search}&statusFilter=expired`;
+            };
         });
     </script>
 </body>

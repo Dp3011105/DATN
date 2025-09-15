@@ -1,191 +1,254 @@
 ﻿@model IEnumerable<BE.DTOs.KhachHangDTO>
+
 @{
     ViewData["Title"] = "Danh sách khách hàng";
     Layout = "_AdminLayout";
+
+    var currentPage = ViewBag.CurrentPage as int? ?? 1;
+    var pageSize = ViewBag.PageSize as int? ?? 10;
+    var totalPages = ViewBag.TotalPages as int? ?? 1;
+    var searchTerm = ViewBag.SearchTerm as string ?? "";
+    var statusFilter = ViewBag.StatusFilter as bool?;
+    var totalFilteredItems = ViewBag.TotalFilteredItems as int? ?? 0;
 }
 
-<div class="container-fluid p-4">
+<style>
+    /* Container chính */
+    .employee-container {
+        background: linear-gradient(135deg, #f8fafc, #e2e8f0);
+        border-radius: 18px;
+        padding: 25px;
+        box-shadow: 0 12px 35px rgba(0, 0, 0, 0.1);
+        margin-bottom: 25px;
+    }
 
+    /* Thống kê khách hàng */
+    .stats-container {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 18px;
+        margin-bottom: 25px;
+    }
+
+    .stat-card {
+        padding: 25px 15px;
+        border-radius: 18px;
+        text-align: center;
+        font-weight: 600;
+        font-size: 1rem;
+        color: #fff;
+        cursor: pointer;
+        position: relative;
+        overflow: hidden;
+        transition: all 0.4s ease;
+    }
+
+        .stat-card i {
+            font-size: 1.8rem;
+            margin-bottom: 10px;
+            opacity: 0.9;
+        }
+
+        .stat-card strong {
+            display: block;
+            font-size: 1.5rem;
+            margin-top: 5px;
+        }
+
+        .stat-card:hover {
+            transform: translateY(-6px) scale(1.05);
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+        }
+
+    .stat-total {
+        background: linear-gradient(135deg, #2563eb, #3b82f6);
+    }
+
+    .stat-active {
+        background: linear-gradient(135deg, #059669, #10b981);
+    }
+
+    .stat-inactive {
+        background: linear-gradient(135deg, #dc2626, #ef4444);
+    }
+
+    /* Thanh tìm kiếm */
+    .search-filter {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 15px;
+        background: #fff;
+        padding: 15px;
+        border-radius: 12px;
+        box-shadow: 0 6px 15px rgba(0, 0, 0, 0.05);
+        margin-bottom: 20px;
+    }
+
+        .search-filter input, .search-filter select {
+            border-radius: 8px;
+            box-shadow: inset 0 2px 5px rgba(0, 0, 0, 0.08);
+        }
+
+    /* Bảng */
+    .table-custom {
+        border-radius: 12px;
+        overflow: hidden;
+        background: #fff;
+        box-shadow: 0 8px 20px rgba(0, 0, 0, 0.08);
+    }
+
+        .table-custom thead {
+            background: linear-gradient(135deg, #1e40af, #3b82f6);
+            color: #fff;
+        }
+
+        .table-custom tbody tr {
+            transition: all 0.3s ease;
+        }
+
+            .table-custom tbody tr:hover {
+                background: rgba(59, 130, 246, 0.08);
+                transform: translateX(5px);
+            }
+
+    /* Nút bấm */
+    .btn-sm {
+        border-radius: 25px;
+        font-weight: 500;
+        padding: 0.35rem 0.9rem;
+        transition: all 0.3s ease;
+    }
+
+        .btn-sm:hover {
+            transform: translateY(-3px) scale(1.05);
+            box-shadow: 0 6px 15px rgba(0, 0, 0, 0.2);
+        }
+
+    /* Badge trạng thái */
+    .badge {
+        padding: 0.4em 0.7em;
+        border-radius: 10px;
+        font-size: 0.85rem;
+        font-weight: 600;
+    }
+</style>
+
+<div class="employee-container">
     <!-- Thống kê -->
-    <div class="row mb-4">
-        <div class="col-md-4">
-            <div class="card text-white bg-primary shadow stat-card">
-                <div class="card-body text-center">
-                    <i class="fas fa-users fa-2x mb-2"></i>
-                    <h5>Tổng khách hàng</h5>
-                    <h3>@Model.Count()</h3>
-                </div>
-            </div>
-        </div>
-        <div class="col-md-4">
-            <div class="card text-white bg-success shadow stat-card">
-                <div class="card-body text-center">
-                    <i class="fas fa-user-check fa-2x mb-2"></i>
-                    <h5>Đang hoạt động</h5>
-                    <h3>@Model.Count(k => k.Trang_Thai)</h3>
-                </div>
-            </div>
-        </div>
-        <div class="col-md-4">
-            <div class="card text-white bg-secondary shadow stat-card">
-                <div class="card-body text-center">
-                    <i class="fas fa-user-slash fa-2x mb-2"></i>
-                    <h5>Không hoạt động</h5>
-                    <h3>@Model.Count(k => !k.Trang_Thai)</h3>
-                </div>
-            </div>
-        </div>
+    <div class="stats-container">
+        <button class="stat-card stat-total" onclick="filterStatus('all')">
+            <i class="fas fa-users"></i>
+            Tổng khách hàng
+            <strong>@totalFilteredItems</strong>
+        </button>
+        <button class="stat-card stat-active" onclick="filterStatus('active')">
+            <i class="fas fa-user-check"></i>
+            Đang hoạt động
+            <strong>@Model.Count(k => k.Trang_Thai)</strong>
+        </button>
+        <button class="stat-card stat-inactive" onclick="filterStatus('inactive')">
+            <i class="fas fa-user-slash"></i>
+            Không hoạt động
+            <strong>@Model.Count(k => !k.Trang_Thai)</strong>
+        </button>
     </div>
 
-    <!-- Khung chính -->
-    <div class="card shadow-lg rounded-3">
-        <div class="card-header bg-gradient bg-primary text-white d-flex justify-content-between align-items-center">
-            <h4 class="mb-0"><i class="fas fa-address-book me-2"></i>Danh sách khách hàng</h4>
-            <a href="@Url.Action("Create")" class="btn btn-success btn-sm rounded-pill">
-                <i class="fas fa-plus"></i> Thêm khách hàng
-            </a>
-            <a href="@Url.Action("ExportToExcel")" class="btn btn-info btn-sm rounded-pill ms-1">
-                <i class="fas fa-file-export"></i> Xuất Excel
-            </a>
-            <form asp-action="ImportFromExcel" method="post" enctype="multipart/form-data" class="d-inline">
-                <input type="file" name="file" class="form-control form-control-sm d-inline w-auto" required />
-                <button type="submit" class="btn btn-warning btn-sm rounded-pill ms-1">
-                    <i class="fas fa-file-import"></i> Nhập Excel
-                </button>
-            </form>
-        </div>
+    <!-- Tìm kiếm & thao tác -->
+    <div class="search-filter">
+        <form asp-action="Index" method="get" class="d-flex gap-1 flex-grow-1">
+            <input type="hidden" name="statusFilter" value="@statusFilter" />
+            <input type="hidden" name="page" value="1" />
+            <input type="hidden" name="pageSize" value="@pageSize" />
+            <input type="text" name="searchTerm" class="form-control" placeholder="Tìm theo họ tên, email, số điện thoại..." value="@searchTerm" />
+            <button type="submit" class="btn btn-outline-primary btn-sm rounded-pill">
+                <i class="fas fa-search"></i>
+            </button>
+        </form>
+        <a href="@Url.Action("Create")" class="btn btn-success btn-sm">
+            <i class="fas fa-plus"></i> Thêm khách hàng
+        </a>
+        <a href="@Url.Action("ExportToExcel", new { searchTerm, statusFilter })" class="btn btn-info btn-sm ms-2">
+            <i class="fas fa-file-export"></i> Xuất Excel
+        </a>
+        <form asp-action="ImportFromExcel" method="post" enctype="multipart/form-data" class="d-inline">
+            <input type="file" name="file" class="form-control d-none" id="importFile" accept=".xlsx,.xls" required />
+            <button type="button" class="btn btn-warning btn-sm ms-2" onclick="document.getElementById('importFile').click()">
+                <i class="fas fa-file-import"></i> Nhập Excel
+            </button>
+            <button type="submit" class="d-none" id="importSubmit"></button>
+        </form>
+    </div>
 
-        <div class="card-body">
-            <!-- Tabs -->
-            <ul class="nav nav-pills mb-3 justify-content-center" id="customerTabs" role="tablist">
-                <li class="nav-item" role="presentation">
-                    <button class="nav-link active" id="all-tab" data-bs-toggle="tab" data-bs-target="#all" type="button">Tất cả</button>
+    <!-- Bảng danh sách -->
+    <div class="table-responsive">
+        <table class="table table-bordered table-hover text-center table-custom">
+            <thead>
+                <tr>
+                    <th>Mã KH</th>
+                    <th>Họ tên</th>
+                    <th>SĐT</th>
+                    <th>Email</th>
+                    <th>Trạng thái</th>
+                    <th>Thao tác</th>
+                </tr>
+            </thead>
+            <tbody>
+                @if (Model.Any())
+                {
+                    @foreach (var kh in Model)
+                    {
+                        <tr class="customer-row" data-id="@kh.ID_Khach_Hang">
+                            <td>@kh.ID_Khach_Hang</td>
+                            <td>@kh.Ho_Ten</td>
+                            <td>@kh.So_Dien_Thoai</td>
+                            <td>@kh.Email</td>
+                            <td>
+                                <span class="badge bg-@(kh.Trang_Thai ? "success" : "secondary")">
+                                    @(kh.Trang_Thai ? "Đang hoạt động" : "Không hoạt động")
+                                </span>
+                            </td>
+                            <td>
+                                <a href="@Url.Action("Edit", new { id = kh.ID_Khach_Hang })" class="btn btn-warning btn-sm">
+                                    <i class="fas fa-edit"></i>
+                                </a>
+                                <form asp-action="Delete" asp-route-id="@kh.ID_Khach_Hang" method="post" style="display:inline" onsubmit="return confirm('Bạn có chắc muốn xóa?');">
+                                    @Html.AntiForgeryToken()
+                                    <button type="submit" class="btn btn-danger btn-sm ms-2">
+                                        <i class="fas fa-trash"></i>
+                                    </button>
+                                </form>
+                            </td>
+                        </tr>
+                    }
+                }
+                else
+                {
+                    <tr><td colspan="6" class="text-center text-muted">Không có dữ liệu</td></tr>
+                }
+            </tbody>
+        </table>
+    </div>
+
+    <!-- Phân trang -->
+    @if (totalPages > 1)
+    {
+        <nav aria-label="Customer pagination">
+            <ul class="pagination justify-content-center mt-3">
+                <li class="page-item @(currentPage == 1 ? "disabled" : "")">
+                    <a class="page-link" href="@Url.Action("Index", new { page = Math.Max(1, currentPage - 1), pageSize, searchTerm, statusFilter })">Trước</a>
                 </li>
-                <li class="nav-item" role="presentation">
-                    <button class="nav-link" id="active-tab" data-bs-toggle="tab" data-bs-target="#active" type="button">Đang hoạt động</button>
-                </li>
-                <li class="nav-item" role="presentation">
-                    <button class="nav-link" id="inactive-tab" data-bs-toggle="tab" data-bs-target="#inactive" type="button">Không hoạt động</button>
+                @for (int i = 1; i <= totalPages; i++)
+                {
+                    <li class="page-item @(i == currentPage ? "active" : "")">
+                        <a class="page-link" href="@Url.Action("Index", new { page = i, pageSize, searchTerm, statusFilter })">@i</a>
+                    </li>
+                }
+                <li class="page-item @(currentPage == totalPages ? "disabled" : "")">
+                    <a class="page-link" href="@Url.Action("Index", new { page = Math.Min(totalPages, currentPage + 1), pageSize, searchTerm, statusFilter })">Sau</a>
                 </li>
             </ul>
-
-            <div class="tab-content">
-                <!-- Tất cả -->
-                <div class="tab-pane fade show active" id="all" role="tabpanel">
-                    <div class="table-responsive">
-                        <table class="table table-hover align-middle shadow-sm rounded table-custom">
-                            <thead class="bg-primary text-white">
-                                <tr>
-                                    <th>Mã KH</th>
-                                    <th>Họ tên</th>
-                                    <th>SĐT</th>
-                                    <th>Email</th>
-                                    <th>Trạng thái</th>
-                                    <th>Thao tác</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                @if (Model.Any())
-                                {
-                                    @foreach (var kh in Model)
-                                    {
-                                        <tr class="customer-row" data-id="@kh.ID_Khach_Hang">
-                                            <td>@kh.ID_Khach_Hang</td>
-                                            <td>@kh.Ho_Ten</td>
-                                            <td>@kh.So_Dien_Thoai</td>
-                                            <td>@kh.Email</td>
-                                            <td>
-                                                <span class="badge bg-@(kh.Trang_Thai ? "success" : "secondary") px-3 py-2 rounded-pill">
-                                                    @(kh.Trang_Thai ? "Đang hoạt động" : "Không hoạt động")
-                                                </span>
-                                            </td>
-                                            <td>
-                                                <a href="@Url.Action("Edit", new { id = kh.ID_Khach_Hang })" class="btn btn-warning btn-sm rounded-pill me-1 btn-action">
-                                                    <i class="fas fa-edit"></i>
-                                                </a>
-                                                <form asp-action="Delete" asp-route-id="@kh.ID_Khach_Hang" method="post" style="display:inline" onsubmit="return confirm('Bạn có chắc muốn xóa?');">
-                                                    @Html.AntiForgeryToken()
-                                                    <button type="submit" class="btn btn-danger btn-sm rounded-pill btn-action">
-                                                        <i class="fas fa-trash"></i>
-                                                    </button>
-                                                </form>
-                                            </td>
-                                        </tr>
-                                    }
-                                }
-                                else
-                                {
-                                    <tr>
-                                        <td colspan="6" class="text-center text-muted">Không có dữ liệu</td>
-                                    </tr>
-                                }
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-
-                <!-- Đang hoạt động -->
-                <div class="tab-pane fade" id="active" role="tabpanel">
-                    @if (Model.Any(k => k.Trang_Thai))
-                    {
-                        @foreach (var kh in Model.Where(k => k.Trang_Thai))
-                        {
-                            <div class="d-flex align-items-center border-bottom py-2 px-2 hover-card">
-                                <div class="flex-grow-1">
-                                    <strong>@kh.Ho_Ten</strong> (@kh.So_Dien_Thoai)
-                                </div>
-                                <div>
-                                    <a href="@Url.Action("Edit", new { id = kh.ID_Khach_Hang })" class="btn btn-warning btn-sm rounded-pill me-1 btn-action">
-                                        <i class="fas fa-edit"></i>
-                                    </a>
-                                    <form asp-action="Delete" asp-route-id="@kh.ID_Khach_Hang" method="post" style="display:inline" onsubmit="return confirm('Bạn có chắc muốn xóa?');">
-                                        @Html.AntiForgeryToken()
-                                        <button type="submit" class="btn btn-danger btn-sm rounded-pill btn-action">
-                                            <i class="fas fa-trash"></i>
-                                        </button>
-                                    </form>
-                                </div>
-                            </div>
-                        }
-                    }
-                    else
-                    {
-                        <p class="text-center text-muted">Không có khách hàng đang hoạt động</p>
-                    }
-                </div>
-
-                <!-- Không hoạt động -->
-                <div class="tab-pane fade" id="inactive" role="tabpanel">
-                    @if (Model.Any(k => !k.Trang_Thai))
-                    {
-                        @foreach (var kh in Model.Where(k => !k.Trang_Thai))
-                        {
-                            <div class="d-flex align-items-center border-bottom py-2 px-2 hover-card">
-                                <div class="flex-grow-1">
-                                    <strong>@kh.Ho_Ten</strong> (@kh.So_Dien_Thoai)
-                                </div>
-                                <div>
-                                    <a href="@Url.Action("Edit", new { id = kh.ID_Khach_Hang })" class="btn btn-warning btn-sm rounded-pill me-1 btn-action">
-                                        <i class="fas fa-edit"></i>
-                                    </a>
-                                    <form asp-action="Delete" asp-route-id="@kh.ID_Khach_Hang" method="post" style="display:inline" onsubmit="return confirm('Bạn có chắc muốn xóa?');">
-                                        @Html.AntiForgeryToken()
-                                        <button type="submit" class="btn btn-danger btn-sm rounded-pill btn-action">
-                                            <i class="fas fa-trash"></i>
-                                        </button>
-                                    </form>
-                                </div>
-                            </div>
-                        }
-                    }
-                    else
-                    {
-                        <p class="text-center text-muted">Không có khách hàng không hoạt động</p>
-                    }
-                </div>
-            </div>
-        </div>
-    </div>
+        </nav>
+    }
 </div>
 
 <!-- Modal Chi tiết -->
@@ -215,50 +278,33 @@
                     document.getElementById('modalBody').innerHTML = "Đang tải...";
                     fetch(`/KhachHang/Details/${id}`)
                         .then(res => res.text())
-                        .then(data => document.getElementById('modalBody').innerHTML = data);
+                        .then(data => document.getElementById('modalBody').innerHTML = data)
+                        .catch(error => console.error('Error fetching details:', error));
                     modal.show();
                 });
             });
+
+            // Import file
+            document.getElementById('importFile').addEventListener('change', function () {
+                if (this.files.length > 0) {
+                    document.getElementById('importSubmit').click();
+                }
+            });
         });
+
+        function filterStatus(type) {
+            let url = '@Url.Action("Index", "KhachHang")';
+            let search = '@searchTerm';
+            if (type === 'all') window.location.href = `${url}?searchTerm=${search}&statusFilter=`;
+            else if (type === 'active') window.location.href = `${url}?searchTerm=${search}&statusFilter=true`;
+            else if (type === 'inactive') window.location.href = `${url}?searchTerm=${search}&statusFilter=false`;
+        }
+
+        function changePageSize(size) {
+            const url = new URL(window.location.href);
+            url.searchParams.set("pageSize", size);
+            url.searchParams.set("page", 1); // reset về trang 1 khi đổi pageSize
+            window.location.href = url.toString();
+        }
     </script>
 }
-
-<style>
-    .stat-card {
-        transition: all 0.3s ease;
-        border-radius: 15px;
-    }
-
-        .stat-card:hover {
-            transform: translateY(-5px) scale(1.05);
-            box-shadow: 0 8px 20px rgba(0,0,0,0.25);
-        }
-
-    .table-custom tbody tr {
-        cursor: pointer;
-        transition: all 0.3s ease;
-    }
-
-        .table-custom tbody tr:hover {
-            background: #f0f9ff;
-            transform: translateX(5px);
-        }
-
-    .btn-action {
-        transition: all 0.2s ease;
-    }
-
-        .btn-action:hover {
-            transform: scale(1.1);
-        }
-
-    .hover-card {
-        transition: background 0.3s ease, transform 0.2s;
-        border-radius: 8px;
-    }
-
-        .hover-card:hover {
-            background: #f8fafc;
-            transform: scale(1.01);
-        }
-</style>
