@@ -16,8 +16,16 @@ namespace FE.Controllers
             _productService = productService;
         }
 
-        public async Task<IActionResult> Index()
+        public async Task<IActionResult> Index(int doNgotActivePage = 1, int doNgotInactivePage = 1, int sizeActivePage = 1, int sizeInactivePage = 1, int toppingActivePage = 1, int toppingInactivePage = 1, int luongDaActivePage = 1, int luongDaInactivePage = 1)
         {
+            ViewBag.DoNgotActivePage = doNgotActivePage;
+            ViewBag.DoNgotInactivePage = doNgotInactivePage;
+            ViewBag.SizeActivePage = sizeActivePage;
+            ViewBag.SizeInactivePage = sizeInactivePage;
+            ViewBag.ToppingActivePage = toppingActivePage;
+            ViewBag.ToppingInactivePage = toppingInactivePage;
+            ViewBag.LuongDaActivePage = luongDaActivePage;
+            ViewBag.LuongDaInactivePage = luongDaInactivePage;
             var viewModel = new ProductDetailViewModel
             {
                 DoNgots = await _productService.GetDoNgotsAsync(),

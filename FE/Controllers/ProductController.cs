@@ -16,12 +16,90 @@ namespace FE.Controllers
         }
 
         // GET: Hiển thị danh sách sản phẩm
-        public async Task<IActionResult> Index()
+        //public async Task<IActionResult> Index(string searchTerm = "", bool? statusFilter = null, bool? promotionFilter = null, string quantityFilter = null)
+        //{
+        //    var products = await _productService.GetAllProductsAsync();
+        //    if (!string.IsNullOrEmpty(searchTerm))
+        //    {
+        //        products = products.Where(p => p.Ten_San_Pham?.ToLower().Contains(searchTerm.ToLower()) ?? false).ToList();
+        //    }
+        //    if (statusFilter.HasValue)
+        //    {
+        //        products = products.Where(p => p.Trang_Thai == statusFilter.Value).ToList();
+        //    }
+        //    if (promotionFilter.HasValue)
+        //    {
+        //        var currentDate = TimeZoneInfo.ConvertTimeFromUtc(DateTime.UtcNow, TimeZoneInfo.FindSystemTimeZoneById("SE Asia Standard Time"));
+        //        if (promotionFilter.Value)
+        //        {
+        //            products = products.Where(p => p.KhuyenMais != null && p.KhuyenMais.Any(km => currentDate >= km.Ngay_Bat_Dau && currentDate <= km.Ngay_Ket_Thuc)).ToList();
+        //        }
+        //        else
+        //        {
+        //            products = products.Where(p => p.KhuyenMais == null || !p.KhuyenMais.Any(km => currentDate >= km.Ngay_Bat_Dau && currentDate <= km.Ngay_Ket_Thuc)).ToList();
+        //        }
+        //    }
+        //    if (!string.IsNullOrEmpty(quantityFilter))
+        //    {
+        //        switch (quantityFilter.ToLower())
+        //        {
+        //            case "under-100":
+        //                products = products.Where(p => p.So_Luong < 3).ToList();
+        //                break;
+        //            case "over-1000":
+        //                products = products.Where(p => p.So_Luong > 100).ToList();
+        //                break;
+        //        }
+        //    }
+        //    ViewBag.SearchTerm = searchTerm;
+        //    ViewBag.StatusFilter = statusFilter;
+        //    ViewBag.PromotionFilter = promotionFilter;
+        //    ViewBag.QuantityFilter = quantityFilter;
+        //    return View(products);
+        //}
+        public async Task<IActionResult> Index(string searchTerm = "", bool? statusFilter = null, bool? promotionFilter = null, string quantityFilter = null, int activePage = 1, int inactivePage = 1)
         {
             var products = await _productService.GetAllProductsAsync();
+            if (!string.IsNullOrEmpty(searchTerm))
+            {
+                products = products.Where(p => p.Ten_San_Pham?.ToLower().Contains(searchTerm.ToLower()) ?? false).ToList();
+            }
+            if (statusFilter.HasValue)
+            {
+                products = products.Where(p => p.Trang_Thai == statusFilter.Value).ToList();
+            }
+            if (promotionFilter.HasValue)
+            {
+                var currentDate = TimeZoneInfo.ConvertTimeFromUtc(DateTime.UtcNow, TimeZoneInfo.FindSystemTimeZoneById("SE Asia Standard Time"));
+                if (promotionFilter.Value)
+                {
+                    products = products.Where(p => p.KhuyenMais != null && p.KhuyenMais.Any(km => currentDate >= km.Ngay_Bat_Dau && currentDate <= km.Ngay_Ket_Thuc)).ToList();
+                }
+                else
+                {
+                    products = products.Where(p => p.KhuyenMais == null || !p.KhuyenMais.Any(km => currentDate >= km.Ngay_Bat_Dau && currentDate <= km.Ngay_Ket_Thuc)).ToList();
+                }
+            }
+            if (!string.IsNullOrEmpty(quantityFilter))
+            {
+                switch (quantityFilter.ToLower())
+                {
+                    case "under-100":
+                        products = products.Where(p => p.So_Luong < 3).ToList();
+                        break;
+                    case "over-1000":
+                        products = products.Where(p => p.So_Luong > 100).ToList();
+                        break;
+                }
+            }
+            ViewBag.SearchTerm = searchTerm;
+            ViewBag.StatusFilter = statusFilter;
+            ViewBag.PromotionFilter = promotionFilter;
+            ViewBag.QuantityFilter = quantityFilter;
+            ViewBag.ActivePage = activePage;
+            ViewBag.InactivePage = inactivePage;
             return View(products);
         }
-
         // GET: Lấy chi tiết sản phẩm theo ID
         public async Task<IActionResult> Details(int id)
         {

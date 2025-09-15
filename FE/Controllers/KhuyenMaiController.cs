@@ -20,12 +20,45 @@ namespace FE.Controllers// controler dùng để thực hiện các chức năng
         }
 
         // GET: /KhuyenMai
-        public async Task<IActionResult> Index()
+        public async Task<IActionResult> Index(string searchTerm = "", string statusFilter = "", int page = 1, int pageSize = 10)
         {
             try
             {
                 var khuyenMais = await _khuyenMaiService.GetAllPromotionsAsync();
-                return View(khuyenMais);
+                var currentDate = TimeZoneInfo.ConvertTimeFromUtc(DateTime.UtcNow, TimeZoneInfo.FindSystemTimeZoneById("SE Asia Standard Time"));
+
+                // Lọc
+                if (!string.IsNullOrEmpty(searchTerm))
+                {
+                    khuyenMais = khuyenMais.Where(k => k.Ten_Khuyen_Mai.Contains(searchTerm, StringComparison.OrdinalIgnoreCase)).ToList();
+                }
+                if (!string.IsNullOrEmpty(statusFilter))
+                {
+                    if (statusFilter == "true")
+                        khuyenMais = khuyenMais.Where(k => k.Trang_Thai && TimeZoneInfo.ConvertTimeFromUtc(k.Ngay_Ket_Thuc, TimeZoneInfo.FindSystemTimeZoneById("SE Asia Standard Time")) > currentDate).ToList();
+                    else if (statusFilter == "false")
+                        khuyenMais = khuyenMais.Where(k => !k.Trang_Thai && TimeZoneInfo.ConvertTimeFromUtc(k.Ngay_Ket_Thuc, TimeZoneInfo.FindSystemTimeZoneById("SE Asia Standard Time")) > currentDate).ToList();
+                    else if (statusFilter == "expired")
+                        khuyenMais = khuyenMais.Where(k => TimeZoneInfo.ConvertTimeFromUtc(k.Ngay_Ket_Thuc, TimeZoneInfo.FindSystemTimeZoneById("SE Asia Standard Time")) <= currentDate).ToList();
+                }
+
+                // Thống kê
+                ViewBag.TotalPromotions = khuyenMais.Count;
+                ViewBag.ActivePromotions = khuyenMais.Count(k => k.Trang_Thai && TimeZoneInfo.ConvertTimeFromUtc(k.Ngay_Ket_Thuc, TimeZoneInfo.FindSystemTimeZoneById("SE Asia Standard Time")) > currentDate);
+                ViewBag.StoppedPromotions = khuyenMais.Count(k => !k.Trang_Thai && TimeZoneInfo.ConvertTimeFromUtc(k.Ngay_Ket_Thuc, TimeZoneInfo.FindSystemTimeZoneById("SE Asia Standard Time")) > currentDate);
+                ViewBag.ExpiredPromotions = khuyenMais.Count(k => TimeZoneInfo.ConvertTimeFromUtc(k.Ngay_Ket_Thuc, TimeZoneInfo.FindSystemTimeZoneById("SE Asia Standard Time")) <= currentDate);
+
+                // Phân trang
+                var totalItems = khuyenMais.Count();
+                var totalPages = (int)Math.Ceiling((double)totalItems / pageSize);
+                var paginatedItems = khuyenMais.Skip((page - 1) * pageSize).Take(pageSize).ToList();
+
+                ViewBag.TotalPages = totalPages;
+                ViewBag.CurrentPage = page;
+                ViewBag.SearchTerm = searchTerm;
+                ViewBag.StatusFilter = statusFilter;
+
+                return View(paginatedItems);
             }
             catch (Exception ex)
             {
