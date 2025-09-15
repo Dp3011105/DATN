@@ -234,5 +234,27 @@ namespace BE.Repository
                                kv.ID_Voucher == voucherId &&
                                kv.Trang_Thai == true);
         }
+        public async Task<Dictionary<int, List<int>>> GetAllCustomerVoucherAssignmentsAsync()
+        {
+            try
+            {
+                var assignments = await _context.KhachHang_Voucher
+                    .Where(kv => kv.Trang_Thai == true)
+                    .GroupBy(kv => kv.ID_Khach_Hang)
+                    .Select(g => new
+                    {
+                        CustomerId = g.Key,
+                        VoucherIds = g.Select(kv => kv.ID_Voucher).ToList()
+                    })
+                    .ToListAsync();
+
+                return assignments.ToDictionary(a => a.CustomerId, a => a.VoucherIds);
+            }
+            catch (Exception ex)
+            {
+                // Log error nếu cần
+                return new Dictionary<int, List<int>>();
+            }
+        }
     }
 }
