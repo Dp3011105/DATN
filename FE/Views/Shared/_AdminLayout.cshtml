@@ -7,6 +7,8 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>@ViewData["Title"] - Admin Panel</title>
+
+    <!-- Bootstrap & FontAwesome -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet" />
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet" />
 
@@ -131,10 +133,10 @@
                 width: calc(100% - var(--sidebar-w-collapsed));
             }
 
-        /* active state (optional) */
         .nav-link.active {
             background: rgba(255,255,255,.22);
         }
+
         /* ==== LOGOUT (bottom-fixed) ==== */
         .logout-wrap {
             position: fixed;
@@ -177,6 +179,124 @@
             pointer-events: none;
         }
 
+        /* =========================================================
+                   ORDER NOTIFIER (bottom-left like Windows notifications)
+                   ========================================================= */
+        #order-notif-tray {
+            position: fixed;
+            left: 16px;
+            bottom: 16px;
+            z-index: 1100;
+            display: flex;
+            flex-direction: column-reverse;
+            gap: 10px;
+            pointer-events: none; /* tray không chặn click; card sẽ bật lại pointer */
+            max-width: calc(100vw - 32px);
+        }
+
+            #order-notif-tray.collapsed .order-toast:nth-child(n+4) {
+                display: none;
+            }
+            /* chỉ show 3 cái mới nhất khi thu gọn */
+            #order-notif-tray.expanded {
+                max-height: 60vh;
+                overflow: auto;
+                padding-right: 8px;
+            }
+
+        .order-toast {
+            width: 360px;
+            max-width: calc(100vw - 32px);
+            background: #fff;
+            border-left: 6px solid #0d6efd;
+            border-radius: 12px;
+            box-shadow: 0 12px 24px rgba(0,0,0,.15);
+            padding: 12px 14px;
+            display: flex;
+            gap: 12px;
+            align-items: flex-start;
+            cursor: pointer;
+            pointer-events: auto;
+            opacity: 0;
+            transform: translateX(-12px) translateY(12px);
+            animation: orderToastIn .25s ease forwards;
+        }
+
+            .order-toast:hover {
+                box-shadow: 0 12px 28px rgba(0,0,0,.2);
+            }
+
+            .order-toast .icon {
+                font-size: 18px;
+                margin-top: 2px;
+                color: #0d6efd;
+            }
+
+            .order-toast .title {
+                font-weight: 600;
+                line-height: 1.3;
+            }
+
+            .order-toast .meta {
+                font-size: 12px;
+                color: #6c757d;
+            }
+
+            .order-toast .badge {
+                background: #e9ecef;
+                color: #333;
+            }
+
+            .order-toast .close-btn {
+                margin-left: auto;
+                border: none;
+                background: transparent;
+                font-size: 18px;
+                line-height: 1;
+                opacity: .55;
+            }
+
+                .order-toast .close-btn:hover {
+                    opacity: .9;
+                }
+
+        @@keyframes orderToastIn {
+            to {
+                opacity: 1;
+                transform: translateX(0) translateY(0);
+            }
+        }
+
+        @@keyframes orderToastOut {
+            to {
+                opacity: 0;
+                transform: translateX(-12px) translateY(12px);
+            }
+        }
+
+        .order-toast.is-hiding {
+            animation: orderToastOut .2s ease forwards;
+        }
+
+        /* Hiệu ứng "stack" khi ở trạng thái thu gọn */
+        #order-notif-tray.collapsed .order-toast {
+            position: relative;
+        }
+
+            #order-notif-tray.collapsed .order-toast:nth-child(2) {
+                transform: translateY(-6px) scale(.985);
+                opacity: .92;
+            }
+
+            #order-notif-tray.collapsed .order-toast:nth-child(3) {
+                transform: translateY(-12px) scale(.97);
+                opacity: .85;
+            }
+
+        /* Ẩn khay khi không có thông báo */
+        #order-notif-tray:empty {
+            display: none;
+        }
     </style>
 
     @RenderSection("Styles", required: false)
@@ -197,7 +317,7 @@
             <div id="sidebarAccordion">
                 <ul class="navbar-nav flex-column">
 
-                    <!-- Thống kê (thay cho Trang chủ) -->
+                    <!-- Thống kê -->
                     <li class="nav-item">
                         <a href="@Url.Action("Index", "ThongKe")" class="nav-link" title="Thống kê" data-bs-toggle="tooltip" data-bs-placement="right">
                             <i class="fas fa-chart-bar nav-icon"></i>
@@ -290,6 +410,7 @@
                             </button>
                         </form>
                     </div>
+
                 </ul>
             </div>
         </nav>
@@ -302,6 +423,10 @@
         </main>
     </div>
 
+    <!-- ===== ORDER NOTIFIER TRAY (bottom-left) ===== -->
+    <div id="order-notif-tray" class="collapsed" aria-live="polite" aria-atomic="false"></div>
+
+    <!-- Scripts -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script>
         function closeAllSidebarCollapses() {
@@ -330,6 +455,10 @@
             localStorage.setItem('sidebarState', sidebar.classList.contains('collapsed') ? 'collapsed' : 'expanded');
         }
 
+        function confirmLogout(){
+            return confirm('Bạn có chắc muốn đăng xuất?');
+        }
+
         (function () {
             // Restore sidebar state on load
             const state = localStorage.getItem('sidebarState');
@@ -355,6 +484,168 @@
                     });
                 });
             });
+        })();
+    </script>
+
+    <!-- ===== ORDER NOTIFIER SCRIPT ===== -->
+    <script>
+        (function () {
+          const tray = document.getElementById('order-notif-tray');
+          const orderIndexUrl = '@Url.Action("Index", "QuanLyDonHang")';
+
+          // timer registry per toast
+          const timers = new WeakMap(); // el -> {remaining, startedAt, tId, active}
+
+          function escapeHTML(s){
+            return (s??'').toString().replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
+          }
+
+          function ensureCollapsed(){ tray.classList.add('collapsed'); tray.classList.remove('expanded'); }
+          function expandTray(){ pauseAll(); tray.classList.remove('collapsed'); tray.classList.add('expanded'); }
+          function collapseTray(){ tray.classList.remove('expanded'); tray.classList.add('collapsed'); resumeAll(); }
+
+          let hoverTimer = null;
+          tray.addEventListener('mouseenter', () => { hoverTimer = setTimeout(expandTray, 3000); });
+          tray.addEventListener('mouseleave', () => {
+            if (hoverTimer) { clearTimeout(hoverTimer); hoverTimer = null; }
+            collapseTray();
+          });
+
+          function startAutoHide(el, ms){
+            const startedAt = Date.now();
+            const tId = setTimeout(() => dismiss(el), ms);
+            timers.set(el, { remaining: ms, startedAt, tId, active: true });
+          }
+          function pauseAll(){
+            document.querySelectorAll('#order-notif-tray .order-toast').forEach(el=>{
+              const t = timers.get(el);
+              if (t && t.active){
+                clearTimeout(t.tId);
+                const elapsed = Date.now() - t.startedAt;
+                t.remaining = Math.max(0, t.remaining - elapsed);
+                t.active = false;
+                timers.set(el, t);
+              }
+            });
+          }
+          function resumeAll(){
+            document.querySelectorAll('#order-notif-tray .order-toast').forEach(el=>{
+              const t = timers.get(el);
+              if (t && !t.active && t.remaining > 0){
+                t.startedAt = Date.now();
+                t.tId = setTimeout(() => dismiss(el), t.remaining);
+                t.active = true;
+                timers.set(el, t);
+              }
+            });
+          }
+
+          function dismiss(el){
+            if (!el || !el.parentElement) return;
+            const t = timers.get(el);
+            if (t) { clearTimeout(t.tId); timers.delete(el); }
+            el.classList.add('is-hiding');
+            setTimeout(()=>{ el.remove(); }, 220);
+          }
+
+          function buildToast({ orderId, orderName, customerName }){
+            const el = document.createElement('div');
+            el.className = 'order-toast';
+            el.innerHTML = `
+              <div class="icon"><i class="fas fa-bell"></i></div>
+              <div class="content">
+                <div class="title">Đã có 1 đơn hàng mới</div>
+                <div class="meta">
+                  <span class="badge me-1">#${escapeHTML(orderName || 'Không rõ')}</span>
+                  ${customerName ? '— ' + escapeHTML(customerName) : ''}
+                </div>
+              </div>
+              <button class="close-btn" type="button" aria-label="Đóng">&times;</button>
+            `;
+
+            el.addEventListener('click', (ev) => {
+              if (ev.target.closest('.close-btn')) {
+                ev.stopPropagation();
+                dismiss(el);
+                return;
+              }
+              // Điều hướng tới trang quản lý đơn hàng
+              window.location.href = orderIndexUrl;
+            });
+
+            return el;
+          }
+
+          function pushToast(data){
+            const el = buildToast(data);
+            tray.prepend(el); // newest on bottom visually because of column-reverse
+            ensureCollapsed();
+            startAutoHide(el, 10000); // 10s auto-hide
+          }
+
+          // ===== Helpers: xác định "không phải tại quầy" & lấy tên đơn/khách =====
+          function getString(obj, ...cands){
+            if (!obj) return null;
+            for (const k of cands){
+              if (obj[k] != null && String(obj[k]).trim() !== '') return String(obj[k]).trim();
+            }
+            return null;
+          }
+
+          function isCounterOrder(order){
+            const yesBools = ['Tai_Quay','IsAtCounter','Ban_Tai_Quan'];
+            for (const k of yesBools){ if (order && typeof order[k] === 'boolean' && order[k]) return true; }
+
+            const channels = ['Kenh_Dat','Kieu_Don','Loai_Don','Channel','Loai'];
+            const val = (getString(order, ...channels) || '').toLowerCase();
+            if (val.includes('quầy') || val.includes('quay')) return true; // chứa 'quầy'/'quay' => tại quầy
+            return false;
+          }
+
+          function getOrderName(order){
+            return getString(order, 'Ma_Hoa_Don','Ten_Don_Hang','Code','So_Hoa_Don','Ma','OrderCode','OrderNo')
+                   || (order?.ID_Hoa_Don ?? order?.Id ?? order?.id ?? 'Moi');
+          }
+          function getCustomerName(order){
+            const kh = order?.KhachHang || order?.Customer || order?.NguoiMua || null;
+            return getString(order, 'Ten_Khach','TenKhach','CustomerName','Ten','Name')
+                || getString(kh||{}, 'Ho_Ten','Ten','Name')
+                || getString(kh||{}, 'So_Dien_Thoai','Phone');
+          }
+
+          // ===== API công khai: gọi ở nơi có đơn mới =====
+          // window.notifyNewOnlineOrder(orderDtoTừBE);
+          window.notifyNewOnlineOrder = function(order){
+            try{
+              if (!order || isCounterOrder(order)) return; // bỏ qua đơn tại quầy
+              pushToast({
+                orderId: order?.ID_Hoa_Don ?? order?.Id ?? order?.id,
+                orderName: getOrderName(order),
+                customerName: getCustomerName(order)
+              });
+            }catch{ /* noop */ }
+          };
+
+          // ===== TÍCH HỢP (chọn 1) =====
+          // 1) SignalR:
+          // const connection = new signalR.HubConnectionBuilder().withUrl("/hubs/orders").build();
+          // connection.on("NewOrderCreated", order => window.notifyNewOnlineOrder(order));
+          // connection.start();
+
+          // 2) Polling demo:
+          // let lastTs = Date.now();
+          // setInterval(async ()=>{
+          //   const res = await fetch('/api/HoaDon/new?since=' + lastTs);
+          //   if (!res.ok) return;
+          //   const arr = await res.json();
+          //   arr.forEach(o => window.notifyNewOnlineOrder(o));
+          //   if (arr.length) lastTs = Date.now();
+          // }, 5000);
+
+          // DEMO nhanh (xoá khi lên prod):
+          // setTimeout(()=> window.notifyNewOnlineOrder({ Ma_Hoa_Don:'DH-001', KhachHang:{Ho_Ten:'Nguyễn A'}, Kenh_Dat:'Online' }), 800);
+          // setTimeout(()=> window.notifyNewOnlineOrder({ Ma_Hoa_Don:'DH-002', KhachHang:{Ho_Ten:'Trần B'}, Kenh_Dat:'Website' }), 1400);
+          // setTimeout(()=> window.notifyNewOnlineOrder({ Ma_Hoa_Don:'DH-003', KhachHang:{Ho_Ten:'Lê C'}, Kenh_Dat:'App' }), 2000);
         })();
     </script>
 
