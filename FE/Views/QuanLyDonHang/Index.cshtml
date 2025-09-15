@@ -73,7 +73,7 @@
             <thead class="table-light">
                 <tr>
                     <th>Mã đơn</th>
-                    <th>Khách hàng</th> @* đã giữ nguyên tiêu đề, SĐT sẽ hiển thị nhỏ bên dưới *@
+                    <th>Khách hàng</th>
                     <th>Ngày tạo</th>
                     <th>Thanh toán</th>
                     <th>Loại HD</th>
@@ -118,11 +118,11 @@
                             <td>
                                 @{
                                     string diaChiHienThi =
-                                        string.Equals(hd.Loai_Hoa_Don, "TaiQuay", StringComparison.OrdinalIgnoreCase)
-                                        ? "Tại quầy"
-                                        : ((hd.ID_Dia_Chi.HasValue && hd.DiaChi != null && !string.IsNullOrWhiteSpace(hd.DiaChi.Dia_Chi))
-                                            ? hd.DiaChi.Dia_Chi
-                                            : (string.IsNullOrWhiteSpace(hd.Dia_Chi_Tu_Nhap) ? "—" : hd.Dia_Chi_Tu_Nhap));
+                                    string.Equals(hd.Loai_Hoa_Don, "TaiQuay", StringComparison.OrdinalIgnoreCase)
+                                    ? "Tại quầy"
+                                    : ((hd.ID_Dia_Chi.HasValue && hd.DiaChi != null && !string.IsNullOrWhiteSpace(hd.DiaChi.Dia_Chi))
+                                    ? hd.DiaChi.Dia_Chi
+                                    : (string.IsNullOrWhiteSpace(hd.Dia_Chi_Tu_Nhap) ? "—" : hd.Dia_Chi_Tu_Nhap));
                                 }
                                 @diaChiHienThi
                             </td>
@@ -176,7 +176,7 @@
 
                                 @* Hủy *@
                                 @if (!string.Equals(dbStatus, "Hoan_Thanh", StringComparison.OrdinalIgnoreCase)
-                                    && !string.Equals(dbStatus, "Huy_Don", StringComparison.OrdinalIgnoreCase))
+                                                        && !string.Equals(dbStatus, "Huy_Don", StringComparison.OrdinalIgnoreCase))
                                 {
                                     <button type="button" class="btn btn-sm btn-outline-danger"
                                             data-bs-toggle="modal"
@@ -192,6 +192,60 @@
                 }
             </tbody>
         </table>
+    </div>
+</div>
+
+<!-- Modal Hủy đơn -->
+<div class="modal fade" id="modalHuyDon" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-xl modal-dialog-scrollable">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Hủy đơn <span id="huy-mahd" class="text-muted"></span></h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Đóng"></button>
+            </div>
+
+            <form id="form-huy-don" method="post" action="@Url.Action("Huy","QuanLyDonHang")">
+                @Html.AntiForgeryToken()
+                <input type="hidden" name="id" id="huy-id" />
+
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold">Lý do hủy <span class="text-danger">*</span></label>
+                        <textarea class="form-control" id="huy-lydo" name="lyDo" rows="2" required></textarea>
+                    </div>
+
+                    <div class="d-flex justify-content-between align-items-center mb-2">
+                        <div class="fw-semibold">Khôi phục tồn cho các cốc đã chọn</div>
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" id="chk-all" />
+                            <label class="form-check-label" for="chk-all">Chọn tất cả</label>
+                        </div>
+                    </div>
+
+                    <div class="table-responsive border rounded">
+                        <table class="table table-sm mb-0" id="tbl-kphoiphuc">
+                            <thead class="table-light">
+                                <tr>
+                                    <th style="width:40px"></th>
+                                    <th>Mặt hàng</th>
+                                    <th class="text-end" style="width:110px">SL đặt</th>
+                                    <th class="text-end" style="width:150px">SL khôi phục</th>
+                                    <th style="width:120px">Trạng thái pha</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr><td colspan="5" class="text-muted">Đang tải...</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Đóng</button>
+                    <button type="submit" id="btn-huy" class="btn btn-danger">Xác nhận hủy</button>
+                </div>
+            </form>
+        </div>
     </div>
 </div>
 
@@ -276,6 +330,7 @@
             const btn = document.getElementById('btn-huy');
             if (btn) btn.disabled = true;
 
+            // Xóa các input cũ nếu có (tránh trùng)
             form.querySelectorAll('input[name="khoiPhucIds"], input[name="khoiPhucQtys"]').forEach(n => n.remove());
 
             const rows = document.querySelectorAll('#tbl-kphoiphuc tbody tr');

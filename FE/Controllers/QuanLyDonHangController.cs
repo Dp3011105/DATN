@@ -147,6 +147,48 @@ namespace FE.Controllers
             if (hd == null)
                 return Json(new { ok = false, items = Array.Empty<object>(), msg = "Not found" });
 
+            // 🔁 Fallback: tải danh sách sản phẩm (ID + Tên) để tra khi ct.SanPham == null
+            var allProducts = await _productService.GetAllProductsAsync() ?? new List<FE.Models.SanPham>();
+
+            // Map: ID_San_Pham -> object sản phẩm (dùng object để GetStringProp đọc mọi schema)
+            var prodMap = allProducts
+                .GroupBy(p => GetIntProp(p, "ID_San_Pham", "Id", "ProductId"))
+                .Where(g => g.Key > 0)
+                .ToDictionary(g => g.Key, g => (object)g.Last());
+
+            // local helper lấy tên SP an toàn (ưu tiên navigation, fallback map)
+            string BuildTenSpLocal(HoaDonChiTiet ct)
+            {
+                var tenSp = GetStringProp(ct.SanPham, "Ten_San_Pham", "Ten", "Name", "TenSP");
+                if (string.IsNullOrWhiteSpace(tenSp))
+                {
+                    var pid = ct.ID_San_Pham;
+                    if (pid > 0 && prodMap.TryGetValue(pid, out var pObj))
+                    {
+                        tenSp = GetStringProp(pObj, "Ten_San_Pham", "Ten", "Name", "TenSP");
+                    }
+                }
+                if (string.IsNullOrWhiteSpace(tenSp)) tenSp = $"SP#{ct.ID_San_Pham}";
+
+                var sizeName = GetStringProp(ct.Size, "SizeName", "Ten_Size", "Ten", "Name");
+                if (!string.IsNullOrWhiteSpace(sizeName)) tenSp += $" - Size {sizeName}";
+
+                var toppingNames = new List<string>();
+                var listTp = ct.HoaDonChiTietToppings;
+                if (listTp != null)
+                {
+                    foreach (var tpLine in listTp)
+                    {
+                        var tp = tpLine?.Topping;
+                        var n = GetStringProp(tp, "Ten", "Ten_Topping", "Name");
+                        if (!string.IsNullOrWhiteSpace(n)) toppingNames.Add(n!);
+                    }
+                }
+                if (toppingNames.Count > 0) tenSp += $" (Topping: {string.Join(", ", toppingNames)})";
+
+                return tenSp;
+            }
+
             var items = (hd.HoaDonChiTiets ?? new List<HoaDonChiTiet>())
                 .OrderBy(ct => ct.ID_HoaDon_ChiTiet)
                 .Select(ct =>
@@ -157,7 +199,7 @@ namespace FE.Controllers
                     return new
                     {
                         id = ct.ID_HoaDon_ChiTiet,
-                        ten = BuildTenSp(ct),
+                        ten = BuildTenSpLocal(ct), // ✅ tên sản phẩm có fallback
                         soLuong = ct.So_Luong,
                         daLam
                     };
@@ -195,6 +237,23 @@ namespace FE.Controllers
                 if (val is int i) return i != 0;
             }
             return false;
+        }
+
+        private static int GetIntProp(object? obj, params string[] candidates)
+        {
+            if (obj == null || candidates == null || candidates.Length == 0) return 0;
+            var t = obj.GetType();
+            foreach (var name in candidates)
+            {
+                var pi = t.GetProperty(name);
+                if (pi == null) continue;
+                var v = pi.GetValue(obj);
+                if (v is int i) return i;
+                if (v is long l) return (int)l;
+                if (v is short s) return s;
+                if (v is string str && int.TryParse(str, out var parsed)) return parsed;
+            }
+            return 0;
         }
 
         private static string BuildTenSp(HoaDonChiTiet ct)
@@ -328,6 +387,7 @@ namespace FE.Controllers
             var mapCt = (hd.HoaDonChiTiets ?? new List<HoaDonChiTiet>())
                         .ToDictionary(x => x.ID_HoaDon_ChiTiet, x => x);
 
+            // Lấy selections từ form (chi tiết được tick)
             var selections = new List<(int chiTietId, int soLuong)>();
             if (khoiPhucIds != null && khoiPhucQtys != null && khoiPhucIds.Length == khoiPhucQtys.Length)
             {
@@ -341,22 +401,42 @@ namespace FE.Controllers
 
                     var max = Math.Max(0, ct.So_Luong);
                     if (q > max) q = max;
-                    selections.Add((cid, q));
+                    if (q > 0) selections.Add((cid, q));
                 }
             }
 
-            var ok = await _hoaDonService.CancelWithRestockAsync(id, lyDo.Trim(), selections);
+            // ✅ Gộp theo sản phẩm để cộng tồn
+            var restockByProduct = selections
+                .Select(sel =>
+                {
+                    var ct = mapCt[sel.chiTietId];
+                    return new { productId = ct.ID_San_Pham, qty = sel.soLuong };
+                })
+                .Where(x => x.productId > 0 && x.qty > 0)
+                .GroupBy(x => x.productId)
+                .Select(g => (productId: g.Key, quantity: g.Sum(z => z.qty)))
+                .ToList();
 
-            TempData["msg"] = ok
-                ? "Đã hủy đơn và khôi phục tồn kho cho các cốc được chọn."
-                : "Hủy đơn thất bại (không khôi phục tồn kho).";
+            bool restockOk = true;
+            if (restockByProduct.Count > 0)
+            {
+                restockOk = await _productService.RestockBatchAsync(restockByProduct);
+            }
+
+            // Cập nhật trạng thái hủy
+            var updateOk = await _hoaDonService.UpdateTrangThaiAsync(id, "Huy_Don", lyDo.Trim());
+
+            var totalQty = restockByProduct.Sum(x => x.quantity);
+            TempData["msg"] = (updateOk && restockOk)
+                ? $"Đã huỷ đơn và khôi phục tồn ({totalQty} sp)."
+                : (updateOk ? "Đã huỷ đơn nhưng KHÔNG khôi phục tồn (lỗi khi cập nhật sản phẩm)."
+                            : "Hủy đơn thất bại.");
 
             return RedirectToAction(nameof(Index));
         }
     }
-
-    // ============== ViewModels ==============
-    public class QuanLyDonHangViewModel
+        // ============== ViewModels ==============
+        public class QuanLyDonHangViewModel
     {
         public List<HoaDon> DanhSachHoaDon { get; set; } = new();
         public string TuKhoa { get; set; } = "";

@@ -143,7 +143,45 @@ namespace FE.Service
             }
         }
 
+        public async Task<bool> RestockBatchAsync(IEnumerable<(int productId, int quantity)> items)
+        {
+            bool allOk = true;
+            if (items == null) return true;
 
+            foreach (var (productId, quantity) in items)
+            {
+                if (productId <= 0 || quantity <= 0) continue;
+
+                // 1) Lấy sản phẩm hiện tại
+                var p = await GetProductByIdAsync(productId);
+                if (p == null) { allOk = false; continue; }
+
+                // 2) Tăng số lượng
+                var newQty = (p.So_Luong <= 0 ? 0 : p.So_Luong) + quantity;
+
+                // 3) Build payload theo format API Update (y như UpdateProductAsync)
+                var payload = new
+                {
+                    iD_San_Pham = p.ID_San_Pham,
+                    ten_San_Pham = p.Ten_San_Pham,
+                    gia = p.Gia,
+                    so_Luong = newQty,
+                    hinh_Anh = p.Hinh_Anh,
+                    mo_Ta = p.Mo_Ta,
+                    trang_Thai = p.Trang_Thai,
+                    sizes = (p.Sizes ?? new List<Size>()).Select(s => s.ID_Size).ToList(),
+                    luongDas = (p.LuongDas ?? new List<LuongDa>()).Select(l => l.ID_LuongDa).ToList(),
+                    doNgots = (p.DoNgots ?? new List<DoNgot>()).Select(d => d.ID_DoNgot).ToList(),
+                    toppings = (p.Toppings ?? new List<Topping>()).Select(t => t.ID_Topping).ToList()
+                };
+
+                // 4) PUT cập nhật lại sản phẩm
+                var res = await _httpClient.PutAsJsonAsync($"{BaseUrl}SanPham/{p.ID_San_Pham}", payload);
+                allOk &= res.IsSuccessStatusCode;
+            }
+
+            return allOk;
+        }
 
     }
 

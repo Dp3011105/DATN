@@ -27,6 +27,7 @@ namespace FE.Service.IService
 
 
         Task<List<SanPham>> GetMostPurchasedProductsAsync(); // Method mới cho API 10 sản phẩm phổ biến
+        Task<bool> RestockBatchAsync(IEnumerable<(int productId, int quantity)> items);
 
     }
 }
