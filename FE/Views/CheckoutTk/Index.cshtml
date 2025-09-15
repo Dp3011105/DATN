@@ -282,1616 +282,6 @@
             box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.15);
         }
 
-    .qr-code-container {
-        text-align: center;
-        margin: 2rem 0;
-        padding: 1.5rem;
-        background-color: #fff;
-        border-radius: 14px;
-        box-shadow: 0 6px 14px rgba(0, 0, 0, 0.12);
-    }
-
-    .qr-code-image {
-        max-width: 300px;
-        width: 100%;
-        border-radius: 12px;
-        border: 1px solid #E5E7EB;
-        padding: 0.75rem;
-        background-color: #fff;
-    }
-
-    .qr-info {
-        font-size: 1.1rem;
-        color: var(--text-primary);
-        margin-top: 1.75rem;
-        text-align: left;
-    }
-
-        .qr-info p {
-            margin-bottom: 1rem;
-            display: flex;
-            justify-content: space-between;
-        }
-
-        .qr-info span {
-            font-weight: 600;
-            color: var(--primary);
-        }
-
-    .qr-header {
-        font-size: 1.2rem;
-        font-weight: 600;
-        margin-bottom: 1.25rem;
-        color: var(--text-primary);
-    }
-
-    .loading-spinner {
-        display: none;
-        border: 5px solid #f3f3f3;
-        border-top: 5px solid var(--primary);
-        border-radius: 50%;
-        width: 40px;
-        height: 40px;
-        animation: spin 1s linear infinite;
-        margin: 2.5rem auto;
-    }
-
-    #cartItemsContainer {
-        max-height: 550px;
-        overflow-y: auto;
-        scrollbar-width: thin;
-        scrollbar-color: var(--primary) #f1f1f1;
-    }
-
-        #cartItemsContainer::-webkit-scrollbar {
-            width: 8px;
-        }
-
-        #cartItemsContainer::-webkit-scrollbar-track {
-            background: #f1f1f1;
-        }
-
-        #cartItemsContainer::-webkit-scrollbar-thumb {
-            background: var(--primary);
-            border-radius: 4px;
-        }
-
-   keyframes spin {
-        0%
-
-    {
-        transform: rotate(0deg);
-    }
-
-    100% {
-        transform: rotate(360deg);
-    }
-
-    }
-
-    keyframes slideIn {
-        from
-
-    {
-        transform: translateY(-20px);
-        opacity: 0;
-    }
-
-    to {
-        transform: translateY(0);
-        opacity: 1;
-    }
-
-    }
-
-    /* Footer CSS */
-    .footer {
-        background: linear-gradient(135deg, #1F2937 0%, #111827 100%);
-        color: white;
-        padding: 3rem 1rem;
-        width: 100vw;
-        margin-left: calc(-50vw + 50%);
-        flex-shrink: 0;
-        margin-top: auto;
-    }
-
-    .footer-container {
-        max-width: 1200px;
-        margin: 0 auto;
-        padding: 0 1.5rem;
-    }
-
-    .footer-section {
-        margin-bottom: 2.5rem;
-    }
-
-    .footer-title {
-        font-size: 1.25rem;
-        font-weight: 600;
-        margin-bottom: 1.25rem;
-        color: var(--secondary);
-    }
-
-    .footer-link {
-        display: block;
-        color: #D1D5DB;
-        text-decoration: none;
-        font-size: 0.95rem;
-        transition: color 0.2s ease;
-        margin-bottom: 0.75rem;
-    }
-
-        .footer-link:hover {
-            color: var(--primary);
-        }
-
-    .footer-social {
-        display: flex;
-        gap: 1.25rem;
-    }
-
-    .social-icon {
-        width: 44px;
-        height: 44px;
-        background: var(--primary);
-        border-radius: 50%;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        color: white;
-        text-decoration: none;
-        transition: background 0.2s ease;
-    }
-
-        .social-icon:hover {
-            background: var(--primary-dark);
-        }
-
-    .footer-bottom {
-        border-top: 1px solid #374151;
-        padding-top: 2rem;
-        text-align: center;
-        color: #9CA3AF;
-        font-size: 0.9rem;
-    }
-
-    /* Responsive Footer */
-    media (max-width: 768px) {
-        .footer
-
-    {
-        padding: 2rem 1rem;
-    }
-
-    .footer-social {
-        justify-content: center;
-    }
-
-    }
-
-    /* Responsive General */
-    media (max-width: 768px) {
-        .grid-cols-1.lg\:grid-cols-2
-
-    {
-        grid-template-columns: 1fr;
-    }
-
-    }
-
-    media (max-width: 480px) {
-        .cart-item
-
-    {
-        flex-direction: column;
-        align-items: flex-start;
-    }
-
-    .cart-item-controls {
-        width: 100%;
-        justify-content: flex-start;
-    }
-
-    }
-</style>
-
-<div class="container mx-auto py-10 px-4 sm:px-6 lg:px-8 max-w-7xl">
-    <h2 class="text-3xl font-bold text-gray-800 mb-8">Thanh Toán</h2>
-
-    <!-- Notifications -->
-@if (TempData["Error"] != null)
-{
-        <div class="alert-notification alert-error animate__animated animate__fadeInDown">
-            <i class="bi bi-exclamation-circle-fill mr-2 text-lg"></i>
-            <div class="flex-1">@TempData["Error"]</div>
-            <button type="button" class="close-button" data-bs-dismiss="alert">
-                <i class="bi bi-x"></i>
-            </button>
-        </div>
-}
-@if (TempData["Success"] != null)
-{
-        <div class="alert-notification alert-success animate__animated animate__fadeInDown">
-            <i class="bi bi-check-circle-fill mr-2 text-lg"></i>
-            <div class="flex-1">@TempData["Success"]</div>
-            <button type="button" class="close-button" data-bs-dismiss="alert">
-                <i class="bi bi-x"></i>
-            </button>
-        </div>
-}
-
-    <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
-        <!-- Left: Cart Items -->
-        <div>
-            <h3 class="text-xl font-bold text-gray-800 mb-4">Giỏ Hàng</h3>
-            <div id="cartItems" class="section-container">
-                @if (Model.CartItems != null && Model.CartItems.Any())
-                {
-                    <div id="cartItemsContainer"></div>
-                    <div class="cart-total">
-                        Tổng cộng: <span id="cartTotal">0 đ</span>
-                    </div>
-                }
-                else
-                {
-                    <p class="cart-empty text-gray-500">Không có sản phẩm nào được chọn để thanh toán. Vui lòng kiểm tra lại.</p>
-                }
-            </div>
-        </div>
-
-        <!-- Right: Checkout Form -->
-        <div>
-            <h3 class="text-xl font-bold text-gray-800 mb-4">Thông Tin Thanh Toán</h3>
-            <div class="section-container">
-                <form id="checkoutForm" method="post" asp-action="ProcessCheckout">
-                    @Html.AntiForgeryToken()
-                    <input type="hidden" name="selectedItems" value="@Html.Raw(ViewBag.SelectedItems)" />
-                    <input type="hidden" id="customerId" value="@(ViewData["CustomerId"] ?? "0")" />
-
-                    <h4 class="text-lg font-semibold text-gray-800 mb-3">Số Điện Thoại</h4>
-                    <div id="phoneNumberSection" class="mb-6">
-                        <p id="phoneNumberDisplay" class="text-gray-500"></p>
-                        <button type="button" id="addPhoneBtn" class="add-phone-btn mb-2 hidden" onclick="openAddPhoneModal()">Thêm Số Điện Thoại</button>
-                        <button type="button" id="editPhoneBtn" class="edit-phone-btn mb-2 hidden" onclick="openEditPhoneModal()">Sửa Số Điện Thoại</button>
-                    </div>
-                    <span id="phoneError" class="error-message">Vui lòng thêm số điện thoại để tiếp tục.</span>
-
-                    <h4 class="text-lg font-semibold text-gray-800 mb-3">Chọn Địa Chỉ</h4>
-                    <p class="text-red-500 text-sm mb-2">Xin lỗi, hiện cửa hàng chỉ có chi nhánh tại Hà Nội.</p>
-                    <div id="addresses" class="mb-6">
-                        @if (Model.Addresses != null && Model.Addresses.Any())
-                        {
-                            foreach (var address in Model.Addresses)
-                            {
-                                <div class="form-group">
-                                    <input type="radio" id="address_@address.ID_Dia_Chi" name="selectedAddress" value="@address.ID_Dia_Chi" class="sr-only" required />
-                                    <label for="address_@address.ID_Dia_Chi" class="radio-label flex items-center gap-2">
-                                        <i class="bi bi-geo-alt text-primary"></i>
-                                        @(address.Dia_Chi ?? "Không xác định"), @(address.Tinh_Thanh ?? "Không xác định") (@(address.Ghi_Chu_KhachHang ?? "Không có ghi chú"))
-                                    </label>
-                                    <button type="button" class="edit-address-btn ml-auto text-sm" onclick="openEditModal(@address.ID_Dia_Chi, '@(address.Dia_Chi?.Replace("'", "\\'") ?? "")', '@(address.Tinh_Thanh?.Replace("'", "\\'") ?? "")', '@(address.Ghi_Chu?.Replace("'", "\\'") ?? "")', '@(address.Ghi_Chu_KhachHang?.Replace("'", "\\'") ?? "")')">Sửa</button>
-                                </div>
-                            }
-                        }
-                        else
-                        {
-                            <p class="text-gray-500">Không có địa chỉ nào.</p>
-                        }
-                    </div>
-                    <span id="addressError" class="error-message">Vui lòng chọn một địa chỉ.</span>
-                    <button type="button" class="add-address-btn mb-6" onclick="openAddAddressModal()"><i class="bi bi-plus-circle mr-2"></i>Thêm Địa Chỉ Mới</button>
-
-                    <h4 class="text-lg font-semibold text-gray-800 mb-3">Chọn Voucher</h4>
-                    <select name="selectedVoucher" id="voucherSelect" class="mb-6" onchange="applyVoucher()">
-                        <option value="" data-minimum="0" data-discount="0">Không sử dụng voucher</option>
-                        @if (Model.Vouchers != null && Model.Vouchers.Any())
-                        {
-                            foreach (var voucher in Model.Vouchers)
-                            {
-                                <option value="@voucher.ID_Voucher" data-minimum="@voucher.So_Tien_Dat_Yeu_Cau" data-discount="@voucher.Gia_Tri_Giam">@(voucher.Ten ?? "Không xác định") (Giảm @voucher.Gia_Tri_Giam% - Đơn tối thiểu @voucher.So_Tien_Dat_Yeu_Cau.ToString("N0", new System.Globalization.CultureInfo("vi-VN")) đ)</option>
-                            }
-                        }
-                    </select>
-                    <span id="voucherError" class="error-message">Đơn hàng chưa đạt giá trị tối thiểu để sử dụng voucher này.</span>
-
-                    <h4 class="text-lg font-semibold text-gray-800 mb-3">Chọn Phương Thức Thanh Toán</h4>
-                    <div id="paymentMethods" class="mb-6">
-                        @{
-                            var paymentMethods = new Dictionary<int, (string Name, string Icon)> {
-                                                { 4, ("Thanh toán khi nhận hàng", "bi-truck") },
-                                                { 5, ("Thanh toán VNPAY", "bi-wallet2") },
-                                                { 3, ("Thanh toán QR", "bi-qr-code") }
-                                                };
-                        }
-                        @if (Model.PaymentMethods != null && Model.PaymentMethods.Any())
-                        {
-                            foreach (var method in Model.PaymentMethods)
-                            {
-                                if (paymentMethods.ContainsKey((int)method.ID_Hinh_Thuc_Thanh_Toan))
-                                {
-                                    var paymentInfo = paymentMethods[(int)method.ID_Hinh_Thuc_Thanh_Toan];
-                                    <div class="form-group">
-                                        <input type="radio" id="payment_@method.ID_Hinh_Thuc_Thanh_Toan" name="selectedPaymentMethod" value="@method.ID_Hinh_Thuc_Thanh_Toan" class="sr-only" onchange="handlePaymentMethodChange(this)" required />
-                                        <label for="payment_@method.ID_Hinh_Thuc_Thanh_Toan" class="radio-label flex items-center gap-2">
-                                            <i class="bi @paymentInfo.Icon text-primary text-lg"></i>
-                                            <span>@paymentInfo.Name</span>
-                                            @if (!string.IsNullOrEmpty(method.Cong_Thanh_Toan))
-                                            {
-                                                <span class="text-sm text-gray-500">(@method.Cong_Thanh_Toan)</span>
-                                            }
-                                        </label>
-                                    </div>
-                                }
-                            }
-                        }
-                        else
-                        {
-                            <p class="text-gray-500">Không có phương thức thanh toán nào khả dụng.</p>
-                        }
-                    </div>
-                    <span id="paymentError" class="error-message">Vui lòng chọn một phương thức thanh toán.</span>
-
-                    <button type="submit" id="submitBtn" class="submit-btn mt-6" disabled onclick="return validateForm()"><i class="bi bi-check-circle mr-2"></i>Xác Nhận Thanh Toán</button>
-                </form>
-            </div>
-        </div>
-    </div>
-
-    <!-- Modal thêm địa chỉ -->
-    <div id="addAddressModal" class="modal">
-        <div class="modal-content">
-            <h3 class="text-lg font-bold text-gray-800 mb-4">Thêm Địa Chỉ Mới</h3>
-            <p class="text-red-500 text-sm mb-2">Xin lỗi, hiện cửa hàng chỉ có chi nhánh tại Hà Nội.</p>
-            <form asp-action="AddAddress" method="post" onsubmit="handleAddAddressSubmit(event)">
-                @Html.AntiForgeryToken()
-                <div class="form-group">
-                    <label for="add_District">Quận/Huyện:</label>
-                    <select id="add_District" name="District" class="w-full" onchange="updateAddWards()" required>
-                        <option value="">Chọn Quận/Huyện</option>
-                    </select>
-                </div>
-                <div class="form-group">
-                    <label for="add_Ward">Phường/Xã:</label>
-                    <select id="add_Ward" name="Ward" class="w-full" required>
-                        <option value="">Chọn Phường/Xã</option>
-                    </select>
-                </div>
-                <div class="form-group">
-                    <label for="add_Tinh_Thanh">Tỉnh/Thành:</label>
-                    <input id="add_Tinh_Thanh" name="Tinh_Thanh" class="w-full" value="Hà Nội" readonly />
-                </div>
-                <div class="form-group">
-                    <label for="add_Ghi_Chu">Địa chỉ chi tiết (Bắt buộc):</label>
-                    <input id="add_Ghi_Chu" name="Ghi_Chu" class="w-full" required />
-                </div>
-                <div class="form-group">
-                    <label for="add_Ghi_Chu_KhachHang">Ghi Chú Khách Hàng:</label>
-                    <input id="add_Ghi_Chu_KhachHang" name="Ghi_Chu_KhachHang" class="w-full" />
-                </div>
-                <input type="hidden" id="add_Dia_Chi" name="Dia_Chi" />
-                <div class="flex justify-end gap-3 mt-4">
-                    <button type="submit" class="submit-btn">Thêm</button>
-                    <button type="button" class="close-button" onclick="closeAddAddressModal()">Hủy</button>
-                </div>
-            </form>
-        </div>
-    </div>
-
-    <!-- Modal sửa địa chỉ -->
-    <div id="editAddressModal" class="modal">
-        <div class="modal-content">
-            <h3 class="text-lg font-bold text-gray-800 mb-4">Sửa Địa Chỉ</h3>
-            <p class="text-red-500 text-sm mb-2">Xin lỗi, hiện cửa hàng chỉ có chi nhánh tại Hà Nội.</p>
-            <form asp-action="UpdateAddress" method="post" onsubmit="handleEditAddressSubmit(event)">
-                @Html.AntiForgeryToken()
-                <input type="hidden" id="edit_ID_Dia_Chi" name="ID_Dia_Chi" />
-                <div class="form-group">
-                    <label for="edit_District">Quận/Huyện:</label>
-                    <select id="edit_District" name="District" class="w-full" onchange="updateEditWards()" required>
-                        <option value="">Chọn Quận/Huyện</option>
-                    </select>
-                </div>
-                <div class="form-group">
-                    <label for="edit_Ward">Phường/Xã:</label>
-                    <select id="edit_Ward" name="Ward" class="w-full" required>
-                        <option value="">Chọn Phường/Xã</option>
-                    </select>
-                </div>
-                <div class="form-group">
-                    <label for="edit_Tinh_Thanh">Tỉnh/Thành:</label>
-                    <input id="edit_Tinh_Thanh" name="Tinh_Thanh" class="w-full" value="Hà Nội" readonly />
-                </div>
-                <div class="form-group">
-                    <label for="edit_Ghi_Chu">Địa chỉ chi tiết (Bắt buộc):</label>
-                    <input id="edit_Ghi_Chu" name="Ghi_Chu" class="w-full" required />
-                </div>
-                <div class="form-group">
-                    <label for="edit_Ghi_Chu_KhachHang">Ghi Chú Khách Hàng:</label>
-                    <input id="edit_Ghi_Chu_KhachHang" name="Ghi_Chu_KhachHang" class="w-full" />
-                </div>
-                <input type="hidden" id="edit_Dia_Chi" name="Dia_Chi" />
-                <input type="hidden" name="Trang_Thai" value="true" />
-                <div class="flex justify-end gap-3 mt-4">
-                    <button type="submit" class="submit-btn">Cập Nhật</button>
-                    <button type="button" class="close-button" onclick="closeEditModal()">Hủy</button>
-                </div>
-            </form>
-        </div>
-    </div>
-
-    <!-- Modal thêm số điện thoại -->
-    <div id="addPhoneModal" class="modal">
-        <div class="modal-content">
-            <h3 class="text-lg font-bold text-gray-800 mb-4">Thêm Số Điện Thoại</h3>
-            <form id="addPhoneForm">
-                @Html.AntiForgeryToken()
-                <input type="hidden" id="add_ID_Khach_Hang" name="iD_Khach_Hang" />
-                <div class="form-group">
-                    <label for="add_So_Dien_Thoai">Số Điện Thoại:</label>
-                    <input id="add_So_Dien_Thoai" name="so_Dien_Thoai" type="tel" class="w-full" required pattern="[0-9]{10}" title="Số điện thoại phải là 10 chữ số" />
-                </div>
-                <div class="flex justify-end gap-3 mt-4">
-                    <button type="submit" class="add-phone-btn">Thêm</button>
-                    <button type="button" class="close-button" onclick="closeAddPhoneModal()">Hủy</button>
-                </div>
-            </form>
-        </div>
-    </div>
-
-    <!-- Modal sửa số điện thoại -->
-    <div id="editPhoneModal" class="modal">
-        <div class="modal-content">
-            <h3 class="text-lg font-bold text-gray-800 mb-4">Sửa Số Điện Thoại</h3>
-            <form id="editPhoneForm">
-                @Html.AntiForgeryToken()
-                <input type="hidden" id="edit_ID_Khach_Hang" name="iD_Khach_Hang" />
-                <div class="form-group">
-                    <label for="edit_So_Dien_Thoai">Số Điện Thoại:</label>
-                    <input id="edit_So_Dien_Thoai" name="so_Dien_Thoai" type="tel" class="w-full" required pattern="[0-9]{10}" title="Số điện thoại phải là 10 chữ số" />
-                </div>
-                <div class="flex justify-end gap-3 mt-4">
-                    <button type="submit" class="edit-phone-btn">Cập Nhật</button>
-                    <button type="button" class="close-button" onclick="closeEditPhoneModal()">Hủy</button>
-                </div>
-            </form>
-        </div>
-    </div>
-
-    <!-- Modal hiển thị mã QR -->
-    <div id="qrCodeModal" class="modal">
-        <div class="modal-content max-w-md">
-            <h3 class="text-lg font-bold text-gray-800 mb-4 text-center">Quét Mã QR Để Thanh Toán</h3>
-            <div id="qrLoading" class="loading-spinner"></div>
-            <div class="qr-code-container" id="qrCodeContainer" style="display: none;">
-                <div class="qr-header">Mã QR Thanh Toán</div>
-                <img id="qrCodeImage" class="qr-code-image mx-auto" src="" alt="QR Code Thanh Toán" />
-                <div class="qr-info mt-4">
-                    <p>Số tiền: <span id="qrAmount"></span></p>
-                    <p>Nội dung: <span id="qrAddInfo"></span></p>
-                    <p>Người nhận: <span>NGUYEN DUC PHUOC</span></p>
-                </div>
-            </div>
-            <div class="flex justify-center mt-4">
-                <button type="button" class="close-button" onclick="closeQRCodeModal()">Đóng</button>
-            </div>
-        </div>
-    </div>
-
-    <!-- Footer -->
-    <footer class="footer">
-        <div class="footer-container">
-            <div class="grid grid-cols-1 md:grid-cols-4 gap-6">
-                <!-- Thông tin cửa hàng -->
-                <div class="footer-section">
-                    <h3 class="footer-title">TheBoy Trà Sữa</h3>
-                    <p class="text-sm text-gray-300 mb-4">Cửa hàng trà sữa tươi ngon, nguyên liệu chất lượng cao. Mang đến những ly trà sữa thơm ngon, đậm đà hương vị Việt Nam.</p>
-                    <div class="flex items-center gap-4">
-                        <i class="bi bi-geo-alt text-primary text-lg"></i>
-                        <span class="text-sm">123 Đường ABC, Quận 1, TP. HCM</span>
-                    </div>
-                    <div class="flex items-center gap-4 mt-2">
-                        <i class="bi bi-telephone text-primary text-lg"></i>
-                        <span class="text-sm">+84 123 456 789</span>
-                    </div>
-                    <div class="flex items-center gap-4 mt-2">
-                        <i class="bi bi-envelope text-primary text-lg"></i>
-                        <span class="text-sm">theboy@trasua.vn</span>
-                    </div>
-                </div>
-
-                <!-- Menu nhanh -->
-                <div class="footer-section">
-                    <h3 class="footer-title">Menu</h3>
-                    <a href="/" class="footer-link">Trang chủ</a>
-                    <a href="/SanPham" class="footer-link">Sản phẩm</a>
-                    <a href="/GioiThieu" class="footer-link">Giới thiệu</a>
-                    <a href="/LienHe" class="footer-link">Liên hệ</a>
-                    <a href="/KhuyenMai" class="footer-link">Khuyến mãi</a>
-                </div>
-
-                <!-- Dịch vụ -->
-                <div class="footer-section">
-                    <h3 class="footer-title">Dịch vụ</h3>
-                    <a href="/GiaoHang" class="footer-link">Giao hàng</a>
-                    <a href="/ThanhToan" class="footer-link">Thanh toán</a>
-                    <a href="/ChinhSach" class="footer-link">Chính sách</a>
-                    <a href="/HoiDap" class="footer-link">Hỏi đáp</a>
-                </div>
-
-                <!-- Mạng xã hội -->
-                <div class="footer-section">
-                    <h3 class="footer-title">Theo dõi chúng tôi</h3>
-                    <div class="footer-social">
-                        <a href="https://facebook.com/theboytrasua" class="social-icon" target="_blank" rel="noopener">
-                            <i class="bi bi-facebook"></i>
-                        </a>
-                        <a href="https://instagram.com/theboytrasua" class="social-icon" target="_blank" rel="noopener">
-                            <i class="bi bi-instagram"></i>
-                        </a>
-                        <a href="https://tiktok.com/theboytrasua" class="social-icon" target="_blank" rel="noopener">
-                            <i class="bi bi-tiktok"></i>
-                        </a>
-                        <a href="https://zalo.me/theboytrasua" class="social-icon" target="_blank" rel="noopener">
-                            <i class="bi bi-chat-dots"></i>
-                        </a>
-                    </div>
-                    <p class="text-sm text-gray-300 mt-4">Nhận ưu đãi đặc biệt qua app!</p>
-                </div>
-            </div>
-            <div class="footer-bottom">
-                <p>&copy; 2025 TheBoy Trà Sữa. Tất cả quyền được bảo lưu. | Thiết kế bởi xAI</p>
-            </div>
-        </div>
-    </footer>
-
-    <script>
-        const wardsData = {
-            'Ba Đình': ['Phúc Xá', 'Trúc Bạch', 'Vĩnh Phúc', 'Cống Vị', 'Liễu Giai', 'Nguyễn Trung Trực', 'Quán Thánh', 'Ngọc Hà', 'Đội Cấn', 'Ngọc Khánh', 'Kim Mã', 'Giảng Võ', 'Điện Biên', 'Thành Công'],
-            'Hoàn Kiếm': ['Phúc Tấn', 'Đồng Xuân', 'Hàng Mã', 'Hàng Buồm', 'Hàng Đào', 'Hàng Bồ', 'Cửa Đông', 'Lý Thái Tổ', 'Hàng Bạc', 'Hàng Gai', 'Chương Dương Độ', 'Cửa Nam', 'Hàng Trống', 'Tràng Tiền', 'Trần Hưng Đạo', 'Phan Chu Trinh', 'Hàng Bông', 'Hàng Thiếc'],
-            'Tây Hồ': ['Phú Thượng', 'Nhật Tân', 'Tứ Liên', 'Quảng An', 'Xuân La', 'Yến Phụ', 'Bưởi', 'Thụy Khuê'],
-            'Long Biên': ['Thượng Thanh', 'Ngọc Thụy', 'Giang Biên', 'Đức Giang', 'Việt Hưng', 'Gia Thụy', 'Ngọc Lâm', 'Phúc Lợi', 'Bo Đề', 'Sài Đồng', 'Long Biên', 'Thạch Bàn', 'Phúc Đồng', 'Cự Khối'],
-            'Cầu Giấy': ['Nghĩa Đô', 'Nghĩa Tân', 'Mai Dịch', 'Dịch Vọng', 'Dịch Vọng Hậu', 'Quan Hoa', 'Yên Hòa', 'Trung Hòa'],
-            'Đống Đa': ['Cát Linh', 'Văn Miếu', 'Quốc Tử Giám', 'Láng Thượng', 'Ô Chợ Dừa', 'Văn Chương', 'Hàng Bột', 'Nam Đồng', 'Trung Liệt', 'Khâm Thiên', 'Thổ Quan', 'Nam Thành', 'Kim Liên', 'Phương Liên', 'Thịnh Quang', 'Trung Phụng', 'Quang Trung', 'Ngã Tư Sở', 'Khương Thượng', 'Láng Hạ', 'Phương Mai'],
-            'Hai Bà Trưng': ['Nguyễn Du', 'Bạch Đằng', 'Phạm Đình Hổ', 'Lê Đại Hành', 'Đồng Nhân', 'Phố Huế', 'Đống Mác', 'Thanh Lương', 'Thanh Nhàn', 'Cầu Dền', 'Bách Khoa', 'Đồng Tâm', 'Vĩnh Tuy', 'Bạch Mai', 'Quỳnh Mai', 'Quỳnh Lôi', 'Minh Khai', 'Trương Định'],
-            'Hoàng Mai': ['Thịnh Liệt', 'Trần Phú', 'Hoàng Văn Thụ', 'Tân Mai', 'Vĩnh Hưng', 'Định Công', 'Mai Động', 'Tương Mai', 'Đại Kim', 'Tân Triều', 'Thanh Trì', 'Linh Đàm', 'Hoàng Liệt', 'Yên Sở'],
-            'Thanh Xuân': ['Hạ Đình', 'Khương Đình', 'Khương Trung', 'Khương Mai', 'Thanh Xuân Bắc', 'Thanh Xuân Nam', 'Thanh Xuân Trung', 'Nhân Chính', 'Thượng Đình', 'Kim Giang'],
-            'Nam Từ Liêm': ['Mễ Trì', 'Phú Đô', 'Phương Canh', 'Mỹ Đình 1', 'Mỹ Đình 2', 'Tây Mỗ', 'Xuân Phương', 'Phúc Diễn', 'Cầu Diễn'],
-            'Bắc Từ Liêm': ['Thượng Cát', 'Liên Mạc', 'Đông Ngạc', 'Đức Thắng', 'Thụy Phương', 'Tây Tựu', 'Xuân Đỉnh', 'Minh Khai', 'Cổ Nhuế 1', 'Cổ Nhuế 2', 'Phú Diễn', 'Phúc Diễn'],
-            'Hà Đông': ['Nguyễn Trãi', 'Mộ Lao', 'Hà Cầu', 'Văn Quán', 'Vạn Phúc', 'Yết Kiêu', 'Quang Trung', 'La Khê', 'Phú La', 'Phú Lãm', 'Phú Lương', 'Kiến Hưng', 'Yên Nghĩa', 'Binh Hưng', 'Phan Sào Nam', 'Cự Khối', 'Đồng Mai']
-        };
-
-        // Populate district dropdowns
-        function populateDistricts() {
-            const addDistrictSelect = document.getElementById('add_District');
-            const editDistrictSelect = document.getElementById('edit_District');
-
-            addDistrictSelect.innerHTML = '<option value="">Chọn Quận/Huyện</option>';
-            editDistrictSelect.innerHTML = '<option value="">Chọn Quận/Huyện</option>';
-
-            Object.keys(wardsData).forEach(district => {
-                const addOption = document.createElement('option');
-                addOption.value = district;
-                addOption.textContent = district;
-                addDistrictSelect.appendChild(addOption);
-
-                const editOption = document.createElement('option');
-                editOption.value = district;
-                editOption.textContent = district;
-                editDistrictSelect.appendChild(editOption);
-            });
-        }
-
-        // Fetch size prices from API
-        async function fetchSizes() {
-            try {
-                const response = await fetch('https://localhost:7169/api/Size');
-                if (!response.ok) {
-                    throw new Error(`HTTP error! Status: ${response.status}`);
-                }
-                sizes = await response.json();
-                console.log('Sizes from API:', sizes);
-            } catch (e) {
-                console.error('Error fetching sizes:', e);
-                showAlert('Lỗi khi lấy dữ liệu kích thước. Vui lòng thử lại.', 'error');
-                sizes = [];
-            }
-        }
-
-        // Get size price by ID
-        function getSizePrice(idSize) {
-            const size = sizes.find(s => s.iD_Size === idSize);
-            return size ? size.gia : 0;
-        }
-
-        // Check phone number existence and update button state
-        async function checkPhoneNumber() {
-            const customerId = parseInt(document.getElementById('customerId').value) || 0;
-            const submitBtn = document.getElementById('submitBtn');
-            const addPhoneBtn = document.getElementById('addPhoneBtn');
-            const editPhoneBtn = document.getElementById('editPhoneBtn');
-            const phoneNumberDisplay = document.getElementById('phoneNumberDisplay');
-            const phoneError = document.getElementById('phoneError');
-
-            if (customerId === 0) {
-                phoneNumberDisplay.textContent = 'Không có thông tin khách hàng.';
-                addPhoneBtn.classList.add('hidden');
-                editPhoneBtn.classList.add('hidden');
-                submitBtn.disabled = true;
-                return;
-            }
-
-            try {
-                const response = await fetch(`https://localhost:7169/api/BanHangTK/kiem-tra-so-dien-thoai/${customerId}`);
-                if (!response.ok) {
-                    throw new Error(`HTTP error! Status: ${response.status}`);
-                }
-                hasPhoneNumber = await response.json();
-
-                if (hasPhoneNumber) {
-                    const phoneResponse = await fetch(`https://localhost:7169/api/BanHangTK/lay-so-dien-thoai/${customerId}`);
-                    if (!phoneResponse.ok) {
-                        throw new Error(`HTTP error! Status: ${phoneResponse.status}`);
-                    }
-                    const phoneData = await phoneResponse.json();
-                    phoneNumberDisplay.textContent = `Số điện thoại: ${phoneData.soDienThoai}`;
-                    addPhoneBtn.classList.add('hidden');
-                    editPhoneBtn.classList.remove('hidden');
-                    phoneError.style.display = 'none';
-                } else {
-                    phoneNumberDisplay.textContent = 'Chưa có số điện thoại.';
-                    addPhoneBtn.classList.remove('hidden');
-                    editPhoneBtn.classList.add('hidden');
-                    phoneError.style.display = 'block';
-                }
-            } catch (e) {
-                console.error('Error checking phone number:', e);
-                showAlert('Lỗi khi kiểm tra số điện thoại. Vui lòng thử lại.', 'error');
-                phoneNumberDisplay.textContent = 'Lỗi khi tải số điện thoại.';
-                addPhoneBtn.classList.add('hidden');
-                editPhoneBtn.classList.add('hidden');
-                submitBtn.disabled = true;
-            }
-            updateSubmitButtonState();
-        }
-
-        // Open add phone modal
-        function openAddPhoneModal() {
-            const customerId = document.getElementById('customerId').value;
-            document.getElementById('add_ID_Khach_Hang').value = customerId;
-            document.getElementById('add_So_Dien_Thoai').value = '';
-            document.getElementById('addPhoneModal').style.display = 'block';
-        }
-
-        // Close add phone modal
-        function closeAddPhoneModal() {
-            document.getElementById('addPhoneModal').style.display = 'none';
-        }
-
-        // Open edit phone modal
-        function openEditPhoneModal() {
-            const customerId = document.getElementById('customerId').value;
-            document.getElementById('edit_ID_Khach_Hang').value = customerId;
-            fetch(`https://localhost:7169/api/BanHangTK/lay-so-dien-thoai/${customerId}`)
-                .then(response => response.json())
-                .then(data => {
-                    document.getElementById('edit_So_Dien_Thoai').value = data.soDienThoai;
-                    document.getElementById('editPhoneModal').style.display = 'block';
-                })
-                .catch(e => {
-                    console.error('Error fetching phone number:', e);
-                    showAlert('Lỗi khi tải số điện thoại. Vui lòng thử lại.', 'error');
-                });
-        }
-
-        // Close edit phone modal
-        function closeEditPhoneModal() {
-            document.getElementById('editPhoneModal').style.display = 'none';
-        }
-
-        // Handle add phone number
-        document.getElementById('addPhoneForm').addEventListener('submit', async function (e) {
-            e.preventDefault();
-            const addPhoneBtn = document.querySelector('#addPhoneForm .add-phone-btn');
-            addPhoneBtn.classList.add('loading');
-            addPhoneBtn.disabled = true;
-
-            const formData = new FormData(this);
-            const data = {
-                iD_Khach_Hang: parseInt(formData.get('iD_Khach_Hang')),
-                so_Dien_Thoai: formData.get('so_Dien_Thoai')
-            };
-
-            try {
-                const response = await fetch('https://localhost:7169/api/BanHangTK/them-so-dien-thoai', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'X-CSRF-TOKEN': document.querySelector('input[name="__RequestVerificationToken"]').value
-                    },
-                    body: JSON.stringify(data)
-                });
-
-                if (!response.ok) {
-                    throw new Error(`HTTP error! Status: ${response.status}`);
-                }
-
-                showAlert('Thêm số điện thoại thành công!', 'success');
-                closeAddPhoneModal();
-                await checkPhoneNumber();
-            } catch (e) {
-                console.error('Error adding phone number:', e);
-                showAlert('Lỗi khi thêm số điện thoại. Vui lòng thử lại.', 'error');
-            } finally {
-                addPhoneBtn.classList.remove('loading');
-                addPhoneBtn.disabled = false;
-            }
-        });
-
-        // Handle edit phone number
-        document.getElementById('editPhoneForm').addEventListener('submit', async function (e) {
-            e.preventDefault();
-            const editPhoneBtn = document.querySelector('#editPhoneForm .edit-phone-btn');
-            editPhoneBtn.classList.add('loading');
-            editPhoneBtn.disabled = true;
-
-            const formData = new FormData(this);
-            const data = {
-                iD_Khach_Hang: parseInt(formData.get('iD_Khach_Hang')),
-                so_Dien_Thoai: formData.get('so_Dien_Thoai')
-            };
-
-            try {
-                const response = await fetch('https://localhost:7169/api/BanHangTK/cap-nhat-so-dien-thoai', {
-                    method: 'PUT',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'X-CSRF-TOKEN': document.querySelector('input[name="__RequestVerificationToken"]').value
-                    },
-                    body: JSON.stringify(data)
-                });
-
-                if (!response.ok) {
-                    throw new Error(`HTTP error! Status: ${response.status}`);
-                }
-
-                showAlert('Cập nhật số điện thoại thành công!', 'success');
-                closeEditPhoneModal();
-                await checkPhoneNumber();
-            } catch (e) {
-                console.error('Error updating phone number:', e);
-                showAlert('Lỗi khi cập nhật số điện thoại. Vui lòng thử lại.', 'error');
-            } finally {
-                editPhoneBtn.classList.remove('loading');
-                editPhoneBtn.disabled = false;
-            }
-        });
-
-        // Handle add address form submission
-        async function handleAddAddressSubmit(event) {
-            event.preventDefault();
-            const form = event.target;
-            const addBtn = form.querySelector('.submit-btn');
-            addBtn.classList.add('loading');
-            addBtn.disabled = true;
-
-            combineAddress('add');
-            const ghiChuKhachHangInput = document.getElementById('add_Ghi_Chu_KhachHang');
-            ghiChuKhachHangInput.value = ghiChuKhachHangInput.value.trim() || 'Không có';
-
-            try {
-                const formData = new FormData(form);
-                const response = await fetch(form.action, {
-                    method: 'POST',
-                    headers: {
-                        'X-CSRF-TOKEN': document.querySelector('input[name="__RequestVerificationToken"]').value
-                    },
-                    body: formData
-                });
-
-                if (!response.ok) {
-                    throw new Error(`HTTP error! Status: ${response.status}`);
-                }
-
-                showAlert('Thêm địa chỉ thành công!', 'success');
-                closeAddAddressModal();
-                window.location.reload();
-            } catch (e) {
-                console.error('Error adding address:', e);
-                showAlert('Lỗi khi thêm địa chỉ. Vui lòng thử lại.', 'error');
-            } finally {
-                addBtn.classList.remove('loading');
-                addBtn.disabled = false;
-            }
-        }
-
-        // Handle edit address form submission
-        async function handleEditAddressSubmit(event) {
-            event.preventDefault();
-            const form = event.target;
-            const editBtn = form.querySelector('.submit-btn');
-            editBtn.classList.add('loading');
-            editBtn.disabled = true;
-
-            combineAddress('edit');
-            const ghiChuKhachHangInput = document.getElementById('edit_Ghi_Chu_KhachHang');
-            ghiChuKhachHangInput.value = ghiChuKhachHangInput.value.trim() || 'Không có';
-
-            try {
-                const formData = new FormData(form);
-                const response = await fetch(form.action, {
-                    method: 'POST',
-                    headers: {
-                        'X-CSRF-TOKEN': document.querySelector('input[name="__RequestVerificationToken"]').value
-                    },
-                    body: formData
-                });
-
-                if (!response.ok) {
-                    throw new Error(`HTTP error! Status: ${response.status}`);
-                }
-
-                showAlert('Cập nhật địa chỉ thành công!', 'success');
-                closeEditModal();
-                window.location.reload();
-            } catch (e) {
-                console.error('Error updating address:', e);
-                showAlert('Lỗi khi cập nhật địa chỉ. Vui lòng thử lại.', 'error');
-            } finally {
-                editBtn.classList.remove('loading');
-                editBtn.disabled = false;
-            }
-        }
-
-        // Render cart items dynamically
-        async function renderCartItems() {
-            await fetchSizes();
-            const cartItemsContainer = document.getElementById('cartItemsContainer');
-            const cartTotalElement = document.getElementById('cartTotal');
-            cartItemsContainer.innerHTML = '';
-
-            if (!selectedItems.length) {
-                cartItemsContainer.innerHTML = '<p class="cart-empty text-gray-500">Không có sản phẩm nào được chọn để thanh toán. Vui lòng kiểm tra lại.</p>';
-                cartTotalElement.textContent = '0 đ';
-                return;
-            }
-
-            cartTotal = 0;
-            selectedItems.forEach(item => {
-                const toppingTotal = item.toppings?.reduce((sum, t) => sum + (t.gia_Topping || 0), 0) || 0;
-                const sizePrice = getSizePrice(item.iD_Size);
-                const basePrice = item.khuyen_Mai && item.khuyen_Mai.ten_Khuyen_Mai ? item.gia_Hien_Thi : item.gia_Goc;
-                const itemTotal = (basePrice + toppingTotal + sizePrice) * item.so_Luong;
-                cartTotal += itemTotal;
-
-                const cartItem = document.createElement('div');
-                cartItem.className = 'cart-item';
-                cartItem.innerHTML = `
-                    <div class="cart-item-details">
-                        <div class="cart-item-name">${item.ten_San_Pham}</div>
-                        <div class="cart-item-options">
-                            ${item.ten_Size ? `Kích thước: ${item.ten_Size} (+${sizePrice.toLocaleString('vi-VN')} đ)<br>` : ''}
-                            ${item.ten_LuongDa ? `Lượng đá: ${item.ten_LuongDa}<br>` : ''}
-                            ${item.ten_DoNgot ? `Độ ngọt: ${item.ten_DoNgot}<br>` : ''}
-                            ${item.toppings && item.toppings.length ? `Topping: ${item.toppings.map(t => `${t.ten_Topping} (+${t.gia_Topping.toLocaleString('vi-VN')} đ)`).join(', ')}<br>` : ''}
-                            ${item.ghi_Chu ? `Ghi chú: ${item.ghi_Chu}` : ''}
-                            ${item.khuyen_Mai && item.khuyen_Mai.ten_Khuyen_Mai ? `<br>Khuyến mãi: ${item.khuyen_Mai.ten_Khuyen_Mai} (Giảm ${(item.gia_Goc - item.gia_Hien_Thi).toLocaleString('vi-VN')} đ)` : ''}
-                        </div>
-                        <div class="cart-item-price">
-                            ${item.khuyen_Mai && item.khuyen_Mai.ten_Khuyen_Mai ?
-                                `<span class="original-price">${(item.gia_Goc + toppingTotal + sizePrice).toLocaleString('vi-VN')} đ</span>
-                                 <span class="discounted-price">${(item.gia_Hien_Thi + toppingTotal + sizePrice).toLocaleString('vi-VN')} đ</span>` :
-                                `<span class="regular-price">${(item.gia_Goc + toppingTotal + sizePrice).toLocaleString('vi-VN')} đ</span>`}
-                        </div>
-                    </div>
-                    <div class="cart-item-controls">
-                        <span class="quantity">x${item.so_Luong > 0 ? item.so_Luong : 'N/A'}</span>
-                    </div>
-                `;
-                cartItemsContainer.appendChild(cartItem);
-            });
-
-            cartTotalElement.textContent = cartTotal.toLocaleString('vi-VN') + ' đ';
-            updateSubmitButtonState();
-        }
-
-        // Initialize cart and districts
-        let selectedItems = [];
-        let cartTotal = 0;
-        let sizes = [];
-        let hasPhoneNumber = false;
-        try {
-            selectedItems = JSON.parse(decodeURIComponent('@Html.Raw(ViewBag.SelectedItems)'));
-            console.log('Selected Items from Cookie:', selectedItems);
-            renderCartItems();
-            checkPhoneNumber();
-            populateDistricts();
-        } catch (e) {
-            console.error('Error parsing selectedItemsCookie:', e);
-            showAlert('Lỗi khi xử lý dữ liệu giỏ hàng. Vui lòng thử lại.', 'error');
-            selectedItems = [];
-            document.getElementById('cartItemsContainer').innerHTML = '<p class="cart-empty text-gray-500">Không có sản phẩm nào được chọn để thanh toán. Vui lòng kiểm tra lại.</p>';
-            document.getElementById('cartTotal').textContent = '0 đ';
-        }
-
-        let selectedVoucher = null;
-
-        function openAddAddressModal() {
-            document.getElementById('addAddressModal').style.display = 'block';
-            document.getElementById('add_District').value = '';
-            document.getElementById('add_Ward').innerHTML = '<option value="">Chọn Phường/Xã</option>';
-            document.getElementById('add_Ghi_Chu').value = '';
-            document.getElementById('add_Ghi_Chu_KhachHang').value = '';
-            updateAddWards();
-        }
-
-        function closeAddAddressModal() {
-            document.getElementById('addAddressModal').style.display = 'none';
-        }
-
-        function openEditModal(id, diaChi, tinhThanh, ghiChu, ghiChuKhachHang) {
-            document.getElementById('edit_ID_Dia_Chi').value = id;
-            document.getElementById('edit_Ghi_Chu').value = ghiChu || '';
-            document.getElementById('edit_Ghi_Chu_KhachHang').value = ghiChuKhachHang || '';
-            document.getElementById('edit_Tinh_Thanh').value = 'Hà Nội';
-
-            const [district, ward] = diaChi ? diaChi.split(', ') : ['', ''];
-            document.getElementById('edit_District').value = district || '';
-            updateEditWards();
-            document.getElementById('edit_Ward').value = ward || '';
-            document.getElementById('editAddressModal').style.display = 'block';
-        }
-
-        function closeEditModal() {
-            document.getElementById('editAddressModal').style.display = 'none';
-        }
-
-        function updateAddWards() {
-            const districtSelect = document.getElementById('add_District');
-            const wardSelect = document.getElementById('add_Ward');
-            const selectedDistrict = districtSelect.value;
-
-            wardSelect.innerHTML = '<option value="">Chọn Phường/Xã</option>';
-            if (selectedDistrict && wardsData[selectedDistrict]) {
-                wardsData[selectedDistrict].forEach(ward => {
-                    const option = document.createElement('option');
-                    option.value = ward;
-                    option.textContent = ward;
-                    wardSelect.appendChild(option);
-                });
-            }
-            updateSubmitButtonState();
-        }
-
-        function updateEditWards() {
-            const districtSelect = document.getElementById('edit_District');
-            const wardSelect = document.getElementById('edit_Ward');
-            const selectedDistrict = districtSelect.value;
-
-            wardSelect.innerHTML = '<option value="">Chọn Phường/Xã</option>';
-            if (selectedDistrict && wardsData[selectedDistrict]) {
-                wardsData[selectedDistrict].forEach(ward => {
-                    const option = document.createElement('option');
-                    option.value = ward;
-                    option.textContent = ward;
-                    wardSelect.appendChild(option);
-                });
-            }
-        }
-
-        function combineAddress(formType) {
-            const district = document.getElementById(`${formType}_District`).value;
-            const ward = document.getElementById(`${formType}_Ward`).value;
-            if (district && ward) {
-                document.getElementById(`${formType}_Dia_Chi`).value = `${district}, ${ward}`;
-            }
-        }
-
-        function openQRCodeModal(total, addInfo) {
-            const qrLoading = document.getElementById('qrLoading');
-            const qrCodeContainer = document.getElementById('qrCodeContainer');
-            const qrCodeImage = document.getElementById('qrCodeImage');
-            const qrAmount = document.getElementById('qrAmount');
-            const qrAddInfo = document.getElementById('qrAddInfo');
-
-            qrLoading.style.display = 'block';
-            qrCodeContainer.style.display = 'none';
-            document.getElementById('qrCodeModal').style.display = 'block';
-
-            const qrUrl = `https://img.vietqr.io/image/mbbank-0834119666-compact2.jpg?amount=${total}&addInfo=${encodeURIComponent(addInfo)}&accountName=NGUYEN%20DUC%20PHUOC`;
-
-            const img = new Image();
-            img.src = qrUrl;
-            img.onload = function() {
-                qrCodeImage.src = qrUrl;
-                qrAmount.textContent = total.toLocaleString('vi-VN') + ' đ';
-                qrAddInfo.textContent = addInfo;
-                qrLoading.style.display = 'none';
-                qrCodeContainer.style.display = 'block';
-            };
-            img.onerror = function() {
-                qrLoading.style.display = 'none';
-                showAlert('Lỗi khi tải mã QR. Vui lòng thử lại.', 'error');
-            };
-        }
-
-        function closeQRCodeModal() {
-            document.getElementById('qrCodeModal').style.display = 'none';
-        }
-
-        function handlePaymentMethodChange(radio) {
-            const paymentMethodId = parseInt(radio.value);
-            if (paymentMethodId === 3) {
-                const addInfo = 'Thanh toan don hang HD' + new Date().getTime();
-                const total = selectedVoucher ? cartTotal * (1 - selectedVoucher.discountPercent / 100) : cartTotal;
-                openQRCodeModal(total, addInfo);
-            } else {
-                closeQRCodeModal();
-            }
-            updateSubmitButtonState();
-        }
-
-        function applyVoucher() {
-            const voucherSelect = document.getElementById('voucherSelect');
-            const voucherError = document.getElementById('voucherError');
-            const cartTotalElement = document.getElementById('cartTotal');
-            const selectedOption = voucherSelect.options[voucherSelect.selectedIndex];
-            const minimumOrder = parseFloat(selectedOption.getAttribute('data-minimum')) || 0;
-            const discountPercent = parseFloat(selectedOption.getAttribute('data-discount')) || 0;
-
-            if (minimumOrder > 0 && cartTotal < minimumOrder) {
-                voucherError.style.display = 'block';
-                voucherSelect.value = '';
-                selectedVoucher = null;
-                cartTotalElement.textContent = cartTotal.toLocaleString('vi-VN') + ' đ';
-                showAlert('Đơn hàng chưa đạt giá trị tối thiểu để sử dụng voucher này!', 'error');
-                return;
-            }
-
-            voucherError.style.display = 'none';
-            selectedVoucher = {
-                id: selectedOption.value,
-                discountPercent: discountPercent,
-                minimumOrder: minimumOrder
-            };
-
-            const discount = cartTotal * (discountPercent / 100);
-            const discountedTotal = cartTotal - discount;
-            cartTotalElement.textContent = discountedTotal.toLocaleString('vi-VN') + ' đ';
-        }
-
-        function clearCartCookie() {
-            document.cookie = 'selectedItems=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;';
-            console.log('Cookie giỏ hàng đã được xóa');
-        }
-
-        async function deleteCartItems(cartItemIds) {
-            if (!cartItemIds || cartItemIds.length === 0) {
-                console.warn('Không có mục giỏ hàng nào để xóa');
-                return true;
-            }
-
-            const deletePromises = cartItemIds.map(id =>
-                fetch(`https://localhost:7169/api/Gio_Hang/delete/${id}`, {
-                    method: 'DELETE',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'X-CSRF-TOKEN': document.querySelector('input[name="__RequestVerificationToken"]').value
-                    }
-                })
-                .then(response => {
-                    if (!response.ok) {
-                        console.error(`Lỗi khi xóa giỏ hàng chi tiết ID ${id}: ${response.status} - ${response.statusText}`);
-                        throw new Error(`Lỗi khi xóa giỏ hàng chi tiết ID ${id}`);
-                    }
-                    console.log(`Xóa giỏ hàng chi tiết ID ${id} thành công`);
-                    return id;
-                })
-                .catch(error => {
-                    console.error(`Lỗi khi xóa giỏ hàng chi tiết ID ${id}:`, error);
-                    return null;
-                })
-            );
-
-            try {
-                const results = await Promise.all(deletePromises);
-                const failedIds = results.filter(id => id === null);
-                if (failedIds.length > 0) {
-                    showAlert(`Lỗi khi xóa một số mục giỏ hàng: ${failedIds.join(', ')}`, 'error');
-                    return false;
-                }
-                console.log('Tất cả mục giỏ hàng chi tiết đã được xóa');
-                return true;
-            } catch (error) {
-                console.error('Lỗi khi xóa các mục giỏ hàng:', error);
-                showAlert('Lỗi khi xóa giỏ hàng. Một số mục có thể vẫn còn.', 'error');
-                return false;
-            }
-        }
-
-        function updateSubmitButtonState() {
-            const paymentSelected = document.querySelector('input[name="selectedPaymentMethod"]:checked');
-            const addressSelected = document.querySelector('input[name="selectedAddress"]:checked');
-            const submitBtn = document.getElementById('submitBtn');
-
-            submitBtn.disabled = !(hasPhoneNumber && paymentSelected && addressSelected && selectedItems.length > 0);
-        }
-
-        async function validateForm() {
-            const paymentSelected = document.querySelector('input[name="selectedPaymentMethod"]:checked');
-            const addressSelected = document.querySelector('input[name="selectedAddress"]:checked');
-            const paymentError = document.getElementById('paymentError');
-            const addressError = document.getElementById('addressError');
-            const phoneError = document.getElementById('phoneError');
-            const submitBtn = document.getElementById('submitBtn');
-
-            paymentError.style.display = paymentSelected ? 'none' : 'block';
-            addressError.style.display = addressSelected ? 'none' : 'block';
-            phoneError.style.display = hasPhoneNumber ? 'none' : 'block';
-
-            if (!paymentSelected || !addressSelected || !hasPhoneNumber) {
-                showAlert('Vui lòng chọn phương thức thanh toán, địa chỉ và thêm số điện thoại!', 'error');
-                return false;
-            }
-
-            if (!selectedItems.length) {
-                showAlert('Không có sản phẩm nào được chọn để thanh toán!', 'error');
-                return false;
-            }
-
-            submitBtn.classList.add('loading');
-            submitBtn.disabled = true;
-
-            const isVNPAY = parseInt(paymentSelected.value) === 5;
-            const checkoutData = {
-                iD_Khach_Hang: parseInt(document.getElementById('customerId').value) || 0,
-                iD_Hinh_Thuc_Thanh_Toan: paymentSelected ? parseInt(paymentSelected.value) : 0,
-                iD_Dia_Chi: addressSelected ? parseInt(addressSelected.value) : 0,
-                iD_Voucher: selectedVoucher && selectedVoucher.id ? parseInt(selectedVoucher.id) : null,
-                tong_Tien: selectedVoucher ? cartTotal * (1 - selectedVoucher.discountPercent / 100) : cartTotal,
-                ghi_Chu: isVNPAY ? 'VNPAY' : '',
-                ma_Hoa_Don: 'HD' + new Date().getTime(),
-                hoaDonChiTiets: selectedItems.map(item => {
-                    const toppingTotal = item.toppings?.reduce((sum, t) => sum + (t.gia_Topping || 0), 0) || 0;
-                    const sizePrice = getSizePrice(item.iD_Size);
-                    const basePrice = item.khuyen_Mai && item.khuyen_Mai.ten_Khuyen_Mai ? item.gia_Hien_Thi : item.gia_Goc;
-                    const itemTotal = (basePrice + toppingTotal + sizePrice) * item.so_Luong;
-
-                    return {
-                        iD_San_Pham: item.iD_San_Pham || 0,
-                        ten_San_Pham: item.ten_San_Pham || '',
-                        gia_Hien_Thi: item.gia_Hien_Thi || 0,
-                        gia_Goc: item.gia_Goc || 0,
-                        so_Luong: item.so_Luong || 0,
-                        ten_Size: item.ten_Size || '',
-                        ten_LuongDa: item.ten_LuongDa || '',
-                        ten_DoNgot: item.ten_DoNgot || '',
-                        ghi_Chu: item.ghi_Chu || '',
-                        iD_Size: item.iD_Size || 0,
-                        iD_SanPham_DoNgot: item.iD_SanPham_DoNgot || 0,
-                        iD_LuongDa: item.iD_LuongDa || 0,
-                        ma_HoaDon_ChiTiet: 'HDC' + item.iD_GioHang_ChiTiet,
-                        gia_Them_Size: sizePrice,
-                        gia_San_Pham: basePrice + toppingTotal + sizePrice,
-                        tong_Tien: itemTotal,
-                        hoaDonChiTietToppings: item.toppings?.map(t => ({
-                            iD_Topping: t.iD_Topping || 0,
-                            ten_Topping: t.ten_Topping || '',
-                            so_Luong: 1,
-                            gia_Topping: t.gia_Topping || 0
-                        })) || []
-                    };
-                })
-            };
-
-            console.log('Checkout Data:', JSON.stringify(checkoutData, null, 2));
-
-            try {
-                const response = await fetch('https://localhost:7169/api/BanHangTK/checkout', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'X-CSRF-TOKEN': document.querySelector('input[name="__RequestVerificationToken"]').value
-                    },
-                    body: JSON.stringify(checkoutData)
-                });
-
-                if (!response.ok) {
-                    const errorData = await response.json();
-                    showAlert(`Lỗi khi gửi yêu cầu thanh toán: ${errorData.message || 'Không xác định'}`, 'error');
-                    submitBtn.classList.remove('loading');
-                    submitBtn.disabled = false;
-                    return false;
-                }
-
-                const result = await response.json();
-                const cartItemIds = selectedItems.map(item => item.iD_GioHang_ChiTiet);
-
-                if (isVNPAY) {
-                    const paymentData = {
-                        orderId: checkoutData.ma_Hoa_Don,
-                        orderType: 'string',
-                        amount: checkoutData.tong_Tien,
-                        orderDescription: 'Thanh toan don hang ' + checkoutData.ma_Hoa_Don,
-                        name: 'NGUYEN DUC PHUOC'
-                    };
-
-                    try {
-                        const paymentResponse = await fetch('https://localhost:7169/api/Payment/create', {
-                            method: 'POST',
-                            headers: {
-                                'Content-Type': 'application/json',
-                                'X-CSRF-TOKEN': document.querySelector('input[name="__RequestVerificationToken"]').value
-                            },
-                            body: JSON.stringify(paymentData)
-                        });
-
-                        if (!paymentResponse.ok) {
-                            throw new Error(`HTTP error! Status: ${paymentResponse.status}`);
-                        }
-
-                        const paymentResult = await paymentResponse.json();
-                        if (paymentResult.paymentUrl) {
-                            window.open(paymentResult.paymentUrl, '_blank');
-                        } else {
-                            showAlert('Không nhận được URL thanh toán từ VNPAY.', 'error');
-                            submitBtn.classList.remove('loading');
-                            submitBtn.disabled = false;
-                            return false;
-                        }
-                    } catch (e) {
-                        console.error('Error creating VNPAY payment:', e);
-                        showAlert('Lỗi khi tạo yêu cầu thanh toán VNPAY. Vui lòng thử lại.', 'error');
-                        submitBtn.classList.remove('loading');
-                        submitBtn.disabled = false;
-                        return false;
-                    }
-                }
-
-                showAlert('Thanh toán thành công!', 'success');
-
-                const deleteSuccess = await deleteCartItems(cartItemIds);
-
-                if (deleteSuccess) {
-                    clearCartCookie();
-                    selectedItems = [];
-                    await renderCartItems();
-                }
-
-                setTimeout(() => {
-                    window.location.href = '/QLDonHangTk';
-                }, 2000);
-
-                submitBtn.classList.remove('loading');
-                submitBtn.disabled = false;
-                return false;
-            } catch (e) {
-                console.error('Error sending checkout request:', e);
-                showAlert('Lỗi khi gửi yêu cầu thanh toán. Vui lòng thử lại.', 'error');
-                submitBtn.classList.remove('loading');
-                submitBtn.disabled = false;
-                return false;
-            }
-        }
-
-        function showAlert(message, type) {
-            const alert = document.createElement('div');
-            alert.className = `alert-notification alert-${type} animate__animated animate__slideInRight fixed top-4 right-4 z-50 max-w-sm`;
-            alert.innerHTML = `
-                <i class="bi bi-${type === 'success' ? 'check-circle-fill' : 'exclamation-circle-fill'} mr-2 text-lg"></i>
-                <div>${message}</div>
-                <button type="button" class="close-button" onclick="this.parentElement.remove()">
-                    <i class="bi bi-x"></i>
-                </button>
-            `;
-            document.body.appendChild(alert);
-            setTimeout(() => {
-                if (alert.parentElement) {
-                    alert.remove();
-                }
-            }, 3000);
-        }
-
-        // Add event listeners for real-time validation
-        document.querySelectorAll('input[name="selectedAddress"]').forEach(input => {
-            input.addEventListener('change', updateSubmitButtonState);
-        });
-        document.querySelectorAll('input[name="selectedPaymentMethod"]').forEach(input => {
-            input.addEventListener('change', updateSubmitButtonState);
-        });
-    </script>
- *@
-
-
-
-
-
-
-
-
-@model FE.Models.CheckoutTkViewModel
-@{
-    ViewData["Title"] = "Thanh Toán";
-}
-
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css" />
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css">
-<link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css">
-
-<style>
-    :root {
-        --primary: #3B82F6;
-        --primary-dark: #2563EB;
-        --secondary: #F59E0B;
-        --light-bg: #F8FAFC;
-        --card-bg: #FFFFFF;
-        --text-primary: #1F2937;
-        --text-secondary: #6B7280;
-        --success: #10B981;
-        --danger: #EF4444;
-    }
-
-    body {
-        font-family: 'Roboto', sans-serif;
-        background-color: var(--light-bg);
-        color: var(--text-primary);
-        margin: 0;
-        min-height: 100vh;
-        display: flex;
-        flex-direction: column;
-    }
-
-    .modal {
-        display: none;
-        position: fixed;
-        top: 0;
-        left: 0;
-        width: 100%;
-        height: 100%;
-        background-color: rgba(0, 0, 0, 0.5);
-        z-index: 1000;
-        overflow-y: auto;
-    }
-
-    .modal-content {
-        background: linear-gradient(135deg, #FFFFFF 0%, #F9FAFB 100%);
-        margin: 5% auto;
-        padding: 2rem;
-        border: none;
-        width: 90%;
-        max-width: 600px;
-        border-radius: 16px;
-        box-shadow: 0 10px 20px rgba(0, 0, 0, 0.15);
-    }
-
-    .error-message {
-        color: var(--danger);
-        font-size: 0.75rem;
-        margin-top: 0.5rem;
-        display: none;
-    }
-
-    .form-group {
-        margin-bottom: 1.5rem;
-    }
-
-    .cart-item {
-        display: flex;
-        align-items: flex-start;
-        padding: 1.25rem;
-        border-bottom: 1px solid #E5E7EB;
-        transition: background-color 0.2s ease;
-    }
-
-        .cart-item:hover {
-            background-color: #F9FAFB;
-        }
-
-    .cart-item-details {
-        flex: 1;
-    }
-
-    .cart-item-name {
-        font-size: 1.1rem;
-        font-weight: 600;
-        color: var(--text-primary);
-    }
-
-    .cart-item-options {
-        font-size: 0.9rem;
-        color: var(--text-secondary);
-        margin-top: 0.75rem;
-    }
-
-    .cart-item-price {
-        font-size: 1.1rem;
-        font-weight: 600;
-        color: var(--primary);
-    }
-
-    .cart-total {
-        font-weight: 700;
-        font-size: 1.3rem;
-        color: var(--text-primary);
-        margin-top: 2rem;
-        text-align: right;
-    }
-
-    .original-price {
-        text-decoration: line-through;
-        color: var(--text-secondary);
-        font-size: 0.95rem;
-        margin-right: 0.5rem;
-    }
-
-    .discounted-price {
-        color: var(--danger);
-        font-weight: 600;
-        font-size: 1.1rem;
-    }
-
-    .regular-price {
-        color: var(--primary);
-        font-weight: 600;
-        font-size: 1.1rem;
-    }
-
-    .cart-item-controls {
-        display: flex;
-        align-items: center;
-        justify-content: flex-end;
-        min-width: 70px;
-        font-size: 0.95rem;
-        font-weight: 500;
-        color: var(--text-primary);
-    }
-
-        .cart-item-controls .quantity {
-            margin-left: 0.75rem;
-            font-weight: 600;
-        }
-
-    .form-group label {
-        font-size: 0.95rem;
-        font-weight: 500;
-        color: var(--text-primary);
-        margin-bottom: 0.75rem;
-        display: block;
-    }
-
-    .form-group input[type="radio"] {
-        margin-right: 0.75rem;
-    }
-
-        .form-group input[type="radio"]:checked + .radio-label {
-            background-color: #EFF6FF;
-            border-color: var(--primary);
-            color: var(--primary);
-            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.2);
-            font-weight: 700;
-            border-width: 2px;
-        }
-
-    .add-address-btn, .submit-btn, .edit-address-btn, .add-phone-btn, .edit-phone-btn {
-        background: linear-gradient(135deg, var(--primary), var(--primary-dark));
-        color: white;
-        padding: 0.85rem 1.75rem;
-        border-radius: 10px;
-        border: none;
-        font-size: 0.95rem;
-        font-weight: 500;
-        transition: all 0.2s ease;
-        position: relative;
-        width: 100%;
-    }
-
-        .add-address-btn:hover, .submit-btn:hover, .edit-address-btn:hover, .add-phone-btn:hover, .edit-phone-btn:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 6px 12px rgba(59, 130, 246, 0.3);
-        }
-
-        .submit-btn:disabled, .add-phone-btn:disabled, .edit-phone-btn:disabled {
-            background: #A1A1AA;
-            cursor: not-allowed;
-        }
-
-        .submit-btn.loading::after, .add-phone-btn.loading::after, .edit-phone-btn.loading::after {
-            content: '';
-            display: inline-block;
-            border: 3px solid #ffffff;
-            border-top: 3px solid var(--primary);
-            border-radius: 50%;
-            width: 18px;
-            height: 18px;
-            animation: spin 1s linear infinite;
-            position: absolute;
-            right: 1.25rem;
-            top: 50%;
-            transform: translateY(-50%);
-        }
-
-    .alert-notification {
-        border-radius: 10px;
-        padding: 1rem 1.5rem;
-        margin-bottom: 1.5rem;
-        display: flex;
-        align-items: center;
-        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-        animation: slideIn 0.4s ease-out;
-    }
-
-    .alert-error {
-        background-color: #FEF2F2;
-        color: #991B1B;
-        border-left: 4px solid var(--danger);
-    }
-
-    .alert-success {
-        background-color: #ECFDF5;
-        color: #065F46;
-        border-left: 4px solid var(--success);
-    }
-
-    .close-button {
-        background: none;
-        border: none;
-        font-size: 1.3rem;
-        color: var(--text-secondary);
-        transition: all 0.2s ease;
-        width: 36px;
-        height: 36px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        border-radius: 50%;
-    }
-
-        .close-button:hover {
-            background-color: #F3F4F6;
-            color: var(--text-primary);
-        }
-
-    select, input[type="text"], input[type="tel"] {
-        width: 100%;
-        padding: 0.85rem;
-        border: 1px solid #E5E7EB;
-        border-radius: 10px;
-        font-size: 0.95rem;
-    }
-
-        select:focus, input:focus {
-            outline: none;
-            border-color: var(--primary);
-            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.25);
-        }
-
-        select:disabled {
-            background-color: #F3F4F6;
-            cursor: not-allowed;
-        }
-
-    .section-container {
-        background: var(--card-bg);
-        border-radius: 14px;
-        padding: 2rem;
-        box-shadow: 0 6px 10px rgba(0, 0, 0, 0.08);
-        margin-bottom: 2rem;
-    }
-
-    .radio-label {
-        display: block;
-        padding: 1rem;
-        border: 1px solid #E5E7EB;
-        border-radius: 10px;
-        cursor: pointer;
-        transition: all 0.2s ease;
-    }
-
-        .radio-label:hover {
-            border-color: var(--primary);
-            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.15);
-        }
-
     .loading-spinner {
         display: none;
         border: 5px solid #f3f3f3;
@@ -3204,4 +1594,1643 @@
         document.querySelectorAll('input[name="selectedPaymentMethod"]').forEach(input => {
             input.addEventListener('change', updateSubmitButtonState);
         });
+    </script>
+ *@
+
+
+
+
+
+
+
+@model FE.Models.CheckoutTkViewModel
+@{
+    ViewData["Title"] = "Thanh Toán";
+}
+
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css" />
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css">
+<link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css">
+
+<style>
+    :root {
+        --primary: #3B82F6;
+        --primary-dark: #2563EB;
+        --secondary: #F59E0B;
+        --light-bg: #F8FAFC;
+        --card-bg: #FFFFFF;
+        --text-primary: #1F2937;
+        --text-secondary: #6B7280;
+        --success: #10B981;
+        --danger: #EF4444;
+    }
+
+    body {
+        font-family: 'Roboto', sans-serif;
+        background-color: var(--light-bg);
+        color: var(--text-primary);
+        margin: 0;
+        min-height: 100vh;
+        display: flex;
+        flex-direction: column;
+    }
+
+    .modal {
+        display: none;
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background-color: rgba(0, 0, 0, 0.5);
+        z-index: 1000;
+        overflow-y: auto;
+    }
+
+    .modal-content {
+        background: linear-gradient(135deg, #FFFFFF 0%, #F9FAFB 100%);
+        margin: 5% auto;
+        padding: 2rem;
+        border: none;
+        width: 90%;
+        max-width: 600px;
+        border-radius: 16px;
+        box-shadow: 0 10px 20px rgba(0, 0, 0, 0.15);
+    }
+
+    .error-message {
+        color: var(--danger);
+        font-size: 0.75rem;
+        margin-top: 0.5rem;
+        display: none;
+    }
+
+    .form-group {
+        margin-bottom: 1.5rem;
+    }
+
+    .cart-item {
+        display: flex;
+        align-items: flex-start;
+        padding: 1.25rem;
+        border-bottom: 1px solid #E5E7EB;
+        transition: background-color 0.2s ease;
+    }
+
+        .cart-item:hover {
+            background-color: #F9FAFB;
+        }
+
+    .cart-item-details {
+        flex: 1;
+    }
+
+    .cart-item-name {
+        font-size: 1.1rem;
+        font-weight: 600;
+        color: var(--text-primary);
+    }
+
+    .cart-item-options {
+        font-size: 0.9rem;
+        color: var(--text-secondary);
+        margin-top: 0.75rem;
+    }
+
+    .cart-item-price {
+        font-size: 1.1rem;
+        font-weight: 600;
+        color: var(--primary);
+    }
+
+    .cart-total {
+        font-weight: 700;
+        font-size: 1.3rem;
+        color: var(--text-primary);
+        margin-top: 2rem;
+        text-align: right;
+    }
+
+    .original-price {
+        text-decoration: line-through;
+        color: var(--text-secondary);
+        font-size: 0.95rem;
+        margin-right: 0.5rem;
+    }
+
+    .discounted-price {
+        color: var(--danger);
+        font-weight: 600;
+        font-size: 1.1rem;
+    }
+
+    .regular-price {
+        color: var(--primary);
+        font-weight: 600;
+        font-size: 1.1rem;
+    }
+
+    .cart-item-controls {
+        display: flex;
+        align-items: center;
+        justify-content: flex-end;
+        min-width: 70px;
+        font-size: 0.95rem;
+        font-weight: 500;
+        color: var(--text-primary);
+    }
+
+        .cart-item-controls .quantity {
+            margin-left: 0.75rem;
+            font-weight: 600;
+        }
+
+    .form-group label {
+        font-size: 0.95rem;
+        font-weight: 500;
+        color: var(--text-primary);
+        margin-bottom: 0.75rem;
+        display: block;
+    }
+
+    .form-group input[type="radio"] {
+        margin-right: 0.75rem;
+    }
+
+        .form-group input[type="radio"]:checked + .radio-label {
+            background-color: #EFF6FF;
+            border-color: var(--primary);
+            color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.2);
+            font-weight: 700;
+            border-width: 2px;
+        }
+
+    .add-address-btn, .submit-btn, .add-phone-btn {
+        background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+        color: white;
+        padding: 0.85rem 1.75rem;
+        border-radius: 10px;
+        border: none;
+        font-size: 0.95rem;
+        font-weight: 500;
+        transition: all 0.2s ease;
+        position: relative;
+        width: 100%;
+    }
+
+    .edit-address-btn, .edit-phone-btn {
+        background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+        color: white;
+        padding: 0.5rem 1rem;
+        border-radius: 8px;
+        border: none;
+        font-size: 0.85rem;
+        font-weight: 500;
+        transition: all 0.2s ease;
+        line-height: 1;
+    }
+
+        .add-address-btn:hover, .submit-btn:hover, .edit-address-btn:hover, .add-phone-btn:hover, .edit-phone-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 12px rgba(59, 130, 246, 0.3);
+        }
+
+        .submit-btn:disabled, .add-phone-btn:disabled, .edit-phone-btn:disabled {
+            background: #A1A1AA;
+            cursor: not-allowed;
+        }
+
+        .submit-btn.loading::after, .add-phone-btn.loading::after, .edit-phone-btn.loading::after {
+            content: '';
+            display: inline-block;
+            border: 3px solid #ffffff;
+            border-top: 3px solid var(--primary);
+            border-radius: 50%;
+            width: 18px;
+            height: 18px;
+            animation: spin 1s linear infinite;
+            position: absolute;
+            right: 1.25rem;
+            top: 50%;
+            transform: translateY(-50%);
+        }
+
+    .alert-notification {
+        border-radius: 10px;
+        padding: 1rem 1.5rem;
+        margin-bottom: 1.5rem;
+        display: flex;
+        align-items: center;
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        animation: slideIn 0.4s ease-out;
+    }
+
+    .alert-error {
+        background-color: #FEF2F2;
+        color: #991B1B;
+        border-left: 4px solid var(--danger);
+    }
+
+    .alert-success {
+        background-color: #ECFDF5;
+        color: #065F46;
+        border-left: 4px solid var(--success);
+    }
+
+    .close-button {
+        background: none;
+        border: none;
+        font-size: 1.3rem;
+        color: var(--text-secondary);
+        transition: all 0.2s ease;
+        width: 36px;
+        height: 36px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 50%;
+    }
+
+        .close-button:hover {
+            background-color: #F3F4F6;
+            color: var(--text-primary);
+        }
+
+    select, input[type="text"], input[type="tel"] {
+        width: 100%;
+        padding: 0.85rem;
+        border: 1px solid #E5E7EB;
+        border-radius: 10px;
+        font-size: 0.95rem;
+    }
+
+        select:focus, input:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.25);
+        }
+
+        select:disabled {
+            background-color: #F3F4F6;
+            cursor: not-allowed;
+        }
+
+    .section-container {
+        background: var(--card-bg);
+        border-radius: 14px;
+        padding: 2rem;
+        box-shadow: 0 6px 10px rgba(0, 0, 0, 0.08);
+        margin-bottom: 2rem;
+    }
+
+    .radio-label {
+        display: block;
+        padding: 1rem;
+        border: 1px solid #E5E7EB;
+        border-radius: 10px;
+        cursor: pointer;
+        transition: all 0.2s ease;
+    }
+
+        .radio-label:hover {
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.15);
+        }
+
+    .loading-spinner {
+        display: none;
+        border: 5px solid #f3f3f3;
+        border-top: 5px solid var(--primary);
+        border-radius: 50%;
+        width: 40px;
+        height: 40px;
+        animation: spin 1s linear infinite;
+        margin: 2.5rem auto;
+    }
+
+    #cartItemsContainer {
+        max-height: 550px;
+        overflow-y: auto;
+        scrollbar-width: thin;
+        scrollbar-color: var(--primary) #f1f1f1;
+    }
+
+        #cartItemsContainer::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        #cartItemsContainer::-webkit-scrollbar-track {
+            background: #f1f1f1;
+        }
+
+        #cartItemsContainer::-webkit-scrollbar-thumb {
+            background: var(--primary);
+            border-radius: 4px;
+        }
+
+    keyframes spin {
+        0%
+
+    {
+        transform: rotate(0deg);
+    }
+
+    100% {
+        transform: rotate(360deg);
+    }
+
+    }
+
+    keyframes slideIn {
+        from
+
+    {
+        transform: translateY(-20px);
+        opacity: 0;
+    }
+
+    to {
+        transform: translateY(0);
+        opacity: 1;
+    }
+
+    }
+
+    .footer {
+        background: linear-gradient(135deg, #1F2937 0%, #111827 100%);
+        color: white;
+        padding: 3rem 1rem;
+        width: 100vw;
+        margin-left: calc(-50vw + 50%);
+        flex-shrink: 0;
+        margin-top: auto;
+    }
+
+    .footer-container {
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 0 1.5rem;
+    }
+
+    .footer-section {
+        margin-bottom: 2.5rem;
+    }
+
+    .footer-title {
+        font-size: 1.25rem;
+        font-weight: 600;
+        margin-bottom: 1.25rem;
+        color: var(--secondary);
+    }
+
+    .footer-link {
+        display: block;
+        color: #D1D5DB;
+        text-decoration: none;
+        font-size: 0.95rem;
+        transition: color 0.2s ease;
+        margin-bottom: 0.75rem;
+    }
+
+        .footer-link:hover {
+            color: var(--primary);
+        }
+
+    .footer-social {
+        display: flex;
+        gap: 1.25rem;
+    }
+
+    .social-icon {
+        width: 44px;
+        height: 44px;
+        background: var(--primary);
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+        text-decoration: none;
+        transition: background 0.2s ease;
+    }
+
+        .social-icon:hover {
+            background: var(--primary-dark);
+        }
+
+    .footer-bottom {
+        border-top: 1px solid #374151;
+        padding-top: 2rem;
+        text-align: center;
+        color: #9CA3AF;
+        font-size: 0.9rem;
+    }
+
+    media (max-width: 768px) {
+        .footer
+
+    {
+        padding: 2rem 1rem;
+    }
+
+    .footer-social {
+        justify-content: center;
+    }
+
+    .grid-cols-1.lg\:grid-cols-2 {
+        grid-template-columns: 1fr;
+    }
+
+    }
+
+    media (max-width: 480px) {
+        .cart-item
+
+    {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+
+    .cart-item-controls {
+        width: 100%;
+        justify-content: flex-start;
+    }
+
+    }
+
+    #loadingOverlay {
+        display: none;
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background-color: rgba(0, 0, 0, 0.6);
+        z-index: 9999;
+        backdrop-filter: blur(4px);
+    }
+
+        #loadingOverlay.show {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            animation: fadeIn 0.3s ease-out;
+        }
+
+        #loadingOverlay .loading-content {
+            background: linear-gradient(135deg, #FFFFFF 0%, #F0F9FF 100%);
+            padding: 2.5rem;
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.2);
+            text-align: center;
+            max-width: 300px;
+            animation: bounceIn 0.5s ease-out;
+        }
+
+        #loadingOverlay .loading-spinner {
+            display: block !important;
+            margin: 0 auto 1.5rem;
+            width: 50px;
+            height: 50px;
+            border-width: 4px;
+        }
+
+        #loadingOverlay p {
+            font-size: 1.1rem;
+            font-weight: 500;
+            color: var(--text-primary);
+            margin: 0;
+        }
+
+    keyframes fadeIn {
+        from
+
+    {
+        opacity: 0;
+    }
+
+    to {
+        opacity: 1;
+    }
+
+    }
+
+    keyframes bounceIn {
+        0%
+
+    {
+        transform: scale(0.3);
+        opacity: 0;
+    }
+
+    50% {
+        transform: scale(1.05);
+    }
+
+    70% {
+        transform: scale(0.9);
+    }
+
+    100% {
+        transform: scale(1);
+        opacity: 1;
+    }
+
+    }
+
+    .address-select-container {
+        position: relative;
+        display: flex;
+        align-items: center;
+    }
+
+        .address-select-container select {
+            flex: 1;
+        }
+
+        .address-select-container .edit-address-btn {
+            margin-left: 0.5rem;
+        }
+</style>
+
+<div class="container mx-auto py-10 px-4 sm:px-6 lg:px-8 max-w-7xl">
+    <h2 class="text-3xl font-bold text-gray-800 mb-8">Thanh Toán</h2>
+
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+        <!-- Left: Cart Items -->
+        <div class="section-container">
+            <h3 class="text-xl font-bold text-gray-800 mb-4">Giỏ Hàng</h3>
+            <div id="cartItems">
+                @if (Model.CartItems != null && Model.CartItems.Any())
+                {
+                    <div id="cartItemsContainer"></div>
+                    <div class="cart-total">
+                        Tổng cộng: <span id="cartTotal">0 đ</span>
+                    </div>
+                }
+                else
+                {
+                    <p class="cart-empty text-gray-500">Không có sản phẩm nào được chọn để thanh toán. Vui lòng kiểm tra lại.</p>
+                }
+            </div>
+        </div>
+
+        <!-- Right: Checkout Form -->
+        <div>
+            <!-- Notifications -->
+            @if (TempData["Error"] != null)
+            {
+                <div class="alert-notification alert-error animate__animated animate__fadeInDown">
+                    <i class="bi bi-exclamation-circle-fill mr-2 text-lg"></i>
+                    <div class="flex-1">@TempData["Error"]</div>
+                    <button type="button" class="close-button" data-bs-dismiss="alert">
+                        <i class="bi bi-x"></i>
+                    </button>
+                </div>
+            }
+            @if (TempData["Success"] != null)
+            {
+                <div class="alert-notification alert-success animate__animated animate__fadeInDown">
+                    <i class="bi bi-check-circle-fill mr-2 text-lg"></i>
+                    <div class="flex-1">@TempData["Success"]</div>
+                    <button type="button" class="close-button" data-bs-dismiss="alert">
+                        <i class="bi bi-x"></i>
+                    </button>
+                </div>
+            }
+
+            <div class="section-container">
+                <form id="checkoutForm" method="post" asp-action="ProcessCheckout">
+                    @Html.AntiForgeryToken()
+                    <input type="hidden" name="selectedItems" value="@Html.Raw(ViewBag.SelectedItems)" />
+                    <input type="hidden" id="customerId" value="@(ViewData["CustomerId"] ?? "0")" />
+
+                    <h4 class="text-lg font-semibold text-gray-800 mb-3">Số Điện Thoại</h4>
+                    <div id="phoneNumberSection" class="mb-6">
+                        <p id="phoneNumberDisplay" class="text-gray-500"></p>
+                        <button type="button" id="addPhoneBtn" class="add-phone-btn mb-2 hidden" onclick="openAddPhoneModal()">Thêm Số Điện Thoại</button>
+                        <button type="button" id="editPhoneBtn" class="edit-phone-btn mb-2 hidden" onclick="openEditPhoneModal()">Sửa</button>
+                    </div>
+                    <span id="phoneError" class="error-message">Vui lòng thêm số điện thoại để tiếp tục.</span>
+
+                    <h4 class="text-lg font-semibold text-gray-800 mb-3">Chọn Địa Chỉ</h4>
+                    <p class="text-red-500 text-sm mb-2">Xin lỗi, hiện cửa hàng chỉ có chi nhánh tại Hà Nội.</p>
+                    <div id="addresses" class="mb-6">
+                        @if (Model.Addresses != null && Model.Addresses.Any())
+                        {
+                            <div class="form-group address-select-container">
+                                <select name="selectedAddress" id="addressSelect" class="w-full" required onchange="updateSelectedAddress()">
+                                    <option value="">Chọn địa chỉ</option>
+                                    @foreach (var address in Model.Addresses)
+                                    {
+                                        <option value="@address.ID_Dia_Chi" data-id="@address.ID_Dia_Chi" data-address="@(address.Dia_Chi?.Replace("'", "\\'") ?? "")" data-tinh-thanh="@(address.Tinh_Thanh?.Replace("'", "\\'") ?? "")" data-ghi-chu="@(address.Ghi_Chu?.Replace("'", "\\'") ?? "")" data-ghi-chu-khach-hang="@(address.Ghi_Chu_KhachHang?.Replace("'", "\\'") ?? "")">
+                                            @(address.Dia_Chi ?? "Không xác định"), @(address.Tinh_Thanh ?? "Không xác định") (@(address.Ghi_Chu_KhachHang ?? "Không có ghi chú"))
+                                        </option>
+                                    }
+                                </select>
+                                <button type="button" id="editAddressBtn" class="edit-address-btn hidden" onclick="openEditModalFromSelect()">Sửa</button>
+                            </div>
+                        }
+                        else
+                        {
+                            <p class="text-gray-500">Không có địa chỉ nào.</p>
+                        }
+                    </div>
+                    <span id="addressError" class="error-message">Vui lòng chọn một địa chỉ.</span>
+                    <button type="button" class="add-address-btn mb-6" onclick="openAddAddressModal()"><i class="bi bi-plus-circle mr-2"></i>Thêm Địa Chỉ Mới</button>
+
+                    <h4 class="text-lg font-semibold text-gray-800 mb-3">Chọn Voucher</h4>
+                    <select name="selectedVoucher" id="voucherSelect" class="mb-6" onchange="applyVoucher()">
+                        <option value="" data-minimum="0" data-discount="0">Không sử dụng voucher</option>
+                        @if (Model.Vouchers != null && Model.Vouchers.Any())
+                        {
+                            foreach (var voucher in Model.Vouchers)
+                            {
+                                <option value="@voucher.ID_Voucher" data-minimum="@voucher.So_Tien_Dat_Yeu_Cau" data-discount="@voucher.Gia_Tri_Giam">@(voucher.Ten ?? "Không xác định") (Giảm @voucher.Gia_Tri_Giam% - Đơn tối thiểu @voucher.So_Tien_Dat_Yeu_Cau.ToString("N0", new System.Globalization.CultureInfo("vi-VN")) đ)</option>
+                            }
+                        }
+                    </select>
+                    <span id="voucherError" class="error-message">Đơn hàng chưa đạt giá trị tối thiểu để sử dụng voucher này.</span>
+
+                    <h4 class="text-lg font-semibold text-gray-800 mb-3">Chọn Phương Thức Thanh Toán</h4>
+                    <div id="paymentMethods" class="mb-6">
+                        @{
+                            var paymentMethods = new Dictionary<int, (string Name, string Icon)> {
+                                                { 4, ("Thanh toán khi nhận hàng", "bi-truck") },
+                                                { 5, ("Thanh toán VNPAY", "bi-wallet2") }
+                                                };
+                        }
+                        @if (Model.PaymentMethods != null && Model.PaymentMethods.Any())
+                        {
+                            foreach (var method in Model.PaymentMethods)
+                            {
+                                if (paymentMethods.ContainsKey((int)method.ID_Hinh_Thuc_Thanh_Toan))
+                                {
+                                    var paymentInfo = paymentMethods[(int)method.ID_Hinh_Thuc_Thanh_Toan];
+                                    <div class="form-group">
+                                        <input type="radio" id="payment_@method.ID_Hinh_Thuc_Thanh_Toan" name="selectedPaymentMethod" value="@method.ID_Hinh_Thuc_Thanh_Toan" class="sr-only" required />
+                                        <label for="payment_@method.ID_Hinh_Thuc_Thanh_Toan" class="radio-label flex items-center gap-2">
+                                            <i class="bi @paymentInfo.Icon text-primary text-lg"></i>
+                                            <span>@paymentInfo.Name</span>
+                                            @if (!string.IsNullOrEmpty(method.Cong_Thanh_Toan))
+                                            {
+                                                <span class="text-sm text-gray-500">(@method.Cong_Thanh_Toan)</span>
+                                            }
+                                        </label>
+                                    </div>
+                                }
+                            }
+                        }
+                        else
+                        {
+                            <p class="text-gray-500">Không có phương thức thanh toán nào khả dụng.</p>
+                        }
+                    </div>
+                    <span id="paymentError" class="error-message">Vui lòng chọn một phương thức thanh toán.</span>
+
+                    <button type="submit" id="submitBtn" class="submit-btn mt-6" disabled onclick="return validateForm()"><i class="bi bi-check-circle mr-2"></i>Xác Nhận Thanh Toán</button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Loading Overlay -->
+    <div id="loadingOverlay">
+        <div class="loading-content animate__animated">
+            <div class="loading-spinner"></div>
+            <p>Đang xử lý thanh toán...</p>
+        </div>
+    </div>
+
+    <!-- Modal thêm địa chỉ -->
+    <div id="addAddressModal" class="modal">
+        <div class="modal-content">
+            <h3 class="text-lg font-bold text-gray-800 mb-4">Thêm Địa Chỉ Mới</h3>
+            <p class="text-red-500 text-sm mb-2">Xin lỗi, hiện cửa hàng chỉ có chi nhánh tại Hà Nội.</p>
+            <form asp-action="AddAddress" method="post" onsubmit="handleAddAddressSubmit(event)">
+                @Html.AntiForgeryToken()
+                <div class="form-group">
+                    <label for="add_District">Quận/Huyện:</label>
+                    <select id="add_District" name="District" class="w-full" onchange="updateAddWards()" required>
+                        <option value="">Chọn Quận/Huyện</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="add_Ward">Phường/Xã:</label>
+                    <select id="add_Ward" name="Ward" class="w-full" required>
+                        <option value="">Chọn Phường/Xã</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="add_Tinh_Thanh">Tỉnh/Thành:</label>
+                    <input id="add_Tinh_Thanh" name="Tinh_Thanh" class="w-full" value="Hà Nội" readonly />
+                </div>
+                <div class="form-group">
+                    <label for="add_Ghi_Chu">Địa chỉ chi tiết (Bắt buộc):</label>
+                    <input id="add_Ghi_Chu" name="Ghi_Chu" class="w-full" required />
+                </div>
+                <div class="form-group">
+                    <label for="add_Ghi_Chu_KhachHang">Ghi Chú Khách Hàng:</label>
+                    <input id="add_Ghi_Chu_KhachHang" name="Ghi_Chu_KhachHang" class="w-full" />
+                </div>
+                <input type="hidden" id="add_Dia_Chi" name="Dia_Chi" />
+                <div class="flex justify-end gap-3 mt-4">
+                    <button type="submit" class="submit-btn">Thêm</button>
+                    <button type="button" class="close-button" onclick="closeAddAddressModal()">Hủy</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Modal sửa địa chỉ -->
+    <div id="editAddressModal" class="modal">
+        <div class="modal-content">
+            <h3 class="text-lg font-bold text-gray-800 mb-4">Sửa Địa Chỉ</h3>
+            <p class="text-red-500 text-sm mb-2">Xin lỗi, hiện cửa hàng chỉ có chi nhánh tại Hà Nội.</p>
+            <form asp-action="UpdateAddress" method="post" onsubmit="handleEditAddressSubmit(event)">
+                @Html.AntiForgeryToken()
+                <input type="hidden" id="edit_ID_Dia_Chi" name="ID_Dia_Chi" />
+                <div class="form-group">
+                    <label for="edit_District">Quận/Huyện:</label>
+                    <select id="edit_District" name="District" class="w-full" onchange="updateEditWards()" required>
+                        <option value="">Chọn Quận/Huyện</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="edit_Ward">Phường/Xã:</label>
+                    <select id="edit_Ward" name="Ward" class="w-full" required>
+                        <option value="">Chọn Phường/Xã</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="edit_Tinh_Thanh">Tỉnh/Thành:</label>
+                    <input id="edit_Tinh_Thanh" name="Tinh_Thanh" class="w-full" value="Hà Nội" readonly />
+                </div>
+                <div class="form-group">
+                    <label for="edit_Ghi_Chu">Địa chỉ chi tiết (Bắt buộc):</label>
+                    <input id="edit_Ghi_Chu" name="Ghi_Chu" class="w-full" required />
+                </div>
+                <div class="form-group">
+                    <label for="edit_Ghi_Chu_KhachHang">Ghi Chú Khách Hàng:</label>
+                    <input id="edit_Ghi_Chu_KhachHang" name="Ghi_Chu_KhachHang" class="w-full" />
+                </div>
+                <input type="hidden" id="edit_Dia_Chi" name="Dia_Chi" />
+                <input type="hidden" name="Trang_Thai" value="true" />
+                <div class="flex justify-end gap-3 mt-4">
+                    <button type="submit" class="submit-btn">Cập Nhật</button>
+                    <button type="button" class="close-button" onclick="closeEditModal()">Hủy</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Modal thêm số điện thoại -->
+    <div id="addPhoneModal" class="modal">
+        <div class="modal-content">
+            <h3 class="text-lg font-bold text-gray-800 mb-4">Thêm Số Điện Thoại</h3>
+            <form id="addPhoneForm">
+                @Html.AntiForgeryToken()
+                <input type="hidden" id="add_ID_Khach_Hang" name="iD_Khach_Hang" />
+                <div class="form-group">
+                    <label for="add_So_Dien_Thoai">Số Điện Thoại:</label>
+                    <input id="add_So_Dien_Thoai" name="so_Dien_Thoai" type="tel" class="w-full" required pattern="[0-9]{10}" title="Số điện thoại phải là 10 chữ số" oninput="validatePhoneNumber(this)" />
+                    <span id="addPhoneError" class="error-message">Số điện thoại phải là 10 chữ số.</span>
+                </div>
+                <div class="flex justify-end gap-3 mt-4">
+                    <button type="submit" class="add-phone-btn">Thêm</button>
+                    <button type="button" class="close-button" onclick="closeAddPhoneModal()">Hủy</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Modal sửa số điện thoại -->
+    <div id="editPhoneModal" class="modal">
+        <div class="modal-content">
+            <h3 class="text-lg font-bold text-gray-800 mb-4">Sửa Số Điện Thoại</h3>
+            <form id="editPhoneForm">
+                @Html.AntiForgeryToken()
+                <input type="hidden" id="edit_ID_Khach_Hang" name="iD_Khach_Hang" />
+                <div class="form-group">
+                    <label for="edit_So_Dien_Thoai">Số Điện Thoại:</label>
+                    <input id="edit_So_Dien_Thoai" name="so_Dien_Thoai" type="tel" class="w-full" required pattern="[0-9]{10}" title="Số điện thoại phải là 10 chữ số" oninput="validatePhoneNumber(this)" />
+                    <span id="editPhoneError" class="error-message">Số điện thoại phải là 10 chữ số.</span>
+                </div>
+                <div class="flex justify-end gap-3 mt-4">
+                    <button type="submit" class="edit-phone-btn">Cập Nhật</button>
+                    <button type="button" class="close-button" onclick="closeEditPhoneModal()">Hủy</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="footer-container">
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-6">
+                <div class="footer-section">
+                    <h3 class="footer-title">TheBoy Trà Sữa</h3>
+                    <p class="text-sm text-gray-300 mb-4">Cửa hàng trà sữa tươi ngon, nguyên liệu chất lượng cao. Mang đến những ly trà sữa thơm ngon, đậm đà hương vị Việt Nam.</p>
+                    <div class="flex items-center gap-4">
+                        <i class="bi bi-geo-alt text-primary text-lg"></i>
+                        <span class="text-sm">123 Đường ABC, Quận 1, TP. HCM</span>
+                    </div>
+                    <div class="flex items-center gap-4 mt-2">
+                        <i class="bi bi-telephone text-primary text-lg"></i>
+                        <span class="text-sm">+84 123 456 789</span>
+                    </div>
+                    <div class="flex items-center gap-4 mt-2">
+                        <i class="bi bi-envelope text-primary text-lg"></i>
+                        <span class="text-sm">theboy@trasua.vn</span>
+                    </div>
+                </div>
+                <div class="footer-section">
+                    <h3 class="footer-title">Menu</h3>
+                    <a href="/" class="footer-link">Trang chủ</a>
+                    <a href="/SanPham" class="footer-link">Sản phẩm</a>
+                    <a href="/GioiThieu" class="footer-link">Giới thiệu</a>
+                    <a href="/LienHe" class="footer-link">Liên hệ</a>
+                    <a href="/KhuyenMai" class="footer-link">Khuyến mãi</a>
+                </div>
+                <div class="footer-section">
+                    <h3 class="footer-title">Dịch vụ</h3>
+                    <a href="/GiaoHang" class="footer-link">Giao hàng</a>
+                    <a href="/ThanhToan" class="footer-link">Thanh toán</a>
+                    <a href="/ChinhSach" class="footer-link">Chính sách</a>
+                    <a href="/HoiDap" class="footer-link">Hỏi đáp</a>
+                </div>
+                <div class="footer-section">
+                    <h3 class="footer-title">Theo dõi chúng tôi</h3>
+                    <div class="footer-social">
+                        <a href="https://facebook.com/theboytrasua" class="social-icon" target="_blank" rel="noopener">
+                            <i class="bi bi-facebook"></i>
+                        </a>
+                        <a href="https://instagram.com/theboytrasua" class="social-icon" target="_blank" rel="noopener">
+                            <i class="bi bi-instagram"></i>
+                        </a>
+                        <a href="https://tiktok.com/theboytrasua" class="social-icon" target="_blank" rel="noopener">
+                            <i class="bi bi-tiktok"></i>
+                        </a>
+                        <a href="https://zalo.me/theboytrasua" class="social-icon" target="_blank" rel="noopener">
+                            <i class="bi bi-chat-dots"></i>
+                        </a>
+                    </div>
+                    <p class="text-sm text-gray-300 mt-4">Nhận ưu đãi đặc biệt qua app!</p>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <p>&copy; 2025 TheBoy Trà Sữa. Tất cả quyền được bảo lưu. | Thiết kế bởi xAI</p>
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        const wardsData = {
+            'Ba Đình': ['Phúc Xá', 'Trúc Bạch', 'Vĩnh Phúc', 'Cống Vị', 'Liễu Giai', 'Nguyễn Trung Trực', 'Quán Thánh', 'Ngọc Hà', 'Đội Cấn', 'Ngọc Khánh', 'Kim Mã', 'Giảng Võ', 'Điện Biên', 'Thành Công'],
+            'Hoàn Kiếm': ['Phúc Tấn', 'Đồng Xuân', 'Hàng Mã', 'Hàng Buồm', 'Hàng Đào', 'Hàng Bồ', 'Cửa Đông', 'Lý Thái Tổ', 'Hàng Bạc', 'Hàng Gai', 'Chương Dương Độ', 'Cửa Nam', 'Hàng Trống', 'Tràng Tiền', 'Trần Hưng Đạo', 'Phan Chu Trinh', 'Hàng Bông', 'Hàng Thiếc'],
+            'Tây Hồ': ['Phú Thượng', 'Nhật Tân', 'Tứ Liên', 'Quảng An', 'Xuân La', 'Yến Phụ', 'Bưởi', 'Thụy Khuê'],
+            'Long Biên': ['Thượng Thanh', 'Ngọc Thụy', 'Giang Biên', 'Đức Giang', 'Việt Hưng', 'Gia Thụy', 'Ngọc Lâm', 'Phúc Lợi', 'Bo Đề', 'Sài Đồng', 'Long Biên', 'Thạch Bàn', 'Phúc Đồng', 'Cự Khối'],
+            'Cầu Giấy': ['Nghĩa Đô', 'Nghĩa Tân', 'Mai Dịch', 'Dịch Vọng', 'Dịch Vọng Hậu', 'Quan Hoa', 'Yên Hòa', 'Trung Hòa'],
+            'Đống Đa': ['Cát Linh', 'Văn Miếu', 'Quốc Tử Giám', 'Láng Thượng', 'Ô Chợ Dừa', 'Văn Chương', 'Hàng Bột', 'Nam Đồng', 'Trung Liệt', 'Khâm Thiên', 'Thổ Quan', 'Nam Thành', 'Kim Liên', 'Phương Liên', 'Thịnh Quang', 'Trung Phụng', 'Quang Trung', 'Ngã Tư Sở', 'Khương Thượng', 'Láng Hạ', 'Phương Mai'],
+            'Hai Bà Trưng': ['Nguyễn Du', 'Bạch Đằng', 'Phạm Đình Hổ', 'Lê Đại Hành', 'Đồng Nhân', 'Phố Huế', 'Đống Mác', 'Thanh Lương', 'Thanh Nhàn', 'Cầu Dền', 'Bách Khoa', 'Đồng Tâm', 'Vĩnh Tuy', 'Bạch Mai', 'Quỳnh Mai', 'Quỳnh Lôi', 'Minh Khai', 'Trương Định'],
+            'Hoàng Mai': ['Thịnh Liệt', 'Trần Phú', 'Hoàng Văn Thụ', 'Tân Mai', 'Vĩnh Hưng', 'Định Công', 'Mai Động', 'Tương Mai', 'Đại Kim', 'Tân Triều', 'Thanh Trì', 'Linh Đàm', 'Hoàng Liệt', 'Yên Sở'],
+            'Thanh Xuân': ['Hạ Đình', 'Khương Đình', 'Khương Trung', 'Khương Mai', 'Thanh Xuân Bắc', 'Thanh Xuân Nam', 'Thanh Xuân Trung', 'Nhân Chính', 'Thượng Đình', 'Kim Giang'],
+            'Nam Từ Liêm': ['Mễ Trì', 'Phú Đô', 'Phương Canh', 'Mỹ Đình 1', 'Mỹ Đình 2', 'Tây Mỗ', 'Xuân Phương', 'Phúc Diễn', 'Cầu Diễn'],
+            'Bắc Từ Liêm': ['Thượng Cát', 'Liên Mạc', 'Đông Ngạc', 'Đức Thắng', 'Thụy Phương', 'Tây Tựu', 'Xuân Đỉnh', 'Minh Khai', 'Cổ Nhuế 1', 'Cổ Nhuế 2', 'Phú Diễn', 'Phúc Diễn'],
+            'Hà Đông': ['Nguyễn Trãi', 'Mộ Lao', 'Hà Cầu', 'Văn Quán', 'Vạn Phúc', 'Yết Kiêu', 'Quang Trung', 'La Khê', 'Phú La', 'Phú Lãm', 'Phú Lương', 'Kiến Hưng', 'Yên Nghĩa', 'Binh Hưng', 'Phan Sào Nam', 'Cự Khối', 'Đồng Mai']
+        };
+
+        function populateDistricts() {
+            const addDistrictSelect = document.getElementById('add_District');
+            const editDistrictSelect = document.getElementById('edit_District');
+
+            addDistrictSelect.innerHTML = '<option value="">Chọn Quận/Huyện</option>';
+            editDistrictSelect.innerHTML = '<option value="">Chọn Quận/Huyện</option>';
+
+            Object.keys(wardsData).forEach(district => {
+                const addOption = document.createElement('option');
+                addOption.value = district;
+                addOption.textContent = district;
+                addDistrictSelect.appendChild(addOption);
+
+                const editOption = document.createElement('option');
+                editOption.value = district;
+                editOption.textContent = district;
+                editDistrictSelect.appendChild(editOption);
+            });
+        }
+
+        async function fetchSizes() {
+            try {
+                const response = await fetch('https://localhost:7169/api/Size');
+                if (!response.ok) {
+                    throw new Error(`HTTP error! Status: ${response.status}`);
+                }
+                sizes = await response.json();
+                console.log('Sizes from API:', sizes);
+            } catch (e) {
+                console.error('Error fetching sizes:', e);
+                showAlert('Lỗi khi lấy dữ liệu kích thước. Vui lòng thử lại.', 'error');
+                sizes = [];
+            }
+        }
+
+        function getSizePrice(idSize) {
+            const size = sizes.find(s => s.iD_Size === idSize);
+            return size ? size.gia : 0;
+        }
+
+        async function checkPhoneNumber() {
+            const customerId = parseInt(document.getElementById('customerId').value) || 0;
+            const submitBtn = document.getElementById('submitBtn');
+            const addPhoneBtn = document.getElementById('addPhoneBtn');
+            const editPhoneBtn = document.getElementById('editPhoneBtn');
+            const phoneNumberDisplay = document.getElementById('phoneNumberDisplay');
+            const phoneError = document.getElementById('phoneError');
+
+            if (customerId === 0) {
+                phoneNumberDisplay.textContent = 'Không có thông tin khách hàng.';
+                addPhoneBtn.classList.add('hidden');
+                editPhoneBtn.classList.add('hidden');
+                submitBtn.disabled = true;
+                return;
+            }
+
+            try {
+                const response = await fetch(`https://localhost:7169/api/BanHangTK/kiem-tra-so-dien-thoai/${customerId}`);
+                if (!response.ok) {
+                    throw new Error(`HTTP error! Status: ${response.status}`);
+                }
+                hasPhoneNumber = await response.json();
+
+                if (hasPhoneNumber) {
+                    const phoneResponse = await fetch(`https://localhost:7169/api/BanHangTK/lay-so-dien-thoai/${customerId}`);
+                    if (!phoneResponse.ok) {
+                        throw new Error(`HTTP error! Status: ${phoneResponse.status}`);
+                    }
+                    const phoneData = await phoneResponse.json();
+                    phoneNumberDisplay.textContent = `Số điện thoại: ${phoneData.soDienThoai}`;
+                    addPhoneBtn.classList.add('hidden');
+                    editPhoneBtn.classList.remove('hidden');
+                    phoneError.style.display = 'none';
+                } else {
+                    phoneNumberDisplay.textContent = 'Chưa có số điện thoại.';
+                    addPhoneBtn.classList.remove('hidden');
+                    editPhoneBtn.classList.add('hidden');
+                    phoneError.style.display = 'block';
+                }
+            } catch (e) {
+                console.error('Error checking phone number:', e);
+                showAlert('Lỗi khi kiểm tra số điện thoại. Vui lòng thử lại.', 'error');
+                phoneNumberDisplay.textContent = 'Lỗi khi tải số điện thoại.';
+                addPhoneBtn.classList.add('hidden');
+                editPhoneBtn.classList.add('hidden');
+                submitBtn.disabled = true;
+            }
+            updateSubmitButtonState();
+        }
+
+        function openAddPhoneModal() {
+            const customerId = document.getElementById('customerId').value;
+            document.getElementById('add_ID_Khach_Hang').value = customerId;
+            document.getElementById('add_So_Dien_Thoai').value = '';
+            document.getElementById('addPhoneModal').style.display = 'block';
+        }
+
+        function closeAddPhoneModal() {
+            document.getElementById('addPhoneModal').style.display = 'none';
+        }
+
+        function openEditPhoneModal() {
+            const customerId = document.getElementById('customerId').value;
+            document.getElementById('edit_ID_Khach_Hang').value = customerId;
+            fetch(`https://localhost:7169/api/BanHangTK/lay-so-dien-thoai/${customerId}`)
+                .then(response => response.json())
+                .then(data => {
+                    document.getElementById('edit_So_Dien_Thoai').value = data.soDienThoai;
+                    document.getElementById('editPhoneModal').style.display = 'block';
+                })
+                .catch(e => {
+                    console.error('Error fetching phone number:', e);
+                    showAlert('Lỗi khi tải số điện thoại. Vui lòng thử lại.', 'error');
+                });
+        }
+
+        function closeEditPhoneModal() {
+            document.getElementById('editPhoneModal').style.display = 'none';
+        }
+
+        function validatePhoneNumber(input) {
+            const errorElement = input.id === 'add_So_Dien_Thoai' ? document.getElementById('addPhoneError') : document.getElementById('editPhoneError');
+            const value = input.value;
+            if (value.length !== 10 || !/^[0-9]{10}$/.test(value)) {
+                errorElement.style.display = 'block';
+                input.setCustomValidity('Số điện thoại phải là 10 chữ số');
+            } else {
+                errorElement.style.display = 'none';
+                input.setCustomValidity('');
+            }
+        }
+
+        document.getElementById('addPhoneForm').addEventListener('submit', async function (e) {
+            e.preventDefault();
+            const addPhoneBtn = document.querySelector('#addPhoneForm .add-phone-btn');
+            addPhoneBtn.classList.add('loading');
+            addPhoneBtn.disabled = true;
+
+            const formData = new FormData(this);
+            const data = {
+                iD_Khach_Hang: parseInt(formData.get('iD_Khach_Hang')),
+                so_Dien_Thoai: formData.get('so_Dien_Thoai')
+            };
+
+            try {
+                const response = await fetch('https://localhost:7169/api/BanHangTK/them-so-dien-thoai', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-TOKEN': document.querySelector('input[name="__RequestVerificationToken"]').value
+                    },
+                    body: JSON.stringify(data)
+                });
+
+                if (!response.ok) {
+                    throw new Error(`HTTP error! Status: ${response.status}`);
+                }
+
+                showAlert('Thêm số điện thoại thành công!', 'success');
+                closeAddPhoneModal();
+                await checkPhoneNumber();
+            } catch (e) {
+                console.error('Error adding phone number:', e);
+                showAlert('Lỗi khi thêm số điện thoại. Vui lòng thử lại.', 'error');
+            } finally {
+                addPhoneBtn.classList.remove('loading');
+                addPhoneBtn.disabled = false;
+            }
+        });
+
+        document.getElementById('editPhoneForm').addEventListener('submit', async function (e) {
+            e.preventDefault();
+            const editPhoneBtn = document.querySelector('#editPhoneForm .edit-phone-btn');
+            editPhoneBtn.classList.add('loading');
+            editPhoneBtn.disabled = true;
+
+            const formData = new FormData(this);
+            const data = {
+                iD_Khach_Hang: parseInt(formData.get('iD_Khach_Hang')),
+                so_Dien_Thoai: formData.get('so_Dien_Thoai')
+            };
+
+            try {
+                const response = await fetch('https://localhost:7169/api/BanHangTK/cap-nhat-so-dien-thoai', {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-TOKEN': document.querySelector('input[name="__RequestVerificationToken"]').value
+                    },
+                    body: JSON.stringify(data)
+                });
+
+                if (!response.ok) {
+                    throw new Error(`HTTP error! Status: ${response.status}`);
+                }
+
+                showAlert('Cập nhật số điện thoại thành công!', 'success');
+                closeEditPhoneModal();
+                await checkPhoneNumber();
+            } catch (e) {
+                console.error('Error updating phone number:', e);
+                showAlert('Lỗi khi cập nhật số điện thoại. Vui lòng thử lại.', 'error');
+            } finally {
+                editPhoneBtn.classList.remove('loading');
+                editPhoneBtn.disabled = false;
+            }
+        });
+
+        async function handleAddAddressSubmit(event) {
+            event.preventDefault();
+            const form = event.target;
+            const addBtn = form.querySelector('.submit-btn');
+            addBtn.classList.add('loading');
+            addBtn.disabled = true;
+
+            combineAddress('add');
+            const ghiChuKhachHangInput = document.getElementById('add_Ghi_Chu_KhachHang');
+            ghiChuKhachHangInput.value = ghiChuKhachHangInput.value.trim() || 'Không có';
+
+            try {
+                const formData = new FormData(form);
+                const response = await fetch(form.action, {
+                    method: 'POST',
+                    headers: {
+                        'X-CSRF-TOKEN': document.querySelector('input[name="__RequestVerificationToken"]').value
+                    },
+                    body: formData
+                });
+
+                if (!response.ok) {
+                    throw new Error(`HTTP error! Status: ${response.status}`);
+                }
+
+                showAlert('Thêm địa chỉ thành công!', 'success');
+                closeAddAddressModal();
+                window.location.reload();
+            } catch (e) {
+                console.error('Error adding address:', e);
+                showAlert('Lỗi khi thêm địa chỉ. Vui lòng thử lại.', 'error');
+            } finally {
+                addBtn.classList.remove('loading');
+                addBtn.disabled = false;
+            }
+        }
+
+        async function handleEditAddressSubmit(event) {
+            event.preventDefault();
+            const form = event.target;
+            const editBtn = form.querySelector('.submit-btn');
+            editBtn.classList.add('loading');
+            editBtn.disabled = true;
+
+            combineAddress('edit');
+            const ghiChuKhachHangInput = document.getElementById('edit_Ghi_Chu_KhachHang');
+            ghiChuKhachHangInput.value = ghiChuKhachHangInput.value.trim() || 'Không có';
+
+            try {
+                const formData = new FormData(form);
+                const response = await fetch(form.action, {
+                    method: 'POST',
+                    headers: {
+                        'X-CSRF-TOKEN': document.querySelector('input[name="__RequestVerificationToken"]').value
+                    },
+                    body: formData
+                });
+
+                if (!response.ok) {
+                    throw new Error(`HTTP error! Status: ${response.status}`);
+                }
+
+                showAlert('Cập nhật địa chỉ thành công!', 'success');
+                closeEditModal();
+                window.location.reload();
+            } catch (e) {
+                console.error('Error updating address:', e);
+                showAlert('Lỗi khi cập nhật địa chỉ. Vui lòng thử lại.', 'error');
+            } finally {
+                editBtn.classList.remove('loading');
+                editBtn.disabled = false;
+            }
+        }
+
+        async function renderCartItems() {
+            await fetchSizes();
+            const cartItemsContainer = document.getElementById('cartItemsContainer');
+            const cartTotalElement = document.getElementById('cartTotal');
+            cartItemsContainer.innerHTML = '';
+
+            if (!selectedItems.length) {
+                cartItemsContainer.innerHTML = '<p class="cart-empty text-gray-500">Không có sản phẩm nào được chọn để thanh toán. Vui lòng kiểm tra lại.</p>';
+                cartTotalElement.textContent = '0 đ';
+                return;
+            }
+
+            cartTotal = 0;
+            selectedItems.forEach(item => {
+                const toppingTotal = item.toppings?.reduce((sum, t) => sum + (t.gia_Topping || 0), 0) || 0;
+                const sizePrice = getSizePrice(item.iD_Size);
+                const basePrice = item.khuyen_Mai && item.khuyen_Mai.ten_Khuyen_Mai ? item.gia_Hien_Thi : item.gia_Goc;
+                const itemTotal = (basePrice + toppingTotal + sizePrice) * item.so_Luong;
+                cartTotal += itemTotal;
+
+                const cartItem = document.createElement('div');
+                cartItem.className = 'cart-item';
+                cartItem.innerHTML = `
+                    <div class="cart-item-details">
+                        <div class="cart-item-name">${item.ten_San_Pham}</div>
+                        <div class="cart-item-options">
+                            ${item.ten_Size ? `Kích thước: ${item.ten_Size} (+${sizePrice.toLocaleString('vi-VN')} đ)<br>` : ''}
+                            ${item.ten_LuongDa ? `Lượng đá: ${item.ten_LuongDa}<br>` : ''}
+                            ${item.ten_DoNgot ? `Độ ngọt: ${item.ten_DoNgot}<br>` : ''}
+                            ${item.toppings && item.toppings.length ? `Topping: ${item.toppings.map(t => `${t.ten_Topping} (+${t.gia_Topping.toLocaleString('vi-VN')} đ)`).join(', ')}<br>` : ''}
+                            ${item.ghi_Chu ? `Ghi chú: ${item.ghi_Chu}` : ''}
+                            ${item.khuyen_Mai && item.khuyen_Mai.ten_Khuyen_Mai ? `<br>Khuyến mãi: ${item.khuyen_Mai.ten_Khuyen_Mai} (Giảm ${(item.gia_Goc - item.gia_Hien_Thi).toLocaleString('vi-VN')} đ)` : ''}
+                        </div>
+                        <div class="cart-item-price">
+                            ${item.khuyen_Mai && item.khuyen_Mai.ten_Khuyen_Mai ?
+                                `<span class="original-price">${(item.gia_Goc + toppingTotal + sizePrice).toLocaleString('vi-VN')} đ</span>
+                                 <span class="discounted-price">${(item.gia_Hien_Thi + toppingTotal + sizePrice).toLocaleString('vi-VN')} đ</span>` :
+                                `<span class="regular-price">${(item.gia_Goc + toppingTotal + sizePrice).toLocaleString('vi-VN')} đ</span>`}
+                        </div>
+                    </div>
+                    <div class="cart-item-controls">
+                        <span class="quantity">x${item.so_Luong > 0 ? item.so_Luong : 'N/A'}</span>
+                    </div>
+                `;
+                cartItemsContainer.appendChild(cartItem);
+            });
+
+            cartTotalElement.textContent = cartTotal.toLocaleString('vi-VN') + ' đ';
+            updateSubmitButtonState();
+        }
+
+        let selectedItems = [];
+        let cartTotal = 0;
+        let sizes = [];
+        let hasPhoneNumber = false;
+        try {
+            selectedItems = JSON.parse(decodeURIComponent('@Html.Raw(ViewBag.SelectedItems)'));
+            console.log('Selected Items from Cookie:', selectedItems);
+            renderCartItems();
+            checkPhoneNumber();
+            populateDistricts();
+        } catch (e) {
+            console.error('Error parsing selectedItemsCookie:', e);
+            showAlert('Lỗi khi xử lý dữ liệu giỏ hàng. Vui lòng thử lại.', 'error');
+            selectedItems = [];
+            document.getElementById('cartItemsContainer').innerHTML = '<p class="cart-empty text-gray-500">Không có sản phẩm nào được chọn để thanh toán. Vui lòng kiểm tra lại.</p>';
+            document.getElementById('cartTotal').textContent = '0 đ';
+        }
+
+        let selectedVoucher = null;
+
+        function openAddAddressModal() {
+            document.getElementById('addAddressModal').style.display = 'block';
+            document.getElementById('add_District').value = '';
+            document.getElementById('add_Ward').innerHTML = '<option value="">Chọn Phường/Xã</option>';
+            document.getElementById('add_Ghi_Chu').value = '';
+            document.getElementById('add_Ghi_Chu_KhachHang').value = '';
+            updateAddWards();
+        }
+
+        function closeAddAddressModal() {
+            document.getElementById('addAddressModal').style.display = 'none';
+        }
+
+        function openEditModal(id, diaChi, tinhThanh, ghiChu, ghiChuKhachHang) {
+            document.getElementById('edit_ID_Dia_Chi').value = id;
+            document.getElementById('edit_Ghi_Chu').value = ghiChu || '';
+            document.getElementById('edit_Ghi_Chu_KhachHang').value = ghiChuKhachHang || '';
+            document.getElementById('edit_Tinh_Thanh').value = 'Hà Nội';
+
+            const [district, ward] = diaChi ? diaChi.split(', ') : ['', ''];
+            document.getElementById('edit_District').value = district || '';
+            updateEditWards();
+            document.getElementById('edit_Ward').value = ward || '';
+            document.getElementById('editAddressModal').style.display = 'block';
+        }
+
+        function openEditModalFromSelect() {
+            const addressSelect = document.getElementById('addressSelect');
+            const selectedOption = addressSelect.options[addressSelect.selectedIndex];
+            if (selectedOption.value) {
+                openEditModal(
+                    selectedOption.getAttribute('data-id'),
+                    selectedOption.getAttribute('data-address'),
+                    selectedOption.getAttribute('data-tinh-thanh'),
+                    selectedOption.getAttribute('data-ghi-chu'),
+                    selectedOption.getAttribute('data-ghi-chu-khach-hang')
+                );
+            }
+        }
+
+        function updateSelectedAddress() {
+            const addressSelect = document.getElementById('addressSelect');
+            const editAddressBtn = document.getElementById('editAddressBtn');
+            if (addressSelect.value) {
+                editAddressBtn.classList.remove('hidden');
+            } else {
+                editAddressBtn.classList.add('hidden');
+            }
+            updateSubmitButtonState();
+        }
+
+        function closeEditModal() {
+            document.getElementById('editAddressModal').style.display = 'none';
+        }
+
+        function updateAddWards() {
+            const districtSelect = document.getElementById('add_District');
+            const wardSelect = document.getElementById('add_Ward');
+            const selectedDistrict = districtSelect.value;
+
+            wardSelect.innerHTML = '<option value="">Chọn Phường/Xã</option>';
+            if (selectedDistrict && wardsData[selectedDistrict]) {
+                wardsData[selectedDistrict].forEach(ward => {
+                    const option = document.createElement('option');
+                    option.value = ward;
+                    option.textContent = ward;
+                    wardSelect.appendChild(option);
+                });
+            }
+            updateSubmitButtonState();
+        }
+
+        function updateEditWards() {
+            const districtSelect = document.getElementById('edit_District');
+            const wardSelect = document.getElementById('edit_Ward');
+            const selectedDistrict = districtSelect.value;
+
+            wardSelect.innerHTML = '<option value="">Chọn Phường/Xã</option>';
+            if (selectedDistrict && wardsData[selectedDistrict]) {
+                wardsData[selectedDistrict].forEach(ward => {
+                    const option = document.createElement('option');
+                    option.value = ward;
+                    option.textContent = ward;
+                    wardSelect.appendChild(option);
+                });
+            }
+        }
+
+        function combineAddress(formType) {
+            const district = document.getElementById(`${formType}_District`).value;
+            const ward = document.getElementById(`${formType}_Ward`).value;
+            if (district && ward) {
+                document.getElementById(`${formType}_Dia_Chi`).value = `${district}, ${ward}`;
+            }
+        }
+
+        function applyVoucher() {
+            const voucherSelect = document.getElementById('voucherSelect');
+            const voucherError = document.getElementById('voucherError');
+            const cartTotalElement = document.getElementById('cartTotal');
+            const selectedOption = voucherSelect.options[voucherSelect.selectedIndex];
+            const minimumOrder = parseFloat(selectedOption.getAttribute('data-minimum')) || 0;
+            const discountPercent = parseFloat(selectedOption.getAttribute('data-discount')) || 0;
+
+            if (minimumOrder > 0 && cartTotal < minimumOrder) {
+                voucherError.style.display = 'block';
+                voucherSelect.value = '';
+                selectedVoucher = null;
+                cartTotalElement.textContent = cartTotal.toLocaleString('vi-VN') + ' đ';
+                showAlert('Đơn hàng chưa đạt giá trị tối thiểu để sử dụng voucher này!', 'error');
+                return;
+            }
+
+            voucherError.style.display = 'none';
+            selectedVoucher = {
+                id: selectedOption.value,
+                discountPercent: discountPercent,
+                minimumOrder: minimumOrder
+            };
+
+            const discount = cartTotal * (discountPercent / 100);
+            const discountedTotal = cartTotal - discount;
+            cartTotalElement.textContent = discountedTotal.toLocaleString('vi-VN') + ' đ';
+        }
+
+        function clearCartCookie() {
+            document.cookie = 'selectedItems=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;';
+            console.log('Cookie giỏ hàng đã được xóa');
+        }
+
+        async function deleteCartItems(cartItemIds) {
+            if (!cartItemIds || cartItemIds.length === 0) {
+                console.warn('Không có mục giỏ hàng nào để xóa');
+                return true;
+            }
+
+            const deletePromises = cartItemIds.map(id =>
+                fetch(`https://localhost:7169/api/Gio_Hang/delete/${id}`, {
+                    method: 'DELETE',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-TOKEN': document.querySelector('input[name="__RequestVerificationToken"]').value
+                    }
+                })
+                .then(response => {
+                    if (!response.ok) {
+                        console.error(`Lỗi khi xóa giỏ hàng chi tiết ID ${id}: ${response.status} - ${response.statusText}`);
+                        throw new Error(`Lỗi khi xóa giỏ hàng chi tiết ID ${id}`);
+                    }
+                    console.log(`Xóa giỏ hàng chi tiết ID ${id} thành công`);
+                    return id;
+                })
+                .catch(error => {
+                    console.error(`Lỗi khi xóa giỏ hàng chi tiết ID ${id}:`, error);
+                    return null;
+                })
+            );
+
+            try {
+                const results = await Promise.all(deletePromises);
+                const failedIds = results.filter(id => id === null);
+                if (failedIds.length > 0) {
+                    showAlert(`Lỗi khi xóa một số mục giỏ hàng: ${failedIds.join(', ')}`, 'error');
+                    return false;
+                }
+                console.log('Tất cả mục giỏ hàng chi tiết đã được xóa');
+                return true;
+            } catch (error) {
+                console.error('Lỗi khi xóa các mục giỏ hàng:', error);
+                showAlert('Lỗi khi xóa giỏ hàng. Một số mục có thể vẫn còn.', 'error');
+                return false;
+            }
+        }
+
+        function updateSubmitButtonState() {
+            const paymentSelected = document.querySelector('input[name="selectedPaymentMethod"]:checked');
+            const addressSelected = document.getElementById('addressSelect').value;
+            const submitBtn = document.getElementById('submitBtn');
+
+            submitBtn.disabled = !(hasPhoneNumber && paymentSelected && addressSelected && selectedItems.length > 0);
+        }
+
+        function showLoading() {
+            document.getElementById('loadingOverlay').classList.add('show');
+        }
+
+        function hideLoading() {
+            document.getElementById('loadingOverlay').classList.remove('show');
+        }
+
+        async function validateForm() {
+            const paymentSelected = document.querySelector('input[name="selectedPaymentMethod"]:checked');
+            const addressSelected = document.getElementById('addressSelect').value;
+            const paymentError = document.getElementById('paymentError');
+            const addressError = document.getElementById('addressError');
+            const phoneError = document.getElementById('phoneError');
+            const submitBtn = document.getElementById('submitBtn');
+
+            paymentError.style.display = paymentSelected ? 'none' : 'block';
+            addressError.style.display = addressSelected ? 'none' : 'block';
+            phoneError.style.display = hasPhoneNumber ? 'none' : 'block';
+
+            if (!paymentSelected || !addressSelected || !hasPhoneNumber) {
+                showAlert('Vui lòng chọn phương thức thanh toán, địa chỉ và thêm số điện thoại!', 'error');
+                return false;
+            }
+
+            if (!selectedItems.length) {
+                showAlert('Không có sản phẩm nào được chọn để thanh toán!', 'error');
+                return false;
+            }
+
+            submitBtn.classList.add('loading');
+            submitBtn.disabled = true;
+            showLoading();
+
+            const isVNPAY = parseInt(paymentSelected.value) === 5;
+            const checkoutData = {
+                iD_Khach_Hang: parseInt(document.getElementById('customerId').value) || 0,
+                iD_Hinh_Thuc_Thanh_Toan: paymentSelected ? parseInt(paymentSelected.value) : 0,
+                iD_Dia_Chi: addressSelected ? parseInt(addressSelected) : 0,
+                iD_Voucher: selectedVoucher && selectedVoucher.id ? parseInt(selectedVoucher.id) : null,
+                tong_Tien: selectedVoucher ? cartTotal * (1 - selectedVoucher.discountPercent / 100) : cartTotal,
+                ghi_Chu: isVNPAY ? 'VNPAY' : '',
+                ma_Hoa_Don: 'HD' + new Date().getTime(),
+                hoaDonChiTiets: selectedItems.map(item => {
+                    const toppingTotal = item.toppings?.reduce((sum, t) => sum + (t.gia_Topping || 0), 0) || 0;
+                    const sizePrice = getSizePrice(item.iD_Size);
+                    const basePrice = item.khuyen_Mai && item.khuyen_Mai.ten_Khuyen_Mai ? item.gia_Hien_Thi : item.gia_Goc;
+                    const itemTotal = (basePrice + toppingTotal + sizePrice) * item.so_Luong;
+
+                    return {
+                        iD_San_Pham: item.iD_San_Pham || 0,
+                        ten_San_Pham: item.ten_San_Pham || '',
+                        gia_Hien_Thi: item.gia_Hien_Thi || 0,
+                        gia_Goc: item.gia_Goc || 0,
+                        so_Luong: item.so_Luong || 0,
+                        ten_Size: item.ten_Size || '',
+                        ten_LuongDa: item.ten_LuongDa || '',
+                        ten_DoNgot: item.ten_DoNgot || '',
+                        ghi_Chu: item.ghi_Chu || '',
+                        iD_Size: item.iD_Size || 0,
+                        iD_SanPham_DoNgot: item.iD_SanPham_DoNgot || 0,
+                        iD_LuongDa: item.iD_LuongDa || 0,
+                        ma_HoaDon_ChiTiet: 'HDC' + item.iD_GioHang_ChiTiet,
+                        gia_Them_Size: sizePrice,
+                        gia_San_Pham: basePrice + toppingTotal + sizePrice,
+                        tong_Tien: itemTotal,
+                        hoaDonChiTietToppings: item.toppings?.map(t => ({
+                            iD_Topping: t.iD_Topping || 0,
+                            ten_Topping: t.ten_Topping || '',
+                            so_Luong: 1,
+                            gia_Topping: t.gia_Topping || 0
+                        })) || []
+                    };
+                })
+            };
+
+            console.log('Checkout Data:', JSON.stringify(checkoutData, null, 2));
+
+            try {
+                const response = await fetch('https://localhost:7169/api/BanHangTK/checkout', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-TOKEN': document.querySelector('input[name="__RequestVerificationToken"]').value
+                    },
+                    body: JSON.stringify(checkoutData)
+                });
+
+                if (!response.ok) {
+                    const errorData = await response.json();
+                    showAlert(`Lỗi khi gửi yêu cầu thanh toán: ${errorData.message || 'Không xác định'}`, 'error');
+                    hideLoading();
+                    submitBtn.classList.remove('loading');
+                    submitBtn.disabled = false;
+                    return false;
+                }
+
+                const result = await response.json();
+                const cartItemIds = selectedItems.map(item => item.iD_GioHang_ChiTiet);
+
+                if (isVNPAY) {
+                    const paymentData = {
+                        orderId: checkoutData.ma_Hoa_Don,
+                        orderType: 'string',
+                        amount: checkoutData.tong_Tien,
+                        orderDescription: 'Thanh toan don hang ' + checkoutData.ma_Hoa_Don,
+                        name: 'NGUYEN DUC PHUOC'
+                    };
+
+                    try {
+                        const paymentResponse = await fetch('https://localhost:7169/api/Payment/create', {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                                'X-CSRF-TOKEN': document.querySelector('input[name="__RequestVerificationToken"]').value
+                            },
+                            body: JSON.stringify(paymentData)
+                        });
+
+                        if (!paymentResponse.ok) {
+                            throw new Error(`HTTP error! Status: ${paymentResponse.status}`);
+                        }
+
+                        const paymentResult = await paymentResponse.json();
+                        if (paymentResult.paymentUrl) {
+                            window.open(paymentResult.paymentUrl, '_blank');
+                        } else {
+                            showAlert('Không nhận được URL thanh toán từ VNPAY.', 'error');
+                            hideLoading();
+                            submitBtn.classList.remove('loading');
+                            submitBtn.disabled = false;
+                            return false;
+                        }
+                    } catch (e) {
+                        console.error('Error creating VNPAY payment:', e);
+                        showAlert('Lỗi khi tạo yêu cầu thanh toán VNPAY. Vui lòng thử lại.', 'error');
+                        hideLoading();
+                        submitBtn.classList.remove('loading');
+                        submitBtn.disabled = false;
+                        return false;
+                    }
+                }
+
+                showAlert('Thanh toán thành công!', 'success');
+
+                const deleteSuccess = await deleteCartItems(cartItemIds);
+
+                if (deleteSuccess) {
+                    clearCartCookie();
+                    selectedItems = [];
+                    await renderCartItems();
+                }
+
+                setTimeout(() => {
+                    window.location.href = '/QLDonHangTk';
+                }, 2000);
+
+                hideLoading();
+                submitBtn.classList.remove('loading');
+                submitBtn.disabled = false;
+                return false;
+            } catch (e) {
+                console.error('Error sending checkout request:', e);
+                showAlert('Lỗi khi gửi yêu cầu thanh toán. Vui lòng thử lại.', 'error');
+                hideLoading();
+                submitBtn.classList.remove('loading');
+                submitBtn.disabled = false;
+                return false;
+            }
+        }
+
+        function showAlert(message, type) {
+            const alert = document.createElement('div');
+            alert.className = `alert-notification alert-${type} animate__animated animate__slideInRight fixed top-4 right-4 z-50 max-w-sm`;
+            alert.innerHTML = `
+                <i class="bi bi-${type === 'success' ? 'check-circle-fill' : 'exclamation-circle-fill'} mr-2 text-lg"></i>
+                <div>${message}</div>
+                <button type="button" class="close-button" onclick="this.parentElement.remove()">
+                    <i class="bi bi-x"></i>
+                </button>
+            `;
+            document.body.appendChild(alert);
+            setTimeout(() => {
+                if (alert.parentElement) {
+                    alert.remove();
+                }
+            }, 3000);
+        }
+
+        document.querySelectorAll('input[name="selectedPaymentMethod"]').forEach(input => {
+            input.addEventListener('change', updateSubmitButtonState);
+        });
+
+        document.getElementById('addressSelect')?.addEventListener('change', updateSelectedAddress);
+
+        window.addEventListener('load', updateSelectedAddress);
     </script>
