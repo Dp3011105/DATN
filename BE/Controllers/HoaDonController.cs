@@ -19,17 +19,15 @@ namespace BE.Controllers
             _repository = repository;
             _emailService = emailService;
         }
-        // GET api/HoaDon  -> (giữ nguyên: nếu bạn đang trả DTO ở repo thì giữ như cũ)
+
         [HttpGet]
         public async Task<ActionResult<IEnumerable<object>>> GetAll()
-            => Ok(await _repository.GetAllAsync()); // có thể là DTO hoặc projection entity của bạn
+            => Ok(await _repository.GetAllAsync()); // DTO list (giữ như cũ)
 
-        // GET api/HoaDon/entities -> trả entity (giữ tương thích code FE cũ)
         [HttpGet("entities")]
         public async Task<ActionResult<IEnumerable<HoaDon>>> GetAllEntities()
-            => Ok(await _repository.GetAllEntitiesAsync());
+            => Ok(await _repository.GetAllEntitiesAsync());   // ⭐ đã Include KH & ĐC ở repo
 
-        // GET api/HoaDon/5
         [HttpGet("{id:int}")]
         public async Task<IActionResult> GetById(int id)
         {
@@ -38,7 +36,6 @@ namespace BE.Controllers
             return Ok(hoaDon);
         }
 
-        // POST api/HoaDon
         [HttpPost]
         public async Task<IActionResult> Create([FromBody] HoaDon hoaDon)
         {
@@ -47,7 +44,6 @@ namespace BE.Controllers
             return CreatedAtAction(nameof(GetById), new { id = hoaDon.ID_Hoa_Don }, hoaDon);
         }
 
-        // PUT api/HoaDon/5
         [HttpPut("{id:int}")]
         public async Task<IActionResult> Update(int id, [FromBody] HoaDon hoaDon)
         {
@@ -58,7 +54,6 @@ namespace BE.Controllers
             return NoContent();
         }
 
-        // DELETE api/HoaDon/5
         [HttpDelete("{id:int}")]
         public async Task<IActionResult> Delete(int id)
         {
@@ -66,37 +61,22 @@ namespace BE.Controllers
             return NoContent();
         }
 
-        // -------- PATCH trạng thái --------
         public class UpdateTrangThaiRequest
         {
             public string TrangThai { get; set; } = default!;
             public string? LyDoHuy { get; set; }
         }
 
-        // PATCH api/HoaDon/5/TrangThai
-        //[HttpPatch("{id:int}/TrangThai")]
-        //public async Task<IActionResult> UpdateTrangThai(int id, [FromBody] UpdateTrangThaiRequest req)
-        //{
-        //    if (req == null || string.IsNullOrWhiteSpace(req.TrangThai))
-        //        return BadRequest("Thiếu trạng thái.");
+        [HttpPatch("{id:int}/TrangThai")]
+        public async Task<IActionResult> UpdateTrangThai(int id, [FromBody] UpdateTrangThaiRequest req)
+        {
+            if (req == null || string.IsNullOrWhiteSpace(req.TrangThai))
+                return BadRequest("Thiếu trạng thái.");
 
-        //    var ok = await _repository.UpdateTrangThaiAsync(id, req.TrangThai, req.LyDoHuy);
-        //    return ok ? NoContent() : NotFound();
-        //}
+            var ok = await _repository.UpdateTrangThaiAsync(id, req.TrangThai, req.LyDoHuy, _emailService);
+            return ok ? NoContent() : NotFound();
+        }
 
-        // -------- Update để dùng có gmail nhé Phúc Beo --------
-        // PATCH api/HoaDon/5/TrangThai
-                        [HttpPatch("{id:int}/TrangThai")]
-                        public async Task<IActionResult> UpdateTrangThai(int id, [FromBody] UpdateTrangThaiRequest req)
-                        {
-                            if (req == null || string.IsNullOrWhiteSpace(req.TrangThai))
-                                return BadRequest("Thiếu trạng thái.");
-
-                            var ok = await _repository.UpdateTrangThaiAsync(id, req.TrangThai, req.LyDoHuy, _emailService);
-                            return ok ? NoContent() : NotFound();
-                        }
-
-        // -------- HỦY + RESTOCK (KHÔNG TẠO DTO FILE MỚI) --------
         public class RestockItem
         {
             public int HoaDonChiTietId { get; set; }
@@ -109,7 +89,6 @@ namespace BE.Controllers
             public List<RestockItem> Items { get; set; } = new();
         }
 
-        // POST api/HoaDon/5/cancel-with-restock
         [HttpPost("{id:int}/cancel-with-restock")]
         public async Task<IActionResult> CancelWithRestock(int id, [FromBody] CancelWithRestockRequest req)
         {

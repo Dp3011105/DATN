@@ -14,6 +14,7 @@
     string HumanStatus(string db) => db switch
     {
         "Chua_Xac_Nhan" => "Chờ xác nhận",
+        "Chua_Thanh_Toan" => "Chưa Thanh Toán",
         "Da_Xac_Nhan" => "Chờ giao",
         "Dang_Xu_Ly" => "Đang xử lý",
         "Dang_Giao_Hang" => "Vận chuyển",
@@ -25,6 +26,7 @@
     string BadgeClass(string db) => db switch
     {
         "Chua_Xac_Nhan" => "text-bg-warning",
+        "Chua_Thanh_Toan" => "text-bg-dark",
         "Da_Xac_Nhan" => "text-bg-primary",
         "Dang_Xu_Ly" => "text-bg-secondary",
         "Dang_Giao_Hang" => "text-bg-info",
@@ -50,7 +52,12 @@
 
     @if (TempData["msg"] is string msg && !string.IsNullOrWhiteSpace(msg))
     {
-        <div class="alert alert-info py-2">@msg</div>
+        <div class="toast align-items-center text-bg-info border-0 show position-fixed top-0 end-0 m-3" role="alert">
+            <div class="d-flex">
+                <div class="toast-body">@msg</div>
+                <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
+            </div>
+        </div>
     }
 
     <form method="get" class="d-flex flex-wrap align-items-center gap-2 mb-3">
@@ -134,7 +141,7 @@
                                 <a class="btn btn-sm btn-outline-secondary me-1"
                                    href="@Url.Action("ChiTiet", "QuanLyDonHang", new { id = hd.ID_Hoa_Don })">Chi tiết</a>
 
-                                @* Bước 1: Xác nhận *@
+                                @* Các nút chuyển trạng thái giữ nguyên *@
                                 @if (string.Equals(dbStatus, "Chua_Xac_Nhan", StringComparison.OrdinalIgnoreCase))
                                 {
                                     <form method="post" class="d-inline" action="@Url.Action("XacNhan","QuanLyDonHang")">
@@ -144,7 +151,6 @@
                                     </form>
                                 }
 
-                                @* Bước 2: Bắt đầu xử lý *@
                                 @if (string.Equals(dbStatus, "Da_Xac_Nhan", StringComparison.OrdinalIgnoreCase))
                                 {
                                     <form method="post" class="d-inline" action="@Url.Action("BatDauXuLy","QuanLyDonHang")">
@@ -154,7 +160,6 @@
                                     </form>
                                 }
 
-                                @* Bước 3: Bắt đầu giao *@
                                 @if (string.Equals(dbStatus, "Dang_Xu_Ly", StringComparison.OrdinalIgnoreCase))
                                 {
                                     <form method="post" class="d-inline" action="@Url.Action("BatDauGiaoHang","QuanLyDonHang")">
@@ -164,7 +169,6 @@
                                     </form>
                                 }
 
-                                @* Bước 4: Giao thành công *@
                                 @if (string.Equals(dbStatus, "Dang_Giao_Hang", StringComparison.OrdinalIgnoreCase))
                                 {
                                     <form method="post" class="d-inline" action="@Url.Action("GiaoHangThanhCong","QuanLyDonHang")">
@@ -174,17 +178,28 @@
                                     </form>
                                 }
 
-                                @* Hủy *@
+                                @* Nút Hủy *@
                                 @if (!string.Equals(dbStatus, "Hoan_Thanh", StringComparison.OrdinalIgnoreCase)
                                                         && !string.Equals(dbStatus, "Huy_Don", StringComparison.OrdinalIgnoreCase))
                                 {
-                                    <button type="button" class="btn btn-sm btn-outline-danger"
-                                            data-bs-toggle="modal"
-                                            data-bs-target="#modalHuyDon"
-                                            data-id="@hd.ID_Hoa_Don"
-                                            data-ma="@hd.Ma_Hoa_Don">
-                                        Hủy
-                                    </button>
+                                    if (string.Equals(dbStatus, "Chua_Thanh_Toan", StringComparison.OrdinalIgnoreCase))
+                                    {
+                                        <button type="button" class="btn btn-sm btn-outline-danger" disabled
+                                                title="Trạng Thái Chưa Thanh Toán chỉ được Hủy bởi hệ thống tự động. Vui lòng đợi chuyển qua trạng thái 'Đã Xác nhận'.">
+                                            Hủy
+                                        </button>
+                                    }
+                                    else
+                                    {
+                                        <button type="button" class="btn btn-sm btn-outline-danger"
+                                                data-bs-toggle="modal"
+                                                data-bs-target="#modalHuyDon"
+                                                data-id="@hd.ID_Hoa_Don"
+                                                data-ma="@hd.Ma_Hoa_Don"
+                                                data-status="@dbStatus">
+                                            Hủy
+                                        </button>
+                                    }
                                 }
                             </td>
                         </tr>
@@ -207,6 +222,7 @@
             <form id="form-huy-don" method="post" action="@Url.Action("Huy","QuanLyDonHang")">
                 @Html.AntiForgeryToken()
                 <input type="hidden" name="id" id="huy-id" />
+                <input type="hidden" name="status" id="huy-status" />
 
                 <div class="modal-body">
                     <div class="mb-3">
@@ -214,29 +230,35 @@
                         <textarea class="form-control" id="huy-lydo" name="lyDo" rows="2" required></textarea>
                     </div>
 
-                    <div class="d-flex justify-content-between align-items-center mb-2">
-                        <div class="fw-semibold">Khôi phục tồn cho các cốc đã chọn</div>
-                        <div class="form-check">
-                            <input class="form-check-input" type="checkbox" id="chk-all" />
-                            <label class="form-check-label" for="chk-all">Chọn tất cả</label>
+                    <div id="khophuc-wrapper">
+                        <div class="d-flex justify-content-between align-items-center mb-2">
+                            <div class="fw-semibold">Khôi phục tồn cho các cốc đã chọn</div>
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" id="chk-all" />
+                                <label class="form-check-label" for="chk-all">Chọn tất cả</label>
+                            </div>
+                        </div>
+
+                        <div class="table-responsive border rounded">
+                            <table class="table table-sm mb-0" id="tbl-kphoiphuc">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th style="width:40px"></th>
+                                        <th>Mặt hàng</th>
+                                        <th class="text-end" style="width:110px">SL đặt</th>
+                                        <th class="text-end" style="width:150px">SL khôi phục</th>
+                                        <th style="width:120px">Trạng thái pha</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr><td colspan="5" class="text-muted">Đang tải...</td></tr>
+                                </tbody>
+                            </table>
                         </div>
                     </div>
 
-                    <div class="table-responsive border rounded">
-                        <table class="table table-sm mb-0" id="tbl-kphoiphuc">
-                            <thead class="table-light">
-                                <tr>
-                                    <th style="width:40px"></th>
-                                    <th>Mặt hàng</th>
-                                    <th class="text-end" style="width:110px">SL đặt</th>
-                                    <th class="text-end" style="width:150px">SL khôi phục</th>
-                                    <th style="width:120px">Trạng thái pha</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <tr><td colspan="5" class="text-muted">Đang tải...</td></tr>
-                            </tbody>
-                        </table>
+                    <div id="no-restock-alert" class="alert alert-warning d-none">
+                        Đơn hàng này chưa trừ số lượng nên không thể hoàn lại số lượng sản phẩm.
                     </div>
                 </div>
 
@@ -279,34 +301,48 @@
             const btn = e.relatedTarget;
             const id = btn?.getAttribute('data-id');
             const ma = btn?.getAttribute('data-ma');
+            const status = btn?.getAttribute('data-status') || "";
 
             document.getElementById('huy-id').value = id || '';
+            document.getElementById('huy-status').value = status || '';
             document.getElementById('huy-mahd').textContent = ma ? `(#${ma})` : '';
+
             const textarea = document.getElementById('huy-lydo');
             if (textarea) textarea.value = '';
 
             const body = tblBody();
-            body.innerHTML = `<tr><td colspan="5" class="text-muted">Đang tải...</td></tr>`;
 
-            try {
-                const url = `@Url.Action("ChiTietJson", "QuanLyDonHang")?id=${0}`.replace('0', encodeURIComponent(id));
-                const res = await fetch(url, { credentials: 'same-origin' });
-                const data = await res.json();
+            // Nếu đơn hàng = Chua_Xac_Nhan → ẩn bảng khôi phục
+            const wrapper = document.getElementById('khophuc-wrapper');
+            const alertBox = document.getElementById('no-restock-alert');
+            if (status === "Chua_Xac_Nhan") {
+                wrapper.classList.add("d-none");
+                alertBox.classList.remove("d-none");
+            } else {
+                wrapper.classList.remove("d-none");
+                alertBox.classList.add("d-none");
 
-                if (!data?.ok) {
-                    body.innerHTML = `<tr><td colspan="5" class="text-danger">Không tải được chi tiết hóa đơn.</td></tr>`;
-                    return;
+                body.innerHTML = `<tr><td colspan="5" class="text-muted">Đang tải...</td></tr>`;
+                try {
+                    const url = `@Url.Action("ChiTietJson", "QuanLyDonHang")?id=${0}`.replace('0', encodeURIComponent(id));
+                    const res = await fetch(url, { credentials: 'same-origin' });
+                    const data = await res.json();
+
+                    if (!data?.ok) {
+                        body.innerHTML = `<tr><td colspan="5" class="text-danger">Không tải được chi tiết hóa đơn.</td></tr>`;
+                        return;
+                    }
+
+                    if (!data.items || data.items.length === 0) {
+                        body.innerHTML = `<tr><td colspan="5" class="text-muted">Đơn hàng không có chi tiết.</td></tr>`;
+                        return;
+                    }
+
+                    body.innerHTML = '';
+                    data.items.forEach(it => body.appendChild(buildRow(it)));
+                } catch (err) {
+                    body.innerHTML = `<tr><td colspan="5" class="text-danger">Lỗi khi tải dữ liệu.</td></tr>`;
                 }
-
-                if (!data.items || data.items.length === 0) {
-                    body.innerHTML = `<tr><td colspan="5" class="text-muted">Đơn hàng không có chi tiết.</td></tr>`;
-                    return;
-                }
-
-                body.innerHTML = '';
-                data.items.forEach(it => body.appendChild(buildRow(it)));
-            } catch (err) {
-                body.innerHTML = `<tr><td colspan="5" class="text-danger">Lỗi khi tải dữ liệu.</td></tr>`;
             }
         });
     }
@@ -330,35 +366,23 @@
             const btn = document.getElementById('btn-huy');
             if (btn) btn.disabled = true;
 
-            // Xóa các input cũ nếu có (tránh trùng)
             form.querySelectorAll('input[name="khoiPhucIds"], input[name="khoiPhucQtys"]').forEach(n => n.remove());
 
             const rows = document.querySelectorAll('#tbl-kphoiphuc tbody tr');
             rows.forEach(tr => {
                 const cb = tr.querySelector('.chk-row');
-                const qtyInput = tr.querySelector('.input-sl');
-                if (!cb || !qtyInput) return;
+                const inp = tr.querySelector('.input-sl');
+                if (cb?.checked && inp) {
+                    const id = inp.getAttribute('data-id');
+                    const qty = inp.value;
+                    if (id) {
+                        const hidden1 = document.createElement('input');
+                        hidden1.type = 'hidden'; hidden1.name = 'khoiPhucIds'; hidden1.value = id;
+                        form.appendChild(hidden1);
 
-                if (cb.checked) {
-                    const id = parseInt(cb.getAttribute('data-id') || '0');
-                    let q = parseInt(qtyInput.value || '0');
-                    const max = parseInt(qtyInput.getAttribute('max') || '0');
-                    if (Number.isNaN(q) || q < 0) q = 0;
-                    if (q > max) q = max;
-
-                    if (id > 0 && q > 0) {
-                        const hid1 = document.createElement('input');
-                        hid1.type = 'hidden';
-                        hid1.name = 'khoiPhucIds';
-                        hid1.value = String(id);
-
-                        const hid2 = document.createElement('input');
-                        hid2.type = 'hidden';
-                        hid2.name = 'khoiPhucQtys';
-                        hid2.value = String(q);
-
-                        form.appendChild(hid1);
-                        form.appendChild(hid2);
+                        const hidden2 = document.createElement('input');
+                        hidden2.type = 'hidden'; hidden2.name = 'khoiPhucQtys'; hidden2.value = qty;
+                        form.appendChild(hidden2);
                     }
                 }
             });
