@@ -3,14 +3,7 @@
     var activeAllProducts = Model.AllProducts
         .Where(p => p.Trang_Thai && p.So_Luong > 0)
         .OrderByDescending(p => p.ID_San_Pham)
-        .Take(9)
         .ToList();
-    var activeMostPurchased = Model.MostPurchasedProducts
-        .Where(p => p.Trang_Thai && p.So_Luong > 0)
-        .Take(10)
-        .ToList();
-    var top5MostPurchased = activeMostPurchased.Take(5).ToList();
-    var next5MostPurchased = activeMostPurchased.Skip(5).Take(5).ToList();
     TimeZoneInfo vnTimeZone;
     try
     {
@@ -28,7 +21,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Menu Sản Phẩm</title>
+    <title>Sản Phẩm</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css" />
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet">
@@ -66,87 +59,6 @@
             height: 60vh;
             background: url('https://theme.hstatic.net/200000399631/1000761068/14/slideshow_1.jpg?v=733') no-repeat center center/cover;
             overflow: hidden;
-        }
-        /* Most Purchased Sections */
-        .most-purchased-section {
-            background: linear-gradient(135deg, #FFF7ED 0%, #FEF3C7 100%);
-            border-radius: 12px;
-            padding: 1.5rem;
-            margin: 1.5rem 0;
-            box-shadow: 0 2px 8px rgba(245, 158, 11, 0.1);
-        }
-
-        .most-purchased-title {
-            text-align: center;
-            font-size: 1.5rem;
-            font-weight: 700;
-            color: var(--secondary);
-            margin-bottom: 1rem;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 0.5rem;
-        }
-
-        .hot-badge {
-            background: linear-gradient(135deg, var(--hot-badge), #DC2626);
-            color: white;
-            font-size: 0.65rem;
-            font-weight: 600;
-            padding: 3px 10px;
-            border-radius: 16px;
-            animation: pulse 2s infinite;
-            z-index: 10;
-        }
-
-        .most-purchased-card {
-            transition: all 0.3s ease;
-            border-radius: 12px;
-            overflow: hidden;
-            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
-            background: var(--card-bg);
-            height: 100%;
-            display: flex;
-            flex-direction: column;
-            position: relative;
-        }
-
-            .most-purchased-card:hover {
-                transform: translateY(-4px) scale(1.02);
-                box-shadow: 0 8px 16px rgba(245, 158, 11, 0.2);
-            }
-
-        .most-purchased-image-container {
-            position: relative;
-            width: 100%;
-            padding-top: 75%;
-            overflow: hidden;
-        }
-
-        .most-purchased-image {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
-            transition: transform 0.3s ease;
-        }
-
-        .most-purchased-card:hover .most-purchased-image {
-            transform: scale(1.03);
-        }
-        keyframes pulse {
-            0%, 100%
-
-        {
-            transform: scale(1);
-        }
-
-        50% {
-            transform: scale(1.08);
-        }
-
         }
         /* All Products */
         .product-card {
@@ -210,8 +122,6 @@
         /* Search */
         .search-container {
             position: relative;
-            max-width: 500px;
-            margin: 0 auto 1.5rem;
         }
 
         .search-input {
@@ -474,23 +384,15 @@
             height: 40vh;
         }
 
-        .most-purchased-section .grid {
-            grid-template-columns: repeat(2, 1fr);
-        }
-
         .main-grid .grid {
             grid-template-columns: repeat(2, 1fr);
         }
 
         }
         media (max-width: 480px) {
-            .most-purchased-section .grid
+            .main-grid .grid
 
         {
-            grid-template-columns: 1fr;
-        }
-
-        .main-grid .grid {
             grid-template-columns: 1fr;
         }
 
@@ -579,203 +481,100 @@
                     </button>
                 </div>
             }
-            <!-- Search Section -->
+            <!-- Title Section -->
             <div class="text-center mb-6">
                 <h1 class="text-2xl md:text-3xl font-bold text-gray-800 mb-3">Thực Đơn</h1>
                 <p class="text-gray-600 text-sm max-w-xl mx-auto">Khám phá đồ uống tươi ngon</p>
-                <div class="search-container">
-                    <i class="bi bi-search search-icon"></i>
-                    <input type="text" id="searchInput" class="search-input" placeholder="Tìm kiếm sản phẩm...">
-                    <button id="searchButton" class="search-button">Tìm</button>
+            </div>
+            <!-- Main Content with Sidebar -->
+            <div class="lg:grid lg:grid-cols-4 gap-6 mb-6">
+                <div class="lg:col-span-3">
+                    <div class="main-grid">
+                        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4" id="productsGrid">
+                            @foreach (var product in activeAllProducts)
+                            {
+                                bool hasActivePromotion = false;
+                                decimal basePrice = product.Gia;
+                                string promotionName = "";
+                                if (product.KhuyenMais != null && product.KhuyenMais.Any())
+                                {
+                                    foreach (var km in product.KhuyenMais)
+                                    {
+                                        if (currentDate >= km.Ngay_Bat_Dau && currentDate <= km.Ngay_Ket_Thuc)
+                                        {
+                                            hasActivePromotion = true;
+                                            basePrice = km.Gia_Giam ?? product.Gia;
+                                            promotionName = km.Ten_Khuyen_Mai;
+                                            break;
+                                        }
+                                    }
+                                }
+                                <div class="product-card animate__animated animate__fadeIn" data-name="@product.Ten_San_Pham.ToLower()" data-id="@product.ID_San_Pham" data-has-promotion="@(hasActivePromotion ? "true" : "false")">
+                                    <div class="product-image-container">
+                                        <img src="@("https://localhost:7169" + product.Hinh_Anh)" alt="@product.Ten_San_Pham" class="product-image" />
+                                        @if (hasActivePromotion)
+                                        {
+                                            <div class="promotion-badge">Khuyến mãi</div>
+                                        }
+                                    </div>
+                                    <div class="p-3 flex flex-col flex-grow">
+                                        <h3 class="text-sm font-semibold text-gray-800 mb-1">@product.Ten_San_Pham</h3>
+                                        <p class="text-gray-600 text-xs mb-2 flex-grow">@(product.Mo_Ta.Length > 80 ? product.Mo_Ta.Substring(0, 80) + "..." : product.Mo_Ta)</p>
+                                        <div class="price-container">
+                                            @if (hasActivePromotion)
+                                            {
+                                                <span class="original-price text-xs">@string.Format("{0:N0} đ", product.Gia)</span>
+                                                <span class="discounted-price text-sm font-semibold text-green-600">@string.Format("{0:N0} đ", basePrice)</span>
+                                            }
+                                            else
+                                            {
+                                                <span class="regular-price text-sm font-semibold">@string.Format("{0:N0} đ", product.Gia)</span>
+                                            }
+                                        </div>
+                                        <div class="mt-auto pt-2 flex justify-between items-center">
+                                            <span class="text-xs text-gray-500">@product.So_Luong sẵn có</span>
+                                            <button class="view-details-btn text-xs text-blue-600 font-medium hover:text-blue-800 transition">
+                                                Chi tiết
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                            }
+                        </div>
+                        <div id="paginationNav" class="flex justify-center items-center space-x-2 mt-8 mb-6">
+                            <button id="prevPage" class="px-3 py-1 bg-gray-200 text-gray-700 rounded disabled:opacity-50 disabled:cursor-not-allowed">Trước</button>
+                            <span id="pageInfo" class="mx-2 text-gray-600"></span>
+                            <button id="nextPage" class="px-3 py-1 bg-gray-200 text-gray-700 rounded disabled:opacity-50 disabled:cursor-not-allowed">Sau</button>
+                        </div>
+                    </div>
+                </div>
+                <div class="lg:col-span-1 space-y-4">
+                    <!-- Search Section -->
+                    <div class="search-container bg-white rounded-lg shadow p-4">
+                        <i class="bi bi-search search-icon"></i>
+                        <input type="text" id="searchInput" class="search-input" placeholder="Tìm kiếm sản phẩm...">
+                        <button id="searchButton" class="search-button">Tìm</button>
+                    </div>
+                    <!-- Filter Section -->
+                    <div class="filter-section bg-white rounded-lg shadow p-4">
+                        <h3 class="font-semibold mb-3 text-gray-800">Bộ lọc</h3>
+                        <select id="filterSelect" class="w-full p-2 border border-gray-300 rounded-md mb-2">
+                            <option value="">Tất cả sản phẩm</option>
+                            <option value="promotion">Sản phẩm khuyến mãi</option>
+                            <option value="vani">Vani</option>
+                            <option value="việt quất">Việt quất</option>
+                            <option value="cà phê">Cà phê</option>
+                            <option value="chocolate">Chocolate</option>
+                            <option value="truyền thống">Truyền thống</option>
+                        </select>
+                        <button id="filterButton" class="w-full bg-blue-600 text-white py-2 rounded-md hover:bg-blue-700 transition">Tìm theo bộ lọc</button>
+                    </div>
                 </div>
             </div>
-            <!-- Most Purchased Section: Top 5 -->
-            @if (top5MostPurchased.Any())
-            {
-                <section class="most-purchased-section animate__animated animate__fadeInUp">
-                    <h2 class="most-purchased-title">
-                        <i class="bi bi-fire text-xl text-red-500"></i>
-                        Sản Phẩm Phổ Biến Nhất
-                    </h2>
-                    <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
-                        @foreach (var product in top5MostPurchased)
-                        {
-                            bool hasActivePromotion = false;
-                            decimal basePrice = product.Gia;
-                            string promotionName = "";
-                            if (product.KhuyenMais != null && product.KhuyenMais.Any())
-                            {
-                                foreach (var km in product.KhuyenMais)
-                                {
-                                    if (currentDate >= km.Ngay_Bat_Dau && currentDate <= km.Ngay_Ket_Thuc)
-                                    {
-                                        hasActivePromotion = true;
-                                        basePrice = km.Gia_Giam ?? product.Gia;
-                                        promotionName = km.Ten_Khuyen_Mai;
-                                        break;
-                                    }
-                                }
-                            }
-                            <div class="most-purchased-card animate__animated animate__zoomIn" data-name="@product.Ten_San_Pham.ToLower()" data-id="@product.ID_San_Pham">
-                                <div class="most-purchased-image-container">
-                                    <img src="@("https://localhost:7169" + product.Hinh_Anh)" alt="@product.Ten_San_Pham" class="most-purchased-image" />
-                                    <div class="hot-badge absolute top-3 left-3">Hot 🔥</div>
-                                    @if (hasActivePromotion)
-                                    {
-                                        <div class="promotion-badge absolute top-3 right-3">Khuyến mãi</div>
-                                    }
-                                </div>
-                                <div class="p-3 flex flex-col flex-grow">
-                                    <h3 class="text-base font-semibold text-gray-800 mb-1">@product.Ten_San_Pham</h3>
-                                    <p class="text-gray-600 text-xs mb-2 flex-grow">@(product.Mo_Ta.Length > 80 ? product.Mo_Ta.Substring(0, 80) + "..." : product.Mo_Ta)</p>
-                                    <div class="price-container mb-2">
-                                        @if (hasActivePromotion)
-                                        {
-                                            <span class="original-price text-sm">@string.Format("{0:N0} đ", product.Gia)</span>
-                                            <span class="discounted-price text-base font-semibold text-green-600">@string.Format("{0:N0} đ", basePrice)</span>
-                                        }
-                                        else
-                                        {
-                                            <span class="regular-price text-base font-semibold">@string.Format("{0:N0} đ", product.Gia)</span>
-                                        }
-                                    </div>
-                                    <div class="mt-auto flex justify-between items-center">
-                                        <span class="text-xs text-gray-500">@product.So_Luong sẵn có</span>
-                                        <button class="view-details-btn text-xs text-blue-600 font-medium hover:text-blue-800 transition">
-                                            Chi tiết
-                                        </button>
-                                    </div>
-                                </div>
-                            </div>
-                        }
-                    </div>
-                </section>
-            }
-            <!-- Most Purchased Section: Next 5 -->
-            @if (next5MostPurchased.Any())
-            {
-                <section class="most-purchased-section animate__animated animate__fadeInUp">
-                    <h2 class="most-purchased-title">
-                        <i class="bi bi-star-fill text-xl text-yellow-500"></i>
-                        Sản Phẩm Mua Nhiều Nhất
-                    </h2>
-                    <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
-                        @foreach (var product in next5MostPurchased)
-                        {
-                            bool hasActivePromotion = false;
-                            decimal basePrice = product.Gia;
-                            string promotionName = "";
-                            if (product.KhuyenMais != null && product.KhuyenMais.Any())
-                            {
-                                foreach (var km in product.KhuyenMais)
-                                {
-                                    if (currentDate >= km.Ngay_Bat_Dau && currentDate <= km.Ngay_Ket_Thuc)
-                                    {
-                                        hasActivePromotion = true;
-                                        basePrice = km.Gia_Giam ?? product.Gia;
-                                        promotionName = km.Ten_Khuyen_Mai;
-                                        break;
-                                    }
-                                }
-                            }
-                            <div class="most-purchased-card animate__animated animate__zoomIn" data-name="@product.Ten_San_Pham.ToLower()" data-id="@product.ID_San_Pham">
-                                <div class="most-purchased-image-container">
-                                    <img src="@("https://localhost:7169" + product.Hinh_Anh)" alt="@product.Ten_San_Pham" class="most-purchased-image" />
-                                    <div class="hot-badge absolute top-3 left-3">Hot 🔥</div>
-                                    @if (hasActivePromotion)
-                                    {
-                                        <div class="promotion-badge absolute top-3 right-3">Khuyến mãi</div>
-                                    }
-                                </div>
-                                <div class="p-3 flex flex-col flex-grow">
-                                    <h3 class="text-base font-semibold text-gray-800 mb-1">@product.Ten_San_Pham</h3>
-                                    <p class="text-gray-600 text-xs mb-2 flex-grow">@(product.Mo_Ta.Length > 80 ? product.Mo_Ta.Substring(0, 80) + "..." : product.Mo_Ta)</p>
-                                    <div class="price-container mb-2">
-                                        @if (hasActivePromotion)
-                                        {
-                                            <span class="original-price text-sm">@string.Format("{0:N0} đ", product.Gia)</span>
-                                            <span class="discounted-price text-base font-semibold text-green-600">@string.Format("{0:N0} đ", basePrice)</span>
-                                        }
-                                        else
-                                        {
-                                            <span class="regular-price text-base font-semibold">@string.Format("{0:N0} đ", product.Gia)</span>
-                                        }
-                                    </div>
-                                    <div class="mt-auto flex justify-between items-center">
-                                        <span class="text-xs text-gray-500">@product.So_Luong sẵn có</span>
-                                        <button class="view-details-btn text-xs text-blue-600 font-medium hover:text-blue-800 transition">
-                                            Chi tiết
-                                        </button>
-                                    </div>
-                                </div>
-                            </div>
-                        }
-                    </div>
-                </section>
-            }
-            <!-- Main Content Grid: All Products -->
-            <div class="main-grid">
-                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                    @foreach (var product in activeAllProducts)
-                    {
-                        bool hasActivePromotion = false;
-                        decimal basePrice = product.Gia;
-                        string promotionName = "";
-                        if (product.KhuyenMais != null && product.KhuyenMais.Any())
-                        {
-                            foreach (var km in product.KhuyenMais)
-                            {
-                                if (currentDate >= km.Ngay_Bat_Dau && currentDate <= km.Ngay_Ket_Thuc)
-                                {
-                                    hasActivePromotion = true;
-                                    basePrice = km.Gia_Giam ?? product.Gia;
-                                    promotionName = km.Ten_Khuyen_Mai;
-                                    break;
-                                }
-                            }
-                        }
-                        <div class="product-card animate__animated animate__fadeIn" data-name="@product.Ten_San_Pham.ToLower()" data-id="@product.ID_San_Pham">
-                            <div class="product-image-container">
-                                <img src="@("https://localhost:7169" + product.Hinh_Anh)" alt="@product.Ten_San_Pham" class="product-image" />
-                                @if (hasActivePromotion)
-                                {
-                                    <div class="promotion-badge">Khuyến mãi</div>
-                                }
-                            </div>
-                            <div class="p-3 flex flex-col flex-grow">
-                                <h3 class="text-sm font-semibold text-gray-800 mb-1">@product.Ten_San_Pham</h3>
-                                <p class="text-gray-600 text-xs mb-2 flex-grow">@(product.Mo_Ta.Length > 80 ? product.Mo_Ta.Substring(0, 80) + "..." : product.Mo_Ta)</p>
-                                <div class="price-container">
-                                    @if (hasActivePromotion)
-                                    {
-                                        <span class="original-price text-xs">@string.Format("{0:N0} đ", product.Gia)</span>
-                                        <span class="discounted-price text-sm font-semibold text-green-600">@string.Format("{0:N0} đ", basePrice)</span>
-                                    }
-                                    else
-                                    {
-                                        <span class="regular-price text-sm font-semibold">@string.Format("{0:N0} đ", product.Gia)</span>
-                                    }
-                                </div>
-                                <div class="mt-auto pt-2 flex justify-between items-center">
-                                    <span class="text-xs text-gray-500">@product.So_Luong sẵn có</span>
-                                    <button class="view-details-btn text-xs text-blue-600 font-medium hover:text-blue-800 transition">
-                                        Chi tiết
-                                    </button>
-                                </div>
-                            </div>
-                        </div>
-                    }
-                </div>
-                <div class="text-center mt-6">
-                    <a href="/SanPham" class="inline-block bg-blue-600 text-white font-medium py-2 px-4 rounded-lg hover:bg-blue-700 transition">
-                        Xem thêm sản phẩm
-                    </a>
-                </div>
-                <div id="noResults" class="hidden text-center py-8">
-                    <i class="bi bi-search text-3xl text-gray-300 mb-3"></i>
-                    <h3 class="text-lg font-medium text-gray-500">Không tìm thấy sản phẩm</h3>
-                    <p class="text-gray-400 text-sm mt-1">Thử từ khóa khác</p>
-                </div>
+            <div id="noResults" class="hidden text-center py-8 lg:col-span-4">
+                <i class="bi bi-search text-3xl text-gray-300 mb-3"></i>
+                <h3 class="text-lg font-medium text-gray-500">Không tìm thấy sản phẩm</h3>
+                <p class="text-gray-400 text-sm mt-1">Thử từ khóa khác</p>
             </div>
         </div>
     </div>
@@ -924,8 +723,11 @@
         document.addEventListener('DOMContentLoaded', function () {
             const searchInput = document.getElementById('searchInput');
             const searchButton = document.getElementById('searchButton');
-            const productCards = document.querySelectorAll('.product-card, .most-purchased-card');
+            const filterSelect = document.getElementById('filterSelect');
+            const filterButton = document.getElementById('filterButton');
+            const productCards = document.querySelectorAll('.product-card');
             const noResults = document.getElementById('noResults');
+            const paginationNav = document.getElementById('paginationNav');
             const modalElement = document.getElementById('productDetailsModal');
             const modal = new bootstrap.Modal(modalElement);
             const quantityInput = document.getElementById('quantityInput');
@@ -937,24 +739,27 @@
             const sweetnessError = document.getElementById('sweetnessError');
             const decreaseQuantity = document.getElementById('decreaseQuantity');
             const increaseQuantity = document.getElementById('increaseQuantity');
+            const prevPage = document.getElementById('prevPage');
+            const nextPage = document.getElementById('nextPage');
+            const pageInfo = document.getElementById('pageInfo');
             let userId = null;
             @if (Context.Request.Cookies["UserData"] != null)
             {
-                    <text>
-                    try {
-                        const userData = JSON.parse('@Html.Raw(Context.Request.Cookies["UserData"])');
-                        userId = userData.ID_Khach_Hang;
-                        console.log('Parsed userId from UserData cookie:', userId);
-                    } catch (e) {
-                        console.error('Error parsing UserData cookie:', e);
-                    }
-                    </text>
+                        <text>
+                        try {
+                            const userData = JSON.parse('@Html.Raw(Context.Request.Cookies["UserData"])');
+                            userId = userData.ID_Khach_Hang;
+                            console.log('Parsed userId from UserData cookie:', userId);
+                        } catch (e) {
+                            console.error('Error parsing UserData cookie:', e);
+                        }
+                        </text>
             }
             else
             {
-                    <text>
-                    console.log('No UserData cookie found');
-                    </text>
+                        <text>
+                        console.log('No UserData cookie found');
+                        </text>
             }
             let productsData = [];
             let sizesData = [];
@@ -996,12 +801,55 @@
                 chatFrame.style.display = 'none';
             });
             Promise.all([fetchProducts(), fetchSizes()]);
-            function filterProducts() {
-                const searchTerm = searchInput.value.toLowerCase().trim();
+            const productsPerPage = 12;
+            let currentPage = 1;
+            let totalProducts = productCards.length;
+            let totalPages = Math.ceil(totalProducts / productsPerPage);
+            let isFiltered = false;
+            function updatePagination() {
+                pageInfo.textContent = `Trang ${currentPage} / ${totalPages}`;
+                prevPage.disabled = currentPage === 1;
+                nextPage.disabled = currentPage === totalPages;
+            }
+            function showPage(page) {
+                if (isFiltered) return;
+                const start = (page - 1) * productsPerPage;
+                const end = start + productsPerPage;
+                productCards.forEach((card, index) => {
+                    if (index >= start && index < end) {
+                        card.style.display = 'block';
+                        card.classList.add('animate__fadeIn');
+                    } else {
+                        card.style.display = 'none';
+                    }
+                });
+            }
+            prevPage.addEventListener('click', () => {
+                if (currentPage > 1) {
+                    currentPage--;
+                    showPage(currentPage);
+                    updatePagination();
+                }
+            });
+            nextPage.addEventListener('click', () => {
+                if (currentPage < totalPages) {
+                    currentPage++;
+                    showPage(currentPage);
+                    updatePagination();
+                }
+            });
+            function filterProducts(searchTerm, filterType) {
                 let visibleCount = 0;
                 productCards.forEach(card => {
                     const name = card.getAttribute('data-name');
-                    if (name.includes(searchTerm)) {
+                    const hasPromo = card.getAttribute('data-has-promotion') === 'true';
+                    let show = name.includes(searchTerm);
+                    if (filterType === 'promotion') {
+                        show = show && hasPromo;
+                    } else if (filterType) {
+                        show = show && name.includes(filterType);
+                    }
+                    if (show) {
                         card.style.display = 'block';
                         card.classList.add('animate__fadeIn');
                         visibleCount++;
@@ -1009,14 +857,34 @@
                         card.style.display = 'none';
                     }
                 });
-                noResults.classList.toggle('hidden', visibleCount > 0 || searchTerm === '');
-                if (visibleCount === 0 && searchTerm !== '') {
+                isFiltered = searchTerm !== '' || filterType !== '';
+                paginationNav.style.display = isFiltered ? 'none' : 'flex';
+                noResults.classList.toggle('hidden', visibleCount > 0);
+                if (visibleCount === 0 && (searchTerm !== '' || filterType !== '')) {
                     noResults.classList.add('animate__fadeIn');
                 }
+                if (!isFiltered) {
+                    currentPage = 1;
+                    showPage(1);
+                    updatePagination();
+                }
             }
-            searchButton.addEventListener('click', filterProducts);
+            searchButton.addEventListener('click', () => {
+                const searchTerm = searchInput.value.toLowerCase().trim();
+                const filterType = filterSelect.value;
+                filterProducts(searchTerm, filterType);
+            });
+            filterButton.addEventListener('click', () => {
+                const searchTerm = searchInput.value.toLowerCase().trim();
+                const filterType = filterSelect.value;
+                filterProducts(searchTerm, filterType);
+            });
             searchInput.addEventListener('keyup', function (e) {
-                if (e.key === 'Enter') filterProducts();
+                if (e.key === 'Enter') {
+                    const searchTerm = this.value.toLowerCase().trim();
+                    const filterType = filterSelect.value;
+                    filterProducts(searchTerm, filterType);
+                }
             });
             let basePrice = 0;
             let selectedSize = null;
@@ -1063,7 +931,7 @@
             document.querySelectorAll('.view-details-btn').forEach(btn => {
                 btn.addEventListener('click', function (e) {
                     e.stopPropagation();
-                    this.closest('.product-card, .most-purchased-card').click();
+                    this.closest('.product-card').click();
                 });
             });
             document.getElementById('modalAddToCart').addEventListener('click', async function () {
@@ -1128,7 +996,7 @@
                 decreaseQuantity.disabled = quantity <= 1;
                 increaseQuantity.disabled = quantity >= maxQuantity;
             });
-            document.querySelectorAll('.product-card, .most-purchased-card').forEach(card => {
+            document.querySelectorAll('.product-card').forEach(card => {
                 card.addEventListener('click', async function () {
                     const productId = this.getAttribute('data-id');
                     try {
@@ -1285,6 +1153,9 @@
                     }
                 });
             });
+            // Initial load
+            showPage(1);
+            updatePagination();
         });
     </script>
 </body>

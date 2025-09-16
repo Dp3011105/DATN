@@ -1,4 +1,5 @@
-﻿using FE.Models;
+﻿using FE.Filters;
+using FE.Models;
 using FE.Service;
 using FE.Service.IService;
 using Microsoft.AspNetCore.Mvc;
@@ -6,6 +7,7 @@ using System.Threading.Tasks;
 
 namespace FE.Controllers
 {
+    [RoleAuthorize(2, 3)]
     public class ProductController : Controller
     {
         private readonly IProductService _productService;

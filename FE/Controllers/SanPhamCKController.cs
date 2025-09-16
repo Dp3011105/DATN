@@ -1,31 +1,26 @@
-﻿using FE.Filters;
+﻿using FE.Models;
 using FE.Service.IService;
 using Microsoft.AspNetCore.Mvc;
-using FE.Models;
-
-//Trang dành cho Khách hàng không có tài khoản đăng nhập
 
 namespace FE.Controllers
 {
-    [RedirectBasedOnLoginFilter] // Phương thức này đươc để trong thư mục Filters nhé ae , dùng để chuyển hướng nếu người dùng chưa đăng nhập thi /home , đăng nhập rồi thì /homekhachhang
-    public class HomeKhachHangController : Controller
+    //Trang dành cho Khách hàng không có tài khoản đăng nhập
+    public class SanPhamCKController : Controller
     {
         private readonly IProductService _productService;
-
-        public HomeKhachHangController(IProductService productService)
+        public SanPhamCKController(IProductService productService)
         {
             _productService = productService;
         }
-       
+
         public async Task<IActionResult> Index()
         {
             var viewModel = new ProductViewModel
             {
-                AllProducts = await _productService.GetAllProductsAsync(),
-                MostPurchasedProducts = await _productService.GetMostPurchasedProductsAsync()
+                AllProducts = await _productService.GetAllProductsAsync()
             };
             return View(viewModel);
-        }       
+        }
 
         public async Task<IActionResult> Details(int id)
         {
@@ -36,6 +31,5 @@ namespace FE.Controllers
             }
             return View(product);
         }
-
     }
 }

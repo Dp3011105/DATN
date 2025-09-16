@@ -68,7 +68,8 @@ builder.Services.AddScoped<IAccountRepository, AccountRepository>();
 builder.Services.AddScoped<IQuanLyPhanQuyenNhanVienRepository, QuanLyPhanQuyenNhanVienRepository>();
 builder.Services.AddScoped<IKhuyenMaiSanPhamRepository, KhuyenMaiSanPhamRepository>();
 builder.Services.AddScoped<IKhuyenMaiRepository, KhuyenMaiRepository>();
-builder.Services.AddScoped<IBanHangTKRepository, BanHangTKRepository>();
+builder.Services.AddScoped<IBanHangTKRepository, BanHangTKRepository>();//Bán hàng có tài khoản 
+builder.Services.AddScoped<IBanHangCKRepository, BanHangCKRepository>();//Bán hàng Không có tài khoản nhó
 builder.Services.AddScoped<IDonHangTKRepository, DonHangTKRepository>();
 builder.Services.AddScoped<IAIRepository, AIRepository>();
 builder.Services.AddScoped<AIChatService>();
