@@ -36,18 +36,20 @@ namespace BE.models
         public string? LyDoHuyDon { get; set; }
         public string? LyDoDonHangCoVanDe { get; set; }
 
-        // Navs lớn: ignore để đơn giản hoá payload
+        // ===== Navigation properties =====
+        // ⭐ BỎ JsonIgnore để FE nhận được tên KH, SĐT và địa chỉ
         [ForeignKey(nameof(ID_Khach_Hang))]
-        [JsonIgnore, ValidateNever] public virtual KhachHang? KhachHang { get; set; }
+        [ValidateNever] public virtual KhachHang? KhachHang { get; set; }
 
+        [ForeignKey(nameof(ID_Dia_Chi))]
+        [ValidateNever] public virtual DiaChi? DiaChi { get; set; }
+
+        // Các nav lớn khác vẫn ignore để payload gọn
         [ForeignKey(nameof(ID_Nhan_Vien))]
         [JsonIgnore, ValidateNever] public virtual NhanVien? NhanVien { get; set; }
 
         [ForeignKey(nameof(ID_Hinh_Thuc_Thanh_Toan))]
         [JsonIgnore, ValidateNever] public virtual HinhThucThanhToan? HinhThucThanhToan { get; set; }
-
-        [ForeignKey(nameof(ID_Dia_Chi))]
-        [JsonIgnore, ValidateNever] public virtual DiaChi? DiaChi { get; set; }
 
         // NHẬN chi tiết từ JSON: KHÔNG JsonIgnore
         [ValidateNever] public virtual List<HoaDonChiTiet> HoaDonChiTiets { get; set; } = new();
