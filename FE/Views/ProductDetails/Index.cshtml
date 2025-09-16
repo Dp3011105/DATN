@@ -1,6 +1,58 @@
 ﻿@model FE.Models.ProductDetailViewModel
 @{
     Layout = "~/Views/Shared/_AdminLayout.cshtml";
+    ViewData["Title"] = "Quản lý chi tiết sản phẩm";
+
+    // Get current date in Vietnam time zone
+    TimeZoneInfo vnTimeZone;
+    try
+    {
+        vnTimeZone = TimeZoneInfo.FindSystemTimeZoneById("SE Asia Standard Time");
+    }
+    catch
+    {
+        vnTimeZone = TimeZoneInfo.FindSystemTimeZoneById("Asia/Ho_Chi_Minh");
+    }
+    var currentDate = TimeZoneInfo.ConvertTimeFromUtc(DateTime.UtcNow, vnTimeZone);
+
+    // Pagination parameters
+    int pageSize = 10; // Number of items per page
+    int doNgotActivePage = ViewBag.DoNgotActivePage != null ? (int)ViewBag.DoNgotActivePage : 1;
+    int doNgotInactivePage = ViewBag.DoNgotInactivePage != null ? (int)ViewBag.DoNgotInactivePage : 1;
+    int sizeActivePage = ViewBag.SizeActivePage != null ? (int)ViewBag.SizeActivePage : 1;
+    int sizeInactivePage = ViewBag.SizeInactivePage != null ? (int)ViewBag.SizeInactivePage : 1;
+    int toppingActivePage = ViewBag.ToppingActivePage != null ? (int)ViewBag.ToppingActivePage : 1;
+    int toppingInactivePage = ViewBag.ToppingInactivePage != null ? (int)ViewBag.ToppingInactivePage : 1;
+    int luongDaActivePage = ViewBag.LuongDaActivePage != null ? (int)ViewBag.LuongDaActivePage : 1;
+    int luongDaInactivePage = ViewBag.LuongDaInactivePage != null ? (int)ViewBag.LuongDaInactivePage : 1;
+
+    // Filter and paginate data
+    var doNgotActive = Model.DoNgots.Where(x => x.Trang_Thai).ToList();
+    var doNgotInactive = Model.DoNgots.Where(x => !x.Trang_Thai).ToList();
+    var sizeActive = Model.Sizes.Where(x => x.Trang_Thai).ToList();
+    var sizeInactive = Model.Sizes.Where(x => !x.Trang_Thai).ToList();
+    var toppingActive = Model.Toppings.Where(x => x.Trang_Thai).ToList();
+    var toppingInactive = Model.Toppings.Where(x => !x.Trang_Thai).ToList();
+    var luongDaActive = Model.LuongDas.Where(x => x.Trang_Thai).ToList();
+    var luongDaInactive = Model.LuongDas.Where(x => !x.Trang_Thai).ToList();
+
+    int totalDoNgotActivePages = (int)Math.Ceiling((double)doNgotActive.Count / pageSize);
+    int totalDoNgotInactivePages = (int)Math.Ceiling((double)doNgotInactive.Count / pageSize);
+    int totalSizeActivePages = (int)Math.Ceiling((double)sizeActive.Count / pageSize);
+    int totalSizeInactivePages = (int)Math.Ceiling((double)sizeInactive.Count / pageSize);
+    int totalToppingActivePages = (int)Math.Ceiling((double)toppingActive.Count / pageSize);
+    int totalToppingInactivePages = (int)Math.Ceiling((double)toppingInactive.Count / pageSize);
+    int totalLuongDaActivePages = (int)Math.Ceiling((double)luongDaActive.Count / pageSize);
+    int totalLuongDaInactivePages = (int)Math.Ceiling((double)luongDaInactive.Count / pageSize);
+
+    var pagedDoNgotActive = doNgotActive.Skip((doNgotActivePage - 1) * pageSize).Take(pageSize).ToList();
+    var pagedDoNgotInactive = doNgotInactive.Skip((doNgotInactivePage - 1) * pageSize).Take(pageSize).ToList();
+    var pagedSizeActive = sizeActive.Skip((sizeActivePage - 1) * pageSize).Take(pageSize).ToList();
+    var pagedSizeInactive = sizeInactive.Skip((sizeInactivePage - 1) * pageSize).Take(pageSize).ToList();
+    var pagedToppingActive = toppingActive.Skip((toppingActivePage - 1) * pageSize).Take(pageSize).ToList();
+    var pagedToppingInactive = toppingInactive.Skip((toppingInactivePage - 1) * pageSize).Take(pageSize).ToList();
+    var pagedLuongDaActive = luongDaActive.Skip((luongDaActivePage - 1) * pageSize).Take(pageSize).ToList();
+    var pagedLuongDaInactive = luongDaInactive.Skip((luongDaInactivePage - 1) * pageSize).Take(pageSize).ToList();
 }
 
 <!DOCTYPE html>
@@ -12,10 +64,28 @@
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css" />
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css" />
 </head>
 <body>
     <div class="container-fluid my-5">
-        <h1 class="text-center mb-4 fw-bold text-primary animate__animated animate__fadeInDown">Quản lý chi tiết sản phẩm</h1>
+        <!-- Statistics -->
+        <div class="stats-container">
+            <button class="stat-card stat-total" onclick="filterStatus('all')">
+                <i class="fas fa-boxes"></i>
+                Tổng mục
+                <strong>@(Model.DoNgots.Count + Model.Sizes.Count + Model.Toppings.Count + Model.LuongDas.Count)</strong>
+            </button>
+            <button class="stat-card stat-active" onclick="filterStatus('active')">
+                <i class="fas fa-check-circle"></i>
+                Hoạt động
+                <strong>@(doNgotActive.Count + sizeActive.Count + toppingActive.Count + luongDaActive.Count)</strong>
+            </button>
+            <button class="stat-card stat-inactive" onclick="filterStatus('inactive')">
+                <i class="fas fa-ban"></i>
+                Không hoạt động
+                <strong>@(doNgotInactive.Count + sizeInactive.Count + toppingInactive.Count + luongDaInactive.Count)</strong>
+            </button>
+        </div>
 
         <!-- Tabs for different sections -->
         <ul class="nav nav-tabs mb-4" id="productTabs" role="tablist">
@@ -37,25 +107,25 @@
             <!-- Độ ngọt -->
             <div class="tab-pane fade show active" id="doNgot" role="tabpanel">
                 <div class="d-flex justify-content-between mb-3">
-                    <button class="btn btn-primary rounded-pill shadow-sm animate__animated animate__pulse animate__infinite" onclick="showAddModal('DoNgot')">
+                    <button class="btn btn-primary btn-sm rounded-pill shadow-sm animate__animated animate__pulse animate__infinite" onclick="showAddModal('DoNgot')">
                         <i class="fas fa-plus me-2"></i>Thêm độ ngọt
                     </button>
                     <div class="input-group w-50">
                         <span class="input-group-text"><i class="fas fa-search"></i></span>
-                        <input type="text" class="form-control" id="doNgotSearch" placeholder="Tìm kiếm độ ngọt..." onkeyup="searchTable('doNgot')">
+                        <input type="text" class="form-control rounded-pill shadow-sm" id="doNgotSearch" placeholder="Tìm kiếm độ ngọt..." onkeyup="searchTable('doNgot')">
                     </div>
                 </div>
                 <ul class="nav nav-pills mb-3" id="doNgotStatusTabs" role="tablist">
                     <li class="nav-item">
-                        <a class="nav-link active" id="doNgot-active-tab" data-bs-toggle="pill" href="#doNgot-active" role="tab">Hoạt động</a>
+                        <a class="nav-link active rounded-pill" id="doNgot-active-tab" data-bs-toggle="pill" href="#doNgot-active" role="tab">Hoạt động</a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link" id="doNgot-inactive-tab" data-bs-toggle="pill" href="#doNgot-inactive" role="tab">Không hoạt động</a>
+                        <a class="nav-link rounded-pill" id="doNgot-inactive-tab" data-bs-toggle="pill" href="#doNgot-inactive" role="tab">Không hoạt động</a>
                     </li>
                 </ul>
                 <div class="tab-content">
                     <div class="tab-pane fade show active" id="doNgot-active" role="tabpanel">
-                        <table class="table table-hover table-bordered shadow-sm">
+                        <table class="table table-hover table-bordered shadow-sm table-custom">
                             <thead class="table-dark">
                                 <tr>
                                     <th>ID</th>
@@ -65,23 +135,44 @@
                                 </tr>
                             </thead>
                             <tbody id="doNgotTableActive">
-                                @foreach (var item in Model.DoNgots.Where(x => x.Trang_Thai))
+                                @foreach (var item in pagedDoNgotActive)
                                 {
                                     <tr class="animate__animated animate__fadeIn">
                                         <td>@item.ID_DoNgot</td>
                                         <td>@item.Muc_Do</td>
                                         <td>@item.Ghi_Chu</td>
                                         <td>
-                                            <button class="btn btn-info btn-sm me-1" onclick="showDetailModal('DoNgot', @item.ID_DoNgot)">Chi tiết</button>
-                                            <button class="btn btn-warning btn-sm" onclick="showEditModal('DoNgot', @item.ID_DoNgot)">Sửa</button>
+                                            <button class="btn btn-info btn-sm me-1 rounded-pill" onclick="showDetailModal('DoNgot', @item.ID_DoNgot)">
+                                                <i class="bi bi-eye"></i> Chi tiết
+                                            </button>
+                                            <button class="btn btn-warning btn-sm rounded-pill" onclick="showEditModal('DoNgot', @item.ID_DoNgot)">
+                                                <i class="bi bi-pencil"></i> Sửa
+                                            </button>
                                         </td>
                                     </tr>
                                 }
                             </tbody>
                         </table>
+                        <!-- Pagination for Độ ngọt Active -->
+                        <div class="pagination-container">
+                            <ul class="pagination">
+                                <li class="@(doNgotActivePage == 1 ? "disabled" : "")">
+                                    <a href="@Url.Action("Index", new { doNgotActivePage = doNgotActivePage - 1, doNgotInactivePage, sizeActivePage, sizeInactivePage, toppingActivePage, toppingInactivePage, luongDaActivePage, luongDaInactivePage })">&laquo;</a>
+                                </li>
+                                @for (int i = 1; i <= totalDoNgotActivePages; i++)
+                                {
+                                    <li class="@(i == doNgotActivePage ? "active" : "")">
+                                        <a href="@Url.Action("Index", new { doNgotActivePage = i, doNgotInactivePage, sizeActivePage, sizeInactivePage, toppingActivePage, toppingInactivePage, luongDaActivePage, luongDaInactivePage })">@i</a>
+                                    </li>
+                                }
+                                <li class="@(doNgotActivePage == totalDoNgotActivePages ? "disabled" : "")">
+                                    <a href="@Url.Action("Index", new { doNgotActivePage = doNgotActivePage + 1, doNgotInactivePage, sizeActivePage, sizeInactivePage, toppingActivePage, toppingInactivePage, luongDaActivePage, luongDaInactivePage })">&raquo;</a>
+                                </li>
+                            </ul>
+                        </div>
                     </div>
                     <div class="tab-pane fade" id="doNgot-inactive" role="tabpanel">
-                        <table class="table table-hover table-bordered shadow-sm">
+                        <table class="table table-hover table-bordered shadow-sm table-custom">
                             <thead class="table-dark">
                                 <tr>
                                     <th>ID</th>
@@ -91,20 +182,41 @@
                                 </tr>
                             </thead>
                             <tbody id="doNgotTableInactive">
-                                @foreach (var item in Model.DoNgots.Where(x => !x.Trang_Thai))
+                                @foreach (var item in pagedDoNgotInactive)
                                 {
                                     <tr class="animate__animated animate__fadeIn">
                                         <td>@item.ID_DoNgot</td>
                                         <td>@item.Muc_Do</td>
                                         <td>@item.Ghi_Chu</td>
                                         <td>
-                                            <button class="btn btn-info btn-sm me-1" onclick="showDetailModal('DoNgot', @item.ID_DoNgot)">Chi tiết</button>
-                                            <button class="btn btn-warning btn-sm" onclick="showEditModal('DoNgot', @item.ID_DoNgot)">Sửa</button>
+                                            <button class="btn btn-info btn-sm me-1 rounded-pill" onclick="showDetailModal('DoNgot', @item.ID_DoNgot)">
+                                                <i class="bi bi-eye"></i> Chi tiết
+                                            </button>
+                                            <button class="btn btn-warning btn-sm rounded-pill" onclick="showEditModal('DoNgot', @item.ID_DoNgot)">
+                                                <i class="bi bi-pencil"></i> Sửa
+                                            </button>
                                         </td>
                                     </tr>
                                 }
                             </tbody>
                         </table>
+                        <!-- Pagination for Độ ngọt Inactive -->
+                        <div class="pagination-container">
+                            <ul class="pagination">
+                                <li class="@(doNgotInactivePage == 1 ? "disabled" : "")">
+                                    <a href="@Url.Action("Index", new { doNgotActivePage, doNgotInactivePage = doNgotInactivePage - 1, sizeActivePage, sizeInactivePage, toppingActivePage, toppingInactivePage, luongDaActivePage, luongDaInactivePage })">&laquo;</a>
+                                </li>
+                                @for (int i = 1; i <= totalDoNgotInactivePages; i++)
+                                {
+                                    <li class="@(i == doNgotInactivePage ? "active" : "")">
+                                        <a href="@Url.Action("Index", new { doNgotActivePage, doNgotInactivePage = i, sizeActivePage, sizeInactivePage, toppingActivePage, toppingInactivePage, luongDaActivePage, luongDaInactivePage })">@i</a>
+                                    </li>
+                                }
+                                <li class="@(doNgotInactivePage == totalDoNgotInactivePages ? "disabled" : "")">
+                                    <a href="@Url.Action("Index", new { doNgotActivePage, doNgotInactivePage = doNgotInactivePage + 1, sizeActivePage, sizeInactivePage, toppingActivePage, toppingInactivePage, luongDaActivePage, luongDaInactivePage })">&raquo;</a>
+                                </li>
+                            </ul>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -112,25 +224,25 @@
             <!-- Size -->
             <div class="tab-pane fade" id="size" role="tabpanel">
                 <div class="d-flex justify-content-between mb-3">
-                    <button class="btn btn-primary rounded-pill shadow-sm animate__animated animate__pulse animate__infinite" onclick="showAddModal('Size')">
+                    <button class="btn btn-primary btn-sm rounded-pill shadow-sm animate__animated animate__pulse animate__infinite" onclick="showAddModal('Size')">
                         <i class="fas fa-plus me-2"></i>Thêm size
                     </button>
                     <div class="input-group w-50">
                         <span class="input-group-text"><i class="fas fa-search"></i></span>
-                        <input type="text" class="form-control" id="sizeSearch" placeholder="Tìm kiếm size..." onkeyup="searchTable('size')">
+                        <input type="text" class="form-control rounded-pill shadow-sm" id="sizeSearch" placeholder="Tìm kiếm size..." onkeyup="searchTable('size')">
                     </div>
                 </div>
                 <ul class="nav nav-pills mb-3" id="sizeStatusTabs" role="tablist">
                     <li class="nav-item">
-                        <a class="nav-link active" id="size-active-tab" data-bs-toggle="pill" href="#size-active" role="tab">Hoạt động</a>
+                        <a class="nav-link active rounded-pill" id="size-active-tab" data-bs-toggle="pill" href="#size-active" role="tab">Hoạt động</a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link" id="size-inactive-tab" data-bs-toggle="pill" href="#size-inactive" role="tab">Không hoạt động</a>
+                        <a class="nav-link rounded-pill" id="size-inactive-tab" data-bs-toggle="pill" href="#size-inactive" role="tab">Không hoạt động</a>
                     </li>
                 </ul>
                 <div class="tab-content">
                     <div class="tab-pane fade show active" id="size-active" role="tabpanel">
-                        <table class="table table-hover table-bordered shadow-sm">
+                        <table class="table table-hover table-bordered shadow-sm table-custom">
                             <thead class="table-dark">
                                 <tr>
                                     <th>ID</th>
@@ -140,23 +252,44 @@
                                 </tr>
                             </thead>
                             <tbody id="sizeTableActive">
-                                @foreach (var item in Model.Sizes.Where(x => x.Trang_Thai))
+                                @foreach (var item in pagedSizeActive)
                                 {
                                     <tr class="animate__animated animate__fadeIn">
                                         <td>@item.ID_Size</td>
                                         <td>@item.SizeName</td>
-                                        <td>@item.Gia</td>
+                                        <td>@string.Format("{0:N0} đ", item.Gia)</td>
                                         <td>
-                                            <button class="btn btn-info btn-sm me-1" onclick="showDetailModal('Size', @item.ID_Size)">Chi tiết</button>
-                                            <button class="btn btn-warning btn-sm" onclick="showEditModal('Size', @item.ID_Size)">Sửa</button>
+                                            <button class="btn btn-info btn-sm me-1 rounded-pill" onclick="showDetailModal('Size', @item.ID_Size)">
+                                                <i class="bi bi-eye"></i> Chi tiết
+                                            </button>
+                                            <button class="btn btn-warning btn-sm rounded-pill" onclick="showEditModal('Size', @item.ID_Size)">
+                                                <i class="bi bi-pencil"></i> Sửa
+                                            </button>
                                         </td>
                                     </tr>
                                 }
                             </tbody>
                         </table>
+                        <!-- Pagination for Size Active -->
+                        <div class="pagination-container">
+                            <ul class="pagination">
+                                <li class="@(sizeActivePage == 1 ? "disabled" : "")">
+                                    <a href="@Url.Action("Index", new { doNgotActivePage, doNgotInactivePage, sizeActivePage = sizeActivePage - 1, sizeInactivePage, toppingActivePage, toppingInactivePage, luongDaActivePage, luongDaInactivePage })">&laquo;</a>
+                                </li>
+                                @for (int i = 1; i <= totalSizeActivePages; i++)
+                                {
+                                    <li class="@(i == sizeActivePage ? "active" : "")">
+                                        <a href="@Url.Action("Index", new { doNgotActivePage, doNgotInactivePage, sizeActivePage = i, sizeInactivePage, toppingActivePage, toppingInactivePage, luongDaActivePage, luongDaInactivePage })">@i</a>
+                                    </li>
+                                }
+                                <li class="@(sizeActivePage == totalSizeActivePages ? "disabled" : "")">
+                                    <a href="@Url.Action("Index", new { doNgotActivePage, doNgotInactivePage, sizeActivePage = sizeActivePage + 1, sizeInactivePage, toppingActivePage, toppingInactivePage, luongDaActivePage, luongDaInactivePage })">&raquo;</a>
+                                </li>
+                            </ul>
+                        </div>
                     </div>
                     <div class="tab-pane fade" id="size-inactive" role="tabpanel">
-                        <table class="table table-hover table-bordered shadow-sm">
+                        <table class="table table-hover table-bordered shadow-sm table-custom">
                             <thead class="table-dark">
                                 <tr>
                                     <th>ID</th>
@@ -166,20 +299,41 @@
                                 </tr>
                             </thead>
                             <tbody id="sizeTableInactive">
-                                @foreach (var item in Model.Sizes.Where(x => !x.Trang_Thai))
+                                @foreach (var item in pagedSizeInactive)
                                 {
                                     <tr class="animate__animated animate__fadeIn">
                                         <td>@item.ID_Size</td>
                                         <td>@item.SizeName</td>
-                                        <td>@item.Gia</td>
+                                        <td>@string.Format("{0:N0} đ", item.Gia)</td>
                                         <td>
-                                            <button class="btn btn-info btn-sm me-1" onclick="showDetailModal('Size', @item.ID_Size)">Chi tiết</button>
-                                            <button class="btn btn-warning btn-sm" onclick="showEditModal('Size', @item.ID_Size)">Sửa</button>
+                                            <button class="btn btn-info btn-sm me-1 rounded-pill" onclick="showDetailModal('Size', @item.ID_Size)">
+                                                <i class="bi bi-eye"></i> Chi tiết
+                                            </button>
+                                            <button class="btn btn-warning btn-sm rounded-pill" onclick="showEditModal('Size', @item.ID_Size)">
+                                                <i class="bi bi-pencil"></i> Sửa
+                                            </button>
                                         </td>
                                     </tr>
                                 }
                             </tbody>
                         </table>
+                        <!-- Pagination for Size Inactive -->
+                        <div class="pagination-container">
+                            <ul class="pagination">
+                                <li class="@(sizeInactivePage == 1 ? "disabled" : "")">
+                                    <a href="@Url.Action("Index", new { doNgotActivePage, doNgotInactivePage, sizeActivePage, sizeInactivePage = sizeInactivePage - 1, toppingActivePage, toppingInactivePage, luongDaActivePage, luongDaInactivePage })">&laquo;</a>
+                                </li>
+                                @for (int i = 1; i <= totalSizeInactivePages; i++)
+                                {
+                                    <li class="@(i == sizeInactivePage ? "active" : "")">
+                                        <a href="@Url.Action("Index", new { doNgotActivePage, doNgotInactivePage, sizeActivePage, sizeInactivePage = i, toppingActivePage, toppingInactivePage, luongDaActivePage, luongDaInactivePage })">@i</a>
+                                    </li>
+                                }
+                                <li class="@(sizeInactivePage == totalSizeInactivePages ? "disabled" : "")">
+                                    <a href="@Url.Action("Index", new { doNgotActivePage, doNgotInactivePage, sizeActivePage, sizeInactivePage = sizeInactivePage + 1, toppingActivePage, toppingInactivePage, luongDaActivePage, luongDaInactivePage })">&raquo;</a>
+                                </li>
+                            </ul>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -187,25 +341,25 @@
             <!-- Topping -->
             <div class="tab-pane fade" id="topping" role="tabpanel">
                 <div class="d-flex justify-content-between mb-3">
-                    <button class="btn btn-primary rounded-pill shadow-sm animate__animated animate__pulse animate__infinite" onclick="showAddModal('Topping')">
+                    <button class="btn btn-primary btn-sm rounded-pill shadow-sm animate__animated animate__pulse animate__infinite" onclick="showAddModal('Topping')">
                         <i class="fas fa-plus me-2"></i>Thêm topping
                     </button>
                     <div class="input-group w-50">
                         <span class="input-group-text"><i class="fas fa-search"></i></span>
-                        <input type="text" class="form-control" id="toppingSearch" placeholder="Tìm kiếm topping..." onkeyup="searchTable('topping')">
+                        <input type="text" class="form-control rounded-pill shadow-sm" id="toppingSearch" placeholder="Tìm kiếm topping..." onkeyup="searchTable('topping')">
                     </div>
                 </div>
                 <ul class="nav nav-pills mb-3" id="toppingStatusTabs" role="tablist">
                     <li class="nav-item">
-                        <a class="nav-link active" id="topping-active-tab" data-bs-toggle="pill" href="#topping-active" role="tab">Hoạt động</a>
+                        <a class="nav-link active rounded-pill" id="topping-active-tab" data-bs-toggle="pill" href="#topping-active" role="tab">Hoạt động</a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link" id="topping-inactive-tab" data-bs-toggle="pill" href="#topping-inactive" role="tab">Không hoạt động</a>
+                        <a class="nav-link rounded-pill" id="topping-inactive-tab" data-bs-toggle="pill" href="#topping-inactive" role="tab">Không hoạt động</a>
                     </li>
                 </ul>
                 <div class="tab-content">
                     <div class="tab-pane fade show active" id="topping-active" role="tabpanel">
-                        <table class="table table-hover table-bordered shadow-sm">
+                        <table class="table table-hover table-bordered shadow-sm table-custom">
                             <thead class="table-dark">
                                 <tr>
                                     <th>ID</th>
@@ -218,19 +372,19 @@
                                 </tr>
                             </thead>
                             <tbody id="toppingTableActive">
-                                @foreach (var item in Model.Toppings.Where(x => x.Trang_Thai))
+                                @foreach (var item in pagedToppingActive)
                                 {
                                     <tr class="animate__animated animate__fadeIn">
                                         <td>@item.ID_Topping</td>
                                         <td>@item.Ten</td>
-                                        <td>@item.Gia</td>
+                                        <td>@string.Format("{0:N0} đ", item.Gia)</td>
                                         <td>@item.So_Luong</td>
                                         <td>
                                             @{
                                                 var imageUrl = string.IsNullOrEmpty(item.Hinh_Anh) ? "" : "https://localhost:7169" + item.Hinh_Anh;
                                                 if (!string.IsNullOrEmpty(imageUrl))
                                                 {
-                                                    <img src="@imageUrl" alt="@item.Ten" style="width: 50px; height: 50px; object-fit: cover;" class="rounded" onerror="this.src='https://via.placeholder.com/50'; this.alt='Hình không tải được';" />
+                                                    <img src="@imageUrl" alt="@item.Ten" style="width: 50px; height: 50px; object-fit: cover;" class="rounded shadow-sm" onerror="this.src='https://via.placeholder.com/50'; this.alt='Hình không tải được';" />
                                                 }
                                                 else
                                                 {
@@ -240,16 +394,37 @@
                                         </td>
                                         <td>@item.Ghi_Chu</td>
                                         <td>
-                                            <button class="btn btn-info btn-sm me-1" onclick="showDetailModal('Topping', @item.ID_Topping)">Chi tiết</button>
-                                            <button class="btn btn-warning btn-sm" onclick="showEditModal('Topping', @item.ID_Topping)">Sửa</button>
+                                            <button class="btn btn-info btn-sm me-1 rounded-pill" onclick="showDetailModal('Topping', @item.ID_Topping)">
+                                                <i class="bi bi-eye"></i> Chi tiết
+                                            </button>
+                                            <button class="btn btn-warning btn-sm rounded-pill" onclick="showEditModal('Topping', @item.ID_Topping)">
+                                                <i class="bi bi-pencil"></i> Sửa
+                                            </button>
                                         </td>
                                     </tr>
                                 }
                             </tbody>
                         </table>
+                        <!-- Pagination for Topping Active -->
+                        <div class="pagination-container">
+                            <ul class="pagination">
+                                <li class="@(toppingActivePage == 1 ? "disabled" : "")">
+                                    <a href="@Url.Action("Index", new { doNgotActivePage, doNgotInactivePage, sizeActivePage, sizeInactivePage, toppingActivePage = toppingActivePage - 1, toppingInactivePage, luongDaActivePage, luongDaInactivePage })">&laquo;</a>
+                                </li>
+                                @for (int i = 1; i <= totalToppingActivePages; i++)
+                                {
+                                    <li class="@(i == toppingActivePage ? "active" : "")">
+                                        <a href="@Url.Action("Index", new { doNgotActivePage, doNgotInactivePage, sizeActivePage, sizeInactivePage, toppingActivePage = i, toppingInactivePage, luongDaActivePage, luongDaInactivePage })">@i</a>
+                                    </li>
+                                }
+                                <li class="@(toppingActivePage == totalToppingActivePages ? "disabled" : "")">
+                                    <a href="@Url.Action("Index", new { doNgotActivePage, doNgotInactivePage, sizeActivePage, sizeInactivePage, toppingActivePage = toppingActivePage + 1, toppingInactivePage, luongDaActivePage, luongDaInactivePage })">&raquo;</a>
+                                </li>
+                            </ul>
+                        </div>
                     </div>
                     <div class="tab-pane fade" id="topping-inactive" role="tabpanel">
-                        <table class="table table-hover table-bordered shadow-sm">
+                        <table class="table table-hover table-bordered shadow-sm table-custom">
                             <thead class="table-dark">
                                 <tr>
                                     <th>ID</th>
@@ -262,19 +437,19 @@
                                 </tr>
                             </thead>
                             <tbody id="toppingTableInactive">
-                                @foreach (var item in Model.Toppings.Where(x => !x.Trang_Thai))
+                                @foreach (var item in pagedToppingInactive)
                                 {
                                     <tr class="animate__animated animate__fadeIn">
                                         <td>@item.ID_Topping</td>
                                         <td>@item.Ten</td>
-                                        <td>@item.Gia</td>
+                                        <td>@string.Format("{0:N0} đ", item.Gia)</td>
                                         <td>@item.So_Luong</td>
                                         <td>
                                             @{
                                                 var imageUrl = string.IsNullOrEmpty(item.Hinh_Anh) ? "" : "https://localhost:7169" + item.Hinh_Anh;
                                                 if (!string.IsNullOrEmpty(imageUrl))
                                                 {
-                                                    <img src="@imageUrl" alt="@item.Ten" style="width: 50px; height: 50px; object-fit: cover;" class="rounded" onerror="this.src='https://via.placeholder.com/50'; this.alt='Hình không tải được';" />
+                                                    <img src="@imageUrl" alt="@item.Ten" style="width: 50px; height: 50px; object-fit: cover;" class="rounded shadow-sm" onerror="this.src='https://via.placeholder.com/50'; this.alt='Hình không tải được';" />
                                                 }
                                                 else
                                                 {
@@ -284,13 +459,34 @@
                                         </td>
                                         <td>@item.Ghi_Chu</td>
                                         <td>
-                                            <button class="btn btn-info btn-sm me-1" onclick="showDetailModal('Topping', @item.ID_Topping)">Chi tiết</button>
-                                            <button class="btn btn-warning btn-sm" onclick="showEditModal('Topping', @item.ID_Topping)">Sửa</button>
+                                            <button class="btn btn-info btn-sm me-1 rounded-pill" onclick="showDetailModal('Topping', @item.ID_Topping)">
+                                                <i class="bi bi-eye"></i> Chi tiết
+                                            </button>
+                                            <button class="btn btn-warning btn-sm rounded-pill" onclick="showEditModal('Topping', @item.ID_Topping)">
+                                                <i class="bi bi-pencil"></i> Sửa
+                                            </button>
                                         </td>
                                     </tr>
                                 }
                             </tbody>
                         </table>
+                        <!-- Pagination for Topping Inactive -->
+                        <div class="pagination-container">
+                            <ul class="pagination">
+                                <li class="@(toppingInactivePage == 1 ? "disabled" : "")">
+                                    <a href="@Url.Action("Index", new { doNgotActivePage, doNgotInactivePage, sizeActivePage, sizeInactivePage, toppingActivePage, toppingInactivePage = toppingInactivePage - 1, luongDaActivePage, luongDaInactivePage })">&laquo;</a>
+                                </li>
+                                @for (int i = 1; i <= totalToppingInactivePages; i++)
+                                {
+                                    <li class="@(i == toppingInactivePage ? "active" : "")">
+                                        <a href="@Url.Action("Index", new { doNgotActivePage, doNgotInactivePage, sizeActivePage, sizeInactivePage, toppingActivePage, toppingInactivePage = i, luongDaActivePage, luongDaInactivePage })">@i</a>
+                                    </li>
+                                }
+                                <li class="@(toppingInactivePage == totalToppingInactivePages ? "disabled" : "")">
+                                    <a href="@Url.Action("Index", new { doNgotActivePage, doNgotInactivePage, sizeActivePage, sizeInactivePage, toppingActivePage, toppingInactivePage = toppingInactivePage + 1, luongDaActivePage, luongDaInactivePage })">&raquo;</a>
+                                </li>
+                            </ul>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -298,25 +494,25 @@
             <!-- Lượng đá -->
             <div class="tab-pane fade" id="luongDa" role="tabpanel">
                 <div class="d-flex justify-content-between mb-3">
-                    <button class="btn btn-primary rounded-pill shadow-sm animate__animated animate__pulse animate__infinite" onclick="showAddModal('LuongDa')">
+                    <button class="btn btn-primary btn-sm rounded-pill shadow-sm animate__animated animate__pulse animate__infinite" onclick="showAddModal('LuongDa')">
                         <i class="fas fa-plus me-2"></i>Thêm lượng đá
                     </button>
                     <div class="input-group w-50">
                         <span class="input-group-text"><i class="fas fa-search"></i></span>
-                        <input type="text" class="form-control" id="luongDaSearch" placeholder="Tìm kiếm lượng đá..." onkeyup="searchTable('luongDa')">
+                        <input type="text" class="form-control rounded-pill shadow-sm" id="luongDaSearch" placeholder="Tìm kiếm lượng đá..." onkeyup="searchTable('luongDa')">
                     </div>
                 </div>
                 <ul class="nav nav-pills mb-3" id="luongDaStatusTabs" role="tablist">
                     <li class="nav-item">
-                        <a class="nav-link active" id="luongDa-active-tab" data-bs-toggle="pill" href="#luongDa-active" role="tab">Hoạt động</a>
+                        <a class="nav-link active rounded-pill" id="luongDa-active-tab" data-bs-toggle="pill" href="#luongDa-active" role="tab">Hoạt động</a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link" id="luongDa-inactive-tab" data-bs-toggle="pill" href="#luongDa-inactive" role="tab">Không hoạt động</a>
+                        <a class="nav-link rounded-pill" id="luongDa-inactive-tab" data-bs-toggle="pill" href="#luongDa-inactive" role="tab">Không hoạt động</a>
                     </li>
                 </ul>
                 <div class="tab-content">
                     <div class="tab-pane fade show active" id="luongDa-active" role="tabpanel">
-                        <table class="table table-hover table-bordered shadow-sm">
+                        <table class="table table-hover table-bordered shadow-sm table-custom">
                             <thead class="table-dark">
                                 <tr>
                                     <th>ID</th>
@@ -325,22 +521,43 @@
                                 </tr>
                             </thead>
                             <tbody id="luongDaTableActive">
-                                @foreach (var item in Model.LuongDas.Where(x => x.Trang_Thai))
+                                @foreach (var item in pagedLuongDaActive)
                                 {
                                     <tr class="animate__animated animate__fadeIn">
                                         <td>@item.ID_LuongDa</td>
                                         <td>@item.Ten_LuongDa</td>
                                         <td>
-                                            <button class="btn btn-info btn-sm me-1" onclick="showDetailModal('LuongDa', @item.ID_LuongDa)">Chi tiết</button>
-                                            <button class="btn btn-warning btn-sm" onclick="showEditModal('LuongDa', @item.ID_LuongDa)">Sửa</button>
+                                            <button class="btn btn-info btn-sm me-1 rounded-pill" onclick="showDetailModal('LuongDa', @item.ID_LuongDa)">
+                                                <i class="bi bi-eye"></i> Chi tiết
+                                            </button>
+                                            <button class="btn btn-warning btn-sm rounded-pill" onclick="showEditModal('LuongDa', @item.ID_LuongDa)">
+                                                <i class="bi bi-pencil"></i> Sửa
+                                            </button>
                                         </td>
                                     </tr>
                                 }
                             </tbody>
                         </table>
+                        <!-- Pagination for Lượng đá Active -->
+                        <div class="pagination-container">
+                            <ul class="pagination">
+                                <li class="@(luongDaActivePage == 1 ? "disabled" : "")">
+                                    <a href="@Url.Action("Index", new { doNgotActivePage, doNgotInactivePage, sizeActivePage, sizeInactivePage, toppingActivePage, toppingInactivePage, luongDaActivePage = luongDaActivePage - 1, luongDaInactivePage })">&laquo;</a>
+                                </li>
+                                @for (int i = 1; i <= totalLuongDaActivePages; i++)
+                                {
+                                    <li class="@(i == luongDaActivePage ? "active" : "")">
+                                        <a href="@Url.Action("Index", new { doNgotActivePage, doNgotInactivePage, sizeActivePage, sizeInactivePage, toppingActivePage, toppingInactivePage, luongDaActivePage = i, luongDaInactivePage })">@i</a>
+                                    </li>
+                                }
+                                <li class="@(luongDaActivePage == totalLuongDaActivePages ? "disabled" : "")">
+                                    <a href="@Url.Action("Index", new { doNgotActivePage, doNgotInactivePage, sizeActivePage, sizeInactivePage, toppingActivePage, toppingInactivePage, luongDaActivePage = luongDaActivePage + 1, luongDaInactivePage })">&raquo;</a>
+                                </li>
+                            </ul>
+                        </div>
                     </div>
                     <div class="tab-pane fade" id="luongDa-inactive" role="tabpanel">
-                        <table class="table table-hover table-bordered shadow-sm">
+                        <table class="table table-hover table-bordered shadow-sm table-custom">
                             <thead class="table-dark">
                                 <tr>
                                     <th>ID</th>
@@ -349,19 +566,40 @@
                                 </tr>
                             </thead>
                             <tbody id="luongDaTableInactive">
-                                @foreach (var item in Model.LuongDas.Where(x => !x.Trang_Thai))
+                                @foreach (var item in pagedLuongDaInactive)
                                 {
                                     <tr class="animate__animated animate__fadeIn">
                                         <td>@item.ID_LuongDa</td>
                                         <td>@item.Ten_LuongDa</td>
                                         <td>
-                                            <button class="btn btn-info btn-sm me-1" onclick="showDetailModal('LuongDa', @item.ID_LuongDa)">Chi tiết</button>
-                                            <button class="btn btn-warning btn-sm" onclick="showEditModal('LuongDa', @item.ID_LuongDa)">Sửa</button>
+                                            <button class="btn btn-info btn-sm me-1 rounded-pill" onclick="showDetailModal('LuongDa', @item.ID_LuongDa)">
+                                                <i class="bi bi-eye"></i> Chi tiết
+                                            </button>
+                                            <button class="btn btn-warning btn-sm rounded-pill" onclick="showEditModal('LuongDa', @item.ID_LuongDa)">
+                                                <i class="bi bi-pencil"></i> Sửa
+                                            </button>
                                         </td>
                                     </tr>
                                 }
                             </tbody>
                         </table>
+                        <!-- Pagination for Lượng đá Inactive -->
+                        <div class="pagination-container">
+                            <ul class="pagination">
+                                <li class="@(luongDaInactivePage == 1 ? "disabled" : "")">
+                                    <a href="@Url.Action("Index", new { doNgotActivePage, doNgotInactivePage, sizeActivePage, sizeInactivePage, toppingActivePage, toppingInactivePage, luongDaActivePage, luongDaInactivePage = luongDaInactivePage - 1 })">&laquo;</a>
+                                </li>
+                                @for (int i = 1; i <= totalLuongDaInactivePages; i++)
+                                {
+                                    <li class="@(i == luongDaInactivePage ? "active" : "")">
+                                        <a href="@Url.Action("Index", new { doNgotActivePage, doNgotInactivePage, sizeActivePage, sizeInactivePage, toppingActivePage, toppingInactivePage, luongDaActivePage, luongDaInactivePage = i })">@i</a>
+                                    </li>
+                                }
+                                <li class="@(luongDaInactivePage == totalLuongDaInactivePages ? "disabled" : "")">
+                                    <a href="@Url.Action("Index", new { doNgotActivePage, doNgotInactivePage, sizeActivePage, sizeInactivePage, toppingActivePage, toppingInactivePage, luongDaActivePage, luongDaInactivePage = luongDaInactivePage + 1 })">&raquo;</a>
+                                </li>
+                            </ul>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -386,6 +624,216 @@
             </div>
         </div>
     </div>
+
+    <style>
+        /* Container chính */
+        .container-fluid {
+            background: linear-gradient(135deg, #f8fafc, #e2e8f0);
+            border-radius: 18px;
+            padding: 25px;
+            box-shadow: 0 12px 35px rgba(0, 0, 0, 0.1);
+        }
+
+        /* Thống kê */
+        .stats-container {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 18px;
+            margin-bottom: 25px;
+        }
+
+        .stat-card {
+            padding: 25px 15px;
+            border-radius: 18px;
+            text-align: center;
+            font-weight: 600;
+            font-size: 1rem;
+            color: #fff;
+            cursor: pointer;
+            position: relative;
+            overflow: hidden;
+            transition: all 0.4s ease;
+        }
+
+            .stat-card i {
+                font-size: 1.8rem;
+                margin-bottom: 10px;
+                opacity: 0.9;
+            }
+
+            .stat-card strong {
+                display: block;
+                font-size: 1.5rem;
+                margin-top: 5px;
+            }
+
+            .stat-card:hover {
+                transform: translateY(-6px) scale(1.05);
+                box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+            }
+
+        .stat-total {
+            background: linear-gradient(135deg, #2563eb, #3b82f6);
+        }
+
+        .stat-active {
+            background: linear-gradient(135deg, #059669, #10b981);
+        }
+
+        .stat-inactive {
+            background: linear-gradient(135deg, #dc2626, #ef4444);
+        }
+
+        /* Tabs */
+        .nav-tabs .nav-link {
+            border-radius: 25px;
+            margin-right: 5px;
+            transition: all 0.3s ease;
+        }
+
+            .nav-tabs .nav-link.active {
+                background-color: #2563eb;
+                color: white;
+            }
+
+        .nav-pills .nav-link {
+            border-radius: 25px;
+            margin-right: 5px;
+        }
+
+            .nav-pills .nav-link.active {
+                background-color: #059669;
+                color: white;
+            }
+
+        /* Table */
+        .table-custom {
+            border-radius: 12px;
+            overflow: hidden;
+            background: #fff;
+            box-shadow: 0 8px 20px rgba(0,0,0,0.08);
+        }
+
+            .table-custom thead {
+                background: linear-gradient(135deg, #1e40af, #3b82f6);
+                color: #fff;
+            }
+
+            .table-custom tbody tr {
+                transition: all 0.3s ease;
+            }
+
+                .table-custom tbody tr:hover {
+                    background: rgba(59, 130, 246, 0.08);
+                    transform: translateX(5px);
+                }
+
+        .table th, .table td {
+            vertical-align: middle;
+        }
+
+        /* Buttons */
+        .btn-sm {
+            border-radius: 25px;
+            font-weight: 500;
+            padding: 0.35rem 0.9rem;
+            transition: all 0.3s ease;
+        }
+
+            .btn-sm:hover {
+                transform: translateY(-3px) scale(1.05);
+                box-shadow: 0 6px 15px rgba(0,0,0,0.2);
+            }
+
+        /* Form controls */
+        .form-control, .form-select {
+            border-radius: 25px;
+            box-shadow: inset 0 2px 5px rgba(0, 0, 0, 0.08);
+            border: 1px solid #d1d5db;
+            transition: all 0.3s ease;
+        }
+
+            .form-control:focus {
+                outline: none;
+                border-color: #3b82f6;
+                box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+                background: #fff;
+            }
+
+            .form-control::placeholder {
+                color: #6b7280;
+                font-size: 0.9rem;
+                opacity: 1;
+            }
+
+        /* Modal */
+        .modal-content {
+            border-radius: 15px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+        }
+
+        .form-switch .form-check-input {
+            height: 1.5em;
+            width: 3em;
+        }
+
+        /* Pagination */
+        .pagination-container {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin-top: 20px;
+            padding: 10px 0;
+        }
+
+        .pagination {
+            display: flex;
+            list-style: none;
+            padding: 0;
+            margin: 0;
+            gap: 8px;
+        }
+
+            .pagination li {
+                display: inline-block;
+            }
+
+                .pagination li a {
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    width: 38px;
+                    height: 38px;
+                    border-radius: 8px;
+                    text-decoration: none;
+                    color: #1e40af;
+                    background: #fff;
+                    border: 1px solid #e2e8f0;
+                    font-weight: 500;
+                    transition: all 0.3s ease;
+                }
+
+                    .pagination li a:hover {
+                        background: #3b82f6;
+                        color: #fff;
+                        border-color: #3b82f6;
+                        transform: translateY(-2px);
+                    }
+
+                .pagination li.active a {
+                    background: #2563eb;
+                    color: #fff;
+                    border-color: #2563eb;
+                    font-weight: 600;
+                }
+
+                .pagination li.disabled a {
+                    color: #94a3b8;
+                    cursor: not-allowed;
+                    border-color: #e2e8f0;
+                    background: #f8fafc;
+                }
+    </style>
 
     <script src="https://code.jquery.com/jquery-3.6.0.min.js" integrity="sha256-/xUj+3OJU5yExlq6GSYGSHk7tPXikynS7ogEvDej/m4=" crossorigin="anonymous"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
@@ -713,64 +1161,25 @@
             });
         }
 
+        // Hàm lọc trạng thái
+        function filterStatus(type) {
+            const tabs = ['doNgot', 'size', 'topping', 'luongDa'];
+            tabs.forEach(tab => {
+                if (type === 'all') {
+                    $(`#${tab}-active-tab`).tab('show');
+                } else if (type === 'active') {
+                    $(`#${tab}-active-tab`).tab('show');
+                } else if (type === 'inactive') {
+                    $(`#${tab}-inactive-tab`).tab('show');
+                }
+            });
+        }
+
         // Debug dữ liệu khi tải trang
         $(document).ready(function () {
             console.log("Dữ liệu Model:", @Html.Raw(Json.Serialize(Model)));
         });
     </script>
-
-    <style>
-        .nav-tabs .nav-link {
-            border-radius: 10px;
-            margin-right: 5px;
-            transition: all 0.3s ease;
-        }
-
-            .nav-tabs .nav-link.active {
-                background-color: #007bff;
-                color: white;
-            }
-
-        .nav-pills .nav-link {
-            border-radius: 10px;
-            margin-right: 5px;
-        }
-
-            .nav-pills .nav-link.active {
-                background-color: #28a745;
-                color: white;
-            }
-
-        .table th, .table td {
-            vertical-align: middle;
-        }
-
-        .table-hover tbody tr:hover {
-            background-color: #f1f1f1;
-        }
-
-        .btn {
-            transition: transform 0.3s ease;
-        }
-
-            .btn:hover {
-                transform: scale(1.05);
-            }
-
-        .form-control, .form-select {
-            border-radius: 20px;
-            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
-        }
-
-        .modal-content {
-            border-radius: 15px;
-            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
-        }
-
-        .form-switch .form-check-input {
-            height: 1.5em;
-            width: 3em;
-        }
-    </style>
 </body>
 </html>
+```

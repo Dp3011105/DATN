@@ -60,7 +60,7 @@ namespace BE.Repository
                 .AsNoTracking()
                 .Include(hd => hd.KhachHang)
                 .Include(hd => hd.HinhThucThanhToan)
-                .Include(hd => hd.DiaChi) // bổ sung nếu cần hiển thị chi tiết địa chỉ
+                .Include(hd => hd.DiaChi)
                 .Include(hd => hd.HoaDonChiTiets).ThenInclude(ct => ct.SanPham)
                 .Include(hd => hd.HoaDonChiTiets).ThenInclude(ct => ct.Size)
                 .Include(hd => hd.HoaDonChiTiets).ThenInclude(ct => ct.DoNgot)
@@ -278,10 +278,13 @@ namespace BE.Repository
         public async Task<HoaDon?> GetByMaHoaDonAsync(string maHoaDon)
             => await _context.Hoa_Don.FirstOrDefaultAsync(x => x.Ma_Hoa_Don == maHoaDon);
 
+        //Hiện để phòng việc 2 người thanh toán vnpay 1 lúc nên khi trạng thái là CHƯA THANH TOÁN là đã trừ rồi,
+        // nếu thanh toán thành công thì chỉ cần đổi trạng thái thôi; còn nếu thất bại/hủy thì hoàn trả.
         public async Task UpdateAsync(HoaDon hoaDon, string? vnPayResponseCode = null)
         {
             using var tx = await _context.Database.BeginTransactionAsync();
 
+            // Load đầy đủ dữ liệu liên quan
             var hd = await _context.Hoa_Don
                 .Include(h => h.KhachHang).ThenInclude(kh => kh.KhachHangVouchers)
                 .Include(h => h.HoaDonVouchers).ThenInclude(hdv => hdv.Voucher)

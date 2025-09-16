@@ -1,452 +1,4 @@
-﻿@* @model List<FE.Models.SanPham>
-@{
-    Layout = "~/Views/Shared/_AdminLayout.cshtml";
-
-    // Sort products by ID in descending order (newest first)
-    var sortedProducts = Model.OrderByDescending(p => p.ID_San_Pham).ToList();
-    var activeProducts = sortedProducts.Where(p => p.Trang_Thai).ToList();
-    var inactiveProducts = sortedProducts.Where(p => !p.Trang_Thai).ToList();
-
-    // Get current date in Vietnam time zone
-    TimeZoneInfo vnTimeZone;
-    try
-    {
-        vnTimeZone = TimeZoneInfo.FindSystemTimeZoneById("SE Asia Standard Time");
-    }
-    catch
-    {
-        vnTimeZone = TimeZoneInfo.FindSystemTimeZoneById("Asia/Ho_Chi_Minh");
-    }
-    var currentDate = TimeZoneInfo.ConvertTimeFromUtc(DateTime.UtcNow, vnTimeZone);
-}
-
-<div class="container-fluid my-4">
-    <!-- Notifications -->
-    @if (TempData["Success"] != null)
-    {
-        <div class="alert alert-success alert-dismissible fade show" role="alert">
-            <i class="bi bi-check-circle-fill me-2"></i>@TempData["Success"]
-            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-        </div>
-    }
-    @if (TempData["Error"] != null)
-    {
-        <div class="alert alert-danger alert-dismissible fade show" role="alert">
-            <i class="bi bi-exclamation-circle-fill me-2"></i>@TempData["Error"]
-            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-        </div>
-    }
-
-    <!-- Search Bar -->
-    <div class="mb-4">
-        <div class="input-group shadow-sm">
-            <span class="input-group-text bg-gray-100 border-gray-300"><i class="bi bi-search"></i></span>
-            <input type="text" id="searchInput" class="form-control border-gray-300" placeholder="Tìm kiếm sản phẩm theo tên..." aria-label="Search" style="font-size: 1rem; padding: 0.75rem;">
-            <button class="btn btn-primary ms-2" type="button" id="searchButton">Tìm kiếm</button>
-        </div>
-    </div>
-
-    <!-- Toggle Buttons -->
-    <div class="mb-4 d-flex justify-content-center gap-3">
-        <button id="showActive" class="btn btn-primary active">Sản Phẩm Hoạt Động</button>
-        <button id="showInactive" class="btn btn-outline-primary">Sản Phẩm Ngừng Hoạt Động</button>
-    </div>
-
-    <div class="mb-4 text-center">
-        <a asp-controller="ProductDetails" asp-action="Index" class="btn btn-outline-primary">
-            <i class="bi bi-arrow-right-circle me-2"></i>Đến Trang Chi Tiết Sản Phẩm
-        </a>
-    </div>
-
-    <!-- Active Products -->
-    <div id="activeProducts" class="card shadow-sm border-0 mb-4">
-        <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
-            <h5 class="mb-0">Sản Phẩm Hoạt Động</h5>
-            <a asp-action="AddProduct" class="btn btn-light btn-sm">
-                <i class="bi bi-plus-circle me-2"></i>Thêm Sản Phẩm
-            </a>
-        </div>
-        <div class="card-body p-0">
-            <div class="table-responsive">
-                <table class="table table-hover table-striped align-middle" id="activeTable">
-                    <thead class="bg-gray-100">
-                        <tr>
-                            <th class="py-3 px-4">ID</th>
-                            <th class="py-3 px-4">Tên Sản Phẩm</th>
-                            <th class="py-3 px-4">Giá</th>
-                            <th class="py-3 px-4">Số Lượng</th>
-                            <th class="py-3 px-4">Hình Ảnh</th>
-                            <th class="py-3 px-4">Mô Tả</th>
-                            <th class="py-3 px-4">Trạng Thái</th>
-                            <th class="py-3 px-4">Hành Động</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        @foreach (var product in activeProducts)
-                        {
-                            bool hasActivePromotion = false;
-                            decimal basePrice = product.Gia;
-                            string promotionName = "";
-
-                            if (product.KhuyenMais != null && product.KhuyenMais.Any())
-                            {
-                                foreach (var km in product.KhuyenMais)
-                                {
-                                    if (currentDate >= km.Ngay_Bat_Dau && currentDate <= km.Ngay_Ket_Thuc)
-                                    {
-                                        hasActivePromotion = true;
-                                        basePrice = km.Gia_Giam ?? product.Gia;
-                                        promotionName = km.Ten_Khuyen_Mai;
-                                        break;
-                                    }
-                                }
-                            }
-
-                            <tr class="product-row" data-name="@(product.Ten_San_Pham?.ToLower() ?? "")" data-json="@Newtonsoft.Json.JsonConvert.SerializeObject(product, new Newtonsoft.Json.JsonSerializerSettings { ReferenceLoopHandling = Newtonsoft.Json.ReferenceLoopHandling.Ignore })">
-                                <td class="py-3 px-4">@product.ID_San_Pham</td>
-                                <td class="py-3 px-4">@(product.Ten_San_Pham ?? "Không có tên")</td>
-                                <td class="py-3 px-4">
-                                    @if (hasActivePromotion)
-                                    {
-                                        <span class="text-muted text-decoration-line-through me-2">@string.Format("{0:N0} đ", product.Gia)</span>
-                                        <span class="text-danger font-weight-bold">@string.Format("{0:N0} đ", basePrice)</span>
-                                        <span class="badge bg-warning text-dark ms-2">@promotionName</span>
-                                    }
-                                    else
-                                    {
-                                        <span class="text-primary font-weight-bold">@string.Format("{0:N0} đ", product.Gia)</span>
-                                    }
-                                </td>
-                                <td class="py-3 px-4">@product.So_Luong</td>
-                                <td class="py-3 px-4">
-                                    <img src="@("https://localhost:7169" + (product.Hinh_Anh ?? "/images/placeholder.jpg"))" alt="@(product.Ten_San_Pham ?? "Sản phẩm")" class="img-fluid rounded" style="max-width: 80px; aspect-ratio: 4/3; object-fit: cover;" />
-                                </td>
-                                <td class="py-3 px-4 text-truncate" style="max-width: 250px;">@(product.Mo_Ta ?? "Không có mô tả")</td>
-                                <td class="py-3 px-4">
-                                    <span class="badge bg-success">Hoạt động</span>
-                                </td>
-                                <td class="py-3 px-4">
-                                    <a asp-action="Details" asp-route-id="@product.ID_San_Pham" class="btn btn-outline-primary btn-sm me-2">
-                                        <i class="bi bi-eye"></i> Chi tiết
-                                    </a>
-                                    <a asp-action="EditProduct" asp-route-id="@product.ID_San_Pham" class="btn btn-outline-primary btn-sm">
-                                        <i class="bi bi-pencil"></i> Sửa
-                                    </a>
-                                </td>
-                            </tr>
-                        }
-                    </tbody>
-                </table>
-            </div>
-        </div>
-    </div>
-
-    <!-- Inactive Products -->
-    <div id="inactiveProducts" class="card shadow-sm border-0 mb-4 d-none">
-        <div class="card-header bg-secondary text-white d-flex justify-content-between align-items-center">
-            <h5 class="mb-0">Sản Phẩm Ngừng Hoạt Động</h5>
-        </div>
-        <div class="card-body p-0">
-            <div class="table-responsive">
-                <table class="table table-hover table-striped align-middle" id="inactiveTable">
-                    <thead class="bg-gray-100">
-                        <tr>
-                            <th class="py-3 px-4">ID</th>
-                            <th class="py-3 px-4">Tên Sản Phẩm</th>
-                            <th class="py-3 px-4">Giá</th>
-                            <th class="py-3 px-4">Số Lượng</th>
-                            <th class="py-3 px-4">Hình Ảnh</th>
-                            <th class="py-3 px-4">Mô Tả</th>
-                            <th class="py-3 px-4">Trạng Thái</th>
-                            <th class="py-3 px-4">Hành Động</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        @foreach (var product in inactiveProducts)
-                        {
-                            bool hasActivePromotion = false;
-                            decimal basePrice = product.Gia;
-                            string promotionName = "";
-
-                            if (product.KhuyenMais != null && product.KhuyenMais.Any())
-                            {
-                                foreach (var km in product.KhuyenMais)
-                                {
-                                    if (currentDate >= km.Ngay_Bat_Dau && currentDate <= km.Ngay_Ket_Thuc)
-                                    {
-                                        hasActivePromotion = true;
-                                        basePrice = km.Gia_Giam ?? product.Gia;
-                                        promotionName = km.Ten_Khuyen_Mai;
-                                        break;
-                                    }
-                                }
-                            }
-
-                            <tr class="product-row" data-name="@(product.Ten_San_Pham?.ToLower() ?? "")" data-json="@Newtonsoft.Json.JsonConvert.SerializeObject(product, new Newtonsoft.Json.JsonSerializerSettings { ReferenceLoopHandling = Newtonsoft.Json.ReferenceLoopHandling.Ignore })">
-                                <td class="py-3 px-4">@product.ID_San_Pham</td>
-                                <td class="py-3 px-4">@(product.Ten_San_Pham ?? "Không có tên")</td>
-                                <td class="py-3 px-4">
-                                    @if (hasActivePromotion)
-                                    {
-                                        <span class="text-muted text-decoration-line-through me-2">@string.Format("{0:N0} đ", product.Gia)</span>
-                                        <span class="text-danger font-weight-bold">@string.Format("{0:N0} đ", basePrice)</span>
-                                        <span class="badge bg-warning text-dark ms-2">@promotionName</span>
-                                    }
-                                    else
-                                    {
-                                        <span class="text-primary font-weight-bold">@string.Format("{0:N0} đ", product.Gia)</span>
-                                    }
-                                </td>
-                                <td class="py-3 px-4">@product.So_Luong</td>
-                                <td class="py-3 px-4">
-                                    <img src="@("https://localhost:7169" + (product.Hinh_Anh ?? "/images/placeholder.jpg"))" alt="@(product.Ten_San_Pham ?? "Sản phẩm")" class="img-fluid rounded" style="max-width: 80px; aspect-ratio: 4/3; object-fit: cover;" />
-                                </td>
-                                <td class="py-3 px-4 text-truncate" style="max-width: 250px;">@(product.Mo_Ta ?? "Không có mô tả")</td>
-                                <td class="py-3 px-4">
-                                    <span class="badge bg-danger">Không hoạt động</span>
-                                </td>
-                                <td class="py-3 px-4">
-                                    <a asp-action="Details" asp-route-id="@product.ID_San_Pham" class="btn btn-outline-primary btn-sm me-2">
-                                        <i class="bi bi-eye"></i> Chi tiết
-                                    </a>
-                                    <a asp-action="EditProduct" asp-route-id="@product.ID_San_Pham" class="btn btn-outline-primary btn-sm">
-                                        <i class="bi bi-pencil"></i> Sửa
-                                    </a>
-                                </td>
-                            </tr>
-                        }
-                    </tbody>
-                </table>
-            </div>
-        </div>
-    </div>
-
-    <div class="mb-4 text-center">
-        <a asp-controller="ProductDetails" asp-action="Index" class="btn btn-outline-primary">
-            <i class="bi bi-arrow-right-circle me-2"></i>Đến Trang Chi Tiết Sản Phẩm
-        </a>
-    </div>
-</div>
-
-@section Scripts {
-    <script>
-        document.addEventListener('DOMContentLoaded', function () {
-            const searchInput = document.getElementById('searchInput');
-            const searchButton = document.getElementById('searchButton');
-            const showActive = document.getElementById('showActive');
-            const showInactive = document.getElementById('showInactive');
-            const activeProducts = document.getElementById('activeProducts');
-            const inactiveProducts = document.getElementById('inactiveProducts');
-            const tables = [document.getElementById('activeTable'), document.getElementById('inactiveTable')];
-
-            function filterProducts() {
-                const searchTerm = searchInput.value.toLowerCase().trim();
-                tables.forEach(table => {
-                    const rows = table.querySelectorAll('.product-row');
-                    rows.forEach(row => {
-                        const name = row.getAttribute('data-name') || '';
-                        if (name.includes(searchTerm)) {
-                            row.style.display = 'table-row';
-                        } else {
-                            row.style.display = 'none';
-                        }
-                    });
-                });
-            }
-
-            searchButton.addEventListener('click', filterProducts);
-            searchInput.addEventListener('keyup', function (e) {
-                if (e.key === 'Enter') filterProducts();
-            });
-
-            showActive.addEventListener('click', function () {
-                activeProducts.classList.remove('d-none');
-                inactiveProducts.classList.add('d-none');
-                showActive.classList.add('btn-primary', 'active');
-                showActive.classList.remove('btn-outline-primary');
-                showInactive.classList.add('btn-outline-primary');
-                showInactive.classList.remove('btn-primary', 'active');
-            });
-
-            showInactive.addEventListener('click', function () {
-                inactiveProducts.classList.remove('d-none');
-                activeProducts.classList.add('d-none');
-                showInactive.classList.add('btn-primary', 'active');
-                showInactive.classList.remove('btn-outline-primary');
-                showActive.classList.add('btn-outline-primary');
-                showActive.classList.remove('btn-primary', 'active');
-            });
-
-            // Debug promotion data
-            document.querySelectorAll('.product-row').forEach(row => {
-                try {
-                    const rawJson = row.getAttribute('data-json');
-                    console.log('Raw product data:', rawJson);
-                    const product = JSON.parse(rawJson);
-                    console.log('Parsed product:', product);
-                    if (product.khuyenMais && product.khuyenMais.length > 0) {
-                        console.log('Promotions for', product.ten_San_Pham, ':', product.khuyenMais);
-                    } else {
-                        console.log('No promotions for', product.ten_San_Pham);
-                    }
-                } catch (error) {
-                    console.error('Error parsing product JSON:', error);
-                }
-            });
-        });
-    </script>
-}
-
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css" />
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css">
-
-<style>
-    body {
-        font-family: 'Inter', sans-serif;
-        background-color: #f8f9fa;
-    }
-
-    .container-fluid {
-        max-width: 1400px;
-    }
-
-    .card {
-        border-radius: 4px;
-        overflow: hidden;
-    }
-
-    .card-header {
-        padding: 1rem 1.5rem;
-        border-bottom: 1px solid #dee2e6;
-    }
-
-    .table {
-        margin-bottom: 0;
-        border-collapse: separate;
-        border-spacing: 0;
-    }
-
-        .table th, .table td {
-            vertical-align: middle;
-            border-top: 1px solid #dee2e6;
-            border-bottom: 1px solid #dee2e6;
-        }
-
-        .table thead th {
-            font-weight: 600;
-            color: #1a1a1a;
-            background-color: #e9ecef;
-        }
-
-        .table tbody tr:hover {
-            background-color: #f1f3f5;
-        }
-
-    .table-responsive {
-        border-radius: 4px;
-        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
-    }
-
-    .btn {
-        border-radius: 4px;
-        padding: 0.5rem 1rem;
-        font-weight: 500;
-        transition: all 0.2s ease;
-    }
-
-    .btn-primary {
-        background-color: #0052cc;
-        border-color: #0052cc;
-    }
-
-        .btn-primary:hover {
-            background-color: #003d99;
-            border-color: #003d99;
-            transform: translateY(-1px);
-        }
-
-    .btn-outline-primary {
-        border-color: #0052cc;
-        color: #0052cc;
-    }
-
-        .btn-outline-primary:hover {
-            background-color: #0052cc;
-            color: white;
-            transform: translateY(-1px);
-        }
-
-    .btn.active {
-        background-color: #003d99 !important;
-        border-color: #003d99 !important;
-        color: white !important;
-    }
-
-    .input-group-text {
-        border-radius: 4px 0 0 4px;
-        background-color: #e9ecef;
-        border-color: #ced4da;
-    }
-
-    .form-control {
-        border-radius: 0 4px 4px 0;
-        border-color: #ced4da;
-        box-shadow: none;
-    }
-
-        .form-control:focus {
-            border-color: #0052cc;
-            box-shadow: 0 0 0 3px rgba(0, 82, 204, 0.1);
-        }
-
-    .badge {
-        font-size: 0.85rem;
-        padding: 0.4rem 0.8rem;
-        border-radius: 4px;
-    }
-
-    .alert {
-        border-radius: 4px;
-        border-left: 4px solid;
-        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
-    }
-
-    .alert-success {
-        border-color: #28a745;
-    }
-
-    .alert-danger {
-        border-color: #dc3545;
-    }
-
-    .img-fluid.rounded {
-        border-radius: 4px;
-        transition: transform 0.2s ease;
-    }
-
-        .img-fluid.rounded:hover {
-            transform: scale(1.05);
-        }
-
-    .text-danger {
-        color: #dc3545 !important;
-    }
-
-    .text-primary {
-        color: #0052cc !important;
-    }
-
-    .text-muted {
-        color: #6c757d !important;
-    }
-</style> *@
-
-
-
-
-
-
+﻿```cshtml
 @model List<FE.Models.SanPham>
 @{
     Layout = "~/Views/Shared/_AdminLayout.cshtml";
@@ -468,59 +20,391 @@
         vnTimeZone = TimeZoneInfo.FindSystemTimeZoneById("Asia/Ho_Chi_Minh");
     }
     var currentDate = TimeZoneInfo.ConvertTimeFromUtc(DateTime.UtcNow, vnTimeZone);
+
+    // Thống kê bổ sung
+    var productsWithPromotion = sortedProducts.Where(p => p.KhuyenMais != null && p.KhuyenMais.Any(km => currentDate >= km.Ngay_Bat_Dau && currentDate <= km.Ngay_Ket_Thuc)).ToList();
+    var productsWithoutPromotion = sortedProducts.Except(productsWithPromotion).ToList();
+    var productsUnder100 = sortedProducts.Where(p => p.So_Luong < 3).ToList();
+    var productsOver1000 = sortedProducts.Where(p => p.So_Luong > 100).ToList();
+
+    // Pagination parameters
+    int pageSize = 10; // Number of products per page
+    int activePage = ViewBag.ActivePage != null ? (int)ViewBag.ActivePage : 1;
+    int inactivePage = ViewBag.InactivePage != null ? (int)ViewBag.InactivePage : 1;
+    int totalActivePages = (int)Math.Ceiling((double)activeProducts.Count / pageSize);
+    int totalInactivePages = (int)Math.Ceiling((double)inactiveProducts.Count / pageSize);
+    var pagedActiveProducts = activeProducts.Skip((activePage - 1) * pageSize).Take(pageSize).ToList();
+    var pagedInactiveProducts = inactiveProducts.Skip((inactivePage - 1) * pageSize).Take(pageSize).ToList();
 }
 
-<div class="container-fluid my-5">
+<style>
+    /* Container chính */
+    .employee-container {
+        background: linear-gradient(135deg, #f8fafc, #e2e8f0);
+        border-radius: 18px;
+        padding: 25px;
+        box-shadow: 0 12px 35px rgba(0, 0, 0, 0.1);
+        margin-bottom: 25px;
+    }
+
+    /* Thống kê */
+    .stats-container {
+        display: grid;
+        grid-template-columns: repeat(5, 1fr);
+        gap: 18px;
+        margin-bottom: 25px;
+    }
+
+    .stat-card {
+        padding: 25px 15px;
+        border-radius: 18px;
+        text-align: center;
+        font-weight: 600;
+        font-size: 1rem;
+        color: #fff;
+        cursor: pointer;
+        position: relative;
+        overflow: hidden;
+        transition: all 0.4s ease;
+    }
+
+        .stat-card i {
+            font-size: 1.8rem;
+            margin-bottom: 10px;
+            opacity: 0.9;
+        }
+
+        .stat-card strong {
+            display: block;
+            font-size: 1.5rem;
+            margin-top: 5px;
+        }
+
+        .stat-card:hover {
+            transform: translateY(-6px) scale(1.05);
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+        }
+
+    .stat-total {
+        background: linear-gradient(135deg, #2563eb, #3b82f6);
+    }
+
+    .stat-active {
+        background: linear-gradient(135deg, #059669, #10b981);
+    }
+
+    .stat-inactive {
+        background: linear-gradient(135deg, #dc2626, #ef4444);
+    }
+
+    .stat-promotion {
+        background: linear-gradient(135deg, #f59e0b, #fbbf24);
+    }
+
+    .stat-no-promotion {
+        background: linear-gradient(135deg, #9333ea, #a855f7);
+    }
+
+    .stat-under-100 {
+        background: linear-gradient(135deg, #ef4444, #f97316);
+    }
+
+    .stat-over-1000 {
+        background: linear-gradient(135deg, #10b981, #34d399);
+    }
+
+    /* Thanh tìm kiếm */
+    .search-filter {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 15px;
+        background: #fff;
+        padding: 15px;
+        border-radius: 12px;
+        box-shadow: 0 6px 15px rgba(0, 0, 0, 0.05);
+        margin-bottom: 20px;
+    }
+
+        .search-filter input, .search-filter select {
+            border-radius: 8px;
+            box-shadow: inset 0 2px 5px rgba(0, 0, 0, 0.08);
+            border: 1px solid #d1d5db;
+            padding: 10px 15px;
+            width: 350px;
+            height: 42px;
+            font-size: 0.95rem;
+            color: #1f2937;
+            background: #f9fafb;
+            transition: all 0.3s ease;
+        }
+
+            .search-filter input:focus {
+                outline: none;
+                border-color: #3b82f6;
+                box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+                background: #fff;
+            }
+
+            .search-filter input::placeholder {
+                color: #6b7280;
+                font-size: 0.9rem;
+                opacity: 1;
+            }
+
+        .search-filter .btn-outline-primary {
+            border-radius: 25px;
+            padding: 0.35rem 0.9rem;
+            font-weight: 500;
+            transition: all 0.3s ease;
+        }
+
+            .search-filter .btn-outline-primary:hover {
+                transform: translateY(-3px) scale(1.05);
+                box-shadow: 0 6px 15px rgba(0,0,0,0.2);
+            }
+
+    /* Bảng */
+    .table-custom {
+        border-radius: 12px;
+        overflow: hidden;
+        background: #fff;
+        box-shadow: 0 8px 20px rgba(0,0,0,0.08);
+    }
+
+        .table-custom thead {
+            background: linear-gradient(135deg, #1e40af, #3b82f6);
+            color: #fff;
+        }
+
+        .table-custom tbody tr {
+            transition: all 0.3s ease;
+        }
+
+            .table-custom tbody tr:hover {
+                background: rgba(59, 130, 246, 0.08);
+                transform: translateX(5px);
+            }
+
+    /* Nút bấm */
+    .btn-sm {
+        border-radius: 25px;
+        font-weight: 500;
+        padding: 0.35rem 0.9rem;
+        transition: all 0.3s ease;
+    }
+
+        .btn-sm:hover {
+            transform: translateY(-3px) scale(1.05);
+            box-shadow: 0 6px 15px rgba(0,0,0,0.2);
+        }
+
+    /* Badge trạng thái */
+    .badge {
+        padding: 0.4em 0.7em;
+        border-radius: 10px;
+        font-size: 0.85rem;
+        font-weight: 600;
+    }
+
+    /* Alert */
+    .alert {
+        position: fixed;
+        top: 20px;
+        left: 50%;
+        transform: translateX(-50%);
+        z-index: 1050;
+        border-radius: 8px;
+        border-left: 4px solid;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+        animation: slideIn 0.5s ease, fadeOut 0.5s ease 3s forwards;
+    }
+
+    keyframes slideIn {
+        from
+
+    {
+        top: -50px;
+        opacity: 0;
+    }
+
+    to {
+        top: 20px;
+        opacity: 1;
+    }
+
+    }
+
+    keyframes fadeOut {
+        from
+
+    {
+        opacity: 1;
+    }
+
+    to {
+        opacity: 0;
+        visibility: hidden;
+    }
+
+    }
+
+    /* Pagination styles */
+    .pagination-container {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        margin-top: 20px;
+        padding: 10px 0;
+    }
+
+    .pagination {
+        display: flex;
+        list-style: none;
+        padding: 0;
+        margin: 0;
+        gap: 8px;
+    }
+
+        .pagination li {
+            display: inline-block;
+        }
+
+            .pagination li a {
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                width: 38px;
+                height: 38px;
+                border-radius: 8px;
+                text-decoration: none;
+                color: #1e40af;
+                background: #fff;
+                border: 1px solid #e2e8f0;
+                font-weight: 500;
+                transition: all 0.3s ease;
+            }
+
+                .pagination li a:hover {
+                    background: #3b82f6;
+                    color: #fff;
+                    border-color: #3b82f6;
+                    transform: translateY(-2px);
+                }
+
+            .pagination li.active a {
+                background: #2563eb;
+                color: #fff;
+                border-color: #2563eb;
+                font-weight: 600;
+            }
+
+            .pagination li.disabled a {
+                color: #94a3b8;
+                cursor: not-allowed;
+                border-color: #e2e8f0;
+                background: #f8fafc;
+            }
+</style>
+
+<div class="employee-container">
     <!-- Notifications -->
     @if (TempData["Success"] != null)
     {
-        <div class="alert alert-success alert-dismissible fade show animate__animated animate__fadeInDown" role="alert">
+        <div class="alert alert-success alert-dismissible fade show" role="alert">
             <i class="bi bi-check-circle-fill me-2"></i>@TempData["Success"]
             <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
         </div>
     }
     @if (TempData["Error"] != null)
     {
-        <div class="alert alert-danger alert-dismissible fade show animate__animated animate__fadeInDown" role="alert">
+        <div class="alert alert-danger alert-dismissible fade show" role="alert">
             <i class="bi bi-exclamation-circle-fill me-2"></i>@TempData["Error"]
             <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
         </div>
     }
 
-    <!-- Search Bar -->
-    <div class="mb-4">
-        <div class="input-group shadow-sm">
-            <span class="input-group-text bg-light border-0"><i class="bi bi-search"></i></span>
-            <input type="text" id="searchInput" class="form-control border-0" placeholder="Tìm kiếm sản phẩm theo tên..." aria-label="Search" style="border-radius: 4px;">
-            <button class="btn btn-primary ms-2" type="button" id="searchButton" style="border-radius: 4px;">Tìm kiếm</button>
-        </div>
+    <!-- Thống kê -->
+    <div class="stats-container">
+        <button class="stat-card stat-total" onclick="filterStatus('all')">
+            <i class="fas fa-boxes"></i>
+            Tổng sản phẩm
+            <strong>@Model.Count</strong>
+        </button>
+        <button class="stat-card stat-active" onclick="filterStatus('active')">
+            <i class="fas fa-check-circle"></i>
+            Hoạt động
+            <strong>@activeProducts.Count</strong>
+        </button>
+        <button class="stat-card stat-inactive" onclick="filterStatus('inactive')">
+            <i class="fas fa-ban"></i>
+            Ngừng hoạt động
+            <strong>@inactiveProducts.Count</strong>
+        </button>
+        <button class="stat-card stat-promotion" onclick="filterStatus('promotion')">
+            <i class="fas fa-tags"></i>
+            Được khuyến mại
+            <strong>@productsWithPromotion.Count</strong>
+        </button>
+        <button class="stat-card stat-no-promotion" onclick="filterStatus('no-promotion')">
+            <i class="fas fa-tag"></i>
+            Không khuyến mại
+            <strong>@productsWithoutPromotion.Count</strong>
+        </button>
+        <button class="stat-card stat-under-100" onclick="filterStatus('under-100')">
+            <i class="fas fa-exclamation-triangle"></i>
+            Số lượng thấp (dưới 3)
+            <strong>@productsUnder100.Count</strong>
+        </button>
+        <button class="stat-card stat-over-1000" onclick="filterStatus('over-1000')">
+            <i class="fas fa-check-double"></i>
+            Số lượng cao (trên 100)
+            <strong>@productsOver1000.Count</strong>
+        </button>
     </div>
 
-    <!-- Product Details Link -->
-    <div class="mb-4 text-center">
-        <a asp-controller="ProductDetails" asp-action="Index" class="btn btn-primary shadow-sm" style="border-radius: 4px;">
-            <i class="bi bi-arrow-right-circle me-2"></i>Đến Trang Chi Tiết Sản Phẩm
+    <!-- Tìm kiếm & thao tác -->
+    <div class="search-filter">
+        <form asp-action="Index" method="get" class="d-flex gap-1 flex-grow-1">
+            <input type="text" name="searchTerm" id="searchInput" class="form-control" placeholder="Tìm kiếm sản phẩm theo tên..." value="@ViewBag.SearchTerm" />
+            <input type="hidden" name="activePage" value="@activePage" />
+            <input type="hidden" name="inactivePage" value="@inactivePage" />
+            <button type="submit" class="btn btn-outline-primary btn-sm rounded-pill" id="searchButton">
+                <i class="fas fa-search"></i>
+            </button>
+        </form>
+        <a asp-action="AddProduct" class="btn btn-success btn-sm">
+            <i class="fas fa-plus"></i> Thêm sản phẩm
         </a>
+        <a asp-action="Index" asp-controller="ProductDetails" class="btn btn-primary btn-sm">
+            <i class="fas fa-cogs"></i> Chi tiết sản phẩm
+        </a>
+        <a asp-action="ExportToExcel" class="btn btn-info btn-sm">
+            <i class="fas fa-file-export"></i> Xuất Excel
+        </a>
+        <form asp-action="ImportFromExcel" method="post" enctype="multipart/form-data" class="d-inline">
+            <input type="file" name="file" class="form-control d-none" id="importFile" accept=".xlsx,.xls" required />
+            <button type="button" class="btn btn-warning btn-sm" onclick="document.getElementById('importFile').click()">
+                <i class="fas fa-file-import"></i> Nhập Excel
+            </button>
+            <button type="submit" class="d-none" id="importSubmit"></button>
+        </form>
     </div>
 
     <!-- Toggle Buttons -->
     <div class="mb-4 d-flex justify-content-center gap-3">
-        <button id="showActive" class="btn btn-primary active" style="border-radius: 4px;">Sản Phẩm Hoạt Động</button>
-        <button id="showInactive" class="btn btn-outline-primary" style="border-radius: 4px;">Sản Phẩm Ngừng Hoạt Động</button>
+        <button id="showActive" class="btn btn-primary active" style="border-radius: 25px;">Sản Phẩm Hoạt Động</button>
+        <button id="showInactive" class="btn btn-outline-primary" style="border-radius: 25px;">Sản Phẩm Ngừng Hoạt Động</button>
     </div>
 
     <!-- Active Products -->
     <div id="activeProducts" class="card shadow-sm border-0 mb-4">
-        <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center" style="border-radius: 4px 4px 0 0;">
+        <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center" style="border-radius: 25px 25px 0 0;">
             <h5 class="mb-0">Sản Phẩm Hoạt Động</h5>
-            <a asp-action="AddProduct" class="btn btn-light btn-sm" style="border-radius: 4px;">
-                <i class="bi bi-plus-circle me-2"></i>Thêm Sản Phẩm
-            </a>
         </div>
         <div class="card-body p-0">
             <div class="table-responsive">
-                <table class="table table-hover table-striped align-middle" id="activeTable">
-                    <thead class="bg-light">
+                <table class="table table-hover table-striped align-middle table-custom" id="activeTable">
+                    <thead>
                         <tr>
                             <th class="py-3 px-4">ID</th>
                             <th class="py-3 px-4">Tên Sản Phẩm</th>
@@ -533,7 +417,7 @@
                         </tr>
                     </thead>
                     <tbody>
-                        @foreach (var product in activeProducts)
+                        @foreach (var product in pagedActiveProducts)
                         {
                             bool hasActivePromotion = false;
                             decimal basePrice = product.Gia;
@@ -575,10 +459,10 @@
                                     <span class="badge bg-success">Hoạt động</span>
                                 </td>
                                 <td class="py-3 px-4">
-                                    <a asp-action="Details" asp-route-id="@product.ID_San_Pham" class="btn btn-outline-primary btn-sm me-2" style="border-radius: 4px;">
+                                    <a asp-action="Details" asp-route-id="@product.ID_San_Pham" class="btn btn-outline-primary btn-sm me-2" style="border-radius: 25px;">
                                         <i class="bi bi-eye"></i> Chi tiết
                                     </a>
-                                    <a asp-action="EditProduct" asp-route-id="@product.ID_San_Pham" class="btn btn-outline-primary btn-sm" style="border-radius: 4px;">
+                                    <a asp-action="EditProduct" asp-route-id="@product.ID_San_Pham" class="btn btn-outline-primary btn-sm" style="border-radius: 25px;">
                                         <i class="bi bi-pencil"></i> Sửa
                                     </a>
                                 </td>
@@ -587,18 +471,35 @@
                     </tbody>
                 </table>
             </div>
+            <!-- Active Products Pagination -->
+            <div class="pagination-container">
+                <ul class="pagination">
+                    <li class="@(activePage == 1 ? "disabled" : "")">
+                        <a href="@Url.Action("Index", new { searchTerm = ViewBag.SearchTerm, statusFilter = ViewBag.StatusFilter, promotionFilter = ViewBag.PromotionFilter, quantityFilter = ViewBag.QuantityFilter, activePage = activePage - 1, inactivePage = inactivePage })">&laquo;</a>
+                    </li>
+                    @for (int i = 1; i <= totalActivePages; i++)
+                    {
+                        <li class="@(i == activePage ? "active" : "")">
+                            <a href="@Url.Action("Index", new { searchTerm = ViewBag.SearchTerm, statusFilter = ViewBag.StatusFilter, promotionFilter = ViewBag.PromotionFilter, quantityFilter = ViewBag.QuantityFilter, activePage = i, inactivePage = inactivePage })">@i</a>
+                        </li>
+                    }
+                    <li class="@(activePage == totalActivePages ? "disabled" : "")">
+                        <a href="@Url.Action("Index", new { searchTerm = ViewBag.SearchTerm, statusFilter = ViewBag.StatusFilter, promotionFilter = ViewBag.PromotionFilter, quantityFilter = ViewBag.QuantityFilter, activePage = activePage + 1, inactivePage = inactivePage })">&raquo;</a>
+                    </li>
+                </ul>
+            </div>
         </div>
     </div>
 
     <!-- Inactive Products -->
     <div id="inactiveProducts" class="card shadow-sm border-0 mb-4 d-none">
-        <div class="card-header bg-secondary text-white" style="border-radius: 4px 4px 0 0;">
+        <div class="card-header bg-secondary text-white" style="border-radius: 25px 25px 0 0;">
             <h5 class="mb-0">Sản Phẩm Ngừng Hoạt Động</h5>
         </div>
         <div class="card-body p-0">
             <div class="table-responsive">
-                <table class="table table-hover table-striped align-middle" id="inactiveTable">
-                    <thead class="bg-light">
+                <table class="table table-hover table-striped align-middle table-custom" id="inactiveTable">
+                    <thead>
                         <tr>
                             <th class="py-3 px-4">ID</th>
                             <th class="py-3 px-4">Tên Sản Phẩm</th>
@@ -611,7 +512,7 @@
                         </tr>
                     </thead>
                     <tbody>
-                        @foreach (var product in inactiveProducts)
+                        @foreach (var product in pagedInactiveProducts)
                         {
                             bool hasActivePromotion = false;
                             decimal basePrice = product.Gia;
@@ -653,10 +554,10 @@
                                     <span class="badge bg-danger">Không hoạt động</span>
                                 </td>
                                 <td class="py-3 px-4">
-                                    <a asp-action="Details" asp-route-id="@product.ID_San_Pham" class="btn btn-outline-primary btn-sm me-2" style="border-radius: 4px;">
+                                    <a asp-action="Details" asp-route-id="@product.ID_San_Pham" class="btn btn-outline-primary btn-sm me-2" style="border-radius: 25px;">
                                         <i class="bi bi-eye"></i> Chi tiết
                                     </a>
-                                    <a asp-action="EditProduct" asp-route-id="@product.ID_San_Pham" class="btn btn-outline-primary btn-sm" style="border-radius: 4px;">
+                                    <a asp-action="EditProduct" asp-route-id="@product.ID_San_Pham" class="btn btn-outline-primary btn-sm" style="border-radius: 25px;">
                                         <i class="bi bi-pencil"></i> Sửa
                                     </a>
                                 </td>
@@ -665,12 +566,28 @@
                     </tbody>
                 </table>
             </div>
+            <!-- Inactive Products Pagination -->
+            <div class="pagination-container">
+                <ul class="pagination">
+                    <li class="@(inactivePage == 1 ? "disabled" : "")">
+                        <a href="@Url.Action("Index", new { searchTerm = ViewBag.SearchTerm, statusFilter = ViewBag.StatusFilter, promotionFilter = ViewBag.PromotionFilter, quantityFilter = ViewBag.QuantityFilter, activePage = activePage, inactivePage = inactivePage - 1 })">&laquo;</a>
+                    </li>
+                    @for (int i = 1; i <= totalInactivePages; i++)
+                    {
+                        <li class="@(i == inactivePage ? "active" : "")">
+                            <a href="@Url.Action("Index", new { searchTerm = ViewBag.SearchTerm, statusFilter = ViewBag.StatusFilter, promotionFilter = ViewBag.PromotionFilter, quantityFilter = ViewBag.QuantityFilter, activePage = activePage, inactivePage = i })">@i</a>
+                        </li>
+                    }
+                    <li class="@(inactivePage == totalInactivePages ? "disabled" : "")">
+                        <a href="@Url.Action("Index", new { searchTerm = ViewBag.SearchTerm, statusFilter = ViewBag.StatusFilter, promotionFilter = ViewBag.PromotionFilter, quantityFilter = ViewBag.QuantityFilter, activePage = activePage, inactivePage = inactivePage + 1 })">&raquo;</a>
+                    </li>
+                </ul>
+            </div>
         </div>
     </div>
 </div>
 
 @section Scripts {
-    <!-- Load jQuery -->
     <script src="https://code.jquery.com/jquery-3.6.0.min.js" integrity="sha256-/xUj+3OJU5yExlq6GSYGSHk7tPXikynS7ogEvDej/m4=" crossorigin="anonymous"></script>
     <script>
         $(document).ready(function () {
@@ -711,152 +628,25 @@
                 showActive.addClass('btn-outline-primary').removeClass('btn-primary active');
             });
         });
+
+        function filterStatus(type) {
+            let url = '@Url.Action("Index", "Product")';
+            let search = $('#searchInput').val() || "";
+            let activePage = @activePage;
+            let inactivePage = @inactivePage;
+            if (type === 'all') window.location.href = `${url}?searchTerm=${encodeURIComponent(search)}&activePage=${activePage}&inactivePage=${inactivePage}`;
+            else if (type === 'active') window.location.href = `${url}?searchTerm=${encodeURIComponent(search)}&statusFilter=true&activePage=${activePage}&inactivePage=${inactivePage}`;
+            else if (type === 'inactive') window.location.href = `${url}?searchTerm=${encodeURIComponent(search)}&statusFilter=false&activePage=${activePage}&inactivePage=${inactivePage}`;
+            else if (type === 'promotion') window.location.href = `${url}?searchTerm=${encodeURIComponent(search)}&promotionFilter=true&activePage=${activePage}&inactivePage=${inactivePage}`;
+            else if (type === 'no-promotion') window.location.href = `${url}?searchTerm=${encodeURIComponent(search)}&promotionFilter=false&activePage=${activePage}&inactivePage=${inactivePage}`;
+            else if (type === 'under-100') window.location.href = `${url}?searchTerm=${encodeURIComponent(search)}&quantityFilter=under-100&activePage=${activePage}&inactivePage=${inactivePage}`;
+            else if (type === 'over-1000') window.location.href = `${url}?searchTerm=${encodeURIComponent(search)}&quantityFilter=over-1000&activePage=${activePage}&inactivePage=${inactivePage}`;
+        }
     </script>
 }
 
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css" />
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css">
-
-<style>
-    body {
-        font-family: 'Inter', sans-serif;
-        background-color: #f8f9fa;
-    }
-
-    .container-fluid {
-        max-width: 1400px;
-    }
-
-    .card {
-        border-radius: 8px;
-        overflow: hidden;
-        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-    }
-
-    .card-header {
-        padding: 1rem 1.5rem;
-        border-bottom: 1px solid #dee2e6;
-    }
-
-    .table {
-        margin-bottom: 0;
-        border-collapse: separate;
-        border-spacing: 0;
-    }
-
-        .table th, .table td {
-            vertical-align: middle;
-            border-top: 1px solid #dee2e6;
-            border-bottom: 1px solid #dee2e6;
-        }
-
-        .table thead th {
-            font-weight: 600;
-            color: #1a1a1a;
-            background-color: #e9ecef;
-        }
-
-        .table tbody tr:hover {
-            background-color: #f1f3f5;
-        }
-
-    .table-responsive {
-        border-radius: 4px;
-        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
-    }
-
-    .btn {
-        border-radius: 4px;
-        padding: 0.5rem 1rem;
-        font-weight: 500;
-        transition: all 0.2s ease;
-    }
-
-    .btn-primary {
-        background-color: #0052cc;
-        border-color: #0052cc;
-    }
-
-        .btn-primary:hover {
-            background-color: #003d99;
-            border-color: #003d99;
-            transform: translateY(-2px);
-            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
-        }
-
-    .btn-outline-primary {
-        border-color: #0052cc;
-        color: #0052cc;
-    }
-
-        .btn-outline-primary:hover {
-            background-color: #0052cc;
-            color: white;
-            transform: translateY(-2px);
-            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
-        }
-
-    .btn.active {
-        background-color: #003d99 !important;
-        border-color: #003d99 !important;
-        color: white !important;
-    }
-
-    .input-group-text {
-        border-radius: 4px 0 0 4px;
-        background-color: #e9ecef;
-        border-color: #ced4da;
-    }
-
-    .form-control {
-        border-radius: 0 4px 4px 0;
-        border-color: #ced4da;
-        box-shadow: none;
-    }
-
-        .form-control:focus {
-            border-color: #0052cc;
-            box-shadow: 0 0 0 3px rgba(0, 82, 204, 0.1);
-        }
-
-    .badge {
-        font-size: 0.85rem;
-        padding: 0.4rem 0.8rem;
-        border-radius: 4px;
-    }
-
-    .alert {
-        border-radius: 4px;
-        border-left: 4px solid;
-        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
-    }
-
-    .alert-success {
-        border-color: #28a745;
-    }
-
-    .alert-danger {
-        border-color: #dc3545;
-    }
-
-    .img-fluid {
-        border-radius: 4px;
-    }
-
-    .text-danger {
-        color: #dc3545 !important;
-    }
-
-    .text-primary {
-        color: #0052cc !important;
-    }
-
-    .text-muted {
-        color: #6c757d !important;
-    }
-
-    .fw-bold {
-        font-weight: 600 !important;
-    }
-</style>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet" />
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css" />
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" />
+```
