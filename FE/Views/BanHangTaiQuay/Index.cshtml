@@ -15,7 +15,7 @@
     var projectedProducts = rawProducts.Select(product =>
     {
         bool hasActivePromotion = false;
-        decimal basePrice = product.Gia ;
+        decimal basePrice = product.Gia;
         string promotionName = null;
 
         if (product.KhuyenMais != null && product.KhuyenMais.Any())
@@ -25,8 +25,8 @@
                 if (now >= km.Ngay_Bat_Dau && now <= km.Ngay_Ket_Thuc)
                 {
                     hasActivePromotion = true;
-                    // Lưu ý: Gia_Giam trong DB của bạn đang là GIÁ SAU KHUYẾN MÃI
-                    basePrice = km.Gia_Giam ?? (product.Gia );
+                    // Chú ý: Gia_Giam trong DB là GIÁ SAU KHUYẾN MÃI
+                    basePrice = km.Gia_Giam ?? product.Gia;
                     promotionName = km.Ten_Khuyen_Mai;
                     break;
                 }
@@ -37,7 +37,6 @@
         {
             product.ID_San_Pham,
             product.Ten_San_Pham,
-          
             product.Gia,
             product.Hinh_Anh,
             product.So_Luong,
@@ -60,10 +59,9 @@
 <form id="__afForm">@Html.AntiForgeryToken()</form>
 
 <style>
-    /* rộng giỏ hàng thêm ~80px */
     .pos-wrap {
         display: grid;
-        grid-template-columns: 1fr 500px; /* trước là 420px */
+        grid-template-columns: 1fr 500px;
         gap: 1rem;
     }
 
@@ -159,7 +157,6 @@
         pointer-events: none
     }
 
-    /* Invoice */
     .invoice {
         font-family: system-ui,-apple-system,Segoe UI,Roboto,'Helvetica Neue',Arial,'Noto Sans','Liberation Sans',sans-serif;
         max-width: 780px;
@@ -168,10 +165,6 @@
         font-size: 13px;
         background: #fff
     }
-
-        .invoice h1, .invoice h2, .invoice h3 {
-            margin: 0
-        }
 
         .invoice .muted {
             color: #6b7280
@@ -197,10 +190,6 @@
         .invoice .totals td {
             border: 0;
             padding: .25rem 0
-        }
-
-        .invoice .money {
-            font-weight: 600
         }
 
         .invoice .badge {
@@ -304,7 +293,7 @@
     </div>
 </div>
 
-<!-- Modal cấu hình item (CHỌN SIZE Ở ĐÂY) -->
+<!-- Modal cấu hình item -->
 <div class="modal fade" id="modalItem" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-dialog-scrollable">
         <div class="modal-content">
@@ -410,7 +399,7 @@
       toppings: @Html.Raw(toppingsJson)
     };
 
-    // ===== Size meta (dùng trong giỏ hàng / modal)
+    // Size meta
     const SIZE_META = {
       1: { id:1, name:"Cơ bản",  extra: 0 },
       2: { id:2, name:"Large",   extra: 10000 },
@@ -428,7 +417,7 @@
       return BE_BASE + (path.startsWith("/") ? "" : "/") + path;
     };
 
-    // ===== Helpers
+    // Helpers
     let PAGE=1, PAGE_SIZE=12, TOTAL=0;
     const esc = s => String(s??'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
     const toNumber = v => {
@@ -450,8 +439,6 @@
       return 0;
     };
 
-    // ==== KM: ĐÃ TÍNH Ở SERVER; fallback nếu cần
-    const CURRENT_DATE = new Date();
     const fmtVND = n => { try { return (toNumber(n)||0).toLocaleString('vi-VN',{style:'currency',currency:'VND'}) } catch { return n } };
     const calcOffPct = (orig, promo) => {
       const o = toNumber(orig), p = toNumber(promo);
@@ -460,21 +447,17 @@
       return pct>0 ? pct : null;
     };
 
-    // ===== SOURCE & FILTERED
-    let SOURCE = (window.__DATA.products || []).map(p => ({
-      ...p,
-      __Stock: pickStock(p)
-    }));
+    // Data
+    let SOURCE = (window.__DATA.products || []).map(p => ({ ...p, __Stock: pickStock(p) }));
     let FILTERED = SOURCE.slice();
 
-    // ===== OPTIONS (global lists)
     const OPTIONS = {
       doNgots : window.__DATA.doNgots  || [],
       luongDas: window.__DATA.luongDas || [],
       toppings: window.__DATA.toppings || []
     };
 
-    // ===== LẤY OPTION HỢP LỆ THEO SẢN PHẨM (cache)
+    // Allowed options cache
     const __ALLOWED_CACHE = {};
     async function fetchAllowedOptions(productId){
       if (__ALLOWED_CACHE[productId]) return __ALLOWED_CACHE[productId];
@@ -488,7 +471,7 @@
           luongDaIds: (p.luongDas || []).filter(x => x.trang_Thai).map(x => x.iD_LuongDa),
           toppingIds: (p.toppings || []).filter(x => x.trang_Thai && (x.so_Luong??0)>0).map(x => x.iD_Topping),
         };
-        if (!allowed.sizeIds.length) allowed.sizeIds = [1]; // luôn có size cơ bản
+        if (!allowed.sizeIds.length) allowed.sizeIds = [1];
         __ALLOWED_CACHE[productId] = allowed;
         return allowed;
       }catch(e){
@@ -497,11 +480,21 @@
       }
     }
 
-    // ===== CART / VOUCHER
+    // CART / VOUCHER
     let CART = [];
     let VOUCHER=null, DISCOUNT=0;
     let PAYABLE = 0;
     const cartQtyOf = productId => CART.filter(x=>x.sanPhamId==productId).reduce((s,x)=>s+x.soLuong,0);
+
+    // Huỷ voucher helper
+    function cancelVoucher(reason) {
+      VOUCHER = null;
+      DISCOUNT = 0;
+      const msg = document.getElementById('voucherMsg');
+      if (msg) msg.textContent = reason || 'Voucher đã bị huỷ vì không còn đủ điều kiện.';
+      const txt = document.getElementById('txtVoucher');
+      if (txt) txt.value = '';
+    }
 
     const resetSearch = ()=>{ document.getElementById('txtSearch').value=''; const cb=document.getElementById('chkOnlyPromo'); if(cb) cb.checked=false; searchProducts(1); };
     const prevPage = ()=>{ if(PAGE>1) searchProducts(PAGE-1) };
@@ -519,9 +512,7 @@
           ((p.Ma_San_Pham||('SP'+p.ID_San_Pham))).toLowerCase().includes(q)
         );
       }
-      if (onlyPromo) {
-        list = list.filter(p => !!p.__HasPromo);
-      }
+      if (onlyPromo) list = list.filter(p => !!p.__HasPromo);
 
       TOTAL = list.length;
       FILTERED = list.slice();
@@ -552,9 +543,7 @@
             </div>
           </div>`;
         const card = col.querySelector('.product-card');
-        if (!disabled) {
-          card.addEventListener('click', () => addToCart(p.ID_San_Pham, p.Ten_San_Pham));
-        }
+        if (!disabled) card.addEventListener('click', () => addToCart(p.ID_San_Pham, p.Ten_San_Pham));
         grid.appendChild(col);
       });
 
@@ -632,7 +621,7 @@
 
       const allowed = await fetchAllowedOptions(it.sanPhamId);
 
-      // Size buttons (chỉ allowed)
+      // Size buttons
       const sizesWrap = document.getElementById('mdlSizes');
       sizesWrap.innerHTML = '';
       const sizeList = (allowed.sizeIds && allowed.sizeIds.length ? allowed.sizeIds : [1]);
@@ -651,7 +640,7 @@
         sizesWrap.appendChild(btn);
       });
 
-      // Độ ngọt theo allowed
+      // Độ ngọt
       const selSweet = document.getElementById('mdlDoNgot');
       const dnSet = new Set(allowed.doNgotIds || []);
       const dnList = (OPTIONS.doNgots||[]).filter(d => dnSet.size ? dnSet.has(d.ID_DoNgot) : false);
@@ -659,7 +648,7 @@
         ? dnList.map(d=>`<option value="${d.ID_DoNgot}" ${it.doNgotId==d.ID_DoNgot?'selected':''}>${esc(d.Muc_Do)}</option>`).join('')
         : `<option value="">Không có độ ngọt</option>`;
 
-      // Lượng đá theo allowed
+      // Lượng đá
       const selIce = document.getElementById('mdlLuongDa');
       const ldSet = new Set(allowed.luongDaIds || []);
       const ldList = (OPTIONS.luongDas||[]).filter(d => ldSet.size ? ldSet.has(d.ID_LuongDa) : false);
@@ -670,7 +659,7 @@
           }).join('')
         : `<option value="">Không có lượng đá</option>`;
 
-      // Topping theo allowed
+      // Topping
       const topWrap = document.getElementById('mdlToppings');
       topWrap.innerHTML = '';
       const topSet = new Set(allowed.toppingIds || []);
@@ -836,10 +825,18 @@
       recalcTotals();
     }
 
+    // TÍNH LẠI – tự huỷ voucher khi không đủ điều kiện
     function recalcTotals(){
       const tam = CART.reduce((s,it)=> s + (it.donGia + it.sizeExtra + it.tienTopping)*it.soLuong, 0);
 
+      if (VOUCHER) {
+        if (VOUCHER.minOrder && tam < VOUCHER.minOrder) {
+          cancelVoucher(`Đơn đã giảm xuống dưới ${fmtVND(VOUCHER.minOrder)} – voucher đã huỷ.`);
+        }
+      }
+
       let giam = 0;
+
       if (VOUCHER) {
         if (VOUCHER.type === 'percent') {
           const pct = Number(VOUCHER.pct) || 0;
@@ -847,16 +844,18 @@
         } else if (VOUCHER.type === 'fixed') {
           giam = Number(VOUCHER.amount) || 0;
         }
-
-        // điều kiện tối thiểu (nếu có)
-        if (VOUCHER.minOrder && tam < VOUCHER.minOrder) {
-          giam = 0;
-          const msg = document.getElementById('voucherMsg');
-          if (msg) msg.textContent = `Đơn tối thiểu ${fmtVND(VOUCHER.minOrder)} để dùng voucher.`;
-        }
-
-        // áp trần 50% tổng
+        // áp trần
         giam = Math.min(giam, tam * 0.5);
+
+        if (giam <= 0) {
+          cancelVoucher('Voucher không còn mang lại giảm giá – đã huỷ.');
+          giam = 0;
+        } else {
+          const msg = document.getElementById('voucherMsg');
+          if (msg && VOUCHER.type === 'percent') {
+            msg.textContent = `Áp dụng ${VOUCHER.pct}% (đã áp trần 50% nếu cần). Giảm ${fmtVND(giam)}.`;
+          }
+        }
       }
 
       DISCOUNT = giam;
@@ -864,18 +863,16 @@
       PAYABLE = pay;
 
       document.getElementById('lblTamTinh').textContent   = fmtVND(tam);
-      document.getElementById('lblGiam').textContent      = `- ${fmtVND(giam)}`;
+      document.getElementById('lblGiam').textContent      = giam > 0 ? `- ${fmtVND(giam)}` : '0';
       document.getElementById('lblThanhToan').textContent = fmtVND(pay);
     }
 
-    // ==== Voucher
+    // Voucher
     async function applyVoucher(){
       const code = (document.getElementById('txtVoucher').value||'').trim();
-      const msg  = document.getElementById('voucherMsg');
 
       if(!code){
-        VOUCHER = null; DISCOUNT = 0;
-        msg.textContent = '';
+        cancelVoucher('');
         recalcTotals();
         return;
       }
@@ -901,29 +898,31 @@
         const minOrder   = Number(data.MinOrder   ?? data.minOrder ?? data.Yeu_Cau_Toi_Thieu) || 0;
 
         if(!res.ok || !success){
-          VOUCHER=null; DISCOUNT=0;
-          msg.textContent = message || 'Voucher không hợp lệ.';
+          cancelVoucher(message || 'Voucher không hợp lệ.');
           recalcTotals();
           return;
         }
 
         if (!pct && tam > 0) {
-          pct = Math.round((discount / tam) * 100); // ước lượng % nếu BE chỉ trả số tiền
+          pct = Math.round((discount / tam) * 100);
         }
 
         VOUCHER = { id: voucherId, code: codeReturn, pct, minOrder, type:'percent' };
-        DISCOUNT = discount; // hiển thị tức thời, recalcTotals sẽ tính lại theo %
-        msg.textContent = `${message || 'Áp dụng voucher thành công.'} Giảm ${fmtVND(DISCOUNT)}.`;
+        DISCOUNT = discount; // UI tức thời, recalcTotals sẽ tính chuẩn
+        const msg = document.getElementById('voucherMsg');
+        if (msg) msg.textContent = `${message || 'Áp dụng voucher thành công.'} Giảm ${fmtVND(DISCOUNT)}.`;
         recalcTotals();
 
       }catch(e){
-        VOUCHER=null; DISCOUNT=0;
-        msg.textContent = 'Lỗi gọi API voucher: ' + (e?.message || e);
+        cancelVoucher('Lỗi gọi API voucher: ' + (e?.message || e));
         recalcTotals();
       }
     }
 
-    const clearCart = ()=>{ CART=[]; VOUCHER=null; DISCOUNT=0; document.getElementById('txtVoucher').value=''; document.getElementById('voucherMsg').textContent=''; renderCart(); };
+    const clearCart = ()=>{
+      CART=[]; cancelVoucher('');
+      renderCart();
+    };
 
     function onLoaiChange(){
       const loai = document.getElementById('selLoai').value;
@@ -1122,7 +1121,7 @@
           }))
         };
 
-        // Trừ tồn & refresh
+        // Trừ tồn & refresh client
         CART.forEach(it=>{
           const prod = SOURCE.find(p=>p.ID_San_Pham==it.sanPhamId);
           if (prod) { prod.__Stock = Math.max(0, (prod.__Stock||0) - it.soLuong); }

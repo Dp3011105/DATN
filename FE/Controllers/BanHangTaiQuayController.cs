@@ -161,6 +161,7 @@ namespace FE.Controllers
             public string? Code { get; set; }
             public decimal Discount { get; set; }   // số tiền giảm
             public decimal Percentage { get; set; } // % giảm thực tế
+            public decimal MinOrder { get; set; }   // 👈 THÊM: đơn hàng tối thiểu yêu cầu
         }
 
         [HttpPost]
@@ -248,15 +249,20 @@ namespace FE.Controllers
                     : root.TryGetProperty("Ngay_Ket_Thuc", out var pE2) ? pE2.ToString()
                     : null);
 
-                if (!trangThai) return Json(new CheckVoucherResponse { Success = false, Message = "Voucher đã tắt." });
-                if (soLuong <= 0) return Json(new CheckVoucherResponse { Success = false, Message = "Voucher đã hết lượt dùng." });
+                if (!trangThai) return Json(new CheckVoucherResponse { Success = false, Message = "Voucher đã tắt.", MinOrder = minOrder });
+                if (soLuong <= 0) return Json(new CheckVoucherResponse { Success = false, Message = "Voucher đã hết lượt dùng.", MinOrder = minOrder });
 
                 var nowUtc = DateTime.UtcNow;
-                if (start.HasValue && nowUtc < start.Value) return Json(new CheckVoucherResponse { Success = false, Message = "Chưa đến thời gian áp dụng." });
-                if (end.HasValue && nowUtc > end.Value) return Json(new CheckVoucherResponse { Success = false, Message = "Voucher đã hết hạn." });
+                if (start.HasValue && nowUtc < start.Value) return Json(new CheckVoucherResponse { Success = false, Message = "Chưa đến thời gian áp dụng.", MinOrder = minOrder });
+                if (end.HasValue && nowUtc > end.Value) return Json(new CheckVoucherResponse { Success = false, Message = "Voucher đã hết hạn.", MinOrder = minOrder });
 
                 if (subtotal < minOrder)
-                    return Json(new CheckVoucherResponse { Success = false, Message = $"Đơn tối thiểu {minOrder:n0}đ để dùng voucher." });
+                    return Json(new CheckVoucherResponse
+                    {
+                        Success = false,
+                        Message = $"Đơn tối thiểu {minOrder:n0}đ để dùng voucher.",
+                        MinOrder = minOrder // 👈 trả về để FE biết ngưỡng và tự huỷ khi giảm xuống dưới
+                    });
 
                 // QUY ƯỚC: gia_Tri_Giam là % (0–100). Áp trần 50% đơn.
                 var pct = Math.Clamp(giaTriGiam, 0m, 100m);
@@ -265,7 +271,7 @@ namespace FE.Controllers
                 var discount = Math.Min(rawDiscount, cap);
 
                 if (discount <= 0)
-                    return Json(new CheckVoucherResponse { Success = false, Message = "Voucher không mang lại giảm giá." });
+                    return Json(new CheckVoucherResponse { Success = false, Message = "Voucher không mang lại giảm giá.", MinOrder = minOrder });
 
                 return Json(new CheckVoucherResponse
                 {
@@ -274,7 +280,8 @@ namespace FE.Controllers
                     VoucherId = id,
                     Code = codeFromObj ?? code,
                     Discount = discount,
-                    Percentage = pct
+                    Percentage = pct,
+                    MinOrder = minOrder // 👈 trả về cho FE
                 });
             }
             catch (Exception ex)
@@ -347,9 +354,7 @@ namespace FE.Controllers
                         if (!toppingMap.TryGetValue(tid, out var top)) continue;
                         var g = top?.Gia ?? 0m;
                         tienTopOne += g;
-                        // cũ: topPayload.Add(new { ID_Topping = tid, Gia = g });
                         topPayload.Add(new { ID_Topping = tid, So_Luong = 1, Gia_Topping = g });
-
                     }
 
                     // Đơn giá 1 sản phẩm (sau KM) + size + topping
