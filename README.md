@@ -77,8 +77,5 @@ Mở trình duyệt tại `https://localhost:5002` để truy cập giao diện.
 - Báo cáo thống kê doanh thu
 - Phân quyền tài khoản (Admin, Nhân viên, Khách hàng)
 
-## 📀 Đóng gói CD nộp
-- Folder `DATN-master` đầy đủ code
-- File `README.md` này
-- (Tùy chọn) File hướng dẫn chạy DB mẫu
-- Ghi tất cả vào CD, kèm theo báo cáo giấy
+
+
