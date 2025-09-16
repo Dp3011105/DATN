@@ -1,0 +1,56 @@
+﻿@{
+    ViewData["Title"] = "Tra cứu hóa đơn";
+}
+
+<div class="container mt-5">
+    <div class="card shadow-lg border-0 rounded-4">
+        <div class="card-header bg-primary text-white text-center rounded-top-4">
+            <h3>🔍 Tra cứu hóa đơn</h3>
+            <p class="mb-0">Nhập thông tin để kiểm tra trạng thái đơn hàng</p>
+        </div>
+        <div class="card-body p-4">
+            <form method="post" class="row g-3">
+                <div class="col-md-6">
+                    <label for="maHoaDon" class="form-label fw-bold">Mã hóa đơn</label>
+                    <input type="text" name="maHoaDon" class="form-control form-control-lg border-primary" placeholder="Nhập mã hóa đơn" required />
+                </div>
+                <div class="col-md-6">
+                    <label for="soDienThoai" class="form-label fw-bold">Số điện thoại</label>
+                    <input type="text" name="soDienThoai" class="form-control form-control-lg border-primary" placeholder="Nhập số điện thoại" required />
+                </div>
+                <div class="col-12 text-center">
+                    <button type="submit" class="btn btn-primary btn-lg px-5 rounded-pill shadow">
+                        Tra cứu
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    @if (ViewBag.Error != null)
+    {
+        <div class="alert alert-danger mt-4 text-center fw-bold shadow rounded-3">
+            ❌ @ViewBag.Error
+        </div>
+    }
+
+    @if (ViewBag.Result != null)
+    {
+        var result = ViewBag.Result;
+        <div class="card mt-4 shadow-lg border-success rounded-4">
+            <div class="card-header bg-success text-white text-center rounded-top-4">
+                <h4>📄 Kết quả tra cứu</h4>
+            </div>
+            <div class="card-body p-4">
+                <ul class="list-group list-group-flush">
+                    <li class="list-group-item"><b>Mã Hóa Đơn:</b> @result.ma_Hoa_Don</li>
+                    <li class="list-group-item"><b>Địa Chỉ:</b> @result.dia_Chi_Tu_Nhap</li>
+                    <li class="list-group-item"><b>Ngày Tạo:</b> @Convert.ToDateTime(result.ngay_Tao).ToString("dd/MM/yyyy HH:mm")</li>
+                    <li class="list-group-item"><b>Tổng Tiền:</b> @String.Format("{0:N0} đ", result.tong_Tien)</li>
+                    <li class="list-group-item"><b>Trạng Thái:</b> <span class="badge bg-warning text-dark">@result.trang_Thai</span></li>
+                    <li class="list-group-item"><b>Ghi Chú:</b> @result.ghi_Chu</li>
+                </ul>
+            </div>
+        </div>
+    }
+</div>

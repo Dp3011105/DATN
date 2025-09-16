@@ -1,0 +1,785 @@
+﻿@{
+    TimeZoneInfo vnTimeZone;
+    try
+    {
+        vnTimeZone = TimeZoneInfo.FindSystemTimeZoneById("SE Asia Standard Time");
+    }
+    catch
+    {
+        vnTimeZone = TimeZoneInfo.FindSystemTimeZoneById("Asia/Ho_Chi_Minh");
+    }
+    var currentDate = TimeZoneInfo.ConvertTimeFromUtc(DateTime.UtcNow, vnTimeZone);
+}
+@Html.Partial("_ShopClosedNotice")
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Giỏ Hàng</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css" />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css">
+    <style>
+        :root {
+            --primary: #3B82F6;
+            --primary-dark: #2563EB;
+            --secondary: #F59E0B;
+            --light-bg: #F8FAFC;
+            --card-bg: #FFFFFF;
+            --text-primary: #1F2937;
+            --text-secondary: #6B7280;
+            --success: #10B981;
+            --danger: #EF4444;
+        }
+
+        body {
+            font-family: 'Roboto', sans-serif;
+            background-color: var(--light-bg);
+            color: var(--text-primary);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .content-wrapper {
+            flex: 1 0 auto;
+        }
+        /* Cart Container */
+        .cart-container {
+            background: var(--card-bg);
+            border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+            padding: 1rem;
+            border: 1px solid #E5E7EB;
+        }
+
+        .cart-header {
+            background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+            color: white;
+            padding: 0.75rem 1rem;
+            border-radius: 8px;
+            margin: -1rem -1rem 1rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .cart-title {
+            font-size: 1.2rem;
+            font-weight: 600;
+        }
+
+        .cart-item {
+            display: flex;
+            align-items: center;
+            padding: 0.75rem 0;
+            border-bottom: 1px solid #E5E7EB;
+            gap: 0.75rem;
+        }
+
+            .cart-item:last-child {
+                border-bottom: none;
+            }
+
+        .cart-item-details {
+            flex-grow: 1;
+            font-size: 0.85rem;
+        }
+
+        .cart-item-name {
+            font-weight: 500;
+            color: var(--text-primary);
+        }
+
+        .cart-item-options {
+            color: var(--text-secondary);
+            font-size: 0.75rem;
+            margin-top: 0.25rem;
+        }
+
+        .cart-item-controls {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .cart-item-remove {
+            background: none;
+            border: none;
+            color: var(--danger);
+            font-size: 1rem;
+            cursor: pointer;
+            transition: color 0.2s ease;
+        }
+
+            .cart-item-remove:hover {
+                color: #B91C1C;
+            }
+
+        .cart-total {
+            font-weight: 600;
+            color: var(--primary);
+            margin: 1rem 0;
+            text-align: right;
+        }
+
+        .cart-checkout-btn {
+            width: 100%;
+            padding: 0.75rem;
+            background: linear-gradient(135deg, var(--success), #059669);
+            color: white;
+            font-weight: 500;
+            border-radius: 8px;
+            border: none;
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+        }
+
+            .cart-checkout-btn:hover {
+                transform: translateY(-2px);
+                box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            }
+
+        .cart-empty {
+            text-align: center;
+            color: var(--text-secondary);
+            padding: 2rem 0;
+            font-size: 0.9rem;
+        }
+        /* Alerts */
+        .alert-notification {
+            padding: 0.75rem 1rem;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-size: 0.9rem;
+            position: fixed;
+            top: 20%;
+            right: 1rem;
+            z-index: 50;
+            max-width: 350px;
+        }
+
+        .alert-success {
+            background: #ECFDF5;
+            color: var(--success);
+            border: 1px solid var(--success);
+        }
+
+        .alert-error {
+            background: #FEF2F2;
+            color: var(--danger);
+            border: 1px solid var(--danger);
+        }
+
+        .close-button {
+            background: none;
+            border: none;
+            font-size: 1rem;
+            cursor: pointer;
+            color: inherit;
+        }
+
+        .error-message {
+            display: block;
+            margin-top: 0.5rem;
+        }
+        /* Price Styles */
+        .original-price {
+            text-decoration: line-through;
+            color: var(--text-secondary);
+        }
+
+        .discounted-price {
+            font-weight: bold;
+        }
+
+        .regular-price {
+            font-weight: bold;
+        }
+        /* Footer */
+        .footer {
+            background: linear-gradient(135deg, #1F2937 0%, #111827 100%);
+            color: white;
+            padding: 3rem 0 1rem;
+            width: 100%;
+            flex-shrink: 0;
+            margin-top: auto;
+        }
+
+        .footer-container {
+            max-width: 100%;
+            padding-left: 1.5rem;
+            padding-right: 1.5rem;
+            margin: 0 auto;
+        }
+
+        .footer-section {
+            margin-bottom: 2rem;
+        }
+
+        .footer-title {
+            font-size: 1.2rem;
+            font-weight: 600;
+            margin-bottom: 1rem;
+            color: var(--secondary);
+        }
+
+        .footer-link {
+            display: block;
+            color: #D1D5DB;
+            text-decoration: none;
+            font-size: 0.9rem;
+            transition: color 0.2s ease;
+            margin-bottom: 0.5rem;
+        }
+
+            .footer-link:hover {
+                color: var(--primary);
+            }
+
+        .footer-social {
+            display: flex;
+            gap: 1rem;
+        }
+
+        .social-icon {
+            width: 40px;
+            height: 40px;
+            background: var(--primary);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            text-decoration: none;
+            transition: background 0.2s ease;
+        }
+
+            .social-icon:hover {
+                background: var(--primary-dark);
+            }
+
+        .footer-bottom {
+            border-top: 1px solid #374151;
+            padding-top: 1.5rem;
+            text-align: center;
+            color: #9CA3AF;
+            font-size: 0.85rem;
+        }
+        /* Responsive Footer */
+        media (max-width: 768px) {
+            .footer
+
+        {
+            padding: 2rem 0 1rem;
+        }
+
+        .footer-social {
+            justify-content: center;
+        }
+
+        }
+        /* Chat Bubble */
+        .chat-bubble {
+            position: fixed;
+            bottom: 1rem;
+            right: 1rem;
+            z-index: 50;
+            cursor: pointer;
+            background-color: #3B82F6;
+            color: white;
+            border-radius: 50%;
+            padding: 1rem;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+            transition: background-color 0.3s;
+        }
+
+            .chat-bubble:hover {
+                background-color: #2563EB;
+            }
+
+        .chat-frame {
+            position: fixed;
+            bottom: 0;
+            right: 0;
+            z-index: 50;
+            width: 23rem;
+            height: 35rem;
+            background-color: white;
+            border-radius: 1rem;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+            overflow: hidden;
+            display: none;
+        }
+
+        .close-chat {
+            position: absolute;
+            top: 0.5rem;
+            right: 0.5rem;
+            background: red;
+            border: none;
+            border-radius: 50%;
+            width: 30px;
+            height: 30px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+        }
+
+            .close-chat i {
+                font-size: 1rem;
+                color: white;
+            }
+
+        .chat-bubble i {
+            font-size: 2rem;
+        }
+    </style>
+</head>
+<body>
+    <div class="content-wrapper">
+        <div class="container mx-auto py-6 px-3 sm:px-4 lg:px-6">
+            <!-- Notifications -->
+            @if (TempData["Success"] != null)
+            {
+                <div class="alert-notification alert-success animate__animated animate__fadeInDown">
+                    <i class="bi bi-check-circle-fill mr-2 text-lg"></i>
+                    <div class="flex-1">@TempData["Success"]</div>
+                    <button type="button" class="close-button" data-bs-dismiss="alert" aria-label="Close">
+                        <i class="bi bi-x"></i>
+                    </button>
+                </div>
+            }
+            @if (TempData["Error"] != null)
+            {
+                <div class="alert-notification alert-error animate__animated animate__fadeInDown">
+                    <i class="bi bi-exclamation-circle-fill mr-2 text-lg"></i>
+                    <div class="flex-1">@TempData["Error"]</div>
+                    <button type="button" class="close-button" data-bs-dismiss="alert" aria-label="Close">
+                        <i class="bi bi-x"></i>
+                    </button>
+                </div>
+            }
+            <!-- Cart Container -->
+            <div class="cart-container">
+                <div class="cart-header">
+                    <h3 class="cart-title">Giỏ Hàng</h3>
+                </div>
+                <div id="cartItems" class="cart-items"></div>
+                <div class="cart-total" id="cartTotal">Tổng cộng: 0 đ</div>
+                <button id="checkoutBtn" class="cart-checkout-btn">Thanh Toán</button>
+                <span id="checkoutError" class="error-message text-red-500 text-xs hidden">Vui lòng chọn ít nhất một sản phẩm để thanh toán.</span>
+            </div>
+        </div>
+    </div>
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="footer-container">
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-6">
+                <div class="footer-section">
+                    <h3 class="footer-title">TheBoy Trà Sữa</h3>
+                    <p class="text-sm text-gray-300 mb-4">Cửa hàng trà sữa tươi ngon, nguyên liệu chất lượng cao. Mang đến những ly trà sữa thơm ngon, đậm đà hương vị Việt Nam.</p>
+                    <div class="flex items-center gap-4">
+                        <i class="bi bi-geo-alt text-primary text-lg"></i>
+                        <span class="text-sm">123 Đường ABC, Quận 1, TP. HCM</span>
+                    </div>
+                    <div class="flex items-center gap-4 mt-2">
+                        <i class="bi bi-telephone text-primary text-lg"></i>
+                        <span class="text-sm">+84 123 456 789</span>
+                    </div>
+                    <div class="flex items-center gap-4 mt-2">
+                        <i class="bi bi-envelope text-primary text-lg"></i>
+                        <span class="text-sm">theboy@trasua.vn</span>
+                    </div>
+                </div>
+                <div class="footer-section">
+                    <h3 class="footer-title">Menu</h3>
+                    <a href="/" class="footer-link">Trang chủ</a>
+                    <a href="/HomeKhachHang" class="footer-link">Sản phẩm</a>
+                    <a href="/GioiThieu" class="footer-link">Giới thiệu</a>
+                    <a href="/LienHe" class="footer-link">Liên hệ</a>
+                    <a href="/KhuyenMai" class="footer-link">Khuyến mãi</a>
+                </div>
+                <div class="footer-section">
+                    <h3 class="footer-title">Dịch vụ</h3>
+                    <a href="/GiaoHang" class="footer-link">Giao hàng</a>
+                    <a href="/ThanhToan" class="footer-link">Thanh toán</a>
+                    <a href="/ChinhSach" class="footer-link">Chính sách</a>
+                    <a href="/HoiDap" class="footer-link">Hỏi đáp</a>
+                </div>
+                <div class="footer-section">
+                    <h3 class="footer-title">Theo dõi chúng tôi</h3>
+                    <div class="footer-social">
+                        <a href="https://facebook.com/theboytrasua" class="social-icon" target="_blank" rel="noopener">
+                            <i class="bi bi-facebook"></i>
+                        </a>
+                        <a href="https://instagram.com/theboytrasua" class="social-icon" target="_blank" rel="noopener">
+                            <i class="bi bi-instagram"></i>
+                        </a>
+                        <a href="https://tiktok.com/theboytrasua" class="social-icon" target="_blank" rel="noopener">
+                            <i class="bi bi-tiktok"></i>
+                        </a>
+                        <a href="https://zalo.me/theboytrasua" class="social-icon" target="_blank" rel="noopener">
+                            <i class="bi bi-chat-dots"></i>
+                        </a>
+                    </div>
+                    <p class="text-sm text-gray-300 mt-4">Nhận ưu đãi đặc biệt qua app!</p>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <p>&copy; 2025 TheBoy Trà Sữa. Tất cả quyền được bảo lưu. | Thiết kế bởi xAI</p>
+            </div>
+        </div>
+    </footer>
+    <!-- Chat Bubble -->
+    <div id="chatBubble" class="chat-bubble">
+        <i class="bi bi-chat-dots text-2xl"></i>
+    </div>
+    <div id="chatFrame" class="chat-frame">
+        <button id="closeChat" class="close-chat">
+            <i class="bi bi-x"></i>
+        </button>
+        <iframe src="https://localhost:7081/chat/chatai" class="w-full h-full border-none"></iframe>
+    </div>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            const cartItemsContainer = document.getElementById('cartItems');
+            const cartTotalElement = document.getElementById('cartTotal');
+            const checkoutBtn = document.getElementById('checkoutBtn');
+            const checkoutError = document.getElementById('checkoutError');
+            let userId = null;
+            @if (Context.Request.Cookies["UserData"] != null)
+            {
+                    <text>
+                    try {
+                        const userData = JSON.parse('@Html.Raw(Context.Request.Cookies["UserData"])');
+                        userId = userData.ID_Khach_Hang;
+                        console.log('Parsed userId from UserData cookie:', userId);
+                    } catch (e) {
+                        console.error('Error parsing UserData cookie:', e);
+                    }
+                    </text>
+            }
+            else
+            {
+                    <text>
+                    console.log('No UserData cookie found');
+                    </text>
+            }
+            let sizesData = [];
+            async function fetchSizes() {
+                try {
+                    const response = await fetch('https://localhost:7169/api/Size', {
+                        method: 'GET',
+                        headers: { 'Content-Type': 'application/json' }
+                    });
+                    if (!response.ok) throw new Error(`Không thể lấy danh sách size: ${await response.text()}`);
+                    sizesData = await response.json();
+                    console.log('Fetched sizes:', sizesData);
+                } catch (error) {
+                    console.error('Lỗi fetch sizes:', error);
+                    showAlert('Lỗi khi lấy danh sách size!', 'error');
+                }
+            }
+            function updateSelectedItemsCookie(selectedItems) {
+                const cleanedItems = selectedItems.map(item => ({
+                    iD_GioHang_ChiTiet: item.iD_GioHang_ChiTiet,
+                    iD_San_Pham: item.iD_San_Pham,
+                    ten_San_Pham: item.ten_San_Pham,
+                    gia_Hien_Thi: item.gia_Hien_Thi || item.gia_Goc,
+                    gia_Goc: item.gia_Goc || item.gia_Hien_Thi,
+                    khuyen_Mai: {
+                        co_Khuyen_Mai: !!item.khuyen_Mai,
+                        ten_Khuyen_Mai: item.khuyen_Mai ? item.khuyen_Mai.ten_Khuyen_Mai || '' : '',
+                        gia_Giam: item.khuyen_Mai ? item.khuyen_Mai.gia_Giam || item.gia_Hien_Thi : item.gia_Hien_Thi
+                    },
+                    hinh_Anh: item.hinh_Anh,
+                    so_Luong: item.so_Luong,
+                    iD_Size: item.iD_Size || null,
+                    ten_Size: item.ten_Size || '',
+                    gia_Size: item.gia_Size || 0,
+                    iD_LuongDa: item.iD_LuongDa || null,
+                    ten_LuongDa: item.ten_LuongDa || '',
+                    iD_SanPham_DoNgot: item.iD_SanPham_DoNgot || null,
+                    ten_DoNgot: item.ten_DoNgot || '',
+                    ghi_Chu: item.ghi_Chu || '',
+                    toppings: item.toppings ? item.toppings.map(topping => ({
+                        iD_Topping: topping.iD_Topping,
+                        ten_Topping: topping.ten_Topping,
+                        gia_Topping: topping.gia_Topping
+                    })) : []
+                }));
+                document.cookie = `selectedCartItems=${encodeURIComponent(JSON.stringify(cleanedItems))}; path=/; max-age=86400`;
+            }
+            function getSelectedItemsFromCookie() {
+                const cookies = document.cookie.split('; ');
+                for (const cookie of cookies) {
+                    if (cookie.startsWith('selectedCartItems=')) {
+                        try {
+                            return JSON.parse(decodeURIComponent(cookie.split('=')[1])) || [];
+                        } catch (e) {
+                            console.error('Error parsing selectedCartItems cookie:', e);
+                            return [];
+                        }
+                    }
+                }
+                return [];
+            }
+            function clearSelectedItemsCookie() {
+                document.cookie = `selectedCartItems=; path=/; max-age=0`;
+            }
+            function updateCartTotal() {
+                let cartTotal = 0;
+                document.querySelectorAll('.cart-item').forEach(item => {
+                    const checkbox = item.querySelector('.cart-checkbox');
+                    if (checkbox && checkbox.checked) {
+                        const itemData = JSON.parse(item.dataset.itemData);
+                        const toppingTotal = itemData.toppings ? itemData.toppings.reduce((sum, topping) => sum + (topping.gia_Topping || 0), 0) : 0;
+                        const sizePrice = itemData.gia_Size || 0;
+                        const itemTotal = (itemData.gia_Hien_Thi + toppingTotal + sizePrice) * itemData.so_Luong;
+                        cartTotal += itemTotal;
+                    }
+                });
+                cartTotalElement.textContent = `Tổng cộng: ${cartTotal.toLocaleString('vi-VN')} đ`;
+            }
+            function showAlert(message, type) {
+                const alert = document.createElement('div');
+                alert.className = `alert-notification alert-${type} animate__animated animate__slideInRight max-w-sm`;
+                alert.innerHTML = `
+                    <i class="bi bi-${type === 'success' ? 'check-circle-fill' : 'exclamation-circle-fill'} mr-2 text-lg"></i>
+                    <div>${message}</div>
+                    <button type="button" class="close-button" onclick="this.parentElement.remove()">
+                        <i class="bi bi-x"></i>
+                    </button>
+                `;
+                document.body.appendChild(alert);
+                setTimeout(() => {
+                    if (alert.parentElement) alert.remove();
+                }, 3000);
+            }
+            async function fetchCart() {
+                if (!userId) {
+                    cartItemsContainer.innerHTML = '<p class="cart-empty text-gray-500 text-sm">Vui lòng đăng nhập để xem giỏ hàng.</p>';
+                    cartTotalElement.textContent = 'Tổng cộng: 0 đ';
+                    checkoutError.classList.add('hidden');
+                    clearSelectedItemsCookie();
+                    return;
+                }
+                try {
+                    const response = await fetch(`https://localhost:7169/api/Gio_Hang/${userId}`, {
+                        method: 'GET',
+                        headers: { 'Content-Type': 'application/json' }
+                    });
+                    if (!response.ok) throw new Error(`Không thể lấy dữ liệu giỏ hàng: ${await response.text()}`);
+                    const cartData = await response.json();
+                    displayCart(cartData);
+                } catch (error) {
+                    console.error('Lỗi khi lấy giỏ hàng:', error);
+                    cartItemsContainer.innerHTML = '<p class="cart-empty text-red-500 text-sm">Lỗi khi tải giỏ hàng.</p>';
+                    cartTotalElement.textContent = 'Tổng cộng: 0 đ';
+                    checkoutError.classList.add('hidden');
+                    clearSelectedItemsCookie();
+                }
+            }
+            function displayCart(cartData) {
+                cartItemsContainer.innerHTML = '';
+                let cartTotal = 0;
+                let selectedItems = getSelectedItemsFromCookie();
+                if (!cartData.chi_Tiet_Gio_Hang || cartData.chi_Tiet_Gio_Hang.length === 0) {
+                    cartItemsContainer.innerHTML = '<p class="cart-empty text-gray-500 text-sm">Giỏ hàng trống.</p>';
+                    cartTotalElement.textContent = 'Tổng cộng: 0 đ';
+                    checkoutError.classList.add('hidden');
+                    clearSelectedItemsCookie();
+                    return;
+                }
+                selectedItems = selectedItems.filter(selected =>
+                    cartData.chi_Tiet_Gio_Hang.some(item => item.iD_GioHang_ChiTiet === selected.iD_GioHang_ChiTiet)
+                );
+                updateSelectedItemsCookie(selectedItems);
+                cartData.chi_Tiet_Gio_Hang.forEach(item => {
+                    const toppingTotal = item.toppings ? item.toppings.reduce((sum, topping) => sum + (topping.gia_Topping || 0), 0) : 0;
+                    const size = sizesData.find(s => s.iD_Size === item.iD_Size);
+                    const sizePrice = size ? size.gia : 0;
+                    const itemTotal = (item.gia_Hien_Thi + toppingTotal + sizePrice) * item.so_Luong;
+                    const isChecked = selectedItems.some(selected => selected.iD_GioHang_ChiTiet === item.iD_GioHang_ChiTiet);
+                    const itemElement = document.createElement('div');
+                    itemElement.className = 'cart-item';
+                    itemElement.dataset.itemData = JSON.stringify({
+                        iD_GioHang_ChiTiet: item.iD_GioHang_ChiTiet,
+                        iD_San_Pham: item.iD_San_Pham,
+                        ten_San_Pham: item.ten_San_Pham,
+                        gia_Hien_Thi: item.gia_Hien_Thi,
+                        gia_Goc: item.gia_Goc,
+                        khuyen_Mai: item.khuyen_Mai ? {
+                            co_Khuyen_Mai: true,
+                            ten_Khuyen_Mai: item.khuyen_Mai.ten_Khuyen_Mai,
+                            gia_Giam: item.khuyen_Mai.gia_Giam
+                        } : { co_Khuyen_Mai: false },
+                        hinh_Anh: item.hinh_Anh,
+                        so_Luong: item.so_Luong,
+                        iD_Size: item.iD_Size,
+                        ten_Size: item.ten_Size,
+                        gia_Size: sizePrice,
+                        iD_LuongDa: item.iD_LuongDa,
+                        ten_LuongDa: item.ten_LuongDa,
+                        iD_SanPham_DoNgot: item.iD_SanPham_DoNgot,
+                        ten_DoNgot: item.ten_DoNgot,
+                        ghi_Chu: item.ghi_Chu,
+                        toppings: item.toppings
+                    });
+                    itemElement.innerHTML = `
+                        <input type="checkbox" class="cart-checkbox" ${isChecked ? 'checked' : ''} data-id="${item.iD_GioHang_ChiTiet}">
+                        <div class="cart-item-details">
+                            <div class="cart-item-name">${item.ten_San_Pham}</div>
+                            <div class="cart-item-options">
+                                ${item.ten_Size ? `Kích thước: ${item.ten_Size} (+${sizePrice.toLocaleString('vi-VN')} đ)<br>` : ''}
+                                ${item.ten_LuongDa ? `Lượng đá: ${item.ten_LuongDa}<br>` : ''}
+                                ${item.ten_DoNgot ? `Độ ngọt: ${item.ten_DoNgot}<br>` : ''}
+                                ${item.toppings && item.toppings.length > 0 ? `Topping: ${item.toppings.map(t => `${t.ten_Topping} (+${t.gia_Topping.toLocaleString('vi-VN')} đ)`).join(', ')}<br>` : ''}
+                                ${item.ghi_Chu ? `Ghi chú: ${item.ghi_Chu}` : ''}
+                            </div>
+                            <div class="price-container">
+                                ${item.khuyen_Mai && item.khuyen_Mai.co_Khuyen_Mai ? `
+                                    <span class="original-price text-xs">${(item.gia_Goc + toppingTotal + sizePrice).toLocaleString('vi-VN')} đ</span>
+                                    <span class="discounted-price text-sm font-semibold text-green-600">${(item.gia_Hien_Thi + toppingTotal + sizePrice).toLocaleString('vi-VN')} đ</span>
+                                ` : `
+                                    <span class="regular-price text-sm font-semibold">${(item.gia_Hien_Thi + toppingTotal + sizePrice).toLocaleString('vi-VN')} đ</span>
+                                `}
+                            </div>
+                        </div>
+                        <div class="cart-item-controls">
+                            <span class="cart-item-price">x${item.so_Luong}</span>
+                            <button class="cart-item-remove" data-id="${item.iD_GioHang_ChiTiet}">
+                                <i class="bi bi-trash"></i>
+                            </button>
+                        </div>
+                    `;
+                    cartItemsContainer.appendChild(itemElement);
+                    if (isChecked) {
+                        cartTotal += itemTotal;
+                    }
+                });
+                cartTotalElement.textContent = `Tổng cộng: ${cartTotal.toLocaleString('vi-VN')} đ`;
+                document.querySelectorAll('.cart-checkbox').forEach(checkbox => {
+                    checkbox.addEventListener('change', function () {
+                        const item = JSON.parse(this.closest('.cart-item').dataset.itemData);
+                        let selectedItems = getSelectedItemsFromCookie();
+                        if (this.checked) {
+                            selectedItems.push(item);
+                        } else {
+                            selectedItems = selectedItems.filter(selected => selected.iD_GioHang_ChiTiet !== item.iD_GioHang_ChiTiet);
+                        }
+                        updateSelectedItemsCookie(selectedItems);
+                        updateCartTotal();
+                    });
+                });
+                document.querySelectorAll('.cart-item-remove').forEach(btn => {
+                    btn.addEventListener('click', async function () {
+                        const id = this.dataset.id;
+                        let selectedItems = getSelectedItemsFromCookie();
+                        selectedItems = selectedItems.filter(selected => selected.iD_GioHang_ChiTiet !== id);
+                        updateSelectedItemsCookie(selectedItems);
+                        await removeCartItem(id);
+                    });
+                });
+            }
+            async function removeCartItem(id) {
+                try {
+                    const response = await fetch(`https://localhost:7169/api/Gio_Hang/delete/${id}`, {
+                        method: 'DELETE',
+                        headers: { 'Content-Type': 'application/json' }
+                    });
+                    if (!response.ok) throw new Error(`Không thể xóa sản phẩm: ${await response.text()}`);
+                    showAlert('Đã xóa sản phẩm khỏi giỏ hàng!', 'success');
+                    fetchCart();
+                } catch (error) {
+                    console.error('Lỗi khi xóa sản phẩm:', error);
+                    showAlert('Lỗi khi xóa sản phẩm!', 'error');
+                }
+            }
+            async function checkCartAvailability() {
+                if (!userId) {
+                    showAlert('Vui lòng đăng nhập để thanh toán!', 'error');
+                    return false;
+                }
+                try {
+                    const cartResponse = await fetch(`https://localhost:7169/api/Gio_Hang/${userId}`, {
+                        method: 'GET',
+                        headers: { 'Content-Type': 'application/json' }
+                    });
+                    if (!cartResponse.ok) throw new Error('Không thể lấy giỏ hàng');
+                    const cartData = await cartResponse.json();
+                    if (!cartData.chi_Tiet_Gio_Hang || cartData.chi_Tiet_Gio_Hang.length === 0) {
+                        showAlert('Giỏ hàng trống, vui lòng thêm sản phẩm!', 'error');
+                        checkoutError.classList.remove('hidden');
+                        return false;
+                    }
+                    const checkedItems = Array.from(document.querySelectorAll('.cart-checkbox:checked')).map(checkbox => {
+                        return JSON.parse(checkbox.closest('.cart-item').dataset.itemData);
+                    });
+                    if (checkedItems.length === 0) {
+                        showAlert('Vui lòng chọn ít nhất một sản phẩm để thanh toán!', 'error');
+                        checkoutError.classList.remove('hidden');
+                        return false;
+                    }
+                    for (const item of checkedItems) {
+                        const productResponse = await fetch(`https://localhost:7169/api/SanPham/${item.iD_San_Pham}`, {
+                            method: 'GET',
+                            headers: { 'Content-Type': 'application/json' }
+                        });
+                        if (!productResponse.ok) throw new Error(`Không thể lấy thông tin sản phẩm ${item.ten_San_Pham}`);
+                        const product = await productResponse.json();
+                        if (product.so_Luong < item.so_Luong) {
+                            showAlert(`Sản phẩm ${item.ten_San_Pham} chỉ còn ${product.so_Luong} số lượng, không đủ số lượng ${item.so_Luong}. Vui lòng chọn lại!`, 'error');
+                            checkoutError.classList.remove('hidden');
+                            return false;
+                        }
+                        if (item.toppings && item.toppings.length > 0) {
+                            for (const topping of item.toppings) {
+                                const productTopping = product.toppings.find(t => t.iD_Topping === topping.iD_Topping);
+                                if (!productTopping || productTopping.so_Luong < item.so_Luong) {
+                                    showAlert(`Topping ${topping.ten_Topping} chỉ còn ${productTopping ? productTopping.so_Luong : 0} số lượng, không đủ số lượng ${item.so_Luong}. Vui lòng chọn lại!`, 'error');
+                                    checkoutError.classList.remove('hidden');
+                                    return false;
+                                }
+                            }
+                        }
+                    }
+                    const selectedIds = checkedItems.map(item => item.iD_GioHang_ChiTiet);
+                    showAlert('Đang chuyển hướng đến trang thanh toán...', 'success');
+                    setTimeout(() => {
+                        window.location.href = `/CheckoutTK?selectedItems=${encodeURIComponent(JSON.stringify(selectedIds))}`;
+                    }, 1000);
+                    return true;
+                } catch (error) {
+                    console.error('Lỗi khi kiểm tra giỏ hàng:', error);
+                    showAlert('Lỗi khi kiểm tra giỏ hàng, vui lòng thử lại!', 'error');
+                    checkoutError.classList.remove('hidden');
+                    return false;
+                }
+            }
+            checkoutBtn.addEventListener('click', async function () {
+                checkoutError.classList.add('hidden');
+                await checkCartAvailability();
+            });
+            const chatBubble = document.getElementById('chatBubble');
+            const chatFrame = document.getElementById('chatFrame');
+            const closeChat = document.getElementById('closeChat');
+            chatBubble.addEventListener('click', () => {
+                chatFrame.style.display = chatFrame.style.display === 'none' ? 'block' : 'none';
+            });
+            closeChat.addEventListener('click', () => {
+                chatFrame.style.display = 'none';
+            });
+            Promise.all([fetchSizes()]).then(() => {
+                fetchCart();
+            });
+        });
+    </script>
+</body>
+</html>
