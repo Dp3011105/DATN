@@ -9,7 +9,6 @@ using System.IO;
 namespace FE.Controllers
 {
     [RoleAuthorize(2)] // Trang cho phép cả vai trò 2
-    // Phương thức này đươc để trong thư mục Filters nhé ae
     public class TaiKhoanController : Controller
     {
         private readonly ITaiKhoanService _taiKhoanService;
@@ -22,7 +21,7 @@ namespace FE.Controllers
         }
 
         [HttpGet]
-        public async Task<IActionResult> Index(string? search)
+        public async Task<IActionResult> Index(string? search, int page = 1, int pageSize = 10)
         {
             var taiKhoans = await _taiKhoanService.GetAllAsync();
 
@@ -30,8 +29,10 @@ namespace FE.Controllers
             {
                 taiKhoans = taiKhoans
                     .Where(t =>
-                        t.Ten_Nguoi_Dung.Contains(search, StringComparison.OrdinalIgnoreCase) ||
-                        (!string.IsNullOrEmpty(t.Email) && t.Email.Contains(search, StringComparison.OrdinalIgnoreCase))
+                        (t.NhanVien != null &&
+                         (t.NhanVien.Ho_Ten.Contains(search, StringComparison.OrdinalIgnoreCase) ||
+                         (!string.IsNullOrEmpty(t.NhanVien.Email) && t.NhanVien.Email.Contains(search, StringComparison.OrdinalIgnoreCase))))
+                        || (!string.IsNullOrEmpty(t.Ten_Nguoi_Dung) && t.Ten_Nguoi_Dung.Contains(search, StringComparison.OrdinalIgnoreCase))
                     )
                     .ToList();
             }
@@ -41,9 +42,21 @@ namespace FE.Controllers
             ViewBag.TaiKhoanHoatDong = taiKhoans.Count(t => t.Trang_Thai);
             ViewBag.TaiKhoanKhoa = taiKhoans.Count(t => !t.Trang_Thai);
 
-            ViewData["Search"] = search;
+            // Pagination
+            int totalItems = taiKhoans.Count();
+            int totalPages = (int)Math.Ceiling(totalItems / (double)pageSize);
+            page = Math.Max(1, Math.Min(page, totalPages)); // Ensure page is within valid range
+            var paginatedTaiKhoans = taiKhoans
+                .Skip((page - 1) * pageSize)
+                .Take(pageSize)
+                .ToList();
 
-            return View(taiKhoans);
+            ViewBag.CurrentPage = page;
+            ViewBag.PageSize = pageSize;
+            ViewBag.TotalPages = totalPages;
+            ViewBag.Search = search;
+
+            return View(paginatedTaiKhoans);
         }
 
         [HttpGet]
@@ -161,7 +174,19 @@ namespace FE.Controllers
         [HttpPost]
         public async Task<IActionResult> Delete(int id)
         {
+            var tk = await _taiKhoanService.GetByIdAsync(id);
+            if (tk == null) return NotFound();
+
+            var roles = tk.TaiKhoanVaiTros.Select(r => r.VaiTro.Ten_Vai_Tro).ToList();
+
+            if (roles.Contains("Admin"))
+            {
+                TempData["Error"] = "Không được phép xóa tài khoản Admin.";
+                return RedirectToAction("Index");
+            }
+
             await _taiKhoanService.DeleteAsync(id);
+            TempData["Success"] = "Xóa tài khoản thành công.";
             return RedirectToAction("Index");
         }
 

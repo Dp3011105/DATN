@@ -50,8 +50,9 @@ namespace Repository
         public async Task<IEnumerable<TaiKhoan>> GetAllAsync()
         {
             return await _context.Tai_Khoan
-                .AsNoTracking()
-                .ToListAsync();
+                               .Include(t => t.NhanVien) // Join bảng NhanVien
+                               .Include(t => t.TaiKhoanVaiTros).ThenInclude(v => v.VaiTro)
+                               .ToListAsync();
         }
 
         public async Task<TaiKhoan> GetByIdAsync(int id)
