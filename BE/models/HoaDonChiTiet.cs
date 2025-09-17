@@ -54,8 +54,7 @@ namespace BE.models
         [ ValidateNever]
         public virtual List<HoaDonChiTietTopping> HoaDonChiTietToppings { get; set; } = new();
 
-        [JsonIgnore, ValidateNever]
-        public virtual List<HoaDonChiTietThue> HoaDonChiTietThues { get; set; } = new();
+      
 
     }
 }
