@@ -22,22 +22,15 @@ namespace BE.Data
         public DbSet<SanPhamSize> SanPham_Size { get; set; }
         public DbSet<Topping> Topping { get; set; }
         public DbSet<SanPhamTopping> SanPham_Topping { get; set; }
-        public DbSet<Thue> Thue { get; set; }
         public DbSet<HoaDon> Hoa_Don { get; set; }
         public DbSet<HoaDonChiTiet> HoaDon_ChiTiet { get; set; }
         public DbSet<HoaDonChiTietTopping> HoaDonChiTiet_Topping { get; set; }
-        public DbSet<HoaDonChiTietThue> HoaDonChiTiet_Thue { get; set; }
-        public DbSet<DiemDanh> Diem_Danh { get; set; }
-        public DbSet<LichSuHoaDon> Lich_Su_Hoa_Don { get; set; }
         public DbSet<HinhThucThanhToan> Hinh_Thuc_Thanh_Toan { get; set; }
         public DbSet<Gio_Hang> Gio_Hang { get; set; }
         public DbSet<GioHang_ChiTiet> GioHang_ChiTiet { get; set; }
         public DbSet<GioHangChiTiet_Topping> GioHangChiTiet_Topping { get; set; }
         public DbSet<LuongDa> LuongDa { get; set; }
         public DbSet<SanPhamLuongDa> SanPhamLuongDa { get; set; }
-        public DbSet<ChatSession> Chat_Session { get; set; }
-        public DbSet<ChatSessionNhanVien> Chat_Session_Nhan_Vien { get; set; }
-        public DbSet<Message> Message { get; set; }
         public DbSet<SanPhamDoNgot> SanPham_DoNgot { get; set; }
         public DbSet<HoaDonVoucher> HoaDonVouchers { get; set; }
         public DbSet<SanPhamKhuyenMai> SanPhamKhuyenMai { get; set; }
@@ -308,12 +301,6 @@ namespace BE.Data
                 .WithMany(ld => ld.SanPhamLuongDas)
                 .HasForeignKey(spld => spld.ID_LuongDa);
 
-            // 18. Thue
-            modelBuilder.Entity<Thue>()
-                .HasKey(t => t.ID_Thue);
-            modelBuilder.Entity<Thue>()
-                .Property(t => t.Ty_Le)
-                .HasPrecision(5, 2);
 
             // 19. Hoa_Don
             modelBuilder.Entity<HoaDon>(e =>
@@ -589,42 +576,8 @@ namespace BE.Data
                 .Property(hdctt => hdctt.Gia_Topping)
                 .HasPrecision(18, 2);
 
-            // 22. HoaDonChiTiet_Thue
-            modelBuilder.Entity<HoaDonChiTietThue>()
-                .HasKey(hdctt => new { hdctt.ID_HoaDon_ChiTiet, hdctt.ID_Thue });
-            modelBuilder.Entity<HoaDonChiTietThue>()
-                .HasOne(hdctt => hdctt.HoaDonChiTiet)
-                .WithMany(hdct => hdct.HoaDonChiTietThues)
-                .HasForeignKey(hdctt => hdctt.ID_HoaDon_ChiTiet);
-            modelBuilder.Entity<HoaDonChiTietThue>()
-                .HasOne(hdctt => hdctt.Thue)
-                .WithMany(t => t.HoaDonChiTietThues)
-                .HasForeignKey(hdctt => hdctt.ID_Thue);
-            modelBuilder.Entity<HoaDonChiTietThue>()
-                .Property(hdctt => hdctt.Ghi_Chu)
-                .IsRequired(false);
+        
 
-            // 23. Diem_Danh
-            modelBuilder.Entity<DiemDanh>()
-                .HasKey(dd => dd.ID_Diem_Danh);
-            modelBuilder.Entity<DiemDanh>()
-                .HasOne(dd => dd.NhanVien)
-                .WithMany(n => n.DiemDanhs)
-                .HasForeignKey(dd => dd.NhanVien_ID);
-            modelBuilder.Entity<DiemDanh>()
-                .Property(dd => dd.Ghi_Chu)
-                .IsRequired(false);
-
-            // 24. Lich_Su_Hoa_Don
-            modelBuilder.Entity<LichSuHoaDon>()
-                .HasKey(lshd => lshd.ID_Lich_Su_Hoa_Don);
-            modelBuilder.Entity<LichSuHoaDon>()
-                .HasOne(lshd => lshd.HoaDon)
-                .WithMany(hd => hd.LichSuHoaDons)
-                .HasForeignKey(lshd => lshd.ID_Hoa_Don);
-            modelBuilder.Entity<LichSuHoaDon>()
-                .Property(lshd => lshd.Ghi_Chu)
-                .IsRequired(false);
 
             // 25. Hinh_Thuc_Thanh_Toan
             modelBuilder.Entity<HinhThucThanhToan>()
@@ -715,65 +668,7 @@ namespace BE.Data
             modelBuilder.Entity<GioHangChiTiet_Topping>()
                 .HasIndex(ghctt => ghctt.ID_GioHang_ChiTiet);
 
-            // 29. Chat_Session
-            modelBuilder.Entity<ChatSession>()
-                .HasKey(cs => cs.ID_Chat_Session);
-            modelBuilder.Entity<ChatSession>()
-                .HasOne(cs => cs.KhachHang)
-                .WithMany(k => k.ChatSessions)
-                .HasForeignKey(cs => cs.ID_Khach_Hang)
-                .IsRequired(true);
-            modelBuilder.Entity<ChatSession>()
-                .Property(cs => cs.Tieu_De)
-                .IsRequired(false);
-            modelBuilder.Entity<ChatSession>()
-                .Property(cs => cs.Trang_Thai)
-                .IsRequired(true)
-                .HasDefaultValue(true);
-
-            // 30. Chat_Session_Nhan_Vien
-            modelBuilder.Entity<ChatSessionNhanVien>()
-                .HasKey(csn => new { csn.ID_Chat_Session, csn.ID_Nhan_Vien });
-            modelBuilder.Entity<ChatSessionNhanVien>()
-                .HasOne(csn => csn.ChatSession)
-                .WithMany(cs => cs.ChatSessionNhanViens)
-                .HasForeignKey(csn => csn.ID_Chat_Session);
-            modelBuilder.Entity<ChatSessionNhanVien>()
-                .HasOne(csn => csn.NhanVien)
-                .WithMany(n => n.ChatSessionNhanViens)
-                .HasForeignKey(csn => csn.ID_Nhan_Vien);
-
-            // 31. Message
-            modelBuilder.Entity<Message>()
-                .HasKey(m => m.ID_Message);
-            modelBuilder.Entity<Message>()
-                .HasOne(m => m.ChatSession)
-                .WithMany(cs => cs.Messages)
-                .HasForeignKey(m => m.ID_Chat_Session)
-                .IsRequired(true);
-            modelBuilder.Entity<Message>()
-                .HasOne(m => m.KhachHang)
-                .WithMany(k => k.Messages)
-                .HasForeignKey(m => m.ID_Khach_Hang)
-                .IsRequired(false);
-            modelBuilder.Entity<Message>()
-                .HasOne(m => m.NhanVien)
-                .WithMany(n => n.Messages)
-                .HasForeignKey(m => m.ID_Nhan_Vien)
-                .IsRequired(false);
-            modelBuilder.Entity<Message>()
-                .Property(m => m.Noi_Dung)
-                .IsRequired(true);
-            modelBuilder.Entity<Message>()
-                .Property(m => m.Thoi_Gian_Gui)
-                .IsRequired(true)
-                .HasDefaultValueSql("GETDATE()");
-            modelBuilder.Entity<Message>()
-                .Property(m => m.Trang_Thai)
-                .IsRequired(true)
-                .HasDefaultValue(true);
-
-           
+                      
             // 32. HoaDonVoucher
             modelBuilder.Entity<HoaDonVoucher>()
                 .HasKey(hdv => hdv.ID_HoaDonVoucher);

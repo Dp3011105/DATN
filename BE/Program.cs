@@ -24,17 +24,13 @@ builder.Services.AddDbContext<MyDbContext>(option =>
 
 // Repository Registrations
 builder.Services.AddScoped<IGanVoucherRepository, GanVoucherRepository>();
-builder.Services.AddScoped<IChatSessionRepository, ChatSessionRepository>();
-builder.Services.AddScoped<IChatSessionNhanVienRepository, ChatSessionNhanVienRepository>();
 builder.Services.AddScoped<IDiaChiRepository, DiaChiRepository>();
-builder.Services.AddScoped<IDiemDanhRepository, DiemDanhRepository>();
 builder.Services.AddScoped<IGioHang_ChiTietRepository, GioHang_ChiTietRepository>();
 builder.Services.AddScoped<IGioHangChiTiet_ToppingRepository, GioHangChiTiet_ToppingRepository>();
 builder.Services.AddScoped<IGio_HangRepository, Gio_HangRepository>();
 builder.Services.AddScoped<IHinhThucThanhToanRepository, HinhThucThanhToanRepository>();
 builder.Services.AddScoped<IHoaDonRepository, HoaDonRepository>();
 builder.Services.AddScoped<IHoaDonChiTietRepository, HoaDonChiTietRepository>();
-builder.Services.AddScoped<IHoaDonChiTietThueRepository, HoaDonChiTietThueRepository>();
 builder.Services.AddScoped<IHoaDonChiTietToppingRepository, HoaDonChiTietToppingRepository>();
 builder.Services.AddScoped<IHoaDonVoucherRepository, HoaDonVoucherRepository>();
 builder.Services.AddScoped<IProfileRepository, ProfileRepository>();
@@ -44,8 +40,6 @@ builder.Services.AddScoped<IKhachHangRepository, KhachHangRepository>();
 
 builder.Services.AddScoped<IKhachHangDiaChiRepository, KhachHangDiaChiRepository>();
 builder.Services.AddScoped<IKhachHangVoucherRepository, KhachHangVoucherRepository>();
-builder.Services.AddScoped<ILichSuHoaDonRepository, LichSuHoaDonRepository>();
-builder.Services.AddScoped<IMessageRepository, MessageRepository>();
 builder.Services.AddScoped<INhanVienRepository, NhanVienRepository>();
 builder.Services.AddScoped<ISanPhamDoNgotRepository, SanPhamDoNgotRepository>();
 builder.Services.AddScoped<ISanPhamLuongDaRepository, SanPhamLuongDaRepository>();
@@ -53,7 +47,6 @@ builder.Services.AddScoped<ISanPhamSizeRepository, SanPhamSizeRepository>();
 builder.Services.AddScoped<ISanPhamToppingRepository, SanPhamToppingRepository>();
 builder.Services.AddScoped<ITaiKhoanRepository, TaiKhoanRepository>();
 builder.Services.AddScoped<ITaiKhoanVaiTroRepository, TaiKhoanVaiTroRepository>();
-builder.Services.AddScoped<IThueRepository, ThueRepository>();
 builder.Services.AddScoped<IVaiTroRepository, VaiTroRepository>();
 builder.Services.AddScoped<IVoucherRepository, VoucherRepository>();
 builder.Services.AddScoped<ISanPhamRepository, SanPhamRepository>();

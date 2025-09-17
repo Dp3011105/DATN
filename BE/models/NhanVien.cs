@@ -51,8 +51,6 @@ namespace BE.models
 
         public virtual ICollection<TaiKhoan> TaiKhoans { get; set; } = new List<TaiKhoan>();
         public virtual ICollection<HoaDon> HoaDons { get; set; } = new List<HoaDon>();
-        public virtual ICollection<DiemDanh> DiemDanhs { get; set; } = new List<DiemDanh>();
-        public virtual ICollection<ChatSessionNhanVien> ChatSessionNhanViens { get; set; } = new List<ChatSessionNhanVien>();
-        public virtual ICollection<Message> Messages { get; set; } = new List<Message>();
+
     }
 }

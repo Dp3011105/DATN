@@ -54,7 +54,6 @@ namespace BE.models
         // NHẬN chi tiết từ JSON: KHÔNG JsonIgnore
         [ValidateNever] public virtual List<HoaDonChiTiet> HoaDonChiTiets { get; set; } = new();
 
-        [JsonIgnore, ValidateNever] public virtual List<LichSuHoaDon> LichSuHoaDons { get; set; } = new();
         [JsonIgnore, ValidateNever] public virtual List<HoaDonVoucher> HoaDonVouchers { get; set; } = new();
     }
 }

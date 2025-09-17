@@ -15,7 +15,6 @@ builder.Services.AddHttpClient<IProductDetailsService, ProductDetailsService>();
 builder.Services.AddHttpClient();
 builder.Services.AddScoped<IHoaDonService, HoaDonService>();
 builder.Services.AddScoped<IHoaDonChiTietService, HoaDonChiTietService>();
-builder.Services.AddScoped<IHoaDonChiTietThueService, HoaDonChiTietThueService>();
 builder.Services.AddScoped<INhanVienService, NhanVienService>();
 builder.Services.AddScoped<IKhachHangService, KhachHangService>();
 builder.Services.AddScoped<IProfileService, ProfileService>();
@@ -45,25 +44,14 @@ builder.Services.AddHttpClient<IGanVoucherService, GanVoucherService>(client =>
 
 //Đăng ký các Service dùng Dependency Injection
 
-builder.Services.AddHttpClient<IChatSessionService, ChatSessionService>(client =>
-{
-    client.BaseAddress = new Uri(baseApiUrl);
-});
 
-builder.Services.AddHttpClient<IChatSessionNhanVienService, ChatSessionNhanVienService>(client =>
-{
-    client.BaseAddress = new Uri(baseApiUrl);
-});
 
 builder.Services.AddHttpClient<IDiaChiService, DiaChiService>(client =>
 {
     client.BaseAddress = new Uri(baseApiUrl);
 });
 
-builder.Services.AddHttpClient<IDiemDanhService, DiemDanhService>(client =>
-{
-    client.BaseAddress = new Uri(baseApiUrl);
-});
+
 
 builder.Services.AddHttpClient<IDoNgotService, DoNgotService>(client =>
 {
@@ -109,20 +97,14 @@ builder.Services.AddHttpClient<IKhachHangVoucherService, KhachHangVoucherService
     client.BaseAddress = new Uri(baseApiUrl);
 });
 
-builder.Services.AddHttpClient<ILichSuHoaDonService, LichSuHoaDonService>(client =>
-{
-    client.BaseAddress = new Uri(baseApiUrl);
-});
+
 
 builder.Services.AddHttpClient<ILuongDaService, LuongDaService>(client =>
 {
     client.BaseAddress = new Uri(baseApiUrl);
 });
 
-builder.Services.AddHttpClient<IMessageService, MessageService>(client =>
-{
-    client.BaseAddress = new Uri(baseApiUrl);
-});
+
 
 builder.Services.AddHttpClient<ISanPhamService, SanPhamService>(client =>
 {
@@ -154,10 +136,7 @@ builder.Services.AddHttpClient<ISizeService, SizeService>(client =>
     client.BaseAddress = new Uri(baseApiUrl);
 });
 
-builder.Services.AddHttpClient<IThueService, ThueService>(client =>
-{
-    client.BaseAddress = new Uri(baseApiUrl);
-});
+
 
 builder.Services.AddHttpClient<IToppingService, ToppingService>(client =>
 {
