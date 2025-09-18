@@ -418,6 +418,22 @@ namespace FE.Controllers
         {
             if (anhNhanVien != null && anhNhanVien.Length > 0)
             {
+                // Validate file type
+                var allowedExtensions = new[] { ".jpg", ".jpeg", ".png" };
+                var extension = Path.GetExtension(anhNhanVien.FileName).ToLowerInvariant();
+                if (!allowedExtensions.Contains(extension))
+                {
+                    ModelState.AddModelError("anhNhanVien", "Chỉ hỗ trợ định dạng .jpg, .jpeg, .png");
+                    return View(entity);
+                }
+
+                // Validate file size (e.g., max 5MB)
+                if (anhNhanVien.Length > 5 * 1024 * 1024)
+                {
+                    ModelState.AddModelError("anhNhanVien", "Kích thước file không được vượt quá 5MB");
+                    return View(entity);
+                }
+
                 var fileName = Path.GetFileName(anhNhanVien.FileName);
                 var filePath = Path.Combine("wwwroot/uploads", fileName);
 
@@ -428,6 +444,9 @@ namespace FE.Controllers
 
                 entity.AnhNhanVien = "/uploads/" + fileName;
             }
+
+            // Set default Trang_Thai to true (Đang làm)
+            entity.Trang_Thai = true;
 
             await _service.AddAsync(entity);
             return RedirectToAction("Index", "NhanVien");
@@ -572,7 +591,6 @@ namespace FE.Controllers
                 worksheet.Cell(1, 9).Value = "Trang_Thai";
                 worksheet.Cell(1, 10).Value = "Ghi_Chu";
                 worksheet.Cell(1, 11).Value = "AnhNhanVien";
-                worksheet.Cell(1, 12).Value = "AnhCCCD";
 
                 for (int i = 0; i < data.Count; i++)
                 {
@@ -587,7 +605,6 @@ namespace FE.Controllers
                     worksheet.Cell(i + 2, 9).Value = data[i].Trang_Thai.HasValue ? (data[i].Trang_Thai.Value ? "Đang làm" : "Nghỉ") : "Không xác định";
                     worksheet.Cell(i + 2, 10).Value = data[i].Ghi_Chu;
                     worksheet.Cell(i + 2, 11).Value = data[i].AnhNhanVien;
-                    worksheet.Cell(i + 2, 12).Value = data[i].AnhCCCD;
                 }
 
                 var range = worksheet.RangeUsed();
@@ -639,10 +656,9 @@ namespace FE.Controllers
                             Dia_Chi = row.Cell(6).GetString(),
                             NamSinh = DateTime.Parse(row.Cell(7).GetString()),
                             CCCD = row.Cell(8).GetString(),
-                            Trang_Thai = row.Cell(9).GetString() == "Đang làm" ? true : false,
+                            Trang_Thai = true, // Set default Trang_Thai to true (Đang làm)
                             Ghi_Chu = row.Cell(10).GetString(),
                             AnhNhanVien = row.Cell(11).GetString(),
-                            AnhCCCD = row.Cell(12).GetString()
                         };
 
                         if (string.IsNullOrEmpty(entity.Ho_Ten))
