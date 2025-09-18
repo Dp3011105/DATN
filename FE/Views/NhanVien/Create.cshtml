@@ -163,14 +163,6 @@
                         <span asp-validation-for="Dia_Chi" class="text-danger"></span>
                     </div>
                     <div class="col-md-6">
-                        <label asp-for="Trang_Thai" class="form-label"></label>
-                        <select asp-for="Trang_Thai" class="form-select">
-                            <option value="true">Đang làm</option>
-                            <option value="false">Nghỉ</option>
-                        </select>
-                        <span asp-validation-for="Trang_Thai" class="text-danger"></span>
-                    </div>
-                    <div class="col-md-6">
                         <label asp-for="Ghi_Chu" class="form-label"></label>
                         <input asp-for="Ghi_Chu" class="form-control" placeholder="Thêm ghi chú..." />
                         <span asp-validation-for="Ghi_Chu" class="text-danger"></span>
@@ -178,11 +170,6 @@
                     <div class="col-md-6">
                         <label class="form-label">Ảnh nhân viên</label>
                         <input type="file" name="anhNhanVien" class="form-control" accept="image/*" />
-                    </div>
-                    <div class="col-md-6">
-                        <label asp-for="AnhCCCD" class="form-label"></label>
-                        <input asp-for="AnhCCCD" class="form-control" placeholder="Nhập link ảnh CCCD..." />
-                        <span asp-validation-for="AnhCCCD" class="text-danger"></span>
                     </div>
                 </div>
                 <div class="mt-4 text-end">

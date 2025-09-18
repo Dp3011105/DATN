@@ -46,9 +46,6 @@ namespace BE.models
         [StringLength(255)]
         public string? AnhNhanVien { get; set; }
 
-        [StringLength(255)]
-        public string? AnhCCCD { get; set; }
-
         public virtual ICollection<TaiKhoan> TaiKhoans { get; set; } = new List<TaiKhoan>();
         public virtual ICollection<HoaDon> HoaDons { get; set; } = new List<HoaDon>();
 
