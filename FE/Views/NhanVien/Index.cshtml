@@ -1,5 +1,5 @@
-﻿```cshtml
-@model IEnumerable<BE.models.NhanVien>
+﻿@model IEnumerable<BE.models.NhanVien>
+@using BE.models
 @{
     ViewData["Title"] = "Danh sách nhân viên";
     Layout = "_AdminLayout";
@@ -170,7 +170,7 @@
 
     /* Nút bấm */
     .btn-sm {
-        border-radius: 4px; /* Điều chỉnh để giống trang sản phẩm */
+        border-radius: 4px;
         font-weight: 500;
         padding: 0.35rem 0.9rem;
         transition: all 0.3s ease;
@@ -230,7 +230,7 @@
                 transform: scale(1.2) rotate(90deg);
             }
 
-    /* Keyframes cho modal */
+    /* Keyframes cho modal - ĐÃ SỬA */
     keyframes fadeIn {
         from
 
@@ -242,6 +242,76 @@
     to {
         opacity: 1;
         transform: scale(1);
+    }
+
+    }
+    /* Thông báo trung tâm */
+    .centered-alert {
+        position: fixed;
+        top: 20px;
+        left: 50%;
+        transform: translateX(-50%);
+        z-index: 1060; /* Cao hơn modal */
+        max-width: 500px;
+        width: 90%;
+        padding: 15px 20px;
+        border-radius: 10px;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+        animation: slideInFromTop 0.3s ease-out;
+        display: none; /* Ẩn ban đầu, JS sẽ hiển thị */
+    }
+
+        .centered-alert.success {
+            background-color: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+
+        .centered-alert.error {
+            background-color: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+
+        .centered-alert .btn-close {
+            position: absolute;
+            top: 5px;
+            right: 5px;
+            font-size: 1.2rem;
+            opacity: 0.7;
+            transition: opacity 0.3s;
+        }
+
+            .centered-alert .btn-close:hover {
+                opacity: 1;
+            }
+
+    keyframes slideInFromTop {
+        from
+
+    {
+        opacity: 0;
+        transform: translate(-50%, -100%);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateX(-50%);
+    }
+
+    }
+
+    keyframes slideOutToTop {
+        from
+
+    {
+        opacity: 1;
+        transform: translateX(-50%);
+    }
+
+    to {
+        opacity: 0;
+        transform: translate(-50%, -100%);
     }
 
     }
@@ -305,6 +375,9 @@
 </style>
 
 <div class="employee-container">
+    <!-- Thông báo trung tâm (sử dụng div với class động) -->
+    <div id="centeredAlert" class="centered-alert"></div>
+
     <!-- Thống kê -->
     <div class="stats-container">
         <button class="stat-card stat-total" onclick="filterStatus('all')">
@@ -344,13 +417,9 @@
             <button id="deleteSelectedBtn" class="btn btn-danger btn-sm"><i class="fas fa-trash"></i> Xóa chọn</button>
             <a asp-action="Create" class="btn btn-success btn-sm"><i class="fas fa-plus"></i> Thêm</a>
             <a asp-action="ExportToExcel" asp-route-searchTerm="@ViewBag.SearchTerm" asp-route-statusFilter="@ViewBag.StatusFilter" class="btn btn-info btn-sm"><i class="fas fa-file-export"></i> Xuất Excel</a>
-            <form asp-action="ImportFromExcel" asp-controller="NhanVien" method="post" enctype="multipart/form-data" class="d-inline">
-                <input type="file" name="file" class="form-control d-none" id="importFile" accept=".xlsx,.xls" required />
-                <button type="button" class="btn btn-primary btn-sm" onclick="document.getElementById('importFile').click()">
-                    <i class="fas fa-file-import"></i> Import Excel
-                </button>
-                <button type="submit" class="d-none" id="importSubmit"></button>
-            </form>
+            <button type="button" class="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#importModal">
+                <i class="fas fa-file-import"></i> Import Excel
+            </button>
         </div>
     </div>
 
@@ -456,12 +525,12 @@
         <div class="modal-content">
             <div class="modal-header bg-primary text-white">
                 <h5 class="modal-title" id="importModalLabel">Import Excel</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <div class="modal-body">
                 <form asp-action="ImportFromExcel" asp-controller="NhanVien" method="post" enctype="multipart/form-data">
                     <div class="mb-3">
-                        <label for="fileExcel" class="form-label">Chọn file</label>
+                        <label for="fileExcel" class="form-label">Chọn file Excel</label>
                         <input type="file" name="file" id="fileExcel" class="form-control" accept=".xlsx,.xls" required />
                     </div>
                     <div class="modal-footer">
@@ -476,6 +545,7 @@
 
 @section Scripts {
     <script src="https://code.jquery.com/jquery-3.6.0.min.js" integrity="sha256-/xUj+3OJU5yExlq6GSYGSHk7tPXikynS7ogEvDej/m4=" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script>
         $(document).ready(function () {
             const modal = document.getElementById('detailModal');
@@ -483,11 +553,39 @@
             const triggers = document.querySelectorAll('.detail-trigger');
             const checkboxes = document.querySelectorAll('.employee-checkbox');
             const searchInput = $('#searchTerm');
+            const centeredAlert = $('#centeredAlert');
+
+            // Hiển thị thông báo trung tâm
+            function showAlert(message, isSuccess) {
+                centeredAlert.removeClass('success error').addClass(isSuccess ? 'success' : 'error')
+                    .html(message + '<button type="button" class="btn-close" aria-label="Close"></button>')
+                    .css('display', 'block');
+                setTimeout(() => {
+                    centeredAlert.addClass('fade-out');
+                    setTimeout(() => centeredAlert.css('display', 'none').removeClass('fade-out'), 300);
+                }, 5000); // Ẩn sau 5s
+            }
+
+            // Kiểm tra TempData và hiển thị thông báo
+            @if (TempData["Success"] != null)
+            {
+                    @:showAlert("@TempData["Success"].ToString().Replace("\"", "\\\"")", true);
+            }
+            @if (TempData["Error"] != null)
+            {
+                    @:showAlert("@Html.Raw(TempData["Error"].ToString().Replace("\"", "\\\""))", false);
+            }
+
+            // Xử lý đóng thông báo khi click nút close
+            centeredAlert.on('click', '.btn-close', function () {
+                centeredAlert.addClass('fade-out');
+                setTimeout(() => centeredAlert.css('display', 'none').removeClass('fade-out'), 300);
+            });
 
             // Chi tiết NV
             triggers.forEach(tr => {
                 tr.addEventListener('click', function (e) {
-                    if (e.target.closest("a,button,input")) return; // tránh conflict click
+                    if (e.target.closest("a,button,input")) return;
                     const id = this.getAttribute('data-id');
                     document.getElementById('modalBody').innerHTML = "Đang tải...";
                     fetch(`/NhanVien/Details/${id}`)
@@ -509,14 +607,21 @@
             // Xóa nhiều
             document.getElementById('deleteSelectedBtn').addEventListener('click', () => {
                 const ids = Array.from(checkboxes).filter(c => c.checked).map(c => c.dataset.id);
-                if (ids.length > 0 && confirm("Xóa các nhân viên đã chọn?")) {
+                if (ids.length === 0) {
+                    alert("Vui lòng chọn ít nhất một nhân viên để xóa.");
+                    return;
+                }
+                if (confirm("Xóa các nhân viên đã chọn?")) {
                     fetch('/NhanVien/DeleteSelected', {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify(ids)
                     }).then(r => r.json()).then(data => {
-                        if (data.success) location.reload();
-                        else alert("Có lỗi xảy ra");
+                        if (data.success) {
+                            location.reload();
+                        } else {
+                            alert("Có lỗi xảy ra: " + data.message);
+                        }
                     });
                 }
             });
@@ -548,4 +653,3 @@
         }
     </script>
 }
-```

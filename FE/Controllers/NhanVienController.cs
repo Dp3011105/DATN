@@ -2,17 +2,16 @@
 //using ClosedXML.Excel;
 //using FE.Filters;
 //using Microsoft.AspNetCore.Mvc;
-//using OfficeOpenXml;
-//using OfficeOpenXml.Drawing;
 //using Service.IService;
-//using System.Drawing;
-//using System.Drawing.Imaging;
+//using System;
+//using System.Collections.Generic;
 //using System.IO;
+//using System.Linq;
+//using System.Threading.Tasks;
 
 //namespace FE.Controllers
 //{
-//    [RoleAuthorize(2)]// Trang chỉ cho vai trò 2 truy cập// Phương thức này đươc để trong thư mục Filters nhé ae
-
+//    [RoleAuthorize(2)]
 //    public class NhanVienController : Controller
 //    {
 //        private readonly INhanVienService _service;
@@ -30,7 +29,10 @@
 
 //            if (!string.IsNullOrEmpty(searchTerm))
 //            {
-//                filteredResult = filteredResult.Where(nv => nv.Ho_Ten.Contains(searchTerm, StringComparison.OrdinalIgnoreCase));
+//                filteredResult = filteredResult.Where(nv =>
+//                    nv.Ho_Ten.Contains(searchTerm, StringComparison.OrdinalIgnoreCase) ||
+//                    nv.Email.Contains(searchTerm, StringComparison.OrdinalIgnoreCase) ||
+//                    nv.So_Dien_Thoai.Contains(searchTerm, StringComparison.OrdinalIgnoreCase));
 //            }
 
 //            if (statusFilter.HasValue)
@@ -38,10 +40,10 @@
 //                filteredResult = filteredResult.Where(nv => nv.Trang_Thai == statusFilter.Value);
 //            }
 
-//            ViewBag.TotalEmployees = result.Count(); 
+//            ViewBag.TotalEmployees = result.Count();
 //            ViewBag.WorkingEmployees = result.Count(nv => nv.Trang_Thai == true);
-//            ViewBag.LeavingEmployees = result.Count(nv => nv.Trang_Thai == false); 
-//            ViewBag.NewEmployees = result.Count(nv => (DateTime.Now - nv.NamSinh).TotalDays / 365 < 1); 
+//            ViewBag.LeavingEmployees = result.Count(nv => nv.Trang_Thai == false);
+//            ViewBag.NewEmployees = result.Count(nv => (DateTime.Now - nv.NamSinh).TotalDays / 365 < 1);
 
 //            var totalItems = filteredResult.Count();
 //            var paginatedResult = filteredResult
@@ -80,6 +82,22 @@
 //        {
 //            if (anhNhanVien != null && anhNhanVien.Length > 0)
 //            {
+//                // Validate file type
+//                var allowedExtensions = new[] { ".jpg", ".jpeg", ".png" };
+//                var extension = Path.GetExtension(anhNhanVien.FileName).ToLowerInvariant();
+//                if (!allowedExtensions.Contains(extension))
+//                {
+//                    ModelState.AddModelError("anhNhanVien", "Chỉ hỗ trợ định dạng .jpg, .jpeg, .png");
+//                    return View(entity);
+//                }
+
+//                // Validate file size (e.g., max 5MB)
+//                if (anhNhanVien.Length > 5 * 1024 * 1024)
+//                {
+//                    ModelState.AddModelError("anhNhanVien", "Kích thước file không được vượt quá 5MB");
+//                    return View(entity);
+//                }
+
 //                var fileName = Path.GetFileName(anhNhanVien.FileName);
 //                var filePath = Path.Combine("wwwroot/uploads", fileName);
 
@@ -90,6 +108,9 @@
 
 //                entity.AnhNhanVien = "/uploads/" + fileName;
 //            }
+
+//            // Set default Trang_Thai to true (Đang làm)
+//            entity.Trang_Thai = true;
 
 //            await _service.AddAsync(entity);
 //            return RedirectToAction("Index", "NhanVien");
@@ -156,6 +177,7 @@
 //                return StatusCode(500, $"Internal server error: {ex.Message}");
 //            }
 //        }
+
 //        [HttpPost]
 //        public async Task<IActionResult> DeleteSelected([FromBody] int[] ids)
 //        {
@@ -205,7 +227,10 @@
 
 //            if (!string.IsNullOrEmpty(searchTerm))
 //            {
-//                filteredResult = filteredResult.Where(nv => nv.Ho_Ten.Contains(searchTerm, StringComparison.OrdinalIgnoreCase));
+//                filteredResult = filteredResult.Where(nv =>
+//                    nv.Ho_Ten.Contains(searchTerm, StringComparison.OrdinalIgnoreCase) ||
+//                    nv.Email.Contains(searchTerm, StringComparison.OrdinalIgnoreCase) ||
+//                    nv.So_Dien_Thoai.Contains(searchTerm, StringComparison.OrdinalIgnoreCase));
 //            }
 
 //            if (statusFilter.HasValue)
@@ -219,7 +244,6 @@
 //            {
 //                var worksheet = workbook.Worksheets.Add("NhanVien");
 
-
 //                worksheet.Cell(1, 1).Value = "ID_Nhan_Vien";
 //                worksheet.Cell(1, 2).Value = "Ho_Ten";
 //                worksheet.Cell(1, 3).Value = "Email";
@@ -231,7 +255,6 @@
 //                worksheet.Cell(1, 9).Value = "Trang_Thai";
 //                worksheet.Cell(1, 10).Value = "Ghi_Chu";
 //                worksheet.Cell(1, 11).Value = "AnhNhanVien";
-//                worksheet.Cell(1, 12).Value = "AnhCCCD";
 
 //                for (int i = 0; i < data.Count; i++)
 //                {
@@ -246,14 +269,11 @@
 //                    worksheet.Cell(i + 2, 9).Value = data[i].Trang_Thai.HasValue ? (data[i].Trang_Thai.Value ? "Đang làm" : "Nghỉ") : "Không xác định";
 //                    worksheet.Cell(i + 2, 10).Value = data[i].Ghi_Chu;
 //                    worksheet.Cell(i + 2, 11).Value = data[i].AnhNhanVien;
-//                    worksheet.Cell(i + 2, 12).Value = data[i].AnhCCCD;
 //                }
 
 //                var range = worksheet.RangeUsed();
 //                var table = range.CreateTable();
-
 //                table.Theme = XLTableTheme.TableStyleMedium9;
-
 //                worksheet.Columns().AdjustToContents();
 
 //                using (var stream = new MemoryStream())
@@ -264,7 +284,6 @@
 //                }
 //            }
 //        }
-
 
 //        [HttpGet]
 //        public IActionResult Import()
@@ -281,44 +300,53 @@
 //                return RedirectToAction("Index");
 //            }
 
-//            using (var stream = new MemoryStream())
+//            try
 //            {
-//                await file.CopyToAsync(stream);
-//                stream.Position = 0;
-//                using (var workbook = new XLWorkbook(stream))
+//                using (var stream = new MemoryStream())
 //                {
-//                    var worksheet = workbook.Worksheet(1);
-//                    var rows = worksheet.RowsUsed().Skip(1); 
-
-//                    foreach (var row in rows)
+//                    await file.CopyToAsync(stream);
+//                    stream.Position = 0;
+//                    using (var workbook = new XLWorkbook(stream))
 //                    {
-//                        var entity = new NhanVien
+//                        var worksheet = workbook.Worksheet(1);
+//                        var rows = worksheet.RowsUsed().Skip(1);
+
+//                        foreach (var row in rows)
 //                        {
-//                            Ho_Ten = row.Cell(2).GetString(),
-//                            Email = row.Cell(3).GetString(),
-//                            GioiTinh = row.Cell(4).GetString() == "Nam" ? true : (row.Cell(4).GetString() == "Nữ" ? false : null),
-//                            So_Dien_Thoai = row.Cell(5).GetString(),
-//                            Dia_Chi = row.Cell(6).GetString(),
-//                            NamSinh = DateTime.Parse(row.Cell(7).GetString()),
-//                            CCCD = row.Cell(8).GetString(),
-//                            Trang_Thai = row.Cell(9).GetString() == "Đang làm" ? true : false,
-//                            Ghi_Chu = row.Cell(10).GetString(),
-//                            AnhNhanVien = row.Cell(11).GetString(),
-//                            AnhCCCD = row.Cell(12).GetString()
-//                        };
+//                            var entity = new NhanVien
+//                            {
+//                                Ho_Ten = row.Cell(2).GetString(),
+//                                Email = row.Cell(3).GetString(),
+//                                GioiTinh = row.Cell(4).GetString() == "Nam" ? true :
+//                                           (row.Cell(4).GetString() == "Nữ" ? false : null),
+//                                So_Dien_Thoai = row.Cell(5).GetString(),
+//                                Dia_Chi = row.Cell(6).GetString(),
+//                                NamSinh = row.Cell(7).DataType == XLDataType.DateTime
+//                                            ? row.Cell(7).GetDateTime()
+//                                            : DateTime.Parse(row.Cell(7).GetString()),
+//                                CCCD = row.Cell(8).GetString(),
+//                                Trang_Thai = row.Cell(9).GetString() == "Đang làm" ? true : false,
+//                                Ghi_Chu = row.Cell(10).GetString(),
+//                                AnhNhanVien = row.Cell(11).GetString(),
+//                            };
 
-//                        // Validate cơ bản
-//                        if (string.IsNullOrEmpty(entity.Ho_Ten))
-//                            continue; // Bỏ qua row lỗi
+//                            if (string.IsNullOrEmpty(entity.Ho_Ten))
+//                                continue;
 
-//                        await _service.AddAsync(entity);
+//                            await _service.AddAsync(entity);
+//                        }
 //                    }
 //                }
+//            }
+//            catch (Exception ex)
+//            {
+//                ModelState.AddModelError("", "Lỗi import: " + ex.Message);
 //            }
 
 //            return RedirectToAction("Index");
 //        }
-//        // Hàm hỗ trợ kiểm tra email
+
+
 //        private bool IsValidEmail(string email)
 //        {
 //            if (string.IsNullOrEmpty(email)) return false;
@@ -338,6 +366,7 @@ using BE.models;
 using ClosedXML.Excel;
 using FE.Filters;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Logging;
 using Service.IService;
 using System;
 using System.Collections.Generic;
@@ -351,10 +380,12 @@ namespace FE.Controllers
     public class NhanVienController : Controller
     {
         private readonly INhanVienService _service;
+        private readonly ILogger<NhanVienController> _logger;
 
-        public NhanVienController(INhanVienService service)
+        public NhanVienController(INhanVienService service, ILogger<NhanVienController> logger)
         {
             _service = service;
+            _logger = logger;
         }
 
         [HttpGet]
@@ -496,20 +527,25 @@ namespace FE.Controllers
             return RedirectToAction("Index", "NhanVien");
         }
 
+
         [HttpPost]
         public async Task<IActionResult> Delete(int id)
         {
             try
             {
                 await _service.DeleteAsync(id);
+                TempData["Success"] = "Đã cập nhật thành công.";
                 return RedirectToAction(nameof(Index));
             }
             catch (KeyNotFoundException)
             {
+                TempData["Error"] = "Không tìm thấy nhân viên.";
                 return NotFound();
             }
             catch (Exception ex)
             {
+                _logger.LogError(ex, "Lỗi , thất bại.");
+                TempData["Error"] = $"Lỗi , thất bại: {ex.Message}";
                 return StatusCode(500, $"Internal server error: {ex.Message}");
             }
         }
@@ -519,40 +555,56 @@ namespace FE.Controllers
         {
             try
             {
+                if (ids == null || !ids.Any())
+                {
+                    return Json(new { success = false, message = "Vui lòng chọn ít nhất một nhân viên." });
+                }
+
                 foreach (var id in ids)
                 {
                     await _service.DeleteAsync(id);
                 }
-                return Json(new { success = true });
+                return Json(new { success = true, message = "Xóa các nhân viên đã chọn thành công." });
             }
             catch (Exception ex)
             {
+                _logger.LogError(ex, "Lỗi khi xóa nhiều nhân viên.");
                 return Json(new { success = false, message = ex.Message });
             }
         }
 
         [HttpPost]
-        public async Task<IActionResult> UpdateStatus([FromBody] dynamic data)
+        public async Task<IActionResult> UpdateStatus([FromBody] UpdateStatusModel data)
         {
             try
             {
-                var ids = data.ids.ToObject<int[]>();
-                var status = data.status.ToObject<bool?>();
-                foreach (var id in ids)
+                if (data.Ids == null || !data.Ids.Any())
+                {
+                    return Json(new { success = false, message = "Vui lòng chọn ít nhất một nhân viên." });
+                }
+
+                foreach (var id in data.Ids)
                 {
                     var employee = await _service.GetByIdAsync(id);
                     if (employee != null)
                     {
-                        employee.Trang_Thai = status;
+                        employee.Trang_Thai = data.Status;
                         await _service.UpdateAsync(id, employee);
                     }
                 }
-                return Json(new { success = true });
+                return Json(new { success = true, message = "Cập nhật trạng thái thành công." });
             }
             catch (Exception ex)
             {
+                _logger.LogError(ex, "Lỗi khi cập nhật trạng thái.");
                 return Json(new { success = false, message = ex.Message });
             }
+        }
+
+        public class UpdateStatusModel
+        {
+            public int[] Ids { get; set; }
+            public bool? Status { get; set; }
         }
 
         [HttpGet]
@@ -591,6 +643,7 @@ namespace FE.Controllers
                 worksheet.Cell(1, 9).Value = "Trang_Thai";
                 worksheet.Cell(1, 10).Value = "Ghi_Chu";
                 worksheet.Cell(1, 11).Value = "AnhNhanVien";
+                worksheet.Cell(1, 12).Value = "AnhCCCD"; // Thêm lại AnhCCCD
 
                 for (int i = 0; i < data.Count; i++)
                 {
@@ -632,41 +685,124 @@ namespace FE.Controllers
         {
             if (file == null || file.Length == 0)
             {
-                ModelState.AddModelError("", "Vui lòng chọn file Excel.");
+                TempData["Error"] = "Vui lòng chọn file Excel.";
                 return RedirectToAction("Index");
             }
 
-            using (var stream = new MemoryStream())
+            var errors = new List<string>();
+            var importedCount = 0;
+            var existingEmployees = await _service.GetAllAsync();
+            var existingNames = new HashSet<string>(existingEmployees.Select(e => e.Ho_Ten), StringComparer.OrdinalIgnoreCase);
+            var existingCCCDs = new HashSet<string>(existingEmployees.Select(e => e.CCCD).Where(c => !string.IsNullOrEmpty(c)));
+
+            try
             {
-                await file.CopyToAsync(stream);
-                stream.Position = 0;
-                using (var workbook = new XLWorkbook(stream))
+                using (var stream = new MemoryStream())
                 {
-                    var worksheet = workbook.Worksheet(1);
-                    var rows = worksheet.RowsUsed().Skip(1);
-
-                    foreach (var row in rows)
+                    await file.CopyToAsync(stream);
+                    stream.Position = 0;
+                    using (var workbook = new XLWorkbook(stream))
                     {
-                        var entity = new NhanVien
+                        var worksheet = workbook.Worksheet(1);
+                        var rows = worksheet.RowsUsed().Skip(1);
+
+                        foreach (var row in rows)
                         {
-                            Ho_Ten = row.Cell(2).GetString(),
-                            Email = row.Cell(3).GetString(),
-                            GioiTinh = row.Cell(4).GetString() == "Nam" ? true : (row.Cell(4).GetString() == "Nữ" ? false : null),
-                            So_Dien_Thoai = row.Cell(5).GetString(),
-                            Dia_Chi = row.Cell(6).GetString(),
-                            NamSinh = DateTime.Parse(row.Cell(7).GetString()),
-                            CCCD = row.Cell(8).GetString(),
-                            Trang_Thai = true, // Set default Trang_Thai to true (Đang làm)
-                            Ghi_Chu = row.Cell(10).GetString(),
-                            AnhNhanVien = row.Cell(11).GetString(),
-                        };
+                            var rowNumber = row.RowNumber();
+                            try
+                            {
+                                var hoTen = row.Cell(2).GetString()?.Trim();
+                                if (string.IsNullOrEmpty(hoTen))
+                                {
+                                    errors.Add($"Dòng {rowNumber}: Bỏ qua vì họ tên rỗng.");
+                                    continue;
+                                }
 
-                        if (string.IsNullOrEmpty(entity.Ho_Ten))
-                            continue;
+                                var email = row.Cell(3).GetString()?.Trim();
+                                if (!IsValidEmail(email))
+                                {
+                                    errors.Add($"Dòng {rowNumber}: Email '{email}' không hợp lệ.");
+                                    continue;
+                                }
 
-                        await _service.AddAsync(entity);
+                                var cccd = row.Cell(8).GetString()?.Trim();
+                                if (string.IsNullOrEmpty(cccd))
+                                {
+                                    errors.Add($"Dòng {rowNumber}: CCCD rỗng.");
+                                    continue;
+                                }
+
+                                if (existingNames.Contains(hoTen))
+                                {
+                                    errors.Add($"Dòng {rowNumber}: Trùng tên '{hoTen}'.");
+                                    continue;
+                                }
+                                if (existingCCCDs.Contains(cccd))
+                                {
+                                    errors.Add($"Dòng {rowNumber}: Trùng mã nhân viên (CCCD) '{cccd}'.");
+                                    continue;
+                                }
+
+                                DateTime namSinh;
+                                if (row.Cell(7).DataType == XLDataType.DateTime)
+                                {
+                                    namSinh = row.Cell(7).GetDateTime();
+                                }
+                                else if (!DateTime.TryParse(row.Cell(7).GetString()?.Trim(), out namSinh))
+                                {
+                                    errors.Add($"Dòng {rowNumber}: Năm sinh không hợp lệ.");
+                                    continue;
+                                }
+
+                                var entity = new NhanVien
+                                {
+                                    Ho_Ten = hoTen,
+                                    Email = email,
+                                    GioiTinh = row.Cell(4).GetString() == "Nam" ? true :
+                                               (row.Cell(4).GetString() == "Nữ" ? false : null),
+                                    So_Dien_Thoai = row.Cell(5).GetString()?.Trim(),
+                                    Dia_Chi = row.Cell(6).GetString()?.Trim(),
+                                    NamSinh = namSinh,
+                                    CCCD = cccd,
+                                    Trang_Thai = row.Cell(9).GetString() == "Đang làm" ? true : false,
+                                    Ghi_Chu = row.Cell(10).GetString()?.Trim(),
+                                    AnhNhanVien = row.Cell(11).GetString()?.Trim()
+                                };
+
+                                await _service.AddAsync(entity);
+                                importedCount++;
+                                existingNames.Add(hoTen);
+                                existingCCCDs.Add(cccd);
+                            }
+                            catch (Exception ex)
+                            {
+                                errors.Add($"Dòng {rowNumber}: Lỗi xử lý dữ liệu - {ex.Message}");
+                            }
+                        }
                     }
                 }
+
+                if (errors.Any())
+                {
+                    TempData["Error"] = string.Join("<br/>", errors);
+                    if (importedCount > 0)
+                    {
+                        TempData["Success"] = $"Import thành công {importedCount} bản ghi, nhưng có lỗi ở một số dòng.";
+                    }
+                }
+                else if (importedCount > 0)
+                {
+                    TempData["Success"] = $"Import thành công {importedCount} bản ghi.";
+                }
+                else
+                {
+                    TempData["Error"] = "Không có bản ghi nào được import.";
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Lỗi import file Excel.");
+                TempData["Error"] = $"Lỗi import toàn bộ file: {ex.Message}";
             }
 
             return RedirectToAction("Index");
