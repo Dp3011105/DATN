@@ -58,8 +58,8 @@ namespace Repository
         public async Task<TaiKhoan> GetByIdAsync(int id)
         {
             return await _context.Tai_Khoan
-                .AsNoTracking()
-                .FirstOrDefaultAsync(x => x.ID_Tai_Khoan == id);
+                                 .Include(t => t.NhanVien)
+                                 .FirstOrDefaultAsync(t => t.ID_Tai_Khoan == id);
         }
 
         public async Task UpdateAsync(int id, TaiKhoan entity)
