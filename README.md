@@ -5,12 +5,14 @@ Dự án này được phát triển trong khuôn khổ **Đồ án Tốt nghi�
 Mục tiêu: Xây dựng hệ thống quản lý bán hàng đa nền tảng, hỗ trợ quản lý sản phẩm, đơn hàng, khách hàng, khuyến mãi, và thanh toán.
 
 ## 👨‍💻 Thành viên nhóm
-- **Vũ Xuân Phúc** – MSSV: *…*
-- **Nguyễn Quang Huy** – MSSV: *…*
-- **… (các thành viên khác điền vào) …*
+- **Vũ Xuân Phúc** – MSSV: *PH54760*
+- **Nguyễn Đức Phương** – MSSV: *PH53969*
+- **Đào Hiệp Hưng** – MSSV: *PH53856*
+- **Nguyễn Đức Phước** – MSSV: *PH53971*
+
 
 ## ⚙️ Công nghệ sử dụng
-- **Back-end**: ASP.NET Core (.NET 6/7/8 tuỳ version trong `.csproj`)
+- **Back-end**: ASP.NET Core (.NET 8 `.csproj`)
 - **Entity Framework Core**: ORM quản lý database
 - **SQL Server**: Cơ sở dữ liệu chính
 - **Front-end**: ASP.NET MVC (Views Razor)

@@ -65,11 +65,6 @@ namespace BE.Data
                 .IsRequired(false) // Optional field
                 .HasMaxLength(255);
 
-            modelBuilder.Entity<NhanVien>()
-                .Property(n => n.AnhCCCD)
-                .IsRequired(false) // Optional field
-                .HasMaxLength(255);
-
             // 3. Khach_Hang
             modelBuilder.Entity<KhachHang>()
                 .HasKey(k => k.ID_Khach_Hang);
@@ -517,7 +512,7 @@ namespace BE.Data
                     Trang_Thai = true,
                     Ghi_Chu = "Nhân viên Admin",
                     AnhNhanVien = null, // Có thể thêm đường dẫn ảnh nếu cần
-                    AnhCCCD = null // Có thể thêm đường dẫn ảnh nếu cần
+   
                 }
             );
 

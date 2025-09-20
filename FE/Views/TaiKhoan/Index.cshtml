@@ -1,4 +1,4 @@
-﻿@model IEnumerable<BE.models.TaiKhoan>
+﻿@* @model IEnumerable<BE.models.TaiKhoan>
 @{
     ViewData["Title"] = "Quản lý tài khoản";
     Layout = "_AdminLayout";
@@ -265,7 +265,7 @@
                                         <i class="fas fa-edit"></i>
                                     </a>
 
-                                    @* Chỉ hiển thị nút Xóa nếu KHÔNG phải là Admin *@
+                                    @* Chỉ hiển thị nút Xóa nếu KHÔNG phải là Admin 
                                     @if (!item.TaiKhoanVaiTros.Any(v => v.VaiTro.Ten_Vai_Tro == "Admin"))
                                     {
                                         <form method="post"
@@ -334,4 +334,570 @@
 @if (TempData["Error"] != null)
 {
     <div class="alert alert-danger">@TempData["Error"]</div>
+} *@
+
+
+
+@model IEnumerable<BE.models.TaiKhoan>
+@using BE.models
+@{
+    ViewData["Title"] = "Quản lý tài khoản";
+    Layout = "_AdminLayout";
+
+    var tongTaiKhoan = ViewBag.TongTaiKhoan as int? ?? 0;
+    var taiKhoanHoatDong = ViewBag.TaiKhoanHoatDong as int? ?? 0;
+    var taiKhoanKhoa = ViewBag.TaiKhoanKhoa as int? ?? 0;
+    var currentPage = ViewBag.CurrentPage as int? ?? 1;
+    var pageSize = ViewBag.PageSize as int? ?? 10;
+    var totalPages = ViewBag.TotalPages as int? ?? 1;
+    var search = ViewBag.Search as string;
+}
+
+<style>
+    /* Container chính */
+    .account-container {
+        background: linear-gradient(135deg, #f8fafc, #e2e8f0);
+        border-radius: 18px;
+        padding: 25px;
+        box-shadow: 0 12px 35px rgba(0, 0, 0, 0.1);
+        margin-bottom: 25px;
+    }
+
+    /* Thống kê tài khoản */
+    .stats-container {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 18px;
+        margin-bottom: 25px;
+    }
+
+    .stat-card {
+        padding: 25px 15px;
+        border-radius: 18px;
+        text-align: center;
+        font-weight: 600;
+        font-size: 1rem;
+        color: #fff;
+        cursor: pointer;
+        position: relative;
+        overflow: hidden;
+        transition: all 0.4s ease;
+    }
+
+        .stat-card i {
+            font-size: 1.8rem;
+            margin-bottom: 10px;
+            opacity: 0.9;
+        }
+
+        .stat-card strong {
+            display: block;
+            font-size: 1.5rem;
+            margin-top: 5px;
+        }
+
+        .stat-card:hover {
+            transform: translateY(-6px) scale(1.05);
+            box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+        }
+
+    .stat-total {
+        background: linear-gradient(135deg, #2563eb, #3b82f6);
+    }
+
+    .stat-active {
+        background: linear-gradient(135deg, #059669, #10b981);
+    }
+
+    .stat-locked {
+        background: linear-gradient(135deg, #dc2626, #ef4444);
+    }
+
+    /* Thanh tìm kiếm */
+    .search-filter {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 15px;
+        background: #fff;
+        padding: 15px;
+        border-radius: 12px;
+        box-shadow: 0 6px 15px rgba(0, 0, 0, 0.05);
+        margin-bottom: 20px;
+    }
+
+        .search-filter input, .search-filter select {
+            border-radius: 8px;
+            box-shadow: inset 0 2px 5px rgba(0, 0, 0, 0.08);
+            border: 1px solid #d1d5db;
+            padding: 10px 15px;
+            width: 350px;
+            height: 42px;
+            font-size: 0.95rem;
+            color: #1f2937;
+            background: #f9fafb;
+            transition: all 0.3s ease;
+        }
+
+            .search-filter input:focus {
+                outline: none;
+                border-color: #3b82f6;
+                box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+                background: #fff;
+            }
+
+            .search-filter input::placeholder {
+                color: #6b7280;
+                font-size: 0.9rem;
+                opacity: 1;
+            }
+
+        .search-filter .btn-outline-primary {
+            border-radius: 8px;
+            padding: 0.35rem 0.9rem;
+            font-weight: 500;
+            transition: all 0.3s ease;
+        }
+
+            .search-filter .btn-outline-primary:hover {
+                transform: translateY(-3px) scale(1.05);
+                box-shadow: 0 6px 15px rgba(0,0,0,0.2);
+            }
+
+    /* Bảng */
+    .table-custom {
+        border-radius: 12px;
+        overflow: hidden;
+        background: #fff;
+        box-shadow: 0 8px 20px rgba(0,0,0,0.08);
+    }
+
+        .table-custom thead {
+            background: linear-gradient(135deg, #1e40af, #3b82f6);
+            color: #fff;
+        }
+
+        .table-custom tbody tr {
+            transition: all 0.3s ease;
+        }
+
+            .table-custom tbody tr:hover {
+                background: rgba(59, 130, 246, 0.08);
+                transform: translateX(5px);
+            }
+
+    /* Nút bấm */
+    .btn-sm {
+        border-radius: 4px;
+        font-weight: 500;
+        padding: 0.35rem 0.9rem;
+        transition: all 0.3s ease;
+    }
+
+        .btn-sm:hover {
+            transform: translateY(-3px) scale(1.05);
+            box-shadow: 0 6px 15px rgba(0,0,0,0.2);
+        }
+
+    /* Badge trạng thái */
+    .badge {
+        padding: 0.4em 0.7em;
+        border-radius: 10px;
+        font-size: 0.85rem;
+        font-weight: 600;
+    }
+
+    /* Thông báo trung tâm */
+    .centered-alert {
+        position: fixed;
+        top: 20px;
+        left: 50%;
+        transform: translateX(-50%);
+        z-index: 1060;
+        max-width: 500px;
+        width: 90%;
+        padding: 15px 20px;
+        border-radius: 10px;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+        animation: slideInFromTop 0.3s ease-out;
+        display: none;
+    }
+
+        .centered-alert.success {
+            background-color: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+
+        .centered-alert.error {
+            background-color: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+
+        .centered-alert .btn-close {
+            position: absolute;
+            top: 5px;
+            right: 5px;
+            font-size: 1.2rem;
+            opacity: 0.7;
+            transition: opacity 0.3s;
+        }
+
+            .centered-alert .btn-close:hover {
+                opacity: 1;
+            }
+
+    keyframes slideInFromTop {
+        from
+
+    {
+        opacity: 0;
+        transform: translate(-50%, -100%);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateX(-50%);
+    }
+
+    }
+
+    keyframes slideOutToTop {
+        from
+
+    {
+        opacity: 1;
+        transform: translateX(-50%);
+    }
+
+    to {
+        opacity: 0;
+        transform: translate(-50%, -100%);
+    }
+
+    }
+
+    /* Pagination styles */
+    .pagination-container {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin-top: 20px;
+        padding: 10px 0;
+        gap: 12px;
+    }
+
+    .pagination {
+        display: flex;
+        list-style: none;
+        padding: 0;
+        margin: 0;
+        gap: 8px;
+    }
+
+        .pagination li {
+            display: inline-block;
+        }
+
+            .pagination li a {
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                width: 38px;
+                height: 38px;
+                border-radius: 8px;
+                text-decoration: none;
+                color: #1e40af;
+                background: #fff;
+                border: 1px solid #e2e8f0;
+                font-weight: 500;
+                transition: all 0.3s ease;
+            }
+
+                .pagination li a:hover {
+                    background: #3b82f6;
+                    color: #fff;
+                    border-color: #3b82f6;
+                    transform: translateY(-2px);
+                }
+
+            .pagination li.active a {
+                background: #2563eb;
+                color: #fff;
+                border-color: #2563eb;
+                font-weight: 600;
+            }
+
+            .pagination li.disabled a {
+                color: #94a3b8;
+                cursor: not-allowed;
+                border-color: #e2e8f0;
+                background: #f8fafc;
+            }
+
+    /* PageSize select nhỏ */
+    .page-size-wrapper {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        font-size: 14px;
+    }
+
+    #pageSizeSelect {
+        width: 62px;
+        height: 34px;
+        padding: 2px 6px;
+        border: 1px solid #cfcfcf;
+        border-radius: 4px;
+        background-clip: padding-box;
+        -webkit-appearance: none;
+        appearance: none;
+        text-align: center;
+        background: #fff;
+        cursor: pointer;
+    }
+
+    .page-size-wrapper .select-box {
+        position: relative;
+        display: inline-block;
+    }
+
+        .page-size-wrapper .select-box::after {
+            content: "\25BE";
+            position: absolute;
+            right: 8px;
+            top: 50%;
+            transform: translateY(-50%);
+            pointer-events: none;
+            color: #333;
+            font-size: 12px;
+        }
+
+    /* Responsive */
+    media (max-width: 900px) {
+        .stats-container
+
+    {
+        grid-template-columns: repeat(2, 1fr);
+    }
+
+    .search-filter input {
+        width: 100%;
+    }
+
+    .pagination-container {
+        gap: 8px;
+        flex-wrap: wrap;
+        justify-content: center;
+    }
+
+    }
+</style>
+
+<div class="account-container">
+    <!-- Thông báo trung tâm (sử dụng div với class động) -->
+    <div id="centeredAlert" class="centered-alert"></div>
+
+    <!-- Thống kê -->
+    <div class="stats-container">
+        <button class="stat-card stat-total">
+            <i class="fas fa-users"></i>
+            Tổng tài khoản
+            <strong>@tongTaiKhoan</strong>
+        </button>
+        <button class="stat-card stat-active">
+            <i class="fas fa-check-circle"></i>
+            Tài khoản hoạt động
+            <strong>@taiKhoanHoatDong</strong>
+        </button>
+        <button class="stat-card stat-locked">
+            <i class="fas fa-lock"></i>
+            Tài khoản bị khóa
+            <strong>@taiKhoanKhoa</strong>
+        </button>
+    </div>
+
+    <!-- Tìm kiếm & thao tác -->
+    <div class="search-filter">
+        <form method="get" class="d-flex gap-1 flex-grow-1 align-items-center">
+            <input type="text" name="search" class="form-control" placeholder="Tìm kiếm theo tên nhân viên, email..." value="@search" />
+            <button type="submit" class="btn btn-outline-primary btn-sm rounded-pill" title="Tìm kiếm">
+                <i class="fas fa-search"></i>
+            </button>
+        </form>
+        <div class="action-group">
+            <a href="@Url.Action("Create", "TaiKhoan")" class="btn btn-success btn-sm"><i class="fas fa-plus"></i> Đăng ký tài khoản</a>
+            <a href="@Url.Action("ExportToExcel", "TaiKhoan", new { search = ViewData["Search"] })" class="btn btn-info btn-sm"><i class="fas fa-file-export"></i> Xuất Excel</a>
+            <button type="button" class="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#importModal">
+                <i class="fas fa-file-import"></i> Import Excel
+            </button>
+        </div>
+    </div>
+
+    <!-- Bảng danh sách -->
+    <div class="table-responsive">
+        <table class="table table-bordered table-hover text-center table-custom">
+            <thead>
+                <tr>
+                    <th>#</th>
+                    <th>Tên nhân viên</th>
+                    <th>Email nhân viên</th>
+                    <th>Tên đăng nhập</th>
+                    <th>Mật khẩu</th>
+                    <th>Trạng thái</th>
+                    <th>Ngày tạo</th>
+                    <th class="text-center">Thao tác</th>
+                </tr>
+            </thead>
+            <tbody>
+                @if (!Model.Any())
+                {
+                    <tr><td colspan="8">Không có dữ liệu</td></tr>
+                }
+                else
+                {
+                    int stt = (currentPage - 1) * pageSize + 1;
+                    foreach (var item in Model)
+                    {
+                        <tr>
+                            <td>@stt</td>
+                            <td>@item.NhanVien?.Ho_Ten</td>
+                            <td>@item.NhanVien?.Email</td>
+                            <td>@item.Ten_Nguoi_Dung</td>
+                            <td>
+                                @if (string.IsNullOrEmpty(item.Mat_Khau))
+                                {
+                                    <span class="text-muted fst-italic">Chưa đặt mật khẩu</span>
+                                }
+                                else
+                                {
+                                    <span class="text-muted fst-italic">******</span>
+                                }
+                            </td>
+                            <td>
+                                <span class="badge bg-@(item.Trang_Thai == true ? "success" : "secondary")">
+                                    @(item.Trang_Thai == true ? "Hoạt động" : "Khóa")
+                                </span>
+                            </td>
+                            <td>@item.Ngay_Tao.ToString("dd/MM/yyyy")</td>
+                            <td class="text-center">
+                                <a href="@Url.Action("Edit", "TaiKhoan", new { id = item.ID_Tai_Khoan })" class="btn btn-warning btn-sm"><i class="fas fa-edit"></i></a>
+                                @if (!item.TaiKhoanVaiTros.Any(v => v.VaiTro.Ten_Vai_Tro == "Admin"))
+                                {
+                                    <form asp-action="Delete" asp-route-id="@item.ID_Tai_Khoan" method="post" style="display:inline-block" onsubmit="return confirm('Bạn có chắc muốn xóa?');">
+                                        <button class="btn btn-danger btn-sm"><i class="fas fa-trash"></i></button>
+                                    </form>
+                                }
+                            </td>
+                        </tr>
+                        stt++;
+                    }
+                }
+            </tbody>
+        </table>
+    </div>
+
+    <!-- Phân trang với pageSize bên trái -->
+    <div class="pagination-container">
+        <!-- PageSize bên trái -->
+        <div class="page-size-left" style="margin-right: auto; display: flex; align-items: center;">
+            <form id="pageSizeForm" asp-action="Index" method="get" style="display: flex; align-items: center;">
+                <div class="page-size-wrapper">
+                    <label class="mb-0" style="margin-right: 6px;">Xem</label>
+                    <div class="select-box">
+                        <select id="pageSizeSelect" name="pageSize" onchange="onPageSizeChange()" aria-label="Chọn số mục trên trang">
+                            <option value="10" selected="@(pageSize == 10 ? "selected" : null)">10</option>
+                            <option value="25" selected="@(pageSize == 25 ? "selected" : null)">25</option>
+                            <option value="50" selected="@(pageSize == 50 ? "selected" : null)">50</option>
+                            <option value="100" selected="@(pageSize == 100 ? "selected" : null)">100</option>
+                        </select>
+                    </div>
+                    <label class="mb-0" style="margin-left: 6px;">mục</label>
+                </div>
+                <input type="hidden" name="page" value="1" />
+                <input type="hidden" name="search" value="@search" />
+            </form>
+        </div>
+
+        <!-- Pagination chính giữa -->
+        <ul class="pagination">
+            <li class="@(currentPage == 1 ? "disabled" : "")">
+                <a href="@Url.Action("Index", new { search = search, page = currentPage - 1, pageSize = pageSize })">&laquo;</a>
+            </li>
+            @for (int i = 1; i <= totalPages; i++)
+            {
+                <li class="@(i == currentPage ? "active" : "")">
+                    <a href="@Url.Action("Index", new { search = search, page = i, pageSize = pageSize })">@i</a>
+                </li>
+            }
+            <li class="@(currentPage == totalPages ? "disabled" : "")">
+                <a href="@Url.Action("Index", new { search = search, page = currentPage + 1, pageSize = pageSize })">&raquo;</a>
+            </li>
+        </ul>
+    </div>
+</div>
+
+<!-- Modal for Import Excel -->
+<div class="modal fade" id="importModal" tabindex="-1" aria-labelledby="importModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header bg-primary text-white">
+                <h5 class="modal-title" id="importModalLabel">Import Excel</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form method="post" enctype="multipart/form-data" asp-action="ImportExcel">
+                    <div class="mb-3">
+                        <label for="file" class="form-label">Chọn file Excel</label>
+                        <input type="file" class="form-control" id="file" name="file" accept=".xlsx,.xls" required />
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Hủy</button>
+                        <button type="submit" class="btn btn-primary btn-sm"><i class="fas fa-upload"></i> Tải lên</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js" integrity="sha256-/xUj+3OJU5yExlq6GSYGSHk7tPXikynS7ogEvDej/m4=" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        $(document).ready(function () {
+            const centeredAlert = $('#centeredAlert');
+
+            // Hiển thị thông báo trung tâm
+            function showAlert(message, isSuccess) {
+                centeredAlert.removeClass('success error').addClass(isSuccess ? 'success' : 'error')
+                    .html(message + '<button type="button" class="btn-close" aria-label="Close"></button>')
+                    .css('display', 'block');
+                setTimeout(() => {
+                    centeredAlert.addClass('fade-out');
+                    setTimeout(() => centeredAlert.css('display', 'none').removeClass('fade-out'), 300);
+                }, 5000); // Ẩn sau 5s
+            }
+
+            // Kiểm tra TempData và hiển thị thông báo
+            @if (TempData["Success"] != null)
+            {
+                    @:showAlert("@TempData["Success"].ToString().Replace("\"", "\\\"")", true);
+            }
+            @if (TempData["Error"] != null)
+            {
+                    @:showAlert("@Html.Raw(TempData["Error"].ToString().Replace("\"", "\\\""))", false);
+            }
+
+            // Xử lý đóng thông báo khi click nút close
+            centeredAlert.on('click', '.btn-close', function () {
+                centeredAlert.addClass('fade-out');
+                setTimeout(() => centeredAlert.css('display', 'none').removeClass('fade-out'), 300);
+            });
+        });
+
+        function onPageSizeChange() {
+            document.getElementById('pageSizeForm').submit();
+        }
+    </script>
 }

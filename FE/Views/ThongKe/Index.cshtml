@@ -39,7 +39,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>Thống Kê Bán Trà Sữa</title>
 
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@500;700;800&display=swap" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" />
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
@@ -47,61 +47,54 @@
 
     <style>
         :root{
-            --bg:#f6f8fb;
-            --card:#ffffff;
-            --text:#111827;
-            --sub:#6b7280;
-            --brand:#4bc0c0;
-            --ring:rgba(75,192,192,.35);
+            --bg:#f7f7f9; --card:#fff; --text:#0f172a; --sub:#6b7280;
+            --primary:#0d6efd; --border:#e5e7eb;
         }
         *{box-sizing:border-box}
-        body{
-            font-family:"Inter",system-ui,-apple-system,Segoe UI,Roboto,"Helvetica Neue",Arial,"Noto Sans",sans-serif;
-            background:var(--bg);
-            color:var(--text);
+        body{font-family:"Inter",system-ui,-apple-system,Segoe UI,Roboto,"Helvetica Neue",Arial,"Noto Sans",sans-serif;background:var(--bg);color:var(--text)}
+        .dashboard-container{max-width:1100px;margin:24px auto;padding:0 12px}
+
+        .toolbar{
+            background:var(--card); border:1px solid var(--border); border-radius:10px;
+            padding:12px 14px; margin-bottom:14px;
         }
-        .dashboard-container{max-width:1200px;margin:24px auto;padding:0 12px}
-        header h1{font-weight:700;font-size:28px;margin:0}
-        .toolbar{display:flex;justify-content:space-between;align-items:center;gap:12px;margin:10px 0 18px; flex-wrap:wrap}
-        .btn-export{padding:8px 12px;border:0;border-radius:8px;cursor:pointer;background:var(--brand);color:#fff;box-shadow:0 10px 20px -10px var(--ring)}
-        .summary-cards{display:grid;grid-template-columns:repeat(5,1fr);gap:12px;margin-bottom:18px}
-        .cardx{
-            background:var(--card);border:1px solid #eef2f7;border-radius:14px;padding:14px;cursor:pointer;
-            transition:.15s transform ease, .15s box-shadow ease; min-height:92px
+        .toolbar-title{font-size:18px; font-weight:800; margin:0}
+        .range-buttons .btn{
+            padding:.35rem .7rem; border-radius:.5rem; font-weight:600;
         }
-        .cardx:hover{transform:translateY(-2px);box-shadow:0 10px 24px -18px rgba(0,0,0,.35)}
-        .cardx h2{font-size:13px;color:var(--sub);margin:0 0 6px}
-        .cardx p{font-size:18px;font-weight:700;margin:0}
-        .charts{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:14px}
-        .chart-box{
-            background:var(--card);border:1px solid #eef2f7;border-radius:14px;padding:14px;cursor:pointer;
-            transition:.15s transform ease, .15s box-shadow ease
+        .range-buttons .btn:not(.active){ background:#fff }
+        .range-buttons .btn.active{
+            color:#fff; background:var(--primary); border-color:var(--primary);
         }
-        .chart-box:hover{transform:translateY(-2px);box-shadow:0 10px 24px -18px rgba(0,0,0,.35)}
-        .chart-box h3{font-size:16px;margin:0 0 8px}
-        .order-table{background:var(--card);border:1px solid #eef2f7;border-radius:14px;padding:14px;margin-bottom:40px}
-        table{width:100%}
-        thead th{font-weight:600;color:var(--sub)}
+        .btn-export{ padding:.4rem .75rem; border-radius:.5rem; font-weight:700; }
+
+        .range-card{
+            display:none; margin-top:10px; padding:10px; border:1px solid var(--border); border-radius:8px; background:#fafafa;
+        }
+        .range-card.show{ display:block }
+        .range-card .input-group-text{ background:#f3f4f6; border-color:var(--border); font-weight:600; color:#475569 }
+        .range-card .form-control{ border-color:var(--border) }
+
+        .summary-cards{display:grid;grid-template-columns:repeat(5,1fr);gap:10px;margin:10px 0 16px}
+        .cardx{ background:var(--card); border:1px solid var(--border); border-radius:10px; padding:12px; cursor:pointer }
+        .cardx h2{font-size:12px; color:#64748b; margin:0 0 4px}
+        .cardx p{font-size:17px; font-weight:800; margin:0}
+        .charts{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:14px}
+        .chart-box{ background:var(--card); border:1px solid var(--border); border-radius:10px; padding:12px }
+        .order-table{ background:var(--card); border:1px solid var(--border); border-radius:10px; padding:12px; margin-bottom:32px }
+        thead th{color:#6b7280}
         tbody td{vertical-align:middle}
 
-        /* Modal */
-        .modal-overlay{
-            position:fixed; top:0; left:0; width:100vw; height:100vh;
-            background:rgba(0,0,0,.35); display:none;
-            align-items:center; justify-content:center; padding:16px;
-            z-index:2147483647;
-        }
-        .modal-overlay.show{ display:flex; }
-        .modal-card{
-            width:min(1000px,96vw);max-height:90vh;overflow:auto;background:#fff;border-radius:16px;padding:18px;border:1px solid #e5e7eb
-        }
-        .modal-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px}
-        .modal-title{font-weight:700;font-size:18px}
-        .btn-closex{border:0;background:#f3f4f6;border-radius:8px;padding:6px 10px}
-        .muted{color:var(--sub)}
+        .note-revenue{font-size:12px;color:#475569}
+        .note-revenue .badge{font-weight:700}
 
-        /* Razor cần escape @@media -> @@media */
-        @@media (max-width: 1100px){
+        .modal-overlay{ position:fixed; inset:0; background:rgba(0,0,0,.35); display:none; align-items:center; justify-content:center; padding:16px; z-index:1000 }
+        .modal-overlay.show{ display:flex }
+        .modal-card{ width:min(1000px,96vw); max-height:90vh; overflow:auto; background:#fff; border:1px solid var(--border); border-radius:10px; padding:14px }
+        .modal-head{display:flex; align-items:center; justify-content:space-between; margin-bottom:8px}
+        .modal-title{font-weight:800; font-size:18px}
+
+        @@media (max-width:1100px){
             .summary-cards{grid-template-columns:repeat(2,1fr)}
             .charts{grid-template-columns:1fr}
         }
@@ -109,44 +102,81 @@
 </head>
 <body>
 <div class="dashboard-container">
-    <!-- Toolbar -->
-    <div class="toolbar">
-        <h1>Thống Kê Hệ Thống Trà Sữa</h1>
 
-        <div class="d-flex flex-wrap gap-2 align-items-center">
-            <div class="btn-group" role="group" aria-label="Chọn khoảng thời gian">
-                <button class="btn btn-outline-secondary time-btn active" data-range="today">Hôm nay</button>
-                <button class="btn btn-outline-secondary time-btn" data-range="week">Tuần này</button>
-                <button class="btn btn-outline-secondary time-btn" data-range="month">Tháng này</button>
-                <button class="btn btn-outline-secondary time-btn" data-range="year">Năm nay</button>
-                <button class="btn btn-outline-secondary time-btn" data-range="all">Tất cả</button>
+    <!-- TOOLBAR -->
+    <div class="toolbar">
+        <div class="d-flex flex-wrap align-items-center justify-content-between gap-2">
+            <div>
+                <h1 class="toolbar-title mb-1">Thống Kê Hệ Thống Trà Sữa</h1>
+                <!-- ⬇️ Chú thích quy tắc doanh thu -->
+                <div class="note-revenue">
+                    <span class="badge text-bg-primary">Lưu ý</span>
+                    Doanh thu và các biểu đồ doanh thu <strong>chỉ tính đơn trạng thái “Hoàn thành”</strong>.
+                </div>
             </div>
 
-            <button id="exportPDF" class="btn-export">📄 Xuất PDF</button>
+            <div class="d-flex align-items-center gap-2">
+                <div class="range-buttons btn-group" role="group" aria-label="Chọn khoảng thời gian">
+                    <button class="btn btn-outline-secondary active time-btn" data-range="today">Hôm nay</button>
+                    <button class="btn btn-outline-secondary time-btn" data-range="week">Tuần này</button>
+                    <button class="btn btn-outline-secondary time-btn" data-range="month">Tháng này</button>
+                    <button class="btn btn-outline-secondary time-btn" data-range="year">Năm nay</button>
+                    <button class="btn btn-outline-secondary time-btn" data-range="all">Tất cả</button>
+                    <button class="btn btn-outline-primary time-btn" data-range="custom">Tùy chỉnh</button>
+                </div>
+
+                <button id="exportPDF" class="btn btn-primary btn-export d-inline-flex align-items-center gap-1">
+                    <span>📄</span><span>Xuất PDF</span>
+                </button>
+            </div>
+        </div>
+
+        <!-- RANGE CARD -->
+        <div id="customRangeRow" class="range-card">
+            <div class="row g-2 align-items-center">
+                <div class="col-12 col-md-5">
+                    <div class="input-group input-group-sm">
+                        <span class="input-group-text">Từ ngày</span>
+                        <input type="date" id="fromDate" class="form-control form-control-sm" />
+                    </div>
+                </div>
+                <div class="col-12 col-md-5">
+                    <div class="input-group input-group-sm">
+                        <span class="input-group-text">Đến ngày</span>
+                        <input type="date" id="toDate" class="form-control form-control-sm" />
+                    </div>
+                </div>
+                <div class="col-12 col-md-2 text-md-end">
+                    <div class="d-flex gap-2">
+                        <button id="applyCustom" class="btn btn-primary btn-sm">Áp dụng</button>
+                        <button id="clearCustom" class="btn btn-outline-secondary btn-sm">Xóa</button>
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
 
-    <!-- 10 ô nhỏ -->
+    <!-- SUMMARY CARDS -->
     <section class="summary-cards">
         <div class="cardx" data-detail="totalOrders">
             <h2>Tổng số hóa đơn</h2>
             <p id="totalOrders">@((Model??Enumerable.Empty<BE.models.HoaDon>()).Count())</p>
         </div>
         <div class="cardx" data-detail="totalRevenue">
-            <h2>Tổng doanh thu</h2>
-            <p id="totalRevenue">@((Model??Enumerable.Empty<BE.models.HoaDon>()).Sum(x => x.Tong_Tien).ToString("C0", new CultureInfo("vi-VN")))</p>
+            <h2>Tổng doanh thu </h2>
+            <p id="totalRevenue">@(((Model??Enumerable.Empty<BE.models.HoaDon>()).Where(x=>x.Trang_Thai=="Hoan_Thanh").Sum(x => x.Tong_Tien)).ToString("C0", new CultureInfo("vi-VN")))</p>
         </div>
         <div class="cardx" data-detail="avgRevenue">
-            <h2>Doanh thu trung bình/đơn</h2>
-            <p id="avgRevenue">@(((Model??Enumerable.Empty<BE.models.HoaDon>()).Any() ? (Model??Enumerable.Empty<BE.models.HoaDon>()).Average(x => x.Tong_Tien) : 0).ToString("C0", new CultureInfo("vi-VN")))</p>
+            <h2>Doanh thu TB/đơn </h2>
+            <p id="avgRevenue">@(((Model??Enumerable.Empty<BE.models.HoaDon>()).Where(x=>x.Trang_Thai=="Hoan_Thanh")).DefaultIfEmpty().Average(x => x==null?0:x.Tong_Tien).ToString("C0", new CultureInfo("vi-VN")))</p>
         </div>
         <div class="cardx" data-detail="todayOrders">
-            <h2>Hóa đơn hôm nay</h2>
+            <h2>Hóa đơn hôm nay (tất cả)</h2>
             <p id="todayOrders">@((Model??Enumerable.Empty<BE.models.HoaDon>()).Count(x => x.Ngay_Tao.Date == DateTime.Today))</p>
         </div>
         <div class="cardx" data-detail="todayRevenue">
-            <h2>Doanh thu hôm nay</h2>
-            <p id="todayRevenue">@((Model??Enumerable.Empty<BE.models.HoaDon>()).Where(x => x.Ngay_Tao.Date == DateTime.Today).Sum(x => x.Tong_Tien).ToString("C0", new CultureInfo("vi-VN")))</p>
+            <h2>Doanh thu hôm nay </h2>
+            <p id="todayRevenue">@((Model??Enumerable.Empty<BE.models.HoaDon>()).Where(x => x.Ngay_Tao.Date == DateTime.Today && x.Trang_Thai=="Hoan_Thanh").Sum(x => x.Tong_Tien).ToString("C0", new CultureInfo("vi-VN")))</p>
         </div>
         <div class="cardx" data-detail="statusTypes">
             <h2>Trạng thái đơn hàng</h2>
@@ -162,53 +192,53 @@
         </div>
         <div class="cardx" data-detail="maxOrder">
             <h2>Đơn lớn nhất</h2>
-            <p id="maxOrder">@(((Model??Enumerable.Empty<BE.models.HoaDon>()).Any()? (Model??Enumerable.Empty<BE.models.HoaDon>()).Max(x=>x.Tong_Tien):0).ToString("C0", new CultureInfo("vi-VN")))</p>
+            <p id="maxOrder">@(((Model??Enumerable.Empty<BE.models.HoaDon>()).Any(x=>x.Trang_Thai=="Hoan_Thanh")? (Model??Enumerable.Empty<BE.models.HoaDon>()).Where(x=>x.Trang_Thai=="Hoan_Thanh").Max(x=>x.Tong_Tien):0).ToString("C0", new CultureInfo("vi-VN")))</p>
         </div>
         <div class="cardx" data-detail="minOrder">
             <h2>Đơn nhỏ nhất</h2>
-            <p id="minOrder">@(((Model??Enumerable.Empty<BE.models.HoaDon>()).Any()? (Model??Enumerable.Empty<BE.models.HoaDon>()).Min(x=>x.Tong_Tien):0).ToString("C0", new CultureInfo("vi-VN")))</p>
+            <p id="minOrder">@(((Model??Enumerable.Empty<BE.models.HoaDon>()).Any(x=>x.Trang_Thai=="Hoan_Thanh")? (Model??Enumerable.Empty<BE.models.HoaDon>()).Where(x=>x.Trang_Thai=="Hoan_Thanh").Min(x=>x.Tong_Tien):0).ToString("C0", new CultureInfo("vi-VN")))</p>
         </div>
     </section>
 
-    <!-- 6 ô to -->
+    <!-- CHARTS -->
     <section class="charts">
         <div class="chart-box" data-detail="revTrend">
-            <h3 id="titleRevTrend">Xu hướng doanh thu</h3>
+            <h3 id="titleRevTrend" class="h6 mb-2">Xu hướng doanh thu </h3>
             <canvas id="revTrendChart"></canvas>
         </div>
         <div class="chart-box" data-detail="statusDist">
-            <h3>Phân bố theo trạng thái</h3>
+            <h3 class="h6 mb-2">Phân bố theo trạng thái (số đơn)</h3>
             <canvas id="statusChart"></canvas>
         </div>
         <div class="chart-box" data-detail="orderTrend">
-            <h3 id="titleOrderTrend">Xu hướng đơn hàng</h3>
+            <h3 id="titleOrderTrend" class="h6 mb-2">Xu hướng đơn hàng (tất cả)</h3>
             <canvas id="orderTrendChart"></canvas>
         </div>
         <div class="chart-box" data-detail="top10">
-            <h3>Top 10 hóa đơn cao nhất</h3>
+            <h3 class="h6 mb-2">Top 10 hóa đơn cao nhất </h3>
             <canvas id="topOrdersChart"></canvas>
         </div>
         <div class="chart-box" data-detail="revByStatus">
-            <h3>Doanh thu theo trạng thái</h3>
+            <h3 class="h6 mb-2">Doanh thu theo trạng thái </h3>
             <canvas id="revStatusChart"></canvas>
         </div>
         <div class="chart-box" data-detail="revWeekday">
-            <h3>Doanh thu theo thứ trong tuần</h3>
+            <h3 class="h6 mb-2">Doanh thu theo thứ trong tuần</h3>
             <canvas id="weekdayChart"></canvas>
         </div>
     </section>
 
-    <!-- Bảng đơn hàng mới -->
+    <!-- TABLE -->
     <section class="order-table">
-        <h3>Danh sách hóa đơn mới nhất</h3>
+        <h3 class="h6 mb-2">Danh sách hóa đơn mới nhất</h3>
         @if ((Model??Enumerable.Empty<BE.models.HoaDon>()).Any())
         {
-            <table class="table align-middle">
+            <table class="table table-sm align-middle">
                 <thead>
                 <tr>
                     <th>Mã hóa đơn</th>
                     <th>Ngày tạo</th>
-                    <th>Tổng tiền</th>
+                    <th class="text-end">Tổng tiền</th>
                     <th>Trạng thái</th>
                 </tr>
                 </thead>
@@ -218,12 +248,8 @@
                     <tr>
                         <td>@(string.IsNullOrWhiteSpace(hoaDon.Ma_Hoa_Don) ? $"HD-{hoaDon.ID_Hoa_Don}" : hoaDon.Ma_Hoa_Don)</td>
                         <td>@hoaDon.Ngay_Tao.ToString("dd/MM/yyyy HH:mm")</td>
-                        <td>@hoaDon.Tong_Tien.ToString("C0", new CultureInfo("vi-VN"))</td>
-                        <td>
-                            <span class="badge @BadgeClass(hoaDon.Trang_Thai)">
-                                @HumanStatus(hoaDon.Trang_Thai)
-                            </span>
-                        </td>
+                        <td class="text-end">@hoaDon.Tong_Tien.ToString("C0", new CultureInfo("vi-VN"))</td>
+                        <td><span class="badge @BadgeClass(hoaDon.Trang_Thai)">@HumanStatus(hoaDon.Trang_Thai)</span></td>
                     </tr>
                 }
                 </tbody>
@@ -236,22 +262,22 @@
     </section>
 </div>
 
-<!-- Modal chi tiết -->
+<!-- MODAL -->
 <div class="modal-overlay" id="detailModal" role="dialog" aria-modal="true" aria-labelledby="detailTitle">
     <div class="modal-card">
         <div class="modal-head">
             <div>
                 <div class="modal-title" id="detailTitle">Chi tiết</div>
-                <div class="muted" id="detailSubtitle"></div>
+                <div class="text-secondary" id="detailSubtitle" style="font-size:12px"></div>
             </div>
-            <button type="button" class="btn-closex" id="closeModal">Đóng</button>
+            <button type="button" class="btn btn-sm btn-outline-secondary" id="closeModal">Đóng</button>
         </div>
         <div id="detailBody"></div>
     </div>
 </div>
 
 <script>
-    // ======= Data từ Model =======
+    // ===== DATA =====
     const hoaDonData = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(
         (Model ?? Enumerable.Empty<BE.models.HoaDon>()).Select(h => new {
             iD_Hoa_Don = h.ID_Hoa_Don,
@@ -263,7 +289,7 @@
         new System.Text.Json.JsonSerializerOptions { PropertyNamingPolicy = System.Text.Json.JsonNamingPolicy.CamelCase }
     ));
 
-    // ======= Helpers & State =======
+    // ===== HELPERS =====
     const VND = v => new Intl.NumberFormat('vi-VN',{style:'currency',currency:'VND'}).format(v ?? 0);
     const statusName = s => ({
         'Chua_Xac_Nhan':'Chưa xác nhận','Da_Xac_Nhan':'Đã xác nhận','Dang_Xu_Ly':'Đang xử lý',
@@ -278,6 +304,7 @@
 
     let currentRange = 'today';
     let filtered = [];
+    let customFrom = null, customTo = null;
 
     function getRangeDates(kind){
       const now = new Date();
@@ -287,334 +314,292 @@
         case 'month': return { from: startOfMonth(now), to: endOfDay(now) };
         case 'year':  return { from: startOfYear(now),  to: endOfDay(now) };
         case 'all':   return { from: new Date(1970,0,1), to: endOfDay(now) };
-        default:      return { from: startOfWeek(now), to: endOfDay(now) };
+        case 'custom':
+          if(!customFrom || !customTo) return null;
+          return { from: new Date(customFrom.getFullYear(),customFrom.getMonth(),customFrom.getDate(),0,0,0,0), to: endOfDay(customTo) };
+        default: return { from: startOfWeek(now), to: endOfDay(now) };
       }
     }
 
-    // ======= Adaptive Buckets (labels + reducers) =======
     function monthDiff(a,b){ return (b.getFullYear()-a.getFullYear())*12 + (b.getMonth()-a.getMonth()); }
     function addMonths(date, n){ const d=new Date(date); d.setMonth(d.getMonth()+n); return d; }
 
+    // ============= CORE RULE: Revenue uses ONLY completed orders =============
+    const onlyCompleted = list => list.filter(h => h.trang_Thai === 'Hoan_Thanh');
+
     function makeBuckets(kind, data){
+      const revData = onlyCompleted(data); // 🔹 chỉ Hoàn thành cho doanh thu
       const now = new Date();
+
       if(kind==='today'){
-        // 24 giờ
         const labels = Array.from({length:24}, (_,h)=>h.toString().padStart(2,'0'));
-        const byHour = Array(24).fill(0);
-        const cntHour = Array(24).fill(0);
-        data.forEach(h=>{ const t=new Date(h.ngay_Tao); const hr=t.getHours(); byHour[hr]+= (h.tong_Tien||0); cntHour[hr]++; });
-        return {
-          titleRev: 'Xu hướng doanh thu theo giờ (hôm nay)',
-          titleOrd: 'Xu hướng đơn hàng theo giờ (hôm nay)',
-          labels,
-          revenueSeries: byHour,
-          orderSeries: cntHour
-        };
+        const sums=Array(24).fill(0), cnt=Array(24).fill(0);
+        revData.forEach(h=>{ const hr=new Date(h.ngay_Tao).getHours(); sums[hr]+=(h.tong_Tien||0); });
+        data.forEach(h=>{ const hr=new Date(h.ngay_Tao).getHours(); cnt[hr]++; }); // số đơn = tất cả
+        return { titleRev:'Doanh thu theo giờ (hôm nay)', titleOrd:'Số đơn theo giờ (hôm nay)', labels, revenueSeries:sums, orderSeries:cnt };
       }
       if(kind==='week'){
-        // Thứ 2..CN
         const names=['T2','T3','T4','T5','T6','T7','CN'];
         const sums=Array(7).fill(0), cnt=Array(7).fill(0);
-        data.forEach(h=>{ const d=new Date(h.ngay_Tao); const dow=(d.getDay()+6)%7; sums[dow]+= (h.tong_Tien||0); cnt[dow]++; });
-        return { titleRev:'Xu hướng doanh thu theo ngày (tuần này)', titleOrd:'Xu hướng đơn hàng theo ngày (tuần này)', labels:names, revenueSeries:sums, orderSeries:cnt };
+        revData.forEach(h=>{ const i=(new Date(h.ngay_Tao).getDay()+6)%7; sums[i]+=(h.tong_Tien||0); });
+        data.forEach(h=>{ const i=(new Date(h.ngay_Tao).getDay()+6)%7; cnt[i]++; });
+        return { titleRev:'Doanh thu theo ngày (tuần này)', titleOrd:'Số đơn theo ngày (tuần này)', labels:names, revenueSeries:sums, orderSeries:cnt };
       }
       if(kind==='month'){
-        // Ngày 1..N
-        const base = startOfMonth(now);
-        const daysInMonth = new Date(base.getFullYear(), base.getMonth()+1, 0).getDate();
-        const labels = Array.from({length:daysInMonth}, (_,i)=> (i+1).toString());
-        const sums=Array(daysInMonth).fill(0), cnt=Array(daysInMonth).fill(0);
-        data.forEach(h=>{ const d=new Date(h.ngay_Tao); const idx=d.getDate()-1; sums[idx]+= (h.tong_Tien||0); cnt[idx]++; });
-        return { titleRev:'Xu hướng doanh thu theo ngày (tháng này)', titleOrd:'Xu hướng đơn hàng theo ngày (tháng này)', labels, revenueSeries:sums, orderSeries:cnt };
+        const base=startOfMonth(now), len=new Date(base.getFullYear(),base.getMonth()+1,0).getDate();
+        const labels=Array.from({length:len},(_,i)=>(i+1).toString());
+        const sums=Array(len).fill(0), cnt=Array(len).fill(0);
+        revData.forEach(h=>{ const i=new Date(h.ngay_Tao).getDate()-1; sums[i]+=(h.tong_Tien||0); });
+        data.forEach(h=>{ const i=new Date(h.ngay_Tao).getDate()-1; cnt[i]++; });
+        return { titleRev:'Doanh thu theo ngày (tháng này)', titleOrd:'Số đơn theo ngày (tháng này)', labels, revenueSeries:sums, orderSeries:cnt };
       }
       if(kind==='year'){
-        // Tháng 1..12
         const labels=['01','02','03','04','05','06','07','08','09','10','11','12'];
         const sums=Array(12).fill(0), cnt=Array(12).fill(0);
-        data.forEach(h=>{ const d=new Date(h.ngay_Tao); const m=d.getMonth(); sums[m]+= (h.tong_Tien||0); cnt[m]++; });
-        return { titleRev:'Xu hướng doanh thu theo tháng (năm nay)', titleOrd:'Xu hướng đơn hàng theo tháng (năm nay)', labels, revenueSeries:sums, orderSeries:cnt };
+        revData.forEach(h=>{ sums[new Date(h.ngay_Tao).getMonth()]+=(h.tong_Tien||0); });
+        data.forEach(h=>{ cnt[new Date(h.ngay_Tao).getMonth()]++; });
+        return { titleRev:'Doanh thu theo tháng (năm nay)', titleOrd:'Số đơn theo tháng (năm nay)', labels, revenueSeries:sums, orderSeries:cnt };
       }
-      // all -> theo tháng (MM/yyyy) từ min..max
-      if(data.length===0){
-        return { titleRev:'Xu hướng doanh thu (tất cả)', titleOrd:'Xu hướng đơn hàng (tất cả)', labels:[], revenueSeries:[], orderSeries:[] };
-      }
-      const times = data.map(h=>new Date(h.ngay_Tao)).sort((a,b)=>a-b);
-      const from = new Date(times[0].getFullYear(), times[0].getMonth(), 1);
-      const to   = new Date(times[times.length-1].getFullYear(), times[times.length-1].getMonth(), 1);
-      const mcount = monthDiff(from, to)+1;
-      const labels = Array.from({length:mcount}, (_,i)=> {
-        const d=addMonths(from,i); return `${String(d.getMonth()+1).padStart(2,'0')}/${d.getFullYear()}`;
-      });
+      // all/custom -> theo tháng
+      if(data.length===0) return { titleRev:'Xu hướng doanh thu', titleOrd:'Xu hướng đơn hàng', labels:[], revenueSeries:[], orderSeries:[] };
+      const times=data.map(h=>new Date(h.ngay_Tao)).sort((a,b)=>a-b);
+      const from=new Date(times[0].getFullYear(),times[0].getMonth(),1);
+      const to=new Date(times.at(-1).getFullYear(),times.at(-1).getMonth(),1);
+      const mcount=monthDiff(from,to)+1;
+      const labels=Array.from({length:mcount},(_,i)=>{const d=addMonths(from,i);return `${String(d.getMonth()+1).padStart(2,'0')}/${d.getFullYear()}`;});
       const sums=Array(mcount).fill(0), cnt=Array(mcount).fill(0);
-      data.forEach(h=>{
-        const d=new Date(h.ngay_Tao);
-        const idx = monthDiff(from, new Date(d.getFullYear(), d.getMonth(), 1));
-        if(idx>=0 && idx<mcount){ sums[idx]+= (h.tong_Tien||0); cnt[idx]++; }
-      });
-      return { titleRev:'Xu hướng doanh thu theo tháng (tất cả)', titleOrd:'Xu hướng đơn hàng theo tháng (tất cả)', labels, revenueSeries:sums, orderSeries:cnt };
+      revData.forEach(h=>{ const d=new Date(h.ngay_Tao); const i=monthDiff(from,new Date(d.getFullYear(),d.getMonth(),1)); if(i>=0&&i<mcount){sums[i]+=(h.tong_Tien||0);} });
+      data.forEach(h=>{ const d=new Date(h.ngay_Tao); const i=monthDiff(from,new Date(d.getFullYear(),d.getMonth(),1)); if(i>=0&&i<mcount){cnt[i]++;} });
+      const isCustom = currentRange==='custom';
+      return { titleRev:`Doanh thu theo tháng (${isCustom?'tùy chỉnh':'tất cả'})`, titleOrd:`Số đơn theo tháng (${isCustom?'tùy chỉnh':'tất cả'})`, labels, revenueSeries:sums, orderSeries:cnt };
     }
 
-    // ======= Summary Cards / Table =======
     function renderSummaryCards(data){
-      const sum = data.reduce((s,h)=>s+(h.tong_Tien||0),0);
-      const avg = data.length ? sum / data.length : 0;
-
+      const revList = onlyCompleted(data);
+      const sum = revList.reduce((s,h)=>s+(h.tong_Tien||0),0);
+      const avg = revList.length ? sum / revList.length : 0;
       document.getElementById('totalOrders').textContent = data.length.toString();
       document.getElementById('totalRevenue').textContent = VND(sum);
       document.getElementById('avgRevenue').textContent = VND(avg);
 
-      const todayYMD = toYMD(new Date());
-      const todayList = hoaDonData.filter(h => toYMD(h.ngay_Tao) === todayYMD);
-      document.getElementById('todayOrders').textContent = todayList.length.toString();
-      document.getElementById('todayRevenue').textContent = VND(todayList.reduce((s,h)=>s+(h.tong_Tien||0),0));
+      const today=toYMD(new Date());
+      const todayAll=hoaDonData.filter(h=>toYMD(h.ngay_Tao)===today);
+      const todayCompleted=todayAll.filter(h=>h.trang_Thai==='Hoan_Thanh');
+      document.getElementById('todayOrders').textContent=todayAll.length.toString();
+      document.getElementById('todayRevenue').textContent=VND(todayCompleted.reduce((s,h)=>s+(h.tong_Tien||0),0));
 
-      const typeCount = new Set(data.map(h=>h.trang_Thai)).size;
-      document.getElementById('statusCount').textContent = `${typeCount} loại`;
-      document.getElementById('doneCount').textContent   = data.filter(h=>h.trang_Thai==='Hoan_Thanh').length;
-      document.getElementById('cancelCount').textContent = data.filter(h=>h.trang_Thai==='Huy_Don').length;
+      const types=new Set(data.map(h=>h.trang_Thai)).size;
+      document.getElementById('statusCount').textContent=`${types} loại`;
+      document.getElementById('doneCount').textContent=data.filter(h=>h.trang_Thai==='Hoan_Thanh').length;
+      document.getElementById('cancelCount').textContent=data.filter(h=>h.trang_Thai==='Huy_Don').length;
 
-      const max = data.length ? Math.max(...data.map(h=>h.tong_Tien||0)) : 0;
-      const min = data.length ? Math.min(...data.map(h=>h.tong_Tien||0)) : 0;
-      document.getElementById('maxOrder').textContent = VND(max);
-      document.getElementById('minOrder').textContent = VND(min);
+      const max=revList.length?Math.max(...revList.map(h=>h.tong_Tien||0)):0;
+      const min=revList.length?Math.min(...revList.map(h=>h.tong_Tien||0)):0;
+      document.getElementById('maxOrder').textContent=VND(max);
+      document.getElementById('minOrder').textContent=VND(min);
     }
 
     function renderLatestTable(data){
-      const container = document.querySelector('.order-table');
-      if(!container) return;
-      const table = container.querySelector('table');
-      if(!table) return;
-      const tbody = table.querySelector('tbody');
-      tbody.innerHTML = '';
-      [...data].sort((a,b)=> new Date(b.ngay_Tao) - new Date(a.ngay_Tao)).slice(0,10).forEach(h=>{
-        const tr = document.createElement('tr');
-        tr.innerHTML = `
-          <td>${h.ma_Hoa_Don ? h.ma_Hoa_Don : 'HD-'+h.iD_Hoa_Don}</td>
+      const tb=document.querySelector('.order-table tbody'); if(!tb) return;
+      tb.innerHTML='';
+      [...data].sort((a,b)=>new Date(b.ngay_Tao)-new Date(a.ngay_Tao)).slice(0,10).forEach(h=>{
+        const tr=document.createElement('tr');
+        tr.innerHTML=`
+          <td>${h.ma_Hoa_Don || 'HD-'+h.iD_Hoa_Don}</td>
           <td>${new Date(h.ngay_Tao).toLocaleString('vi-VN')}</td>
-          <td>${VND(h.tong_Tien)}</td>
-          <td><span class="badge">${statusName(h.trang_Thai)}</span></td>
-        `;
-        tbody.appendChild(tr);
+          <td class="text-end">${VND(h.tong_Tien)}</td>
+          <td><span class="badge">${statusName(h.trang_Thai)}</span></td>`;
+        tb.appendChild(tr);
       });
     }
 
-    // ======= Charts =======
-    let _chartRefs = [];
-    function destroyCharts(){ _chartRefs.forEach(c=>c?.destroy?.()); _chartRefs = []; }
-
+    let charts = [];
+    function destroyCharts(){ charts.forEach(c=>c?.destroy?.()); charts=[]; }
     function renderAllCharts(data){
       destroyCharts();
+      const buckets=makeBuckets(currentRange,data);
+      document.getElementById('titleRevTrend').textContent=buckets.titleRev;
+      document.getElementById('titleOrderTrend').textContent=buckets.titleOrd;
 
-      // adaptive buckets
-      const buckets = makeBuckets(currentRange, data);
-      document.getElementById('titleRevTrend').textContent   = buckets.titleRev;
-      document.getElementById('titleOrderTrend').textContent = buckets.titleOrd;
-
-      // 1) Revenue Trend
-      _chartRefs.push(new Chart(document.getElementById('revTrendChart'),{
+      charts.push(new Chart(document.getElementById('revTrendChart'),{
         type:'line',
-        data:{labels:buckets.labels, datasets:[{label:'Doanh thu', data:buckets.revenueSeries, tension:.3, fill:true, borderColor:'#4bc0c0', backgroundColor:'rgba(75,192,192,.12)'}]},
+        data:{labels:buckets.labels, datasets:[{label:'Doanh thu (Hoàn thành)', data:buckets.revenueSeries, tension:.25, fill:false}]},
         options:{plugins:{legend:{display:false}}, scales:{y:{beginAtZero:true, ticks:{callback:v=>VND(v)}}}}
       }));
 
-      // 2) Status distribution
+      // Phân bố trạng thái = đếm tất cả trạng thái
       const cnt={}; data.forEach(h=>cnt[h.trang_Thai]=(cnt[h.trang_Thai]||0)+1);
-      _chartRefs.push(new Chart(document.getElementById('statusChart'),{
+      charts.push(new Chart(document.getElementById('statusChart'),{
         type:'doughnut',
         data:{labels:Object.keys(cnt).map(statusName), datasets:[{data:Object.values(cnt)}]},
         options:{plugins:{legend:{position:'bottom'}}}
       }));
 
-      // 3) Order trend (same buckets count)
-      _chartRefs.push(new Chart(document.getElementById('orderTrendChart'),{
+      charts.push(new Chart(document.getElementById('orderTrendChart'),{
         type:'bar',
-        data:{labels:buckets.labels, datasets:[{label:'Số đơn', data:buckets.orderSeries}]},
-        options:{scales:{y:{beginAtZero:true}}}
+        data:{labels:buckets.labels, datasets:[{label:'Số đơn (tất cả)', data:buckets.orderSeries}]},
+        options:{plugins:{legend:{display:false}}, scales:{y:{beginAtZero:true}}}
       }));
 
-      // 4) Top 10 orders
-      const top=[...data].sort((a,b)=>b.tong_Tien-a.tong_Tien).slice(0,10);
-      _chartRefs.push(new Chart(document.getElementById('topOrdersChart'),{
+      // Top 10 theo Hoàn thành
+      const top=[...onlyCompleted(data)].sort((a,b)=>b.tong_Tien-a.tong_Tien).slice(0,10);
+      charts.push(new Chart(document.getElementById('topOrdersChart'),{
         type:'bar',
-        data:{labels:top.map(h=>h.ma_Hoa_Don || `HD-${h.iD_Hoa_Don}`), datasets:[{label:'Giá trị đơn hàng', data:top.map(h=>h.tong_Tien)}]},
-        options:{scales:{y:{beginAtZero:true, ticks:{callback:v=>VND(v)}}}}
+        data:{labels:top.map(h=>h.ma_Hoa_Don || `HD-${h.iD_Hoa_Don}`), datasets:[{label:'Giá trị', data:top.map(h=>h.tong_Tien)}]},
+        options:{plugins:{legend:{display:false}}, scales:{y:{beginAtZero:true, ticks:{callback:v=>VND(v)}}}}
       }));
 
-      // 5) Revenue by status
-      const sumBySt={}; data.forEach(h=>{sumBySt[h.trang_Thai]=(sumBySt[h.trang_Thai]||0)+(h.tong_Tien||0);});
-      _chartRefs.push(new Chart(document.getElementById('revStatusChart'),{
+      // Doanh thu theo trạng thái: chỉ cộng tiền cho Hoàn thành
+      const sumBySt={}; data.forEach(h=>{
+        const key=h.trang_Thai;
+        const val=(h.trang_Thai==='Hoan_Thanh')?(h.tong_Tien||0):0;
+        sumBySt[key]=(sumBySt[key]||0)+val;
+      });
+      charts.push(new Chart(document.getElementById('revStatusChart'),{
         type:'bar',
-        data:{labels:Object.keys(sumBySt).map(statusName), datasets:[{label:'Doanh thu', data:Object.values(sumBySt)}]},
-        options:{scales:{y:{beginAtZero:true, ticks:{callback:v=>VND(v)}}}, plugins:{legend:{display:false}}}
+        data:{labels:Object.keys(sumBySt).map(statusName), datasets:[{label:'Doanh thu (Hoàn thành)', data:Object.values(sumBySt)}]},
+        options:{plugins:{legend:{display:false}}, scales:{y:{beginAtZero:true, ticks:{callback:v=>VND(v)}}}}
       }));
 
-      // 6) Revenue by weekday (always Mon..Sun summary of the filtered)
-      const names=['CN','T2','T3','T4','T5','T6','T7'];
-      const sum=Array(7).fill(0);
-      data.forEach(h=>{ const d=new Date(h.ngay_Tao).getDay(); sum[d]+= (h.tong_Tien||0); });
-      _chartRefs.push(new Chart(document.getElementById('weekdayChart'),{
+      // Doanh thu theo thứ: chỉ Hoàn thành
+      const names=['CN','T2','T3','T4','T5','T6','T7']; const sum=Array(7).fill(0);
+      onlyCompleted(data).forEach(h=>{ sum[new Date(h.ngay_Tao).getDay()]+=(h.tong_Tien||0); });
+      charts.push(new Chart(document.getElementById('weekdayChart'),{
         type:'line',
-        data:{labels:names, datasets:[{label:'Doanh thu', data:sum, tension:.3, fill:true, borderColor:'#36a2eb', backgroundColor:'rgba(54,162,235,.12)'}]},
+        data:{labels:names, datasets:[{label:'Doanh thu (Hoàn thành)', data:sum, tension:.25, fill:false}]},
         options:{plugins:{legend:{display:false}}, scales:{y:{beginAtZero:true, ticks:{callback:v=>VND(v)}}}}
       }));
     }
 
-    // ======= Apply range =======
     function applyRange(kind){
       currentRange = kind;
-      document.querySelectorAll('.time-btn').forEach(b=>{
-        b.classList.toggle('active', b.dataset.range === kind);
-      });
+      document.querySelectorAll('.time-btn').forEach(b=> b.classList.toggle('active', b.dataset.range===kind));
+      document.getElementById('customRangeRow').classList.toggle('show', kind==='custom');
 
-      const {from, to} = getRangeDates(kind);
-      filtered = hoaDonData.filter(h=>{
-        const t = new Date(h.ngay_Tao);
-        return t >= from && t <= to;
-      });
+      const rt=getRangeDates(kind);
+      if(kind==='custom' && !rt) return;
+      const {from,to}=rt;
 
+      filtered = hoaDonData.filter(h=>{ const t=new Date(h.ngay_Tao); return t>=from && t<=to; });
       renderSummaryCards(filtered);
       renderAllCharts(filtered);
       renderLatestTable(filtered);
     }
 
-    // ======= Modal (giữ theo filtered) =======
-    const modal   = document.getElementById('detailModal');
-    const closeBtn= document.getElementById('closeModal');
-    const bodyEl  = document.getElementById('detailBody');
-    const titleEl = document.getElementById('detailTitle');
-    const subEl   = document.getElementById('detailSubtitle');
-    function openModal(title, subtitle){ titleEl.textContent=title||'Chi tiết'; subEl.textContent=subtitle||''; bodyEl.innerHTML=''; modal.classList.add('show'); document.body.style.overflow='hidden'; }
-    function closeModal(){ modal.classList.remove('show'); document.body.style.overflow=''; }
-    closeBtn?.addEventListener('click', closeModal);
-    modal.addEventListener('click', (e)=>{ if(e.target===modal) closeModal(); });
-
+    // Modal
+    const modal=document.getElementById('detailModal');
+    document.getElementById('closeModal')?.addEventListener('click',()=>{ modal.classList.remove('show'); document.body.style.overflow=''; });
+    modal.addEventListener('click',(e)=>{ if(e.target===modal){ modal.classList.remove('show'); document.body.style.overflow=''; }});
+    function openModal(title, subtitle){ document.getElementById('detailTitle').textContent=title; document.getElementById('detailSubtitle').textContent=subtitle||''; document.getElementById('detailBody').innerHTML=''; modal.classList.add('show'); document.body.style.overflow='hidden'; }
     function renderOrdersTable(list){
-      const table = document.createElement('table'); table.className='table table-sm';
-      table.innerHTML = `
-        <thead><tr>
-           <th>#</th><th>Mã HĐ</th><th>Ngày</th><th>Trạng thái</th><th class="text-end">Tổng tiền</th>
-        </tr></thead><tbody></tbody>`;
-      const tb = table.querySelector('tbody');
-      list.forEach((h,i)=>{
-        const tr=document.createElement('tr');
-        tr.innerHTML = `
-          <td>${i+1}</td>
-          <td>${h.ma_Hoa_Don || 'HD-'+h.iD_Hoa_Don}</td>
-          <td>${new Date(h.ngay_Tao).toLocaleString('vi-VN')}</td>
-          <td>${statusName(h.trang_Thai)}</td>
-          <td class="text-end">${VND(h.tong_Tien)}</td>`;
-        tb.appendChild(tr);
-      });
+      const bodyEl=document.getElementById('detailBody');
+      const table=document.createElement('table'); table.className='table table-sm';
+      table.innerHTML=`<thead><tr><th>#</th><th>Mã HĐ</th><th>Ngày</th><th>Trạng thái</th><th class="text-end">Tổng tiền</th></tr></thead><tbody></tbody>`;
+      const tb=table.querySelector('tbody');
+      list.forEach((h,i)=> tb.insertAdjacentHTML('beforeend', `<tr><td>${i+1}</td><td>${h.ma_Hoa_Don||'HD-'+h.iD_Hoa_Don}</td><td>${new Date(h.ngay_Tao).toLocaleString('vi-VN')}</td><td>${statusName(h.trang_Thai)}</td><td class="text-end">${VND(h.tong_Tien)}</td></tr>`));
       bodyEl.appendChild(table);
     }
-    function renderModalChart(configBuilder){
-      const wrap = document.createElement('div');
-      wrap.innerHTML = `<canvas id="modalChart" style="max-height:480px"></canvas>`;
-      bodyEl.appendChild(wrap);
-      new Chart(document.getElementById('modalChart'), configBuilder());
+    function renderModalChart(builder){
+      const el=document.createElement('canvas'); el.style.maxHeight='480px';
+      document.getElementById('detailBody').appendChild(el);
+      new Chart(el, builder());
     }
 
-    // Cards → modal (dùng filtered)
     document.querySelectorAll('.cardx').forEach(card=>{
       card.addEventListener('click', ()=>{
-        const key = card.getAttribute('data-detail');
+        const key=card.getAttribute('data-detail');
         switch(key){
           case 'totalOrders':
             openModal('Tổng số hóa đơn','50 đơn mới nhất (theo phạm vi đang chọn)');
-            renderOrdersTable([...filtered].sort((a,b)=>new Date(b.ngay_Tao)-new Date(a.ngay_Tao)).slice(0,50));
-            break;
+            renderOrdersTable([...filtered].sort((a,b)=>new Date(b.ngay_Tao)-new Date(a.ngay_Tao)).slice(0,50)); break;
           case 'totalRevenue':
-            openModal('Tổng doanh thu','Doanh thu theo tháng trong phạm vi');
+            openModal('Tổng doanh thu (Hoàn thành)','Doanh thu theo tháng trong phạm vi');
             renderModalChart(()=>{
-              const byMonth={};
-              filtered.forEach(h=>{
-                const d=new Date(h.ngay_Tao); const k=`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`;
-                byMonth[k]=(byMonth[k]||0)+(h.tong_Tien||0);
-              });
+              const byMonth={}; onlyCompleted(filtered).forEach(h=>{ const d=new Date(h.ngay_Tao); const k=`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`; byMonth[k]=(byMonth[k]||0)+(h.tong_Tien||0); });
               const labels=Object.keys(byMonth).sort();
-              return { type:'bar', data:{labels, datasets:[{label:'Doanh thu', data:labels.map(l=>byMonth[l])}]}, options:{scales:{y:{beginAtZero:true, ticks:{callback:v=>VND(v)}}}} };
-            });
-            break;
+              return {type:'bar', data:{labels, datasets:[{label:'Doanh thu', data:labels.map(l=>byMonth[l])}]}, options:{scales:{y:{beginAtZero:true, ticks:{callback:v=>VND(v)}}}}};
+            }); break;
           case 'avgRevenue':
-            openModal('Doanh thu trung bình/đơn','Phân phối giá trị đơn hàng (theo phạm vi)');
+            openModal('Doanh thu trung bình/đơn (Hoàn thành)','Phân phối giá trị đơn');
             renderModalChart(()=>{
-              const vals=filtered.map(h=>h.tong_Tien||0).sort((a,b)=>a-b);
-              const n=10, min=vals[0]||0, max=vals[vals.length-1]||0, step=(max-min)/Math.max(1,n);
-              const bins=Array(n).fill(0), labels=[];
-              for(let i=0;i<n;i++){ const a=min+i*step, b=a+step; labels.push(`${VND(a)} - ${VND(b)}`); }
-              vals.forEach(v=>{ const idx=Math.min(n-1, Math.floor(step>0?(v-min)/step:0)); bins[idx]++; });
-              return { type:'bar', data:{labels, datasets:[{label:'Số đơn', data:bins}]}, options:{scales:{y:{beginAtZero:true}}} };
-            });
-            break;
+              const vals=onlyCompleted(filtered).map(h=>h.tong_Tien||0).sort((a,b)=>a-b);
+              const n=10, min=vals[0]||0, max=vals.at(-1)||0, step=(max-min)/Math.max(1,n);
+              const bins=Array(n).fill(0), labels=[]; for(let i=0;i<n;i++){ const a=min+i*step,b=a+step; labels.push(`${VND(a)} - ${VND(b)}`); }
+              vals.forEach(v=> bins[Math.min(n-1, Math.floor(step>0?(v-min)/step:0))]++);
+              return {type:'bar', data:{labels, datasets:[{label:'Số đơn', data:bins}]}, options:{scales:{y:{beginAtZero:true}}}};
+            }); break;
           case 'todayOrders':
-            openModal('Đơn trong hôm nay');
-            const k = toYMD(new Date());
-            renderOrdersTable(hoaDonData.filter(h => toYMD(h.ngay_Tao)===k));
-            break;
+            openModal('Đơn trong hôm nay (tất cả)'); const k=toYMD(new Date()); renderOrdersTable(hoaDonData.filter(h=>toYMD(h.ngay_Tao)===k)); break;
           case 'todayRevenue':
-            openModal('Doanh thu hôm nay');
+            openModal('Doanh thu hôm nay (Hoàn thành)');
             renderModalChart(()=>{
-              const byStatus={}; const t=toYMD(new Date());
-              hoaDonData.forEach(h=>{ if(toYMD(h.ngay_Tao)===t){ byStatus[h.trang_Thai]=(byStatus[h.trang_Thai]||0)+(h.tong_Tien||0); }});
-              return { type:'doughnut', data:{labels:Object.keys(byStatus).map(statusName), datasets:[{data:Object.values(byStatus)}]}, options:{plugins:{legend:{position:'bottom'}}}};
-            });
-            break;
+              const bySt={}, t=toYMD(new Date());
+              hoaDonData.forEach(h=>{ if(toYMD(h.ngay_Tao)===t && h.trang_Thai==='Hoan_Thanh') bySt[h.trang_Thai]=(bySt[h.trang_Thai]||0)+(h.tong_Tien||0); });
+              return {type:'doughnut', data:{labels:Object.keys(bySt).map(statusName), datasets:[{data:Object.values(bySt)}]}, options:{plugins:{legend:{position:'bottom'}}}};
+            }); break;
           case 'statusTypes':
-            openModal('Thống kê trạng thái','Số lượng & doanh thu (theo phạm vi)');
+            openModal('Thống kê trạng thái','Số lượng & doanh thu (doanh thu chỉ tính Hoàn thành)');
             renderModalChart(()=>{
-              const c={}, s={}; filtered.forEach(h=>{ c[h.trang_Thai]=(c[h.trang_Thai]||0)+1; s[h.trang_Thai]=(s[h.trang_Thai]||0)+(h.tong_Tien||0); });
+              const c={}, s={}; filtered.forEach(h=>{ c[h.trang_Thai]=(c[h.trang_Thai]||0)+1; s[h.trang_Thai]=(s[h.trang_Thai]||0)+((h.trang_Thai==='Hoan_Thanh')?(h.tong_Tien||0):0); });
               const keys=Object.keys(c);
-              return { type:'bar', data:{ labels:keys.map(statusName), datasets:[ {label:'Số đơn', data:keys.map(k=>c[k])}, {label:'Doanh thu', data:keys.map(k=>s[k]), yAxisID:'y1'} ] },
-                       options:{ scales:{ y:{beginAtZero:true, position:'left'}, y1:{beginAtZero:true, position:'right', ticks:{callback:v=>VND(v)}} } } };
-            });
-            break;
-          case 'completed':
-            openModal('Đơn hoàn thành (theo phạm vi)'); renderOrdersTable(filtered.filter(h=>h.trang_Thai==='Hoan_Thanh')); break;
-          case 'cancelled':
-            openModal('Đơn hủy (theo phạm vi)'); renderOrdersTable(filtered.filter(h=>h.trang_Thai==='Huy_Don')); break;
+              return {type:'bar', data:{labels:keys.map(statusName), datasets:[{label:'Số đơn', data:keys.map(k=>c[k])},{label:'Doanh thu (Hoàn thành)', data:keys.map(k=>s[k])}]}, options:{scales:{y:{beginAtZero:true, ticks:{callback:v=>VND(v)}}}}};
+            }); break;
+          case 'completed': openModal('Đơn hoàn thành'); renderOrdersTable(filtered.filter(h=>h.trang_Thai==='Hoan_Thanh')); break;
+          case 'cancelled': openModal('Đơn hủy'); renderOrdersTable(filtered.filter(h=>h.trang_Thai==='Huy_Don')); break;
           case 'maxOrder':
-            openModal('Đơn giá trị lớn nhất (theo phạm vi)'); const max = [...filtered].sort((a,b)=>b.tong_Tien-a.tong_Tien)[0]; renderOrdersTable(max?[max]:[]); break;
+            openModal('Đơn lớn nhất (Hoàn thành)');
+            const mx=[...onlyCompleted(filtered)].sort((a,b)=>b.tong_Tien-a.tong_Tien)[0]; renderOrdersTable(mx?[mx]:[]); break;
           case 'minOrder':
-            openModal('Đơn giá trị nhỏ nhất (theo phạm vi)'); const min = [...filtered].sort((a,b)=>a.tong_Tien-b.tong_Tien)[0]; renderOrdersTable(min?[min]:[]); break;
+            openModal('Đơn nhỏ nhất (Hoàn thành)');
+            const mn=[...onlyCompleted(filtered)].sort((a,b)=>a.tong_Tien-b.tong_Tien)[0]; renderOrdersTable(mn?[mn]:[]); break;
         }
       });
     });
 
-    // Xuất PDF
-    async function addElementAsPages(pdf, el, margin = 10) {
+    // PDF
+    async function addElementAsPages(pdf, el, margin = 8) {
       const canvas = await html2canvas(el, { scale: 2, useCORS: true });
       const imgWidthMM = pdf.internal.pageSize.getWidth() - margin * 2;
       const pageHeightMM = pdf.internal.pageSize.getHeight() - margin * 2;
       const pxPerMM = canvas.width / imgWidthMM;
       const sliceHeightPx = pageHeightMM * pxPerMM;
-      let rendered = 0, first = true;
-      while (rendered < canvas.height) {
-        const slice = document.createElement('canvas');
-        slice.width = canvas.width;
-        slice.height = Math.min(sliceHeightPx, canvas.height - rendered);
-        const ctx = slice.getContext('2d');
-        ctx.drawImage(canvas, 0, rendered, canvas.width, slice.height, 0, 0, canvas.width, slice.height);
-        const imgData = slice.toDataURL('image/png');
-        if (!first) pdf.addPage(); first = false;
-        const mmH = slice.height / pxPerMM;
-        pdf.addImage(imgData, 'PNG', margin, margin, imgWidthMM, mmH);
-        rendered += sliceHeightPx;
+      let y=0, first=true;
+      while (y < canvas.height) {
+        const slice=document.createElement('canvas'); slice.width=canvas.width; slice.height=Math.min(sliceHeightPx, canvas.height-y);
+        slice.getContext('2d').drawImage(canvas, 0,y,canvas.width,slice.height,0,0,canvas.width,slice.height);
+        const img=slice.toDataURL('image/png'); if(!first) pdf.addPage(); first=false;
+        pdf.addImage(img,'PNG',margin,margin,imgWidthMM, slice.height/pxPerMM); y += sliceHeightPx;
       }
     }
     document.getElementById('exportPDF')?.addEventListener('click', async ()=>{
       const { jsPDF } = window.jspdf;
       const pdf = new jsPDF('p','mm','a4');
-      const container = document.querySelector('.dashboard-container');
-      await addElementAsPages(pdf, container, 8);
+      await addElementAsPages(pdf, document.querySelector('.dashboard-container'), 8);
       pdf.save('ThongKe_TraSua.pdf');
+    });
+
+    // Custom handlers
+    const fromEl=document.getElementById('fromDate');
+    const toEl=document.getElementById('toDate');
+    (function preset(){ const now=new Date(); const s=new Date(now.getFullYear(),now.getMonth(),1);
+      const f=d=>`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+      fromEl.value=f(s); toEl.value=f(now);
+    })();
+
+    document.getElementById('applyCustom')?.addEventListener('click', ()=>{
+      const f=fromEl.value, t=toEl.value; if(!f||!t) return alert('Vui lòng chọn đủ ngày.');
+      const from=new Date(f+'T00:00:00'), to=new Date(t+'T23:59:59.999');
+      if(from>to) return alert('Từ ngày phải ≤ Đến ngày.');
+      customFrom=from; customTo=to; applyRange('custom');
+    });
+    document.getElementById('clearCustom')?.addEventListener('click', ()=>{
+      customFrom=null; customTo=null; fromEl.value=''; toEl.value=''; applyRange('today');
     });
 
     // INIT
     document.addEventListener('DOMContentLoaded', ()=>{
-      document.querySelectorAll('.time-btn').forEach(btn=>{
-        btn.addEventListener('click', ()=> applyRange(btn.dataset.range));
-      });
-      applyRange('today'); // muốn mặc định "Tất cả" thì đổi 'today' -> 'all'
+      document.querySelectorAll('.time-btn').forEach(b=> b.addEventListener('click', ()=> applyRange(b.dataset.range)));
+      applyRange('today');
     });
 </script>
 </body>
