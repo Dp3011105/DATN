@@ -34,6 +34,7 @@ builder.Services.AddScoped<IHoaDonChiTietRepository, HoaDonChiTietRepository>();
 builder.Services.AddScoped<IHoaDonChiTietToppingRepository, HoaDonChiTietToppingRepository>();
 builder.Services.AddScoped<IHoaDonVoucherRepository, HoaDonVoucherRepository>();
 builder.Services.AddScoped<IProfileRepository, ProfileRepository>();
+builder.Services.AddHttpClient();
 
 // THÊM LẠI: KhachHangRepository bị comment trong bản mới
 builder.Services.AddScoped<IKhachHangRepository, KhachHangRepository>();

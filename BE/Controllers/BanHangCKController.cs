@@ -1,6 +1,7 @@
 ﻿using BE.DTOs;
 using BE.models;
 using BE.Repository.IRepository;
+using BE.Service;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 
@@ -11,13 +12,17 @@ namespace BE.Controllers
     public class BanHangCKController : ControllerBase
     {
         private readonly IBanHangCKRepository _repository;
+        private readonly EmailService _emailService;
 
-        public BanHangCKController(IBanHangCKRepository repository)
+
+        public BanHangCKController(IBanHangCKRepository repository, EmailService emailService)
         {
             _repository = repository;
+            _emailService = emailService;
+
         }
 
-       
+
 
 
         // Lấy tất cả hình thức thanh toán, chỉ hiển thị các bản ghi có Trang_Thai = true
@@ -30,12 +35,29 @@ namespace BE.Controllers
 
 
 
+        //[HttpPost("checkout")]
+        //public async Task<ActionResult<HoaDonBanHangCKDTO>> CheckOutTk([FromBody] HoaDonBanHangCKDTO hoaDonDto)
+
+        //{
+        //    try
+        //    {
+        //        var hoaDon = await _repository.CheckOutTk(hoaDonDto);
+        //        return Ok(hoaDon);
+        //    }
+        //    catch (Exception ex)
+        //    {
+        //        return BadRequest(new { Message = ex.Message });
+        //    }
+        //}
+
+
         [HttpPost("checkout")]
         public async Task<ActionResult<HoaDonBanHangCKDTO>> CheckOutTk([FromBody] HoaDonBanHangCKDTO hoaDonDto)
         {
             try
             {
-                var hoaDon = await _repository.CheckOutTk(hoaDonDto);
+                // Truyền thêm _emailService vào
+                var hoaDon = await _repository.CheckOutTk(hoaDonDto, _emailService);
                 return Ok(hoaDon);
             }
             catch (Exception ex)
@@ -43,6 +65,9 @@ namespace BE.Controllers
                 return BadRequest(new { Message = ex.Message });
             }
         }
+
+
+
 
 
 

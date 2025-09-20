@@ -114,13 +114,45 @@ namespace FE.Controllers
             return View(product);
         }
 
+        //// GET: Hiển thị form thêm sản phẩm
+        //public async Task<IActionResult> AddProduct()
+        //{
+        //    ViewBag.Sizes = await _productService.GetSizesAsync();
+        //    ViewBag.Toppings = await _productService.GetToppingsAsync();
+        //    ViewBag.LuongDas = await _productService.GetLuongDasAsync();
+        //    ViewBag.DoNgots = await _productService.GetDoNgotsAsync();
+        //    return View(new AddProductViewModel());
+        //}
+
+        //// POST: Thêm sản phẩm
+        //[HttpPost]
+        //[ValidateAntiForgeryToken]
+        //public async Task<IActionResult> AddProduct(AddProductViewModel model)
+        //{
+        //    if (ModelState.IsValid)
+        //    {
+        //        var result = await _productService.AddProductAsync(model);
+        //        if (result)
+        //        {
+        //            TempData["Success"] = "Thêm sản phẩm thành công!";
+        //            return RedirectToAction("Index");
+        //        }
+        //        TempData["Error"] = "Không thể thêm sản phẩm. Vui lòng thử lại.";
+        //    }
+
+        //    ViewBag.Sizes = await _productService.GetSizesAsync();
+        //    ViewBag.Toppings = await _productService.GetToppingsAsync();
+        //    ViewBag.LuongDas = await _productService.GetLuongDasAsync();
+        //    ViewBag.DoNgots = await _productService.GetDoNgotsAsync();
+        //    return View(model);
+        //}
+
+
+
         // GET: Hiển thị form thêm sản phẩm
         public async Task<IActionResult> AddProduct()
         {
-            ViewBag.Sizes = await _productService.GetSizesAsync();
-            ViewBag.Toppings = await _productService.GetToppingsAsync();
-            ViewBag.LuongDas = await _productService.GetLuongDasAsync();
-            ViewBag.DoNgots = await _productService.GetDoNgotsAsync();
+            await LoadViewBagData();
             return View(new AddProductViewModel());
         }
 
@@ -129,23 +161,87 @@ namespace FE.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> AddProduct(AddProductViewModel model)
         {
-            if (ModelState.IsValid)
+            // Kiểm tra validation server-side
+            if (!ModelState.IsValid || !IsValidProduct(model))
+            {
+                await LoadViewBagData();
+                TempData["Error"] = "Dữ liệu không hợp lệ. Vui lòng kiểm tra lại.";
+                return View(model);
+            }
+
+            try
             {
                 var result = await _productService.AddProductAsync(model);
                 if (result)
                 {
-                    TempData["Success"] = "Thêm sản phẩm thành công!";
+                    TempData["Success"] = "Thêm sản phẩm thành công! Trà sữa đã sẵn sàng lên kệ! 😎";
                     return RedirectToAction("Index");
                 }
-                TempData["Error"] = "Không thể thêm sản phẩm. Vui lòng thử lại.";
+                TempData["Error"] = "Không thể thêm sản phẩm. Có gì đó sai sai rồi! 😅";
+            }
+            catch (Exception ex)
+            {
+                // Log lỗi nếu cần (dùng ILogger nếu có)
+                TempData["Error"] = $"Lỗi hệ thống: {ex.Message}. Liên hệ IT ngay! 🚨";
             }
 
+            await LoadViewBagData();
+            return View(model);
+        }
+
+
+        private async Task LoadViewBagData()
+        {
             ViewBag.Sizes = await _productService.GetSizesAsync();
             ViewBag.Toppings = await _productService.GetToppingsAsync();
             ViewBag.LuongDas = await _productService.GetLuongDasAsync();
             ViewBag.DoNgots = await _productService.GetDoNgotsAsync();
-            return View(model);
         }
+
+        // Kiểm tra validation bổ sung
+        private bool IsValidProduct(AddProductViewModel model)
+        {
+            bool isValid = true;
+
+            if (model.Gia < 1000)
+            {
+                ModelState.AddModelError("Gia", "Giá phải lớn hơn hoặc bằng 1.000.");
+                isValid = false;
+            }
+
+            if (model.SoLuong < 1)
+            {
+                ModelState.AddModelError("SoLuong", "Số lượng phải lớn hơn hoặc bằng 1.");
+                isValid = false;
+            }
+
+            if (model.SelectedSizes == null || !model.SelectedSizes.Any())
+            {
+                ModelState.AddModelError("SelectedSizes", "Phải chọn ít nhất một kích thước.");
+                isValid = false;
+            }
+
+            if (model.SelectedLuongDas == null || !model.SelectedLuongDas.Any())
+            {
+                ModelState.AddModelError("SelectedLuongDas", "Phải chọn ít nhất một lượng đá.");
+                isValid = false;
+            }
+
+            if (model.SelectedDoNgots == null || !model.SelectedDoNgots.Any())
+            {
+                ModelState.AddModelError("SelectedDoNgots", "Phải chọn ít nhất một độ ngọt.");
+                isValid = false;
+            }
+
+            return isValid;
+        }
+
+
+
+
+
+
+
 
         // GET: Hiển thị form sửa sản phẩm
         public async Task<IActionResult> EditProduct(int id)

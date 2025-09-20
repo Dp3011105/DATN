@@ -110,6 +110,51 @@ namespace BE.Controllers
 
 
 
+        //private HoaDonDonHangTKDTO MapToHoaDonDonHangTKDTO(HoaDon h)
+        //{
+        //    return new HoaDonDonHangTKDTO
+        //    {
+        //        ID_Hoa_Don = h.ID_Hoa_Don,
+        //        Ma_Hoa_Don = h.Ma_Hoa_Don,
+        //        Ngay_Tao = h.Ngay_Tao,
+        //        Tong_Tien = h.Tong_Tien,
+        //        Trang_Thai = h.Trang_Thai,
+        //        Ghi_Chu = h.Ghi_Chu,
+        //        Loai_Hoa_Don = h.Loai_Hoa_Don,
+        //        LyDoHuyDon = h.LyDoHuyDon,
+        //        LyDoDonHangCoVanDe = h.LyDoDonHangCoVanDe,
+        //        Phuong_Thuc_Thanh_Toan = h.HinhThucThanhToan?.Phuong_Thuc_Thanh_Toan,
+        //        DiaChi = h.DiaChi != null ? new DiaChiDonHangTK
+        //        {
+        //            Dia_Chi = h.DiaChi.Dia_Chi,
+        //            Tinh_Thanh = h.DiaChi.Tinh_Thanh
+        //        } : null,
+        //        ChiTiets = h.HoaDonChiTiets.Select(ct => new HoaDonChiTietDonHangTKDTO
+        //        {
+        //            ID_HoaDon_ChiTiet = ct.ID_HoaDon_ChiTiet,
+        //            Ten_San_Pham = ct.SanPham?.Ten_San_Pham,
+        //            SizeName = ct.Size?.SizeName,
+        //            Muc_Do = ct.DoNgot?.Muc_Do,
+        //            Ten_LuongDa = ct.LuongDa?.Ten_LuongDa,
+        //            Toppings = ct.HoaDonChiTietToppings.Select(ht => new ToppingDonHangTKDTO
+        //            {
+        //                Ten = ht.Topping?.Ten,
+        //                Gia = ht.Topping?.Gia ?? 0
+        //            }).ToList(),
+        //            So_Luong = ct.So_Luong,
+        //            Tong_Tien = ct.Tong_Tien,
+        //            Ghi_Chu = ct.Ghi_Chu
+        //        }).ToList(),
+        //        Vouchers = h.HoaDonVouchers.Select(hv => new VoucherDonHangTKDTO
+        //        {
+        //            Ma_Voucher = hv.Voucher?.Ma_Voucher,
+        //            Ten = hv.Voucher?.Ten,
+        //            Gia_Tri_Giam = hv.Voucher?.Gia_Tri_Giam
+        //        }).ToList()
+        //    };
+        //}
+
+
         private HoaDonDonHangTKDTO MapToHoaDonDonHangTKDTO(HoaDon h)
         {
             return new HoaDonDonHangTKDTO
@@ -127,7 +172,9 @@ namespace BE.Controllers
                 DiaChi = h.DiaChi != null ? new DiaChiDonHangTK
                 {
                     Dia_Chi = h.DiaChi.Dia_Chi,
-                    Tinh_Thanh = h.DiaChi.Tinh_Thanh
+                    Tinh_Thanh = h.DiaChi.Tinh_Thanh,
+                    Ghi_Chu = h.DiaChi.Ghi_Chu
+
                 } : null,
                 ChiTiets = h.HoaDonChiTiets.Select(ct => new HoaDonChiTietDonHangTKDTO
                 {
@@ -150,9 +197,15 @@ namespace BE.Controllers
                     Ma_Voucher = hv.Voucher?.Ma_Voucher,
                     Ten = hv.Voucher?.Ten,
                     Gia_Tri_Giam = hv.Voucher?.Gia_Tri_Giam
-                }).ToList()
+                }).ToList(),
+
+                // Gán Phi_Ship
+                Phi_Ship = h.Phi_Ship
             };
         }
+
+
+
 
 
     }

@@ -11,10 +11,12 @@ namespace BE.Controllers
     public class BanHangTKController : ControllerBase
     {
         private readonly IBanHangTKRepository _repository;
+        private readonly ILogger<BanHangTKRepository> _logger; // Khai báo ILogger
 
-        public BanHangTKController(IBanHangTKRepository repository)
+        public BanHangTKController(IBanHangTKRepository repository, ILogger<BanHangTKRepository> logger)
         {
             _repository = repository;
+            _logger = logger;
         }
 
         // API 1: GET all active addresses for a customer
@@ -148,7 +150,82 @@ namespace BE.Controllers
             await _repository.CapNhatSoDienThoaiAsync(dto.ID_Khach_Hang, dto.So_Dien_Thoai);
             return Ok("Cập nhật số điện thoại thành công");
         }
-        
+
+
+
+
+        [HttpGet("khachhang/{id}")]
+        public async Task<ActionResult<KhachHangCheckoutDTO>> GetKhachHang(int id)
+        {
+            var khachHang = await _repository.GetKhachHangByIdAsync(id);
+            if (khachHang == null)
+            {
+                return NotFound(new { message = $"Không tìm thấy khách hàng với ID {id}" });
+            }
+            return Ok(khachHang);
+        }
+
+        //[HttpPut("khachhang/{id}")]
+        //public async Task<ActionResult> UpdateKhachHang(int id, [FromBody] KhachHangCheckoutDTO khachHangDto)
+        //{
+        //    if (!ModelState.IsValid)
+        //    {
+        //        return BadRequest(ModelState);
+        //    }
+
+        //    if (id != khachHangDto.ID_Khach_Hang)
+        //    {
+        //        return BadRequest(new { message = "ID khách hàng không khớp" });
+        //    }
+
+        //    var result = await _repository.UpdateKhachHangAsync(id, khachHangDto);
+        //    if (!result)
+        //    {
+        //        return NotFound(new { message = $"Không tìm thấy khách hàng với ID {id}" });
+        //    }
+
+        //    return NoContent();
+        //}
+
+
+        [HttpPut("khachhang/{id}")]
+        public async Task<ActionResult> UpdateKhachHang(int id, [FromBody] KhachHangCheckoutDTO khachHangDto)
+        {
+            if (!ModelState.IsValid)
+            {
+                return BadRequest(ModelState);
+            }
+
+            if (id != khachHangDto.ID_Khach_Hang)
+            {
+                return BadRequest(new { message = "ID khách hàng không khớp" });
+            }
+
+            try
+            {
+                var result = await _repository.UpdateKhachHangAsync(id, khachHangDto);
+                if (!result)
+                {
+                    return NotFound(new { message = $"Không tìm thấy khách hàng với ID {id}" });
+                }
+
+                return NoContent();
+            }
+            catch (InvalidOperationException ex) when (ex.Message.Contains("Email đã được sử dụng"))
+            {
+                return BadRequest(new { message = ex.Message });
+            }
+            catch (InvalidOperationException ex)
+            {
+                return BadRequest(new { message = ex.Message });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, $"Lỗi không xác định khi cập nhật khách hàng ID {id}: {ex.Message}");
+                return StatusCode(500, new { message = "Đã xảy ra lỗi khi cập nhật khách hàng.", error = ex.Message });
+            }
+        }
+
 
 
     }

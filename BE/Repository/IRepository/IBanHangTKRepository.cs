@@ -17,6 +17,11 @@ namespace BE.Repository.IRepository
         Task ThemSoDienThoaiAsync(int idKhachHang, string soDienThoai);
         Task CapNhatSoDienThoaiAsync(int idKhachHang, string soDienThoaiMoi);
 
+        // cập nhật thông tin khách hàng
+
+        Task<KhachHangCheckoutDTO> GetKhachHangByIdAsync(int id);
+        Task<bool> UpdateKhachHangAsync(int id, KhachHangCheckoutDTO khachHangDto);
+
 
     }
 }

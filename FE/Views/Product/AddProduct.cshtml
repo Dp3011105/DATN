@@ -24,194 +24,6 @@
     <!-- Add Product Form -->
     <div class="row justify-content-center">
         <div class="col-md-8">
-            <div class="card shadow-lg border-0 rounded animate__animated animate__fadeInUp">
-                <div class="card-body p-5">
-                    <h2 class="text-center mb-4 fw-bold text-primary">Thêm Sản Phẩm</h2>
-                    <form asp-action="AddProduct" enctype="multipart/form-data" id="addProductForm">
-                        <div asp-validation-summary="ModelOnly" class="text-danger mb-3 text-center"></div>
-
-                        <div class="form-floating mb-3">
-                            <input asp-for="TenSanPham" class="form-control rounded-pill shadow-sm" id="tenSanPham" placeholder="Tên sản phẩm" required />
-                            <label asp-for="TenSanPham" class="form-label">Tên sản phẩm</label>
-                            <span asp-validation-for="TenSanPham" class="text-danger small"></span>
-                        </div>
-
-                        <div class="form-floating mb-3">
-                            <input asp-for="Gia" class="form-control rounded-pill shadow-sm" type="number" id="gia" placeholder="Giá" required />
-                            <label asp-for="Gia" class="form-label">Giá</label>
-                            <span asp-validation-for="Gia" class="text-danger small"></span>
-                        </div>
-
-                        <div class="form-floating mb-3">
-                            <input asp-for="SoLuong" class="form-control rounded-pill shadow-sm" type="number" id="soLuong" placeholder="Số lượng" required />
-                            <label asp-for="SoLuong" class="form-label">Số lượng</label>
-                            <span asp-validation-for="SoLuong" class="text-danger small"></span>
-                        </div>
-
-                        <div class="form-floating mb-3">
-                            <textarea asp-for="MoTa" class="form-control shadow-sm" id="moTa" placeholder="Mô tả" style="height: 100px;"></textarea>
-                            <label asp-for="MoTa" class="form-label">Mô tả</label>
-                            <span asp-validation-for="MoTa" class="text-danger small"></span>
-                        </div>
-
-                        <div class="mb-3">
-                            <label asp-for="Image" class="form-label fw-bold">Hình ảnh</label>
-                            <input asp-for="Image" type="file" class="form-control shadow-sm" accept="image/*" required />
-                            <span asp-validation-for="Image" class="text-danger small"></span>
-                        </div>
-
-                        <div class="mb-3">
-                            <label class="form-label fw-bold">Kích thước</label>
-                            <div class="row">
-                                @foreach (var size in ViewBag.Sizes)
-                                {
-                                    <div class="col-md-4 form-check">
-                                        <input type="checkbox" name="SelectedSizes" value="@size.ID_Size" class="form-check-input" id="size_@size.ID_Size" />
-                                        <label class="form-check-label" for="size_@size.ID_Size">@size.SizeName (Giá: @string.Format("{0:N0} đ", size.Gia))</label>
-                                    </div>
-                                }
-                            </div>
-                        </div>
-
-                        <div class="mb-3">
-                            <label class="form-label fw-bold">Topping</label>
-                            <div class="row">
-                                @foreach (var topping in ViewBag.Toppings)
-                                {
-                                    <div class="col-md-4 form-check">
-                                        <input type="checkbox" name="SelectedToppings" value="@topping.ID_Topping" class="form-check-input" id="topping_@topping.ID_Topping" />
-                                        <label class="form-check-label" for="topping_@topping.ID_Topping">@topping.Ten (Giá: @string.Format("{0:N0} đ", topping.Gia))</label>
-                                    </div>
-                                }
-                            </div>
-                        </div>
-
-                        <div class="mb-3">
-                            <label class="form-label fw-bold">Lượng đá</label>
-                            <div class="row">
-                                @foreach (var luongDa in ViewBag.LuongDas)
-                                {
-                                    <div class="col-md-4 form-check">
-                                        <input type="checkbox" name="SelectedLuongDas" value="@luongDa.ID_LuongDa" class="form-check-input" id="luongDa_@luongDa.ID_LuongDa" />
-                                        <label class="form-check-label" for="luongDa_@luongDa.ID_LuongDa">@luongDa.Ten_LuongDa</label>
-                                    </div>
-                                }
-                            </div>
-                        </div>
-
-                        <div class="mb-3">
-                            <label class="form-label fw-bold">Độ ngọt</label>
-                            <div class="row">
-                                @foreach (var doNgot in ViewBag.DoNgots)
-                                {
-                                    <div class="col-md-4 form-check">
-                                        <input type="checkbox" name="SelectedDoNgots" value="@doNgot.ID_DoNgot" class="form-check-input" id="doNgot_@doNgot.ID_DoNgot" />
-                                        <label class="form-check-label" for="doNgot_@doNgot.ID_DoNgot">@doNgot.Muc_Do</label>
-                                    </div>
-                                }
-                            </div>
-                        </div>
-
-                        <div class="d-flex justify-content-between">
-                            <a asp-action="Index" class="btn btn-outline-secondary rounded-pill">
-                                <i class="bi bi-arrow-left me-2"></i>Quay lại
-                            </a>
-                            <button type="submit" class="btn btn-primary btn-lg rounded-pill shadow-sm animate__animated animate__pulse animate__infinite">
-                                <i class="bi bi-plus me-2"></i>Thêm
-                            </button>
-                        </div>
-                    </form>
-                </div>
-            </div>
-        </div>
-    </div>
-</div>
-
-@section Scripts {
-    <script src="~/lib/jquery-validation/dist/jquery.validate.min.js"></script>
-    <script src="~/lib/jquery-validation-unobtrusive/jquery.validate.unobtrusive.min.js"></script>
-    <script>
-        $(document).ready(function () {
-            $("#addProductForm").validate({
-                errorClass: "text-danger",
-                highlight: function (element) {
-                    $(element).addClass("is-invalid").removeClass("is-valid");
-                },
-                unhighlight: function (element) {
-                    $(element).removeClass("is-invalid").addClass("is-valid");
-                },
-                errorPlacement: function (error, element) {
-                    error.insertAfter(element);
-                }
-            });
-        });
-    </script>
-}
-
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css" />
-
-<style>
-    .form-control.is-invalid, .form-control-file.is-invalid {
-        border-color: #dc3545;
-        box-shadow: 0 0 5px rgba(220, 53, 69, 0.5);
-    }
-
-    .form-control.is-valid, .form-control-file.is-valid {
-        border-color: #28a745;
-        box-shadow: 0 0 5px rgba(40, 167, 69, 0.5);
-    }
-
-    .form-floating label {
-        color: #495057;
-    }
-
-    .hover-scale:hover {
-        transform: scale(1.1);
-        transition: transform 0.3s ease;
-    }
-
-    .btn-primary:hover, .btn-outline-secondary:hover {
-        transform: scale(1.05);
-        transition: transform 0.3s ease;
-    }
-
-    .form-check {
-        margin-bottom: 0.5rem;
-    }
-</style> *@
-
-
-
-
-
-
-
-@model AddProductViewModel
-@{
-    Layout = "~/Views/Shared/_AdminLayout.cshtml";
-    ViewData["Title"] = "Thêm sản phẩm";
-}
-
-<div class="container-fluid my-5">
-    <!-- Notifications -->
-    @if (TempData["Success"] != null)
-    {
-        <div class="alert alert-success alert-dismissible fade show animate__animated animate__fadeInDown" role="alert">
-            @TempData["Success"]
-            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-        </div>
-    }
-    @if (TempData["Error"] != null)
-    {
-        <div class="alert alert-danger alert-dismissible fade show animate__animated animate__fadeInDown" role="alert">
-            @TempData["Error"]
-            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-        </div>
-    }
-
-    <!-- Add Product Form -->
-    <div class="row justify-content-center">
-        <div class="col-md-8">
             <div class="card shadow-sm border-0">
                 <div class="card-body p-5">
                     <h2 class="text-center mb-4 fw-bold text-dark">Thêm Sản Phẩm</h2>
@@ -225,7 +37,7 @@
                         </div>
 
                         <div class="form-floating mb-3">
-                            <input asp-for="Gia" class="form-control shadow-sm" type="number" id="gia" placeholder="Giá" required />
+                            <input asp-for="Gia" class="form-control shadow-sm" type="text" id="gia" placeholder="Giá" required />
                             <label asp-for="Gia" class="form-label">Giá</label>
                             <span asp-validation-for="Gia" class="text-danger small"></span>
                         </div>
@@ -262,6 +74,7 @@
                                     </div>
                                 }
                             </div>
+                            <span class="text-danger small size-error"></span>
                         </div>
 
                         <div class="mb-3">
@@ -291,6 +104,7 @@
                                     </div>
                                 }
                             </div>
+                            <span class="text-danger small luongDa-error"></span>
                         </div>
 
                         <div class="mb-3">
@@ -307,6 +121,7 @@
                                     </div>
                                 }
                             </div>
+                            <span class="text-danger small doNgot-error"></span>
                         </div>
 
                         <div class="d-flex justify-content-between">
@@ -325,13 +140,46 @@
 </div>
 
 @section Scripts {
-    <!-- Load jQuery first -->
     <script src="https://code.jquery.com/jquery-3.6.0.min.js" integrity="sha256-/xUj+3OJU5yExlq6GSYGSHk7tPXikynS7ogEvDej/m4=" crossorigin="anonymous"></script>
-    <!-- Load validation libraries after jQuery -->
     <script src="~/lib/jquery-validation/dist/jquery.validate.min.js"></script>
     <script src="~/lib/jquery-validation-unobtrusive/jquery.validate.unobtrusive.min.js"></script>
     <script>
         $(document).ready(function () {
+            // Hàm định dạng số tiếng Việt
+            function formatNumberVN(number) {
+                return number.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ".");
+            }
+
+            // Hàm bỏ định dạng để gửi dữ liệu
+            function parseNumberVN(value) {
+                return parseFloat(value.replace(/\./g, ""));
+            }
+
+            // Định dạng giá khi nhập
+            $("#gia").on("input", function () {
+                let value = $(this).val().replace(/[^\d]/g, "");
+                if (value) {
+                    $(this).val(formatNumberVN(value));
+                }
+            });
+
+            // Xử lý trước khi submit
+            $("#addProductForm").on("submit", function () {
+                let gia = $("#gia").val();
+                if (gia) {
+                    $("#gia").val(parseNumberVN(gia));
+                }
+            });
+
+            // Custom validator cho file ảnh
+            $.validator.addMethod("imageFile", function (value, element) {
+                if (!value) return true; // Không bắt buộc nếu không có file
+                const allowedExtensions = ["jpg", "jpeg", "png", "gif", "bmp"];
+                const extension = value.split(".").pop().toLowerCase();
+                return allowedExtensions.includes(extension);
+            }, "Vui lòng chọn file ảnh (jpg, jpeg, png, gif, bmp).");
+
+            // Cấu hình jQuery Validation
             $("#addProductForm").validate({
                 errorClass: "text-danger",
                 highlight: function (element) {
@@ -341,7 +189,79 @@
                     $(element).removeClass("is-invalid").addClass("is-valid");
                 },
                 errorPlacement: function (error, element) {
-                    error.insertAfter(element);
+                    if (element.attr("name") === "SelectedSizes") {
+                        error.appendTo(".size-error");
+                    } else if (element.attr("name") === "SelectedLuongDas") {
+                        error.appendTo(".luongDa-error");
+                    } else if (element.attr("name") === "SelectedDoNgots") {
+                        error.appendTo(".doNgot-error");
+                    } else {
+                        error.insertAfter(element);
+                    }
+                },
+                rules: {
+                    TenSanPham: {
+                        required: true,
+                        maxlength: 100
+                    },
+                    Gia: {
+                        required: true,
+                        number: true,
+                        min: 1000
+                    },
+                    SoLuong: {
+                        required: true,
+                        number: true,
+                        min: 1
+                    },
+                    Image: {
+                        required: true,
+                        imageFile: true
+                    },
+                    "SelectedSizes": {
+                        required: true,
+                        minlength: 1
+                    },
+                    "SelectedLuongDas": {
+                        required: true,
+                        minlength: 1
+                    },
+                    "SelectedDoNgots": {
+                        required: true,
+                        minlength: 1
+                    }
+                },
+                messages: {
+                    TenSanPham: {
+                        required: "Tên sản phẩm là bắt buộc",
+                        maxlength: "Tên sản phẩm không được vượt quá 100 ký tự"
+                    },
+                    Gia: {
+                        required: "Giá là bắt buộc",
+                        number: "Giá phải là số hợp lệ",
+                        min: "Giá phải lớn hơn hoặc bằng 1.000"
+                    },
+                    SoLuong: {
+                        required: "Số lượng là bắt buộc",
+                        number: "Số lượng phải là số hợp lệ",
+                        min: "Số lượng phải lớn hơn hoặc bằng 1"
+                    },
+                    Image: {
+                        required: "Hình ảnh là bắt buộc",
+                        imageFile: "Vui lòng chọn file ảnh (jpg, jpeg, png, gif, bmp)"
+                    },
+                    "SelectedSizes": {
+                        required: "Phải chọn ít nhất một kích thước",
+                        minlength: "Phải chọn ít nhất một kích thước"
+                    },
+                    "SelectedLuongDas": {
+                        required: "Phải chọn ít nhất một lượng đá",
+                        minlength: "Phải chọn ít nhất một lượng đá"
+                    },
+                    "SelectedDoNgots": {
+                        required: "Phải chọn ít nhất một độ ngọt",
+                        minlength: "Phải chọn ít nhất một độ ngọt"
+                    }
                 }
             });
 
@@ -350,7 +270,7 @@
                 const prefix = $(this).data('prefix');
                 const checkboxes = $(`input[id^="${prefix}_"]`);
                 const allChecked = checkboxes.toArray().every(cb => cb.checked);
-                checkboxes.prop('checked', !allChecked);
+                checkboxes.prop('checked', !allChecked).valid();
             });
         });
     </script>
@@ -401,4 +321,558 @@
         padding: 0.25rem 0.5rem;
         font-size: 0.875rem;
     }
+</style> *@
+
+
+
+
+
+
+
+
+
+
+
+@model AddProductViewModel
+
+@{
+    Layout = "~/Views/Shared/_AdminLayout.cshtml";
+    ViewData["Title"] = "Thêm sản phẩm";
+}
+
+<style>
+    /* Card container */
+    .card-container {
+        background: #fff;
+        border: 1px solid #e0e0e0;
+        border-radius: 0.5rem;
+        padding: 20px;
+        margin-bottom: 20px;
+        max-width: 1400px;
+        margin-left: auto;
+        margin-right: auto;
+    }
+
+    /* Form Card */
+    .form-card {
+        background: #fff;
+        border: 1px solid #e0e0e0;
+        border-radius: 0.5rem;
+        padding: 20px;
+    }
+
+    .form-header {
+        background: linear-gradient(135deg, #1e40af, #3b82f6);
+        color: #fff;
+        padding: 20px;
+        text-align: center;
+        border-top-left-radius: 0.5rem;
+        border-top-right-radius: 0.5rem;
+        margin: -20px -20px 20px -20px;
+    }
+
+    .form-control, .form-control-file, .form-select {
+        border-radius: 0.3rem;
+        border: 1px solid #e0e0e0;
+        padding: 10px;
+        font-size: 0.9rem;
+        background: #f9fafb;
+    }
+
+        .form-control:focus, .form-control-file:focus, .form-select:focus {
+            border-color: #3b82f6;
+            background: #fff;
+            outline: none;
+        }
+
+    .form-floating label {
+        color: #6b7280;
+        font-size: 0.9rem;
+    }
+
+    .form-control.is-invalid, .form-control-file.is-invalid, .form-select.is-invalid {
+        border-color: #dc3545;
+    }
+
+    .form-control.is-valid, .form-control-file.is-valid, .form-select.is-valid {
+        border-color: #28a745;
+    }
+
+    .form-check {
+        margin-bottom: 0.5rem;
+    }
+
+    .action-buttons {
+        display: flex;
+        justify-content: flex-end;
+        gap: 10px;
+        margin-top: 20px;
+    }
+
+    .btn-custom {
+        border-radius: 0.3rem;
+        padding: 10px 20px;
+        font-weight: 500;
+        font-size: 1rem;
+    }
+
+    .btn-submit {
+        background: #28a745;
+        border: none;
+        color: #fff;
+    }
+
+    .btn-back {
+        background: #6b7280;
+        border: none;
+        color: #fff;
+    }
+
+    .btn-outline-primary {
+        border-radius: 0.3rem;
+        border-color: #3b82f6;
+        color: #3b82f6;
+    }
+
+        .btn-outline-primary:hover {
+            background-color: #3b82f6;
+            color: #fff;
+        }
+
+    .text-danger.small {
+        font-size: 0.85rem;
+        margin-left: 10px;
+        display: inline-block;
+        vertical-align: middle;
+    }
+
+    /* Table for checkboxes */
+    .checkbox-table {
+        text-align: center;
+        width: 100%;
+    }
+
+        .checkbox-table td {
+            padding: 10px;
+            vertical-align: middle;
+        }
+
+        .checkbox-table .name-column {
+            width: 70%;
+            text-align: left;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .checkbox-table .status-column {
+            width: 30%;
+        }
+
+    .badge-active {
+        background: #e6f4ea;
+        color: #1e7e34;
+        padding: 0.4em 0.7em;
+        border-radius: 0.3rem;
+        font-size: 0.85rem;
+        font-weight: 600;
+    }
+
+    .badge-inactive {
+        background: #fbe9e7;
+        color: #d32f2f;
+        padding: 0.4em 0.7em;
+        border-radius: 0.3rem;
+        font-size: 0.85rem;
+        font-weight: 600;
+    }
+
+    /* Topping 3 columns */
+    .topping-container {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+    }
+
+    .topping-column {
+        flex: 1 1 33.33%;
+        min-width: 200px;
+    }
+
+    /* Notifications animation */
+    .alert {
+        position: fixed;
+        top: 20px;
+        right: -100%;
+        width: 300px;
+        z-index: 1050;
+        border-radius: 0.3rem;
+        animation: slideInRight 0.5s ease forwards, fadeOut 0.5s ease 3s forwards;
+    }
+
+    keyframes slideInRight {
+        from
+
+    {
+        right: -100%;
+    }
+
+    to {
+        right: 20px;
+    }
+
+    }
+
+    keyframes fadeOut {
+        from
+
+    {
+        opacity: 1;
+    }
+
+    to {
+        opacity: 0;
+        visibility: hidden;
+    }
+
+    }
+
+    /* Responsive */
+    media (max-width: 768px) {
+        .card-container
+
+    {
+        padding: 15px;
+    }
+
+    .form-card {
+        padding: 15px;
+    }
+
+    .action-buttons {
+        flex-direction: column;
+        gap: 10px;
+    }
+
+    .btn-custom {
+        width: 100%;
+    }
+
+    .topping-column {
+        flex: 1 1 100%;
+    }
+
+    .checkbox-table .name-column {
+        width: 60%;
+    }
+
+    .checkbox-table .status-column {
+        width: 40%;
+    }
+
+    .alert {
+        width: 90%;
+        right: -100%;
+    }
+
+    }
+
+    body {
+        font-family: 'Inter', sans-serif;
+        background-color: #f8f9fa;
+    }
 </style>
+
+<div class="card-container">
+    <!-- Notifications -->
+    @if (TempData["Success"] != null)
+    {
+        <div class="alert alert-success alert-dismissible fade show" role="alert">
+            <i class="bi bi-check-circle-fill me-2"></i>@TempData["Success"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    }
+    @if (TempData["Error"] != null)
+    {
+        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+            <i class="bi bi-exclamation-circle-fill me-2"></i>@TempData["Error"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    }
+
+    <!-- Add Product Form -->
+    <div class="row justify-content-center">
+        <div class="col-md-10">
+            <div class="form-card">
+                <div class="form-header">
+                    <h2 class="mb-0 fw-bold">Thêm Sản Phẩm</h2>
+                </div>
+                <form asp-action="AddProduct" enctype="multipart/form-data" id="addProductForm">
+                    <div asp-validation-summary="ModelOnly" class="text-danger mb-4 text-center"></div>
+
+                    <div class="form-floating mb-4">
+                        <input asp-for="TenSanPham" class="form-control" id="tenSanPham" placeholder="Tên sản phẩm" required />
+                        <label asp-for="TenSanPham">Tên sản phẩm</label>
+                        <span asp-validation-for="TenSanPham" class="text-danger small"></span>
+                    </div>
+
+                    <div class="form-floating mb-4">
+                        <input asp-for="Gia" class="form-control" type="text" id="gia" placeholder="Giá" required />
+                        <label asp-for="Gia">Giá (VND)</label>
+                        <span asp-validation-for="Gia" class="text-danger small"></span>
+                    </div>
+
+                    <div class="form-floating mb-4">
+                        <input asp-for="SoLuong" class="form-control" type="number" id="soLuong" placeholder="Số lượng" required />
+                        <label asp-for="SoLuong">Số lượng</label>
+                        <span asp-validation-for="SoLuong" class="text-danger small"></span>
+                    </div>
+
+                    <div class="form-floating mb-4">
+                        <textarea asp-for="MoTa" class="form-control" id="moTa" placeholder="Mô tả" style="height: 150px;"></textarea>
+                        <label asp-for="MoTa">Mô tả</label>
+                        <span asp-validation-for="MoTa" class="text-danger small"></span>
+                    </div>
+
+                    <div class="mb-4">
+                        <label asp-for="Image" class="form-label fw-bold">Hình ảnh</label>
+                        <input asp-for="Image" type="file" class="form-control" accept="image/*" required />
+                        <span asp-validation-for="Image" class="text-danger small"></span>
+                    </div>
+
+                    <div class="mb-4">
+                        <div class="d-flex justify-content-between align-items-center mb-3">
+                            <label class="form-label fw-bold">Kích thước</label>
+                            <button type="button" class="btn btn-outline-primary btn-sm select-all" data-prefix="size">Chọn tất cả</button>
+                        </div>
+                        <table class="table table-hover table-light align-middle checkbox-table">
+                            <tbody>
+                                @foreach (var size in ViewBag.Sizes)
+                                {
+                                    <tr>
+                                        <td class="name-column">
+                                            <input type="checkbox" name="SelectedSizes" value="@size.ID_Size" class="form-check-input size-checkbox" id="size_@size.ID_Size" />
+                                            <label class="form-check-label" for="size_@size.ID_Size">@size.SizeName (Giá: @string.Format("{0:N0} đ", size.Gia))</label>
+                                        </td>
+                                        <td class="status-column">
+                                            <span class="badge @(size.Trang_Thai ? "badge-active" : "badge-inactive")">@(size.Trang_Thai ? "Hoạt động" : "Không hoạt động")</span>
+                                        </td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                        <span id="sizeError" class="text-danger small"></span>
+                    </div>
+
+                    <div class="mb-4">
+                        <div class="d-flex justify-content-between align-items-center mb-3">
+                            <label class="form-label fw-bold">Topping</label>
+                        </div>
+                        <div class="topping-container">
+                            @{
+                                var toppings = ViewBag.Toppings;
+                                int itemsPerColumn = (int)Math.Ceiling(toppings.Count / 3.0);
+                                for (int col = 0; col < 3; col++)
+                                {
+                                    <div class="topping-column">
+                                        <table class="table table-hover table-light align-middle checkbox-table">
+                                            <tbody>
+                                                @for (int i = col * itemsPerColumn; i < Math.Min((col + 1) * itemsPerColumn, toppings.Count); i++)
+                                                {
+                                                    var topping = toppings[i];
+                                                    <tr>
+                                                        <td class="name-column">
+                                                            <input type="checkbox" name="SelectedToppings" value="@topping.ID_Topping" class="form-check-input" id="topping_@topping.ID_Topping" />
+                                                            <label class="form-check-label" for="topping_@topping.ID_Topping">@topping.Ten (Giá: @string.Format("{0:N0} đ", topping.Gia))</label>
+                                                        </td>
+                                                        <td class="status-column">
+                                                            <span class="badge @(topping.Trang_Thai ? "badge-active" : "badge-inactive")">@(topping.Trang_Thai ? "Hoạt động" : "Không hoạt động")</span>
+                                                        </td>
+                                                    </tr>
+                                                }
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                }
+                            }
+                        </div>
+                    </div>
+
+                    <div class="mb-4">
+                        <div class="d-flex justify-content-between align-items-center mb-3">
+                            <label class="form-label fw-bold">Lượng đá</label>
+                            <button type="button" class="btn btn-outline-primary btn-sm select-all" data-prefix="luongDa">Chọn tất cả</button>
+                        </div>
+                        <table class="table table-hover table-light align-middle checkbox-table">
+                            <tbody>
+                                @foreach (var luongDa in ViewBag.LuongDas)
+                                {
+                                    <tr>
+                                        <td class="name-column">
+                                            <input type="checkbox" name="SelectedLuongDas" value="@luongDa.ID_LuongDa" class="form-check-input luongDa-checkbox" id="luongDa_@luongDa.ID_LuongDa" />
+                                            <label class="form-check-label" for="luongDa_@luongDa.ID_LuongDa">@luongDa.Ten_LuongDa</label>
+                                        </td>
+                                        <td class="status-column">
+                                            <span class="badge @(luongDa.Trang_Thai ? "badge-active" : "badge-inactive")">@(luongDa.Trang_Thai ? "Hoạt động" : "Không hoạt động")</span>
+                                        </td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                        <span id="luongDaError" class="text-danger small"></span>
+                    </div>
+
+                    <div class="mb-4">
+                        <div class="d-flex justify-content-between align-items-center mb-3">
+                            <label class="form-label fw-bold">Độ ngọt</label>
+                            <button type="button" class="btn btn-outline-primary btn-sm select-all" data-prefix="doNgot">Chọn tất cả</button>
+                        </div>
+                        <table class="table table-hover table-light align-middle checkbox-table">
+                            <tbody>
+                                @foreach (var doNgot in ViewBag.DoNgots)
+                                {
+                                    <tr>
+                                        <td class="name-column">
+                                            <input type="checkbox" name="SelectedDoNgots" value="@doNgot.ID_DoNgot" class="form-check-input doNgot-checkbox" id="doNgot_@doNgot.ID_DoNgot" />
+                                            <label class="form-check-label" for="doNgot_@doNgot.ID_DoNgot">@doNgot.Muc_Do</label>
+                                        </td>
+                                        <td class="status-column">
+                                            <span class="badge @(doNgot.Trang_Thai ? "badge-active" : "badge-inactive")">@(doNgot.Trang_Thai ? "Hoạt động" : "Không hoạt động")</span>
+                                        </td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                        <span id="doNgotError" class="text-danger small"></span>
+                    </div>
+
+                    <div class="action-buttons">
+                        <button type="submit" class="btn-custom btn-submit">
+                            <i class="bi bi-plus me-2"></i>Thêm
+                        </button>
+                        <a asp-action="Index" class="btn-custom btn-back">
+                            <i class="bi bi-arrow-left me-2"></i>Quay lại
+                        </a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js" integrity="sha256-/xUj+3OJU5yExlq6GSYGSHk7tPXikynS7ogEvDej/m4=" crossorigin="anonymous"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-validate/1.19.5/jquery.validate.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-validation-unobtrusive/3.2.12/jquery.validate.unobtrusive.min.js"></script>
+    <script>
+        $(document).ready(function () {
+            // Format tiền tệ cho input giá
+            $('#gia').on('input', function () {
+                let value = $(this).val().replace(/[^0-9]/g, '');
+                if (value) {
+                    value = parseInt(value).toLocaleString('vi-VN');
+                    $(this).val(value);
+                }
+            });
+
+            // Xóa định dạng khi gửi form
+            $('#addProductForm').on('submit', function () {
+                let gia = $('#gia').val().replace(/[^0-9]/g, '');
+                $('#gia').val(gia);
+            });
+
+            // Validate form
+            $("#addProductForm").validate({
+                errorClass: "text-danger small",
+                highlight: function (element) {
+                    $(element).addClass("is-invalid").removeClass("is-valid");
+                },
+                unhighlight: function (element) {
+                    $(element).removeClass("is-invalid").addClass("is-valid");
+                },
+                errorPlacement: function (element, error) {
+                    if (element.is(':checkbox')) {
+                        if (element.attr("name") === "SelectedSizes") {
+                            error.appendTo('#sizeError');
+                        } else if (element.attr("name") === "SelectedLuongDas") {
+                            error.appendTo('#luongDaError');
+                        } else if (element.attr("name") === "SelectedDoNgots") {
+                            error.appendTo('#doNgotError');
+                        }
+                    } else {
+                        error.insertAfter(element);
+                    }
+                },
+                rules: {
+                    Gia: {
+                        required: true,
+                        number: true,
+                        min: 1001,
+                        notEqual: 1000
+                    },
+                    SoLuong: {
+                        required: true,
+                        number: true,
+                        min: 1
+                    },
+                    Image: {
+                        required: true
+                    },
+                    SelectedSizes: {
+                        required: true,
+                        minlength: 1
+                    },
+                    SelectedLuongDas: {
+                        required: true,
+                        minlength: 1
+                    },
+                    SelectedDoNgots: {
+                        required: true,
+                        minlength: 1
+                    }
+                },
+                messages: {
+                    Gia: {
+                        required: "Vui lòng nhập giá.",
+                        number: "Giá phải là số.",
+                        min: "Giá phải lớn hơn 1.000 VND.",
+                        notEqual: "Giá không được là 1.000 VND."
+                    },
+                    SoLuong: {
+                        required: "Vui lòng nhập số lượng.",
+                        number: "Số lượng phải là số.",
+                        min: "Số lượng phải lớn hơn 0."
+                    },
+                    Image: {
+                        required: "Vui lòng chọn hình ảnh."
+                    },
+                    SelectedSizes: {
+                        required: "Hãy chọn ít nhất 1 Kích thước.",
+                        minlength: "Hãy chọn ít nhất 1 Kích thước."
+                    },
+                    SelectedLuongDas: {
+                        required: "Hãy chọn ít nhất 1 Lượng đá.",
+                        minlength: "Hãy chọn ít nhất 1 Lượng đá."
+                    },
+                    SelectedDoNgots: {
+                        required: "Hãy chọn ít nhất 1 Độ ngọt.",
+                        minlength: "Hãy chọn ít nhất 1 Độ ngọt."
+                    }
+                }
+            });
+
+            // Chọn tất cả checkbox
+            $('.select-all').on('click', function () {
+                const prefix = $(this).data('prefix');
+                const checkboxes = $(`input[id^="${prefix}_"]`);
+                const allChecked = checkboxes.toArray().every(cb => cb.checked);
+                checkboxes.prop('checked', !allChecked);
+            });
+        });
+    </script>
+}
+
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css" />
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet" />
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css" />
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" />

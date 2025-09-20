@@ -49,9 +49,79 @@ namespace BE.Controllers
             return password.ToString();
         }
 
+        //[HttpPost("register")]
+        //public async Task<IActionResult> Register([FromBody] BE.DTOs.RegisterRequest request)
+        //{
+        //    // Kiểm tra email hoặc tên người dùng đã tồn tại
+        //    if (await _customerRepository.EmailExistsAsync(request.Email))
+        //    {
+        //        return BadRequest("Email đã tồn tại.");
+        //    }
+        //    if (await _accountRepository.UsernameExistsAsync(request.Ten_Nguoi_Dung))
+        //    {
+        //        return BadRequest("Tên người dùng đã tồn tại.");
+        //    }
+
+        //    // Tạo khách hàng mới
+        //    var khachHang = new KhachHang
+        //    {
+        //        Email = request.Email,
+        //        Ho_Ten = request.Ho_Ten,
+        //        So_Dien_Thoai = "",
+        //        Ghi_Chu = "",
+        //        Trang_Thai = true
+        //    };
+        //    await _customerRepository.AddKhachHangAsync(khachHang);
+        //    await _customerRepository.SaveChangesAsync();
+
+        //    // Tạo mật khẩu ngẫu nhiên
+        //    var password = GenerateRandomPassword();
+
+        //    // Tạo tài khoản mới
+        //    var taiKhoan = new TaiKhoan
+        //    {
+        //        ID_Khach_Hang = khachHang.ID_Khach_Hang,
+        //        Ten_Nguoi_Dung = request.Ten_Nguoi_Dung,
+        //        Mat_Khau = password,
+        //        Trang_Thai = true
+        //    };
+        //    await _accountRepository.AddTaiKhoanAsync(taiKhoan);
+        //    await _accountRepository.SaveChangesAsync();
+
+        //    // Gán vai trò mặc định (ID_Vai_Tro = 1) 
+        //    var taiKhoanVaiTro = new TaiKhoanVaiTro
+        //    {
+        //        ID_Tai_Khoan = taiKhoan.ID_Tai_Khoan,
+        //        ID_Vai_Tro = 1 // có thể sửa lại nhó em yêu 
+        //    };
+        //    await _accountRepository.AddTaiKhoanVaiTroAsync(taiKhoanVaiTro);
+        //    await _accountRepository.SaveChangesAsync();
+
+        //    // Gửi email chứa mật khẩu
+        //    var emailBody = $"Chào mừng bạn đến với Trà sữa TheBoy!\n\nTên người dùng: {request.Ten_Nguoi_Dung}\nMật khẩu: {password}";
+        //    await _emailService.SendEmailAsync(request.Email, "Đăng ký tài khoản DATN", emailBody);
+
+        //    return Ok("Đăng ký thành công. Vui lòng kiểm tra email để lấy mật khẩu.");
+        //}
+
+
+
+
         [HttpPost("register")]
         public async Task<IActionResult> Register([FromBody] BE.DTOs.RegisterRequest request)
         {
+            // Kiểm tra email có hợp lệ không
+            if (string.IsNullOrWhiteSpace(request.Email))
+            {
+                return BadRequest("Email không được để trống.");
+            }
+
+            // Kiểm tra mật khẩu có hợp lệ không
+            if (string.IsNullOrWhiteSpace(request.Mat_Khau))
+            {
+                return BadRequest("Vui lòng nhập mật khẩu.");
+            }
+
             // Kiểm tra email hoặc tên người dùng đã tồn tại
             if (await _customerRepository.EmailExistsAsync(request.Email))
             {
@@ -65,7 +135,7 @@ namespace BE.Controllers
             // Tạo khách hàng mới
             var khachHang = new KhachHang
             {
-                Email = request.Email,
+                Email = request.Email, // Lưu email vào bảng KhachHang
                 Ho_Ten = request.Ho_Ten,
                 So_Dien_Thoai = "",
                 Ghi_Chu = "",
@@ -74,34 +144,32 @@ namespace BE.Controllers
             await _customerRepository.AddKhachHangAsync(khachHang);
             await _customerRepository.SaveChangesAsync();
 
-            // Tạo mật khẩu ngẫu nhiên
-            var password = GenerateRandomPassword();
-
-            // Tạo tài khoản mới
+            // Tạo tài khoản mới với email đồng bộ từ KhachHang
             var taiKhoan = new TaiKhoan
             {
                 ID_Khach_Hang = khachHang.ID_Khach_Hang,
                 Ten_Nguoi_Dung = request.Ten_Nguoi_Dung,
-                Mat_Khau = password,
+                Mat_Khau = request.Mat_Khau, // Sử dụng mật khẩu từ request
+                Email = khachHang.Email, // Đồng bộ email từ KhachHang
                 Trang_Thai = true
             };
             await _accountRepository.AddTaiKhoanAsync(taiKhoan);
             await _accountRepository.SaveChangesAsync();
 
-            // Gán vai trò mặc định (ID_Vai_Tro = 1) 
+            // Gán vai trò mặc định (ID_Vai_Tro = 1)
             var taiKhoanVaiTro = new TaiKhoanVaiTro
             {
                 ID_Tai_Khoan = taiKhoan.ID_Tai_Khoan,
-                ID_Vai_Tro = 1 // có thể sửa lại nhó em yêu 
+                ID_Vai_Tro = 1 // Vai trò mặc định, có thể chỉnh sửa nếu cần
             };
             await _accountRepository.AddTaiKhoanVaiTroAsync(taiKhoanVaiTro);
             await _accountRepository.SaveChangesAsync();
 
-            // Gửi email chứa mật khẩu
-            var emailBody = $"Chào mừng bạn đến với Trà sữa TheBoy!\n\nTên người dùng: {request.Ten_Nguoi_Dung}\nMật khẩu: {password}";
-            await _emailService.SendEmailAsync(request.Email, "Đăng ký tài khoản DATN", emailBody);
+            // Gửi email chào mừng
+            var emailBody = $"Chào mừng bạn đến với Trà Sữa TheBoy!\n\nTên người dùng: {request.Ten_Nguoi_Dung}\nCảm ơn bạn đã đăng ký tài khoản.";
+            await _emailService.SendEmailAsync(khachHang.Email, "Chào mừng đến với Trà Sữa TheBoy", emailBody);
 
-            return Ok("Đăng ký thành công. Vui lòng kiểm tra email để lấy mật khẩu.");
+            return Ok("Đăng ký thành công. Vui lòng kiểm tra email để nhận thông báo chào mừng.");
         }
 
 
