@@ -1,446 +1,15 @@
-﻿@* @model FE.Models.RegisterModel
+﻿@model FE.Models.RegisterModel
 
 @{
-    ViewData["Title"] = "Đăng ký";
-}
-
-<div class="container my-5">
-    <!-- Success/Error Notifications -->
-    @if (TempData["Success"] != null)
-    {
-        <div class="alert alert-success alert-dismissible fade show" role="alert">
-            <div class="d-flex align-items-center">
-                <i class="bi bi-check-circle-fill me-3" style="font-size: 1.5rem;"></i>
-                <div>
-                    <strong>Thành công!</strong>
-                    <p class="mb-0">@TempData["Success"]</p>
-                    <p class="mb-0">Tài khoản của bạn đã được tạo. <a href="@Url.Action("Login", "Account")" class="text-primary fw-bold">Đăng nhập ngay</a> để bắt đầu trải nghiệm!</p>
-                </div>
-            </div>
-            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-        </div>
-    }
-    @if (TempData["Error"] != null)
-    {
-        <div class="alert alert-danger alert-dismissible fade show" role="alert">
-            <div class="d-flex align-items-center">
-                <i class="bi bi-exclamation-triangle-fill me-3" style="font-size: 1.5rem;"></i>
-                <div>
-                    <strong>Lỗi!</strong>
-                    <p class="mb-0">@TempData["Error"]</p>
-                </div>
-            </div>
-            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-        </div>
-    }
-
-    <!-- Register Form -->
-    <div class="row justify-content-center">
-        <div class="col-md-6 col-lg-4">
-            <div class="card shadow-sm border-0">
-                <div class="card-body p-4">
-                    <h2 class="text-center mb-4 fw-bold text-dark">Đăng Ký</h2>
-                    <form asp-action="Register" method="post" id="registerForm">
-                        <div asp-validation-summary="ModelOnly" class="text-danger mb-3 text-center"></div>
-                        <div class="mb-3">
-                            <label asp-for="Email" class="form-label">Email</label>
-                            <input asp-for="Email" class="form-control shadow-sm" id="email"
-                                   placeholder="Ví dụ: user@example.com"
-                                   title="Vui lòng nhập một địa chỉ email hợp lệ."
-                                   required />
-                            <span asp-validation-for="Email" class="text-danger small"></span>
-                        </div>
-                        <div class="mb-3">
-                            <label asp-for="Ho_Ten" class="form-label">Họ tên</label>
-                            <input asp-for="Ho_Ten" class="form-control shadow-sm" id="fullname"
-                                   placeholder="Ví dụ: Nguyễn Văn A"
-                                   title="Họ tên phải từ 2 đến 100 ký tự."
-                                   required />
-                            <span asp-validation-for="Ho_Ten" class="text-danger small"></span>
-                        </div>
-                        <div class="mb-3">
-                            <label asp-for="Ten_Nguoi_Dung" class="form-label">Tên Đăng nhập</label>
-                            <input asp-for="Ten_Nguoi_Dung" class="form-control shadow-sm" id="username"
-                                   placeholder="Ví dụ: user123, john_doe"
-                                   title="Tên đăng nhập chỉ chứa chữ cái, số, dấu chấm (.) hoặc dấu gạch dưới (_), không chứa dấu hoặc khoảng trắng."
-                                   required />
-                            <span asp-validation-for="Ten_Nguoi_Dung" class="text-danger small"></span>
-                        </div>
-                        <button type="submit" class="btn btn-primary btn-lg w-100" id="submitButton" disabled>
-                            <i class="bi bi-person-plus-fill me-2"></i>Đăng ký
-                        </button>
-                    </form>
-                    <div class="text-center mt-3">
-                        <p>Đã có tài khoản? <a href="@Url.Action("Login", "Account")" class="text-primary">Đăng nhập ngay</a></p>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-</div>
-
-@section Scripts {
-    <script src="~/lib/jquery/dist/jquery.min.js"></script>
-    <script src="~/lib/jquery-validation/dist/jquery.validate.min.js"></script>
-    <script src="~/lib/jquery-validation-unobtrusive/jquery.validate.unobtrusive.min.js"></script>
-    <script>
-        $(document).ready(function () {
-            // Add custom validation method for username
-            $.validator.addMethod("usernameFormat", function (value, element) {
-                // Allow only alphanumeric, dots, and underscores; no spaces or diacritics
-                return this.optional(element) || /^[a-zA-Z0-9_.]+$/.test(value) && !/\s/.test(value);
-            }, "Tên đăng nhập chỉ được chứa chữ cái, số, dấu chấm (.) hoặc dấu gạch dưới (_), không chứa dấu hoặc khoảng trắng.");
-
-            // Initialize form validation
-            var form = $("#registerForm").validate({
-                errorClass: "text-danger",
-                highlight: function (element) {
-                    $(element).addClass("is-invalid").removeClass("is-valid");
-                },
-                unhighlight: function (element) {
-                    $(element).removeClass("is-invalid").addClass("is-valid");
-                },
-                errorPlacement: function (error, element) {
-                    error.insertAfter(element);
-                },
-                rules: {
-                    Email: {
-                        required: true,
-                        email: true,
-                        maxlength: 100
-                    },
-                    Ho_Ten: {
-                        required: true,
-                        minlength: 2,
-                        maxlength: 100
-                    },
-                    Ten_Nguoi_Dung: {
-                        required: true,
-                        usernameFormat: true,
-                        minlength: 3,
-                        maxlength: 50
-                    }
-                },
-                messages: {
-                    Email: {
-                        required: "Email là bắt buộc.",
-                        email: "Vui lòng nhập một địa chỉ email hợp lệ.",
-                        maxlength: "Email không được vượt quá 100 ký tự."
-                    },
-                    Ho_Ten: {
-                        required: "Họ tên là bắt buộc.",
-                        minlength: "Họ tên phải từ 2 ký tự trở lên.",
-                        maxlength: "Họ tên không được vượt quá 100 ký tự."
-                    },
-                    Ten_Nguoi_Dung: {
-                        required: "Tên đăng nhập là bắt buộc.",
-                        minlength: "Tên đăng nhập phải từ 3 ký tự trở lên.",
-                        maxlength: "Tên đăng nhập không được vượt quá 50 ký tự."
-                    }
-                }
-            });
-
-            // Real-time validation to enable/disable submit button
-            $("#registerForm input").on("input blur", function () {
-                // Check if the form is valid
-                if (form.valid()) {
-                    $("#submitButton").prop("disabled", false);
-                } else {
-                    $("#submitButton").prop("disabled", true);
-                }
-            });
-
-            // Trigger validation on form load to handle pre-filled values
-            $("#registerForm").validate().form();
-        });
-    </script>
-}
-
-<style>
-    body {
-        background-color: #f8f9fa;
-    }
-
-    .card {
-        border-radius: 8px;
-        background-color: #ffffff;
-        transition: transform 0.3s ease, box-shadow 0.3s ease;
-    }
-
-        .card:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1) !important;
-        }
-
-    .form-control {
-        border-radius: 6px;
-        border: 1px solid #ced4da;
-        padding: 10px;
-        font-size: 1rem;
-        transition: border-color 0.3s ease, box-shadow 0.3s ease;
-    }
-
-        .form-control:focus {
-            border-color: #007bff;
-            box-shadow: 0 0 5px rgba(0, 123, 255, 0.3);
-            outline: none;
-        }
-
-        .form-control.is-invalid {
-            border-color: #dc3545;
-            box-shadow: 0 0 5px rgba(220, 53, 69, 0.3);
-        }
-
-        .form-control.is-valid {
-            border-color: #28a745;
-            box-shadow: 0 0 5px rgba(40, 167, 69, 0.3);
-        }
-
-    .btn-primary {
-        border-radius: 6px;
-        background-color: #007bff;
-        border: none;
-        padding: 12px;
-        font-size: 1.1rem;
-        transition: background-color 0.3s ease, transform 0.2s ease;
-    }
-
-        .btn-primary:hover {
-            background-color: #0056b3;
-            transform: scale(1.02);
-        }
-
-        .btn-primary:disabled {
-            background-color: #6c757d;
-            cursor: not-allowed;
-        }
-
-    .alert {
-        border-radius: 6px;
-        margin-bottom: 1.5rem;
-        padding: 1.25rem;
-    }
-
-    .alert-success {
-        background-color: #d4edda;
-        border-color: #c3e6cb;
-        color: #155724;
-    }
-
-    .alert-danger {
-        background-color: #f8d7da;
-        border-color: #f5c6cb;
-        color: #721c24;
-    }
-
-    .text-primary {
-        color: #007bff !important;
-    }
-
-    .form-label {
-        font-weight: 500;
-        color: #495057;
-    }
-</style> *@
-
-
-
-
-
-
-
-
-
-
-
-
-
-@* @model FE.Models.RegisterModel
-
-@{
-    ViewData["Title"] = "Đăng ký";
-}
-
-<div class="register-container d-flex justify-content-center align-items-center min-vh-100">
-    <!-- Register Card -->
-    <div class="glass-card p-5 shadow-lg">
-        <h2 class="text-center mb-4 fw-bold text-white">Đăng Ký</h2>
-
-        <!-- Notifications -->
-        @if (TempData["Success"] != null)
-        {
-            <div class="alert alert-success alert-dismissible fade show" role="alert">
-                <i class="bi bi-check-circle-fill me-2"></i>
-                <span>@TempData["Success"]</span>
-                <p class="mt-1 mb-0">Tài khoản đã được tạo. <a href="@Url.Action("Login", "Account")" class="text-primary fw-bold">Đăng nhập ngay</a> để bắt đầu trải nghiệm!</p>
-                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-            </div>
-        }
-        @if (TempData["Error"] != null)
-        {
-            <div class="alert alert-danger alert-dismissible fade show" role="alert">
-                <i class="bi bi-exclamation-triangle-fill me-2"></i>
-                <span>@TempData["Error"]</span>
-                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-            </div>
-        }
-
-        <form asp-action="Register" method="post" id="registerForm" class="mt-3">
-            <div asp-validation-summary="ModelOnly" class="text-danger mb-3 text-center"></div>
-
-            <div class="mb-3">
-                <label asp-for="Email" class="form-label text-white">Email</label>
-                <input asp-for="Email" class="form-control shadow-sm" id="email" placeholder="user@example.com" required />
-                <span asp-validation-for="Email" class="text-danger small"></span>
-            </div>
-
-            <div class="mb-3">
-                <label asp-for="Ho_Ten" class="form-label text-white">Họ tên</label>
-                <input asp-for="Ho_Ten" class="form-control shadow-sm" id="fullname" placeholder="Nguyễn Văn A" required />
-                <span asp-validation-for="Ho_Ten" class="text-danger small"></span>
-            </div>
-
-            <div class="mb-3">
-                <label asp-for="Ten_Nguoi_Dung" class="form-label text-white">Tên Đăng nhập</label>
-                <input asp-for="Ten_Nguoi_Dung" class="form-control shadow-sm" id="username" placeholder="user123" required />
-                <span asp-validation-for="Ten_Nguoi_Dung" class="text-danger small"></span>
-            </div>
-
-            <button type="submit" class="btn btn-glass w-100 mb-2" id="submitButton" disabled>
-                <i class="bi bi-person-plus-fill me-2"></i>Đăng ký
-            </button>
-
-            <div class="text-center mt-3 text-white">
-                <p>Đã có tài khoản? <a href="@Url.Action("Login", "Account")" class="text-primary fw-bold">Đăng nhập ngay</a></p>
-            </div>
-        </form>
-    </div>
-</div>
-
-@section Scripts {
-    <script src="~/lib/jquery/dist/jquery.min.js"></script>
-    <script src="~/lib/jquery-validation/dist/jquery.validate.min.js"></script>
-    <script src="~/lib/jquery-validation-unobtrusive/jquery.validate.unobtrusive.min.js"></script>
-    <script>
-        $(document).ready(function () {
-            // Chuyển thông báo validation sang tiếng Việt
-            $.extend($.validator.messages, {
-                required: "Trường này là bắt buộc.",
-                email: "Vui lòng nhập địa chỉ email hợp lệ.",
-                minlength: $.validator.format("Nhập ít nhất {0} ký tự."),
-                maxlength: $.validator.format("Không được vượt quá {0} ký tự.")
-            });
-
-            // Custom validation cho username
-            $.validator.addMethod("usernameFormat", function (value, element) {
-                return this.optional(element) || /^[a-zA-Z0-9_.]+$/.test(value) && !/\s/.test(value);
-            }, "Tên đăng nhập chỉ chứa chữ cái, số, dấu chấm (.) hoặc dấu gạch dưới (_), không chứa khoảng trắng.");
-
-            var form = $("#registerForm").validate({
-                errorClass: "text-danger",
-                highlight: function (element) { $(element).addClass("is-invalid").removeClass("is-valid"); },
-                unhighlight: function (element) { $(element).removeClass("is-invalid").addClass("is-valid"); },
-                rules: {
-                    Email: { required: true, email: true, maxlength: 100 },
-                    Ho_Ten: { required: true, minlength: 2, maxlength: 100 },
-                    Ten_Nguoi_Dung: { required: true, usernameFormat: true, minlength: 3, maxlength: 50 }
-                }
-            });
-
-            $("#registerForm input").on("input blur", function () {
-                $("#submitButton").prop("disabled", !form.valid());
-            });
-
-            $("#registerForm").validate().form();
-        });
-    </script>
-}
-
-<style scoped>
-    /* Glassmorphism Card */
-    .glass-card {
-        background: rgba(255, 255, 255, 0.15);
-        backdrop-filter: blur(12px);
-        -webkit-backdrop-filter: blur(12px);
-        border-radius: 20px;
-        border: 1px solid rgba(255, 255, 255, 0.3);
-        max-width: 400px;
-        width: 100%;
-        color: #fff;
-    }
-
-    /* Buttons */
-    .btn-glass {
-        background: rgba(255, 255, 255, 0.2);
-        color: #fff;
-        border: 1px solid rgba(255, 255, 255, 0.3);
-        border-radius: 8px;
-        padding: 10px;
-        font-size: 1.05rem;
-        transition: all 0.3s ease;
-    }
-
-        .btn-glass:hover {
-            background: rgba(255, 255, 255, 0.35);
-            transform: scale(1.02);
-        }
-
-    /* Form controls */
-    .form-control {
-        border-radius: 8px;
-        border: none;
-        padding: 10px;
-        font-size: 1rem;
-        background: rgba(255, 255, 255, 0.15);
-        color: #fff;
-        backdrop-filter: blur(10px);
-    }
-
-        .form-control::placeholder {
-            color: rgba(255, 255, 255, 0.7);
-        }
-
-        .form-control.is-invalid {
-            border-color: #ff6b6b;
-            box-shadow: 0 0 5px rgba(255, 107, 107, 0.5);
-        }
-
-        .form-control.is-valid {
-            border-color: #4ade80;
-            box-shadow: 0 0 5px rgba(74, 222, 128, 0.5);
-        }
-
-    /* Alerts */
-    .alert {
-        border-radius: 10px;
-        text-align: center;
-        font-weight: 500;
-    }
-
-    /* Page background */
-    body {
-        background: linear-gradient(135deg, #667eea, #764ba2);
-    }
-</style>
- *@
-
-
-
-
-
-
-@model FE.Models.RegisterModel
-
-@{
-    ViewData["Title"] = "Đăng ký";
+    ViewData["Title"] = "Đăng ký - Trà Sữa TheBoy";
 }
 
 <!DOCTYPE html>
-<html lang="en">
+<html lang="vi">
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>@ViewData["Title"] - Trà Sữa Ngon</title>
+    <title>@ViewData["Title"]</title>
 
     <!-- Bootstrap & Icons -->
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" />
@@ -498,7 +67,7 @@
             position: relative;
         }
 
-        /* Logo + Giới thiệu - giống login */
+        /* Logo + Giới thiệu */
         .logo-section {
             display: flex;
             flex-direction: column;
@@ -779,7 +348,7 @@
             <div class="register-form">
                 <h2 class="text-center mb-4 fw-bold text-white">Đăng Ký</h2>
 
-                <!-- Notifications - GIỮ NGUYÊN -->
+                <!-- Notifications -->
                 @if (TempData["Success"] != null)
                 {
                     <div class="alert alert-success alert-dismissible fade show" role="alert">
@@ -801,22 +370,28 @@
                 <form asp-action="Register" method="post" id="registerForm" class="mt-3">
                     <div asp-validation-summary="ModelOnly" class="text-danger mb-3 text-center"></div>
 
-                    <div class="mb-3">
+                    <div class="form-group">
                         <label asp-for="Email" class="form-label text-white">Email</label>
                         <input asp-for="Email" class="form-control shadow-sm" id="email" placeholder="user@example.com" required />
                         <span asp-validation-for="Email" class="text-danger small"></span>
                     </div>
 
-                    <div class="mb-3">
+                    <div class="form-group">
                         <label asp-for="Ho_Ten" class="form-label text-white">Họ tên</label>
                         <input asp-for="Ho_Ten" class="form-control shadow-sm" id="fullname" placeholder="Nguyễn Văn A" required />
                         <span asp-validation-for="Ho_Ten" class="text-danger small"></span>
                     </div>
 
-                    <div class="mb-3">
+                    <div class="form-group">
                         <label asp-for="Ten_Nguoi_Dung" class="form-label text-white">Tên Đăng nhập</label>
                         <input asp-for="Ten_Nguoi_Dung" class="form-control shadow-sm" id="username" placeholder="user123" required />
                         <span asp-validation-for="Ten_Nguoi_Dung" class="text-danger small"></span>
+                    </div>
+
+                    <div class="form-group">
+                        <label asp-for="Mat_Khau" class="form-label text-white">Mật khẩu</label>
+                        <input asp-for="Mat_Khau" type="password" class="form-control shadow-sm" id="password" placeholder="Nhập mật khẩu" required />
+                        <span asp-validation-for="Mat_Khau" class="text-danger small"></span>
                     </div>
 
                     <button type="submit" class="btn btn-glass w-100 mb-2" id="submitButton" disabled>
@@ -829,7 +404,7 @@
                 </form>
             </div>
 
-            <!-- Logo + Giới thiệu - giống như login -->
+            <!-- Logo + Giới thiệu -->
             <div class="register-image">
                 <div class="decorative-icons">
                     <i class="fas fa-user-plus"></i>
@@ -839,9 +414,7 @@
 
                 <div class="logo-section">
                     <div class="logo-container">
-                        <div class="logo-img">
-                            TB
-                        </div>
+                        <div class="logo-img">TB</div>
                         <h3 class="brand-name">The Boy</h3>
                     </div>
 
@@ -849,11 +422,9 @@
                         <p class="shop-desc">
                             Tham gia cộng đồng <span class="highlight-text">The Boy</span> -
                             Khám phá thế giới trà sữa tuyệt vời!<br><br>
-
                             🎁 <strong>Ưu đãi thành viên mới</strong><br>
                             🌟 <strong>Tích điểm đổi quà</strong><br>
                             📱 <strong>Đặt hàng dễ dàng</strong><br><br>
-
                             <em>Đăng ký ngay để không bỏ lỡ những ưu đãi đặc biệt!</em>
                         </p>
                     </div>
@@ -863,11 +434,11 @@
     </div>
 
     @section Scripts {
-        <script src="~/lib/jquery/dist/jquery.min.js"></script>
-        <script src="~/lib/jquery-validation/dist/jquery.validate.min.js"></script>
-        <script src="~/lib/jquery-validation-unobtrusive/jquery.validate.unobtrusive.min.js"></script>
+        <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-validate/1.19.5/jquery.validate.min.js"></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-validate/1.19.5/additional-methods.min.js"></script>
+        <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
         <script>
-            // GIỮ NGUYÊN TOÀN BỘ LOGIC CŨ
             $(document).ready(function () {
                 // Chuyển thông báo validation sang tiếng Việt
                 $.extend($.validator.messages, {
@@ -882,24 +453,74 @@
                     return this.optional(element) || /^[a-zA-Z0-9_.]+$/.test(value) && !/\s/.test(value);
                 }, "Tên đăng nhập chỉ chứa chữ cái, số, dấu chấm (.) hoặc dấu gạch dưới (_), không chứa khoảng trắng.");
 
+                // Initialize form validation
                 var form = $("#registerForm").validate({
                     errorClass: "text-danger",
-                    highlight: function (element) { $(element).addClass("is-invalid").removeClass("is-valid"); },
-                    unhighlight: function (element) { $(element).removeClass("is-invalid").addClass("is-valid"); },
+                    highlight: function (element) {
+                        $(element).addClass("is-invalid").removeClass("is-valid");
+                    },
+                    unhighlight: function (element) {
+                        $(element).removeClass("is-invalid").addClass("is-valid");
+                    },
+                    errorPlacement: function (error, element) {
+                        error.insertAfter(element);
+                    },
                     rules: {
-                        Email: { required: true, email: true, maxlength: 100 },
-                        Ho_Ten: { required: true, minlength: 2, maxlength: 100 },
-                        Ten_Nguoi_Dung: { required: true, usernameFormat: true, minlength: 3, maxlength: 50 }
+                        Email: {
+                            required: true,
+                            email: true,
+                            maxlength: 100
+                        },
+                        Ho_Ten: {
+                            required: true,
+                            minlength: 2,
+                            maxlength: 100
+                        },
+                        Ten_Nguoi_Dung: {
+                            required: true,
+                            usernameFormat: true,
+                            minlength: 3,
+                            maxlength: 50
+                        },
+                        Mat_Khau: {
+                            required: true,
+                            minlength: 6,
+                            maxlength: 50
+                        }
+                    },
+                    messages: {
+                        Email: {
+                            required: "Email là bắt buộc.",
+                            email: "Vui lòng nhập một địa chỉ email hợp lệ.",
+                            maxlength: "Email không được vượt quá 100 ký tự."
+                        },
+                        Ho_Ten: {
+                            required: "Họ tên là bắt buộc.",
+                            minlength: "Họ tên phải từ 2 ký tự trở lên.",
+                            maxlength: "Họ tên không được vượt quá 100 ký tự."
+                        },
+                        Ten_Nguoi_Dung: {
+                            required: "Tên đăng nhập là bắt buộc.",
+                            minlength: "Tên đăng nhập phải từ 3 ký tự trở lên.",
+                            maxlength: "Tên đăng nhập không được vượt quá 50 ký tự."
+                        },
+                        Mat_Khau: {
+                            required: "Mật khẩu là bắt buộc.",
+                            minlength: "Mật khẩu phải từ 6 ký tự trở lên.",
+                            maxlength: "Mật khẩu không được vượt quá 50 ký tự."
+                        }
                     }
                 });
 
+                // Real-time validation to enable/disable submit button
                 $("#registerForm input").on("input blur", function () {
                     $("#submitButton").prop("disabled", !form.valid());
                 });
 
+                // Trigger validation on form load
                 $("#registerForm").validate().form();
             });
         </script>
     }
 </body>
-</html></html>
+</html>

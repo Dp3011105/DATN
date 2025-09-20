@@ -1,4 +1,4 @@
-﻿@model SanPham
+﻿@* @model SanPham
 
 @{
     Layout = "~/Views/Shared/_AdminLayout.cshtml";
@@ -386,6 +386,343 @@
                     </div>
 
                     <!-- Quick Actions (Di chuyển xuống dưới) -->
+                    <div class="action-buttons">
+                        <a asp-action="EditProduct" asp-route-id="@Model.ID_San_Pham" class="btn-custom btn-edit">
+                            <i class="bi bi-pencil me-2"></i>Sửa sản phẩm
+                        </a>
+                        <a asp-action="Index" class="btn-custom btn-back">
+                            <i class="bi bi-arrow-left me-2"></i>Quay lại danh sách
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css" />
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet" />
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css" />
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" /> *@
+
+
+
+
+
+
+
+
+
+
+
+@model SanPham
+
+@{
+    Layout = "~/Views/Shared/_AdminLayout.cshtml";
+    ViewData["Title"] = "Chi tiết sản phẩm";
+}
+
+<style>
+    /* Card container */
+    .card-container {
+        background: #fff;
+        border: 1px solid #e0e0e0;
+        border-radius: 0.5rem;
+        padding: 20px;
+        margin-bottom: 20px;
+    }
+
+    /* Product Detail Card */
+    .product-detail-card {
+        background: #fff;
+        border: 1px solid #e0e0e0;
+        border-radius: 0.5rem;
+        padding: 15px;
+    }
+
+    .product-header {
+        background: linear-gradient(135deg, #1e40af, #3b82f6);
+        color: #fff;
+        padding: 20px;
+        text-align: center;
+        border-top-left-radius: 0.5rem;
+        border-top-right-radius: 0.5rem;
+    }
+
+    .product-image {
+        width: 100%;
+        max-width: 350px;
+        height: 250px;
+        object-fit: cover;
+        border-radius: 0.3rem;
+        margin: 15px auto;
+    }
+
+    .product-info {
+        padding: 20px;
+    }
+
+    .product-price {
+        font-size: 1.6rem;
+        font-weight: bold;
+        color: #059669;
+        margin-bottom: 10px;
+    }
+
+    .badge-active {
+        background: #e6f4ea;
+        color: #1e7e34;
+        padding: 0.4em 0.7em;
+        border-radius: 0.3rem;
+        font-size: 0.85rem;
+        font-weight: 600;
+    }
+
+    .badge-inactive {
+        background: #fbe9e7;
+        color: #d32f2f;
+        padding: 0.4em 0.7em;
+        border-radius: 0.3rem;
+        font-size: 0.85rem;
+        font-weight: 600;
+    }
+
+    .product-description {
+        font-size: 1rem;
+        line-height: 1.5;
+        color: #374151;
+        margin-bottom: 20px;
+    }
+
+    .product-attribute-section {
+        margin-bottom: 20px;
+        padding: 15px;
+        border-radius: 0.3rem;
+        background: #f8fafc;
+        border-left: 3px solid #3b82f6;
+    }
+
+        .product-attribute-section h6 {
+            color: #1e40af;
+            margin-bottom: 10px;
+            font-weight: 600;
+        }
+
+    .product-attribute-table {
+        text-align: center;
+    }
+
+    .action-buttons {
+        display: flex;
+        justify-content: space-between;
+        gap: 10px;
+        margin-top: 20px;
+        padding: 0 15px 15px 15px;
+    }
+
+    .btn-custom {
+        border-radius: 0.3rem;
+        padding: 10px 20px;
+        font-weight: 500;
+        flex: 1;
+        text-align: center;
+    }
+
+    .btn-edit {
+        background: #f59e0b;
+        border: none;
+        color: #fff;
+    }
+
+    .btn-back {
+        background: #6b7280;
+        border: none;
+        color: #fff;
+    }
+
+    /* Responsive */
+    media (max-width: 768px) {
+        .product-image
+
+    {
+        max-width: 100%;
+        height: 200px;
+    }
+
+    .action-buttons {
+        flex-direction: column;
+    }
+
+    }
+
+    body {
+        font-family: 'Inter', sans-serif;
+        background-color: #f8f9fa;
+    }
+
+    .container-fluid {
+        max-width: 1400px;
+    }
+</style>
+
+<div class="card-container">
+    <!-- Notifications -->
+    @if (TempData["Success"] != null)
+    {
+        <div class="alert alert-success alert-dismissible fade show" role="alert">
+            <i class="bi bi-check-circle-fill me-2"></i>@TempData["Success"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    }
+    @if (TempData["Error"] != null)
+    {
+        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+            <i class="bi bi-exclamation-circle-fill me-2"></i>@TempData["Error"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    }
+
+    <div class="product-detail-card">
+        <div class="product-header">
+            <h1 class="mb-0 fw-bold">@Model.Ten_San_Pham</h1>
+            <p class="mb-0 opacity-75">ID: @Model.ID_San_Pham</p>
+        </div>
+
+        <div class="row g-4">
+            <!-- Product Image -->
+            <div class="col-lg-4 text-center">
+                <img src="@("https://localhost:7169" + (Model.Hinh_Anh ?? "/images/placeholder.jpg"))" alt="@Model.Ten_San_Pham" class="product-image" />
+                <p class="mt-2 text-muted small">Hình ảnh sản phẩm</p>
+            </div>
+
+            <!-- Product Basic Info -->
+            <div class="col-lg-8">
+                <div class="product-info">
+                    <!-- Price and Status -->
+                    <div class="d-flex justify-content-between align-items-center mb-4">
+                        <div>
+                            <span class="product-price">@string.Format("{0:N0} đ", Model.Gia)</span>
+                            <span class="badge @(Model.Trang_Thai ? "badge-active" : "badge-inactive") ms-2">
+                                @(Model.Trang_Thai ? "Hoạt động" : "Không hoạt động")
+                            </span>
+                        </div>
+                        <div class="text-end">
+                            <span class="text-muted small">Số lượng tồn kho: <strong>@Model.So_Luong</strong></span>
+                        </div>
+                    </div>
+
+                    <!-- Description -->
+                    <div class="product-description">
+                        @Model.Mo_Ta
+                    </div>
+
+                    <!-- Attributes Sections -->
+                    <div class="row g-4">
+                        <!-- Sizes -->
+                        <div class="col-lg-6">
+                            <div class="product-attribute-section">
+                                <h6><i class="bi bi-rulers me-2"></i>Kích thước</h6>
+                                <table class="table table-hover table-light align-middle product-attribute-table">
+                                    <tbody>
+                                        @if (Model.Sizes.Any())
+                                        {
+                                            @foreach (var size in Model.Sizes)
+                                            {
+                                                <tr>
+                                                    <td><strong>@size.SizeName</strong></td>
+                                                    <td><span class="badge @(size.Trang_Thai ? "badge-active" : "badge-inactive")">@(size.Trang_Thai ? "Hoạt động" : "Không hoạt động")</span></td>
+                                                </tr>
+                                            }
+                                        }
+                                        else
+                                        {
+                                            <tr><td colspan="2" class="text-muted">Không có kích thước nào.</td></tr>
+                                        }
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+
+                        <!-- LuongDas -->
+                        <div class="col-lg-6">
+                            <div class="product-attribute-section">
+                                <h6><i class="bi bi-cup-hot me-2"></i>Lượng đá</h6>
+                                <table class="table table-hover table-light align-middle product-attribute-table">
+                                    <tbody>
+                                        @if (Model.LuongDas.Any())
+                                        {
+                                            @foreach (var luongDa in Model.LuongDas)
+                                            {
+                                                <tr>
+                                                    <td><strong>@luongDa.Ten_LuongDa</strong></td>
+                                                    <td><span class="badge @(luongDa.Trang_Thai ? "badge-active" : "badge-inactive")">@(luongDa.Trang_Thai ? "Hoạt động" : "Không hoạt động")</span></td>
+                                                </tr>
+                                            }
+                                        }
+                                        else
+                                        {
+                                            <tr><td colspan="2" class="text-muted">Không có lượng đá nào.</td></tr>
+                                        }
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+
+                        <!-- DoNgots -->
+                        <div class="col-lg-6">
+                            <div class="product-attribute-section">
+                                <h6><i class="bi bi-cup-straw me-2"></i>Độ ngọt</h6>
+                                <table class="table table-hover table-light align-middle product-attribute-table">
+                                    <tbody>
+                                        @if (Model.DoNgots.Any())
+                                        {
+                                            @foreach (var doNgot in Model.DoNgots)
+                                            {
+                                                <tr>
+                                                    <td><strong>@doNgot.Muc_Do</strong></td>
+                                                    <td><span class="badge @(doNgot.Trang_Thai ? "badge-active" : "badge-inactive")">@(doNgot.Trang_Thai ? "Hoạt động" : "Không hoạt động")</span></td>
+                                                </tr>
+                                            }
+                                        }
+                                        else
+                                        {
+                                            <tr><td colspan="2" class="text-muted">Không có độ ngọt nào.</td></tr>
+                                        }
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+
+                        <!-- Toppings -->
+                        <div class="col-lg-6">
+                            <div class="product-attribute-section">
+                                <h6><i class="bi bi-stars me-2"></i>Topping</h6>
+                                <table class="table table-hover table-light align-middle product-attribute-table">
+                                    <tbody>
+                                        @if (Model.Toppings.Any())
+                                        {
+                                            @foreach (var topping in Model.Toppings)
+                                            {
+                                                <tr>
+                                                    <td><strong>@topping.Ten</strong></td>
+                                                    <td>
+                                                        <span class="text-primary small">Giá: @string.Format("{0:N0} đ", topping.Gia) | SL: @topping.So_Luong</span>
+                                                        <span class="badge @(topping.Trang_Thai ? "badge-active" : "badge-inactive") ms-2">@(topping.Trang_Thai ? "Hoạt động" : "Không hoạt động")</span>
+                                                    </td>
+                                                </tr>
+                                            }
+                                        }
+                                        else
+                                        {
+                                            <tr><td colspan="2" class="text-muted">Không có topping nào.</td></tr>
+                                        }
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Quick Actions -->
                     <div class="action-buttons">
                         <a asp-action="EditProduct" asp-route-id="@Model.ID_San_Pham" class="btn-custom btn-edit">
                             <i class="bi bi-pencil me-2"></i>Sửa sản phẩm

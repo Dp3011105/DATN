@@ -22,50 +22,6 @@ namespace BE.Migrations
 
             SqlServerModelBuilderExtensions.UseIdentityColumns(modelBuilder);
 
-            modelBuilder.Entity("BE.models.ChatSession", b =>
-                {
-                    b.Property<int>("ID_Chat_Session")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("ID_Chat_Session"));
-
-                    b.Property<int>("ID_Khach_Hang")
-                        .HasColumnType("int");
-
-                    b.Property<string>("Tieu_De")
-                        .HasMaxLength(255)
-                        .HasColumnType("nvarchar(255)");
-
-                    b.Property<bool>("Trang_Thai")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("bit")
-                        .HasDefaultValue(true);
-
-                    b.HasKey("ID_Chat_Session");
-
-                    b.HasIndex("ID_Khach_Hang");
-
-                    b.ToTable("Chat_Session");
-                });
-
-            modelBuilder.Entity("BE.models.ChatSessionNhanVien", b =>
-                {
-                    b.Property<int>("ID_Chat_Session")
-                        .HasColumnType("int")
-                        .HasColumnOrder(0);
-
-                    b.Property<int>("ID_Nhan_Vien")
-                        .HasColumnType("int")
-                        .HasColumnOrder(1);
-
-                    b.HasKey("ID_Chat_Session", "ID_Nhan_Vien");
-
-                    b.HasIndex("ID_Nhan_Vien");
-
-                    b.ToTable("Chat_Session_Nhan_Vien");
-                });
-
             modelBuilder.Entity("BE.models.DiaChi", b =>
                 {
                     b.Property<int>("ID_Dia_Chi")
@@ -93,47 +49,6 @@ namespace BE.Migrations
                     b.ToTable("Dia_Chi");
                 });
 
-            modelBuilder.Entity("BE.models.DiemDanh", b =>
-                {
-                    b.Property<int>("ID_Diem_Danh")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("ID_Diem_Danh"));
-
-                    b.Property<string>("Ca")
-                        .IsRequired()
-                        .HasMaxLength(50)
-                        .HasColumnType("nvarchar(50)");
-
-                    b.Property<string>("Ghi_Chu")
-                        .HasMaxLength(255)
-                        .HasColumnType("nvarchar(255)");
-
-                    b.Property<TimeSpan?>("Gio_Bat_Dau")
-                        .HasColumnType("time");
-
-                    b.Property<TimeSpan?>("Gio_Ket_Thuc")
-                        .HasColumnType("time");
-
-                    b.Property<DateTime?>("Ngay_Diem_Danh")
-                        .HasColumnType("datetime2");
-
-                    b.Property<int>("NhanVien_ID")
-                        .HasColumnType("int");
-
-                    b.Property<string>("Vi_Tri")
-                        .IsRequired()
-                        .HasMaxLength(100)
-                        .HasColumnType("nvarchar(100)");
-
-                    b.HasKey("ID_Diem_Danh");
-
-                    b.HasIndex("NhanVien_ID");
-
-                    b.ToTable("Diem_Danh");
-                });
-
             modelBuilder.Entity("BE.models.DoNgot", b =>
                 {
                     b.Property<int>("ID_DoNgot")
@@ -158,6 +73,29 @@ namespace BE.Migrations
                     b.HasKey("ID_DoNgot");
 
                     b.ToTable("DoNgot");
+
+                    b.HasData(
+                        new
+                        {
+                            ID_DoNgot = 1,
+                            Ghi_Chu = "asd",
+                            Muc_Do = "Mặc Định",
+                            Trang_Thai = true
+                        },
+                        new
+                        {
+                            ID_DoNgot = 2,
+                            Ghi_Chu = "asd",
+                            Muc_Do = "Thêm Đường",
+                            Trang_Thai = true
+                        },
+                        new
+                        {
+                            ID_DoNgot = 3,
+                            Ghi_Chu = "asd",
+                            Muc_Do = "Ít Đường",
+                            Trang_Thai = true
+                        });
                 });
 
             modelBuilder.Entity("BE.models.GioHangChiTiet_Topping", b =>
@@ -298,6 +236,43 @@ namespace BE.Migrations
                     b.HasKey("ID_Hinh_Thuc_Thanh_Toan");
 
                     b.ToTable("Hinh_Thuc_Thanh_Toan");
+
+                    b.HasData(
+                        new
+                        {
+                            ID_Hinh_Thuc_Thanh_Toan = 1,
+                            Cong_Thanh_Toan = "Cash",
+                            Phuong_Thuc_Thanh_Toan = "TienMat",
+                            Trang_Thai = true
+                        },
+                        new
+                        {
+                            ID_Hinh_Thuc_Thanh_Toan = 2,
+                            Cong_Thanh_Toan = "Card",
+                            Phuong_Thuc_Thanh_Toan = "The",
+                            Trang_Thai = true
+                        },
+                        new
+                        {
+                            ID_Hinh_Thuc_Thanh_Toan = 3,
+                            Cong_Thanh_Toan = "Bank",
+                            Phuong_Thuc_Thanh_Toan = "ChuyenKhoan",
+                            Trang_Thai = true
+                        },
+                        new
+                        {
+                            ID_Hinh_Thuc_Thanh_Toan = 4,
+                            Cong_Thanh_Toan = "Cash",
+                            Phuong_Thuc_Thanh_Toan = "Thanh Toan Khi Nhan Hang",
+                            Trang_Thai = true
+                        },
+                        new
+                        {
+                            ID_Hinh_Thuc_Thanh_Toan = 5,
+                            Cong_Thanh_Toan = "Bank",
+                            Phuong_Thuc_Thanh_Toan = "Thanh Toán VNPAY",
+                            Trang_Thai = true
+                        });
                 });
 
             modelBuilder.Entity("BE.models.HoaDon", b =>
@@ -321,7 +296,6 @@ namespace BE.Migrations
                         .HasColumnType("int");
 
                     b.Property<int?>("ID_Khach_Hang")
-                        .IsRequired()
                         .HasColumnType("int");
 
                     b.Property<int?>("ID_Nhan_Vien")
@@ -332,7 +306,10 @@ namespace BE.Migrations
 
                     b.Property<string>("Loai_Hoa_Don")
                         .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                        .ValueGeneratedOnAdd()
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)")
+                        .HasDefaultValue("TaiQuay");
 
                     b.Property<string>("LyDoDonHangCoVanDe")
                         .HasMaxLength(500)
@@ -344,7 +321,8 @@ namespace BE.Migrations
 
                     b.Property<string>("Ma_Hoa_Don")
                         .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
 
                     b.Property<DateTime>("Ngay_Tao")
                         .HasColumnType("datetime2");
@@ -359,7 +337,10 @@ namespace BE.Migrations
 
                     b.Property<string>("Trang_Thai")
                         .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                        .ValueGeneratedOnAdd()
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)")
+                        .HasDefaultValue("Chua_Xac_Nhan");
 
                     b.HasKey("ID_Hoa_Don");
 
@@ -411,7 +392,7 @@ namespace BE.Migrations
 
                     b.Property<string>("Ma_HoaDon_ChiTiet")
                         .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                        .HasColumnType("nvarchar(450)");
 
                     b.Property<DateTime>("Ngay_Tao")
                         .ValueGeneratedOnAdd()
@@ -427,8 +408,6 @@ namespace BE.Migrations
 
                     b.HasKey("ID_HoaDon_ChiTiet");
 
-                    b.HasIndex("ID_Hoa_Don");
-
                     b.HasIndex("ID_LuongDa");
 
                     b.HasIndex("ID_SanPham_DoNgot");
@@ -437,28 +416,10 @@ namespace BE.Migrations
 
                     b.HasIndex("ID_Size");
 
+                    b.HasIndex("ID_Hoa_Don", "Ma_HoaDon_ChiTiet")
+                        .IsUnique();
+
                     b.ToTable("HoaDon_ChiTiet");
-                });
-
-            modelBuilder.Entity("BE.models.HoaDonChiTietThue", b =>
-                {
-                    b.Property<int>("ID_HoaDon_ChiTiet")
-                        .HasColumnType("int");
-
-                    b.Property<int>("ID_Thue")
-                        .HasColumnType("int");
-
-                    b.Property<string>("Ghi_Chu")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<bool>("Trang_Thai")
-                        .HasColumnType("bit");
-
-                    b.HasKey("ID_HoaDon_ChiTiet", "ID_Thue");
-
-                    b.HasIndex("ID_Thue");
-
-                    b.ToTable("HoaDonChiTiet_Thue");
                 });
 
             modelBuilder.Entity("BE.models.HoaDonChiTietTopping", b =>
@@ -538,7 +499,7 @@ namespace BE.Migrations
                         .HasColumnType("nvarchar(255)")
                         .HasDefaultValue("");
 
-                    b.Property<bool?>("GioiTinh")
+                    b.Property<bool>("GioiTinh")
                         .HasColumnType("bit");
 
                     b.Property<string>("Ho_Ten")
@@ -553,12 +514,24 @@ namespace BE.Migrations
                         .HasColumnType("nvarchar(20)")
                         .HasDefaultValue("");
 
-                    b.Property<bool?>("Trang_Thai")
+                    b.Property<bool>("Trang_Thai")
                         .HasColumnType("bit");
 
                     b.HasKey("ID_Khach_Hang");
 
                     b.ToTable("Khach_Hang");
+
+                    b.HasData(
+                        new
+                        {
+                            ID_Khach_Hang = 1,
+                            Email = "nguyenvana@example.com",
+                            Ghi_Chu = "Khách hàng mặc định",
+                            GioiTinh = true,
+                            Ho_Ten = "Nguyen Van A",
+                            So_Dien_Thoai = "0123456789",
+                            Trang_Thai = true
+                        });
                 });
 
             modelBuilder.Entity("BE.models.KhachHangDiaChi", b =>
@@ -588,12 +561,10 @@ namespace BE.Migrations
             modelBuilder.Entity("BE.models.KhachHangVoucher", b =>
                 {
                     b.Property<int>("ID_Khach_Hang")
-                        .HasColumnType("int")
-                        .HasColumnOrder(0);
+                        .HasColumnType("int");
 
                     b.Property<int>("ID_Voucher")
-                        .HasColumnType("int")
-                        .HasColumnOrder(1);
+                        .HasColumnType("int");
 
                     b.Property<string>("Ghi_Chu")
                         .IsRequired()
@@ -601,6 +572,9 @@ namespace BE.Migrations
                         .HasMaxLength(255)
                         .HasColumnType("nvarchar(255)")
                         .HasDefaultValue("");
+
+                    b.Property<int>("ID")
+                        .HasColumnType("int");
 
                     b.Property<bool?>("Trang_Thai")
                         .HasColumnType("bit");
@@ -612,47 +586,36 @@ namespace BE.Migrations
                     b.ToTable("KhachHang_Voucher");
                 });
 
-            modelBuilder.Entity("BE.models.LichSuHoaDon", b =>
+            modelBuilder.Entity("BE.models.KhuyenMai", b =>
                 {
-                    b.Property<int>("ID_Lich_Su_Hoa_Don")
+                    b.Property<int>("ID_Khuyen_Mai")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("int");
 
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("ID_Lich_Su_Hoa_Don"));
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("ID_Khuyen_Mai"));
 
-                    b.Property<string>("Ghi_Chu")
+                    b.Property<string>("Mo_Ta")
+                        .IsRequired()
                         .HasMaxLength(255)
                         .HasColumnType("nvarchar(255)");
 
-                    b.Property<string>("Hanh_Dong")
-                        .IsRequired()
-                        .HasMaxLength(100)
-                        .HasColumnType("nvarchar(100)");
-
-                    b.Property<int>("ID_Hoa_Don")
-                        .HasColumnType("int");
-
-                    b.Property<DateTime?>("Ngay_Cap_Nhat")
+                    b.Property<DateTime>("Ngay_Bat_Dau")
                         .HasColumnType("datetime2");
 
-                    b.Property<DateTime?>("Ngay_Tao")
+                    b.Property<DateTime>("Ngay_Ket_Thuc")
                         .HasColumnType("datetime2");
 
-                    b.Property<string>("Nguoi_Cap_Nhat")
+                    b.Property<string>("Ten_Khuyen_Mai")
                         .IsRequired()
                         .HasMaxLength(100)
                         .HasColumnType("nvarchar(100)");
 
-                    b.Property<string>("Nguoi_Tao")
-                        .IsRequired()
-                        .HasMaxLength(100)
-                        .HasColumnType("nvarchar(100)");
+                    b.Property<bool>("Trang_Thai")
+                        .HasColumnType("bit");
 
-                    b.HasKey("ID_Lich_Su_Hoa_Don");
+                    b.HasKey("ID_Khuyen_Mai");
 
-                    b.HasIndex("ID_Hoa_Don");
-
-                    b.ToTable("Lich_Su_Hoa_Don");
+                    b.ToTable("KhuyenMai");
                 });
 
             modelBuilder.Entity("BE.models.LuongDa", b =>
@@ -674,48 +637,26 @@ namespace BE.Migrations
                     b.HasKey("ID_LuongDa");
 
                     b.ToTable("LuongDa");
-                });
 
-            modelBuilder.Entity("BE.models.Message", b =>
-                {
-                    b.Property<int>("ID_Message")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("ID_Message"));
-
-                    b.Property<int>("ID_Chat_Session")
-                        .HasColumnType("int");
-
-                    b.Property<int?>("ID_Khach_Hang")
-                        .HasColumnType("int");
-
-                    b.Property<int?>("ID_Nhan_Vien")
-                        .HasColumnType("int");
-
-                    b.Property<string>("Noi_Dung")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<DateTime>("Thoi_Gian_Gui")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("datetime2")
-                        .HasDefaultValueSql("GETDATE()");
-
-                    b.Property<bool>("Trang_Thai")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("bit")
-                        .HasDefaultValue(true);
-
-                    b.HasKey("ID_Message");
-
-                    b.HasIndex("ID_Chat_Session");
-
-                    b.HasIndex("ID_Khach_Hang");
-
-                    b.HasIndex("ID_Nhan_Vien");
-
-                    b.ToTable("Message");
+                    b.HasData(
+                        new
+                        {
+                            ID_LuongDa = 1,
+                            Ten_LuongDa = "Mặc Định",
+                            Trang_Thai = true
+                        },
+                        new
+                        {
+                            ID_LuongDa = 2,
+                            Ten_LuongDa = "Nhiều Đá",
+                            Trang_Thai = true
+                        },
+                        new
+                        {
+                            ID_LuongDa = 3,
+                            Ten_LuongDa = "Ít Đá",
+                            Trang_Thai = true
+                        });
                 });
 
             modelBuilder.Entity("BE.models.NhanVien", b =>
@@ -754,6 +695,7 @@ namespace BE.Migrations
                         .HasColumnType("nvarchar(255)");
 
                     b.Property<bool?>("GioiTinh")
+                        .IsRequired()
                         .HasColumnType("bit");
 
                     b.Property<string>("Ho_Ten")
@@ -770,6 +712,7 @@ namespace BE.Migrations
                         .HasColumnType("nvarchar(20)");
 
                     b.Property<bool?>("Trang_Thai")
+                        .IsRequired()
                         .HasColumnType("bit");
 
                     b.HasKey("ID_Nhan_Vien");
@@ -778,6 +721,21 @@ namespace BE.Migrations
                         .IsUnique();
 
                     b.ToTable("Nhan_Vien");
+
+                    b.HasData(
+                        new
+                        {
+                            ID_Nhan_Vien = 1,
+                            CCCD = "123456789012",
+                            Dia_Chi = "123 Đường Láng, Đống Đa, Hà Nội",
+                            Email = "tranvanb@example.com",
+                            Ghi_Chu = "Nhân viên Admin",
+                            GioiTinh = true,
+                            Ho_Ten = "Tran Van B",
+                            NamSinh = new DateTime(1990, 5, 15, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            So_Dien_Thoai = "0987654321",
+                            Trang_Thai = true
+                        });
                 });
 
             modelBuilder.Entity("BE.models.SanPham", b =>
@@ -833,6 +791,35 @@ namespace BE.Migrations
                     b.HasIndex("ID_DoNgot");
 
                     b.ToTable("SanPham_DoNgot");
+                });
+
+            modelBuilder.Entity("BE.models.SanPhamKhuyenMai", b =>
+                {
+                    b.Property<int>("ID_San_Pham_Khuyen_Mai")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("ID_San_Pham_Khuyen_Mai"));
+
+                    b.Property<decimal?>("Gia_Giam")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<int>("ID_Khuyen_Mai")
+                        .HasColumnType("int");
+
+                    b.Property<int>("ID_San_Pham")
+                        .HasColumnType("int");
+
+                    b.Property<decimal>("Phan_Tram_Giam")
+                        .HasColumnType("decimal(5,2)");
+
+                    b.HasKey("ID_San_Pham_Khuyen_Mai");
+
+                    b.HasIndex("ID_Khuyen_Mai");
+
+                    b.HasIndex("ID_San_Pham");
+
+                    b.ToTable("SanPhamKhuyenMai");
                 });
 
             modelBuilder.Entity("BE.models.SanPhamLuongDa", b =>
@@ -919,6 +906,29 @@ namespace BE.Migrations
                     b.HasKey("ID_Size");
 
                     b.ToTable("Size");
+
+                    b.HasData(
+                        new
+                        {
+                            ID_Size = 1,
+                            Gia = 0m,
+                            SizeName = "Cơ bản",
+                            Trang_Thai = true
+                        },
+                        new
+                        {
+                            ID_Size = 2,
+                            Gia = 10000m,
+                            SizeName = "Large",
+                            Trang_Thai = true
+                        },
+                        new
+                        {
+                            ID_Size = 3,
+                            Gia = 15000m,
+                            SizeName = "X-Large",
+                            Trang_Thai = true
+                        });
                 });
 
             modelBuilder.Entity("BE.models.TaiKhoan", b =>
@@ -928,6 +938,11 @@ namespace BE.Migrations
                         .HasColumnType("int");
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("ID_Tai_Khoan"));
+
+                    b.Property<string>("Email")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
 
                     b.Property<int?>("ID_Khach_Hang")
                         .HasColumnType("int");
@@ -940,66 +955,86 @@ namespace BE.Migrations
                         .HasMaxLength(100)
                         .HasColumnType("nvarchar(100)");
 
+                    b.Property<DateTime?>("Ngay_Cap_Nhat")
+                        .HasColumnType("datetime2");
+
+                    b.Property<DateTime>("Ngay_Tao")
+                        .HasColumnType("datetime2");
+
                     b.Property<string>("Ten_Nguoi_Dung")
                         .IsRequired()
                         .HasMaxLength(50)
                         .HasColumnType("nvarchar(50)");
 
-                    b.Property<bool?>("Trang_Thai")
+                    b.Property<bool>("Trang_Thai")
                         .HasColumnType("bit");
 
                     b.HasKey("ID_Tai_Khoan");
+
+                    b.HasIndex("Email");
 
                     b.HasIndex("ID_Khach_Hang");
 
                     b.HasIndex("ID_Nhan_Vien");
 
+                    b.HasIndex("Ten_Nguoi_Dung")
+                        .IsUnique();
+
                     b.ToTable("Tai_Khoan");
+
+                    b.HasData(
+                        new
+                        {
+                            ID_Tai_Khoan = 1,
+                            Email = "nguyenvana@example.com",
+                            ID_Khach_Hang = 1,
+                            Mat_Khau = "hashed_password_here",
+                            Ngay_Tao = new DateTime(2025, 9, 18, 3, 33, 8, 845, DateTimeKind.Local).AddTicks(5858),
+                            Ten_Nguoi_Dung = "nguyenvana",
+                            Trang_Thai = true
+                        },
+                        new
+                        {
+                            ID_Tai_Khoan = 2,
+                            Email = "tranvanb@example.com",
+                            ID_Nhan_Vien = 1,
+                            Mat_Khau = "admin",
+                            Ngay_Tao = new DateTime(2025, 9, 18, 3, 33, 8, 845, DateTimeKind.Local).AddTicks(5861),
+                            Ten_Nguoi_Dung = "admin",
+                            Trang_Thai = true
+                        });
                 });
 
             modelBuilder.Entity("BE.models.TaiKhoanVaiTro", b =>
                 {
-                    b.Property<int>("ID_Vai_Tro")
-                        .HasColumnType("int")
-                        .HasColumnOrder(0);
-
                     b.Property<int>("ID_Tai_Khoan")
                         .HasColumnType("int")
                         .HasColumnOrder(1);
 
-                    b.HasKey("ID_Vai_Tro", "ID_Tai_Khoan");
+                    b.Property<int>("ID_Vai_Tro")
+                        .HasColumnType("int")
+                        .HasColumnOrder(0);
 
-                    b.HasIndex("ID_Tai_Khoan");
+                    b.HasKey("ID_Tai_Khoan", "ID_Vai_Tro");
+
+                    b.HasIndex("ID_Vai_Tro");
+
+                    b.HasIndex("ID_Tai_Khoan", "ID_Vai_Tro")
+                        .IsUnique();
 
                     b.ToTable("TaiKhoan_VaiTro");
-                });
 
-            modelBuilder.Entity("BE.models.Thue", b =>
-                {
-                    b.Property<int>("ID_Thue")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("ID_Thue"));
-
-                    b.Property<string>("Mo_Ta")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("Ten_Thue")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<bool>("Trang_Thai")
-                        .HasColumnType("bit");
-
-                    b.Property<decimal>("Ty_Le")
-                        .HasPrecision(5, 2)
-                        .HasColumnType("decimal(5,2)");
-
-                    b.HasKey("ID_Thue");
-
-                    b.ToTable("Thue");
+                    b.HasData(
+                        new
+                        {
+                            ID_Tai_Khoan = 1,
+                            ID_Vai_Tro = 1
+                        },
+                        new
+                        {
+                            ID_Tai_Khoan = 2,
+                            ID_Vai_Tro = 2
+                        });
                 });
 
             modelBuilder.Entity("BE.models.Topping", b =>
@@ -1020,7 +1055,8 @@ namespace BE.Migrations
 
                     b.Property<string>("Hinh_Anh")
                         .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                        .HasMaxLength(255)
+                        .HasColumnType("nvarchar(255)");
 
                     b.Property<int?>("So_Luong")
                         .HasColumnType("int");
@@ -1054,6 +1090,23 @@ namespace BE.Migrations
                     b.HasKey("ID_Vai_Tro");
 
                     b.ToTable("Vai_Tro");
+
+                    b.HasData(
+                        new
+                        {
+                            ID_Vai_Tro = 1,
+                            Ten_Vai_Tro = "Khách Hàng"
+                        },
+                        new
+                        {
+                            ID_Vai_Tro = 2,
+                            Ten_Vai_Tro = "Admin"
+                        },
+                        new
+                        {
+                            ID_Vai_Tro = 3,
+                            Ten_Vai_Tro = "Nhân Viên"
+                        });
                 });
 
             modelBuilder.Entity("BE.models.Voucher", b =>
@@ -1100,47 +1153,6 @@ namespace BE.Migrations
                     b.HasKey("ID_Voucher");
 
                     b.ToTable("Voucher");
-                });
-
-            modelBuilder.Entity("BE.models.ChatSession", b =>
-                {
-                    b.HasOne("BE.models.KhachHang", "KhachHang")
-                        .WithMany("ChatSessions")
-                        .HasForeignKey("ID_Khach_Hang")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("KhachHang");
-                });
-
-            modelBuilder.Entity("BE.models.ChatSessionNhanVien", b =>
-                {
-                    b.HasOne("BE.models.ChatSession", "ChatSession")
-                        .WithMany("ChatSessionNhanViens")
-                        .HasForeignKey("ID_Chat_Session")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.HasOne("BE.models.NhanVien", "NhanVien")
-                        .WithMany("ChatSessionNhanViens")
-                        .HasForeignKey("ID_Nhan_Vien")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("ChatSession");
-
-                    b.Navigation("NhanVien");
-                });
-
-            modelBuilder.Entity("BE.models.DiemDanh", b =>
-                {
-                    b.HasOne("BE.models.NhanVien", "NhanVien")
-                        .WithMany("DiemDanhs")
-                        .HasForeignKey("NhanVien_ID")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("NhanVien");
                 });
 
             modelBuilder.Entity("BE.models.GioHangChiTiet_Topping", b =>
@@ -1214,21 +1226,23 @@ namespace BE.Migrations
                 {
                     b.HasOne("BE.models.DiaChi", "DiaChi")
                         .WithMany("HoaDons")
-                        .HasForeignKey("ID_Dia_Chi");
+                        .HasForeignKey("ID_Dia_Chi")
+                        .OnDelete(DeleteBehavior.Restrict);
 
                     b.HasOne("BE.models.HinhThucThanhToan", "HinhThucThanhToan")
                         .WithMany("HoaDons")
-                        .HasForeignKey("ID_Hinh_Thuc_Thanh_Toan");
+                        .HasForeignKey("ID_Hinh_Thuc_Thanh_Toan")
+                        .OnDelete(DeleteBehavior.Restrict);
 
                     b.HasOne("BE.models.KhachHang", "KhachHang")
                         .WithMany("HoaDons")
                         .HasForeignKey("ID_Khach_Hang")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
+                        .OnDelete(DeleteBehavior.Restrict);
 
                     b.HasOne("BE.models.NhanVien", "NhanVien")
                         .WithMany("HoaDons")
-                        .HasForeignKey("ID_Nhan_Vien");
+                        .HasForeignKey("ID_Nhan_Vien")
+                        .OnDelete(DeleteBehavior.Restrict);
 
                     b.Navigation("DiaChi");
 
@@ -1249,21 +1263,24 @@ namespace BE.Migrations
 
                     b.HasOne("BE.models.LuongDa", "LuongDa")
                         .WithMany("HoaDonChiTiets")
-                        .HasForeignKey("ID_LuongDa");
+                        .HasForeignKey("ID_LuongDa")
+                        .OnDelete(DeleteBehavior.Restrict);
 
                     b.HasOne("BE.models.DoNgot", "DoNgot")
                         .WithMany("HoaDonChiTiets")
-                        .HasForeignKey("ID_SanPham_DoNgot");
+                        .HasForeignKey("ID_SanPham_DoNgot")
+                        .OnDelete(DeleteBehavior.Restrict);
 
                     b.HasOne("BE.models.SanPham", "SanPham")
                         .WithMany("HoaDonChiTiets")
                         .HasForeignKey("ID_San_Pham")
-                        .OnDelete(DeleteBehavior.Cascade)
+                        .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
                     b.HasOne("BE.models.Size", "Size")
                         .WithMany("HoaDonChiTiets")
-                        .HasForeignKey("ID_Size");
+                        .HasForeignKey("ID_Size")
+                        .OnDelete(DeleteBehavior.Restrict);
 
                     b.Navigation("DoNgot");
 
@@ -1274,25 +1291,6 @@ namespace BE.Migrations
                     b.Navigation("SanPham");
 
                     b.Navigation("Size");
-                });
-
-            modelBuilder.Entity("BE.models.HoaDonChiTietThue", b =>
-                {
-                    b.HasOne("BE.models.HoaDonChiTiet", "HoaDonChiTiet")
-                        .WithMany("HoaDonChiTietThues")
-                        .HasForeignKey("ID_HoaDon_ChiTiet")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.HasOne("BE.models.Thue", "Thue")
-                        .WithMany("HoaDonChiTietThues")
-                        .HasForeignKey("ID_Thue")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("HoaDonChiTiet");
-
-                    b.Navigation("Thue");
                 });
 
             modelBuilder.Entity("BE.models.HoaDonChiTietTopping", b =>
@@ -1371,40 +1369,6 @@ namespace BE.Migrations
                     b.Navigation("Voucher");
                 });
 
-            modelBuilder.Entity("BE.models.LichSuHoaDon", b =>
-                {
-                    b.HasOne("BE.models.HoaDon", "HoaDon")
-                        .WithMany("LichSuHoaDons")
-                        .HasForeignKey("ID_Hoa_Don")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("HoaDon");
-                });
-
-            modelBuilder.Entity("BE.models.Message", b =>
-                {
-                    b.HasOne("BE.models.ChatSession", "ChatSession")
-                        .WithMany("Messages")
-                        .HasForeignKey("ID_Chat_Session")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.HasOne("BE.models.KhachHang", "KhachHang")
-                        .WithMany("Messages")
-                        .HasForeignKey("ID_Khach_Hang");
-
-                    b.HasOne("BE.models.NhanVien", "NhanVien")
-                        .WithMany("Messages")
-                        .HasForeignKey("ID_Nhan_Vien");
-
-                    b.Navigation("ChatSession");
-
-                    b.Navigation("KhachHang");
-
-                    b.Navigation("NhanVien");
-                });
-
             modelBuilder.Entity("BE.models.SanPhamDoNgot", b =>
                 {
                     b.HasOne("BE.models.DoNgot", "DoNgot")
@@ -1420,6 +1384,25 @@ namespace BE.Migrations
                         .IsRequired();
 
                     b.Navigation("DoNgot");
+
+                    b.Navigation("SanPham");
+                });
+
+            modelBuilder.Entity("BE.models.SanPhamKhuyenMai", b =>
+                {
+                    b.HasOne("BE.models.KhuyenMai", "BangKhuyenMai")
+                        .WithMany("SanPhamKhuyenMais")
+                        .HasForeignKey("ID_Khuyen_Mai")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("BE.models.SanPham", "SanPham")
+                        .WithMany("SanPhamKhuyenMais")
+                        .HasForeignKey("ID_San_Pham")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("BangKhuyenMai");
 
                     b.Navigation("SanPham");
                 });
@@ -1515,13 +1498,6 @@ namespace BE.Migrations
                     b.Navigation("VaiTro");
                 });
 
-            modelBuilder.Entity("BE.models.ChatSession", b =>
-                {
-                    b.Navigation("ChatSessionNhanViens");
-
-                    b.Navigation("Messages");
-                });
-
             modelBuilder.Entity("BE.models.DiaChi", b =>
                 {
                     b.Navigation("HoaDons");
@@ -1558,21 +1534,15 @@ namespace BE.Migrations
                     b.Navigation("HoaDonChiTiets");
 
                     b.Navigation("HoaDonVouchers");
-
-                    b.Navigation("LichSuHoaDons");
                 });
 
             modelBuilder.Entity("BE.models.HoaDonChiTiet", b =>
                 {
-                    b.Navigation("HoaDonChiTietThues");
-
                     b.Navigation("HoaDonChiTietToppings");
                 });
 
             modelBuilder.Entity("BE.models.KhachHang", b =>
                 {
-                    b.Navigation("ChatSessions");
-
                     b.Navigation("Gio_Hangs");
 
                     b.Navigation("HoaDons");
@@ -1581,9 +1551,12 @@ namespace BE.Migrations
 
                     b.Navigation("KhachHangVouchers");
 
-                    b.Navigation("Messages");
-
                     b.Navigation("TaiKhoans");
+                });
+
+            modelBuilder.Entity("BE.models.KhuyenMai", b =>
+                {
+                    b.Navigation("SanPhamKhuyenMais");
                 });
 
             modelBuilder.Entity("BE.models.LuongDa", b =>
@@ -1597,13 +1570,7 @@ namespace BE.Migrations
 
             modelBuilder.Entity("BE.models.NhanVien", b =>
                 {
-                    b.Navigation("ChatSessionNhanViens");
-
-                    b.Navigation("DiemDanhs");
-
                     b.Navigation("HoaDons");
-
-                    b.Navigation("Messages");
 
                     b.Navigation("TaiKhoans");
                 });
@@ -1615,6 +1582,8 @@ namespace BE.Migrations
                     b.Navigation("HoaDonChiTiets");
 
                     b.Navigation("SanPhamDoNgots");
+
+                    b.Navigation("SanPhamKhuyenMais");
 
                     b.Navigation("SanPhamLuongDas");
 
@@ -1635,11 +1604,6 @@ namespace BE.Migrations
             modelBuilder.Entity("BE.models.TaiKhoan", b =>
                 {
                     b.Navigation("TaiKhoanVaiTros");
-                });
-
-            modelBuilder.Entity("BE.models.Thue", b =>
-                {
-                    b.Navigation("HoaDonChiTietThues");
                 });
 
             modelBuilder.Entity("BE.models.Topping", b =>

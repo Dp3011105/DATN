@@ -1,5 +1,6 @@
 ﻿using BE.DTOs;
 using BE.models;
+using BE.Service;
 
 namespace BE.Repository.IRepository
 {
@@ -7,7 +8,7 @@ namespace BE.Repository.IRepository
     {
 
         Task<IEnumerable<HinhThucThanhToanDTO>> GetAllHinhThucThanhToan();
-        Task<HoaDonBanHangCKDTO> CheckOutTk(HoaDonBanHangCKDTO hoaDonDto);
+        Task<HoaDonBanHangCKDTO> CheckOutTk(HoaDonBanHangCKDTO hoaDonDto, EmailService emailService);
 
         // xử lý vấn đề voucher 
 
