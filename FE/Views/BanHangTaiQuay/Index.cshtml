@@ -157,6 +157,7 @@
         pointer-events: none
     }
 
+    /* Invoice */
     .invoice {
         font-family: system-ui,-apple-system,Segoe UI,Roboto,'Helvetica Neue',Arial,'Noto Sans','Liberation Sans',sans-serif;
         max-width: 780px;
@@ -199,6 +200,19 @@
             padding: .1rem .4rem;
             font-size: .75rem
         }
+
+    /* Tabs */
+    .tab-close {
+        border: 0;
+        background: transparent;
+        padding: 0 .25rem;
+        line-height: 1;
+        opacity: .6
+    }
+
+        .tab-close:hover {
+            opacity: 1
+        }
 </style>
 
 <div class="container-fluid py-3">
@@ -226,10 +240,19 @@
 
         <!-- RIGHT -->
         <div>
+            <!-- Tabs header -->
+            <ul class="nav nav-tabs mb-2" id="cartTabs" role="tablist">
+                <!-- JS sẽ render -->
+            </ul>
+            <div class="d-flex justify-content-between align-items-center mb-2">
+                <div class="small text-muted">Tối đa 5 hoá đơn chờ.</div>
+                <button class="btn btn-sm btn-outline-primary" onclick="addTab()">+ Thêm hoá đơn chờ</button>
+            </div>
+
             <div class="card p-3">
                 <div class="d-flex justify-content-between align-items-center">
                     <h5 class="mb-0">Giỏ hàng</h5>
-                    <button class="btn btn-sm btn-outline-danger" onclick="clearCart()">Xoá giỏ</button>
+                    <button class="btn btn-sm btn-outline-danger" onclick="clearCart()">Xoá giỏ (tab hiện tại)</button>
                 </div>
 
                 <div id="cartList" class="mt-2"></div>
@@ -427,7 +450,17 @@
       const n = parseInt(s,10);
       return Number.isFinite(n) ? n : 0;
     };
-    const pickStock = (p) => {
+    const fmtVND = n => { try { return (toNumber(n)||0).toLocaleString('vi-VN',{style:'currency',currency:'VND'}) } catch { return n } };
+    const calcOffPct = (orig, promo) => {
+      const o = toNumber(orig), p = toNumber(promo);
+      if (!o || o <= 0 || !p || p >= o) return null;
+      const pct = Math.round((1 - (p / o)) * 100);
+      return pct>0 ? pct : null;
+    };
+
+    // ===== STOCK MODEL with RESERVATION =====
+    const SOURCE = (window.__DATA.products || []).map(p => ({ ...p, __StockBase: pickStock(p) })); // gốc từ BE
+    function pickStock(p){
       const keys = ['SoLuongTon','So_Luong','So_Luong_Ton','SoLuong','Stock','TonKho','Ton_kho'];
       for (const k of keys) {
         const raw = p && p[k];
@@ -437,27 +470,91 @@
         }
       }
       return 0;
-    };
+    }
+    // Map productId -> tổng giữ chỗ từ mọi tab
+    const RESERVED = new Map();
+    const getBase = (pid)=> (SOURCE.find(x=>x.ID_San_Pham==pid)?.__StockBase || 0);
+    const getReserved = (pid)=> RESERVED.get(pid) || 0;
+    const getAvailable = (pid)=> Math.max(0, getBase(pid) - getReserved(pid));
 
-    const fmtVND = n => { try { return (toNumber(n)||0).toLocaleString('vi-VN',{style:'currency',currency:'VND'}) } catch { return n } };
-    const calcOffPct = (orig, promo) => {
-      const o = toNumber(orig), p = toNumber(promo);
-      if (!o || o <= 0 || !p || p >= o) return null;
-      const pct = Math.round((1 - (p / o)) * 100);
-      return pct>0 ? pct : null;
-    };
+    function rebuildReserved(){
+      RESERVED.clear();
+      for (const t of TABS){
+        for (const it of t.cart){
+          RESERVED.set(it.sanPhamId, (RESERVED.get(it.sanPhamId)||0) + it.soLuong);
+        }
+      }
+    }
 
-    // Data
-    let SOURCE = (window.__DATA.products || []).map(p => ({ ...p, __Stock: pickStock(p) }));
-    let FILTERED = SOURCE.slice();
+    // ===== TABS (multi carts) =====
+    const MAX_TABS = 5;
+    let TABS = []; // { cart:[], voucher:null|{...}, discount:0, payable:0, note:'', shipAddr:'', phone:'' }
+    let ACTIVE = 0;
 
-    const OPTIONS = {
-      doNgots : window.__DATA.doNgots  || [],
-      luongDas: window.__DATA.luongDas || [],
-      toppings: window.__DATA.toppings || []
-    };
+    function newEmptyTab(){
+      return { cart:[], voucher:null, discount:0, payable:0, phone:'', note:'', shipAddr:'', loai:'TaiQuay' };
+    }
 
-    // Allowed options cache
+    function renderTabs(){
+      const ul = document.getElementById('cartTabs');
+      ul.innerHTML = '';
+      TABS.forEach((t, i) => {
+        const li = document.createElement('li'); li.className='nav-item';
+        const a = document.createElement('button');
+        a.className = 'nav-link' + (i===ACTIVE ? ' active' : '');
+        a.type = 'button';
+        a.role = 'tab';
+        a.textContent = `Hoá đơn ${i+1}`;
+        a.onclick = ()=>switchTab(i);
+
+        const close = document.createElement('button');
+        close.className='tab-close ms-2';
+        close.innerHTML='&times;';
+        close.title='Đóng tab';
+        close.onclick=(e)=>{ e.stopPropagation(); closeTab(i); };
+
+        li.appendChild(a);
+        if (TABS.length>1) a.appendChild(close);
+        ul.appendChild(li);
+      });
+    }
+
+    function addTab(){
+      if (TABS.length >= MAX_TABS){ alert('Đã tối đa 5 hoá đơn chờ.'); return; }
+      TABS.push(newEmptyTab());
+      ACTIVE = TABS.length - 1;
+      renderTabs();
+      syncFormFromTab();
+      renderCart();
+    }
+
+    function closeTab(idx){
+      if (TABS.length === 1){ // luôn giữ ít nhất 1 tab
+        clearCart(); return;
+      }
+      // Trả lại giữ chỗ của tab sắp đóng
+      TABS.splice(idx, 1);
+      if (ACTIVE >= TABS.length) ACTIVE = TABS.length - 1;
+      rebuildReserved();
+      renderTabs();
+      syncFormFromTab();
+      searchProducts(PAGE);
+      renderCart();
+    }
+
+    function switchTab(i){
+      ACTIVE = i;
+      renderTabs();
+      syncFormFromTab();
+      renderCart();
+    }
+
+    // Helpers thao tác state tab hiện tại
+    const CUR = ()=> TABS[ACTIVE];
+    const cartQtyOf = (pid) => CUR().cart.filter(x=>x.sanPhamId==pid).reduce((s,x)=>s+x.soLuong,0);
+
+    // ===== OPTIONS cache
+    const OPTIONS = { doNgots : window.__DATA.doNgots  || [], luongDas: window.__DATA.luongDas || [], toppings: window.__DATA.toppings || [] };
     const __ALLOWED_CACHE = {};
     async function fetchAllowedOptions(productId){
       if (__ALLOWED_CACHE[productId]) return __ALLOWED_CACHE[productId];
@@ -480,27 +577,14 @@
       }
     }
 
-    // CART / VOUCHER
-    let CART = [];
-    let VOUCHER=null, DISCOUNT=0;
-    let PAYABLE = 0;
-    const cartQtyOf = productId => CART.filter(x=>x.sanPhamId==productId).reduce((s,x)=>s+x.soLuong,0);
-
-    // Huỷ voucher helper
-    function cancelVoucher(reason) {
-      VOUCHER = null;
-      DISCOUNT = 0;
-      const msg = document.getElementById('voucherMsg');
-      if (msg) msg.textContent = reason || 'Voucher đã bị huỷ vì không còn đủ điều kiện.';
-      const txt = document.getElementById('txtVoucher');
-      if (txt) txt.value = '';
-    }
-
+    // ===== SEARCH & GRID (dựa vào tồn khả dụng)
+    let FILTERED = SOURCE.slice();
     const resetSearch = ()=>{ document.getElementById('txtSearch').value=''; const cb=document.getElementById('chkOnlyPromo'); if(cb) cb.checked=false; searchProducts(1); };
     const prevPage = ()=>{ if(PAGE>1) searchProducts(PAGE-1) };
     const nextPage = ()=>{ if(PAGE<Math.ceil(TOTAL/PAGE_SIZE)) searchProducts(PAGE+1) };
 
     function searchProducts(page){
+      rebuildReserved(); // đảm bảo tồn khả dụng đúng trước khi render
       PAGE = page||1;
       const q = (document.getElementById('txtSearch').value||'').trim().toLowerCase();
       const onlyPromo = document.getElementById('chkOnlyPromo')?.checked;
@@ -527,13 +611,14 @@
         const giaGoc = toNumber(p.Gia ?? 0);
         const giaHienThi = toNumber(p.__PriceAfterPromo ?? giaGoc);
         const pct = calcOffPct(giaGoc, giaHienThi);
-        const disabled = (p.__Stock ?? 0) <= 0;
+        const avail = getAvailable(p.ID_San_Pham);
+        const disabled = avail <= 0;
 
         const col = document.createElement('div'); col.className='col-6 col-md-4 col-lg-3';
         col.innerHTML = `
           <div class="product-card ${disabled?'out-of-stock':''}" ${disabled?'':'data-id="'+p.ID_San_Pham+'" data-name="'+esc(p.Ten_San_Pham||'')+'"'} >
             ${p.__HasPromo ? `<div class="promo-badge" title="${esc(p.__PromoName||'')}">${esc(p.__PromoName||'Khuyến mãi')}</div>` : ``}
-            <div class="stock-badge" title="Tồn kho">Tồn: ${p.__Stock ?? 0}</div>
+            <div class="stock-badge" title="Tồn khả dụng (đã trừ giữ chỗ)">Tồn: ${avail}</div>
             <img class="product-img" src="${img}" onerror="this.src='https://placehold.co/400x400?text=Drink';" />
             <div class="mt-1 fw-semibold">${esc(p.Ten_San_Pham||'')}</div>
             <div class="text-muted small">${esc(ma)}</div>
@@ -551,12 +636,10 @@
     }
 
     function ensureNotOverStock(productId, wantedDelta){
-      const prod = SOURCE.find(x=>x.ID_San_Pham==productId);
-      const stock = prod ? (prod.__Stock||0) : 0;
-      const inCart = cartQtyOf(productId);
-      if (inCart + wantedDelta > stock) {
-        const remain = Math.max(0, stock - inCart);
-        alert(`Số lượng vượt tồn kho. Bạn chỉ có thể thêm tối đa ${remain} sản phẩm nữa.`);
+      // muốn tăng thêm 'wantedDelta' ở tab hiện tại
+      const avail = getAvailable(productId); // đã trừ giữ chỗ các tab khác (và cả tab hiện tại)
+      if (wantedDelta > avail) {
+        alert(`Số lượng vượt tồn khả dụng. Bạn chỉ có thể thêm tối đa ${avail} sản phẩm nữa.`);
         return false;
       }
       return true;
@@ -575,49 +658,46 @@
       const allowed = await fetchAllowedOptions(id);
       const defaultSize = allowed.sizeIds.length ? allowed.sizeIds[0] : 1;
 
-      CART.push({
+      CUR().cart.push({
         sanPhamId:id, ten:name,
         sizeId: defaultSize, sizeName: (SIZE_META[defaultSize]?.name || 'Cơ bản'), sizeExtra: (SIZE_META[defaultSize]?.extra || 0),
         donGia: base, // sau KM (chưa size/topping)
         soLuong:1, doNgotId:null, luongDaId:null, toppingIds:[], tienTopping:0
       });
+      rebuildReserved();        // giữ chỗ ngay
+      searchProducts(PAGE);     // cập nhật tồn khả dụng hiển thị
       renderCart();
     }
 
-    const removeItem = i => { CART.splice(i,1); renderCart(); };
-    const decQty = i => { if(CART[i].soLuong>1){ CART[i].soLuong--; renderCart(); } };
+    const removeItem = i => { CUR().cart.splice(i,1); rebuildReserved(); searchProducts(PAGE); renderCart(); };
+    const decQty = i => { if(CUR().cart[i].soLuong>1){ CUR().cart[i].soLuong--; rebuildReserved(); searchProducts(PAGE); renderCart(); } };
     const incQty = i => {
-      const it = CART[i];
+      const it = CUR().cart[i];
       if(!ensureNotOverStock(it.sanPhamId, 1)) return;
-      it.soLuong++; renderCart();
+      it.soLuong++; rebuildReserved(); searchProducts(PAGE); renderCart();
     };
     const setQty = (i,val) => {
       let v=parseInt(val)||1; if(v<1)v=1;
-      const it = CART[i];
-      const current = it.soLuong;
-      const delta = v - current;
+      const it = CUR().cart[i];
+      // số lượng muốn tăng thêm so với hiện tại
+      const delta = v - it.soLuong;
       if (delta>0 && !ensureNotOverStock(it.sanPhamId, delta)) {
-        const prod = SOURCE.find(x=>x.ID_San_Pham==it.sanPhamId);
-        const stock = prod ? (prod.__Stock||0) : 0;
-        const can = Math.max(1, stock - (cartQtyOf(it.sanPhamId) - current));
-        it.soLuong = can;
+        // giữ nguyên
       } else {
         it.soLuong = v;
       }
-      renderCart();
+      rebuildReserved(); searchProducts(PAGE); renderCart();
     };
 
     // Modal cấu hình
     async function openConfig(idx){
-      const it = CART[idx];
+      const it = CUR().cart[idx];
       document.getElementById('mdlIndex').value = idx;
       document.getElementById('mdlTitle').textContent = it.ten;
 
       const prod = SOURCE.find(x=>x.ID_San_Pham==it.sanPhamId);
-      const stock = prod ? (prod.__Stock||0) : 0;
-      const othersInCart = cartQtyOf(it.sanPhamId) - it.soLuong;
-      const maxAllow = Math.max(1, stock - othersInCart);
-      document.getElementById('mdlQtyHint').textContent = `Số lượng tối đa có thể chọn: ${maxAllow}`;
+      const avail = getAvailable(it.sanPhamId) + it.soLuong; // có thể nâng tối đa bằng tồn khả dụng + số hiện có
+      document.getElementById('mdlQtyHint').textContent = `Số lượng tối đa có thể chọn: ${avail}`;
 
       const allowed = await fetchAllowedOptions(it.sanPhamId);
 
@@ -697,7 +777,7 @@
 
     function calcModalMoney(){
       const idx = +document.getElementById('mdlIndex').value;
-      const it  = CART[idx];
+      const it  = CUR().cart[idx];
       const qty = +document.getElementById('mdlQty').value || 1;
 
       let top = 0;
@@ -718,17 +798,13 @@
 
     function saveItemConfig(){
       const idx = +document.getElementById('mdlIndex').value;
-      const it  = CART[idx];
+      const it  = CUR().cart[idx];
 
-      const prod = SOURCE.find(x=>x.ID_San_Pham==it.sanPhamId);
-      const stock = prod ? (prod.__Stock||0) : 0;
-      const othersInCart = cartQtyOf(it.sanPhamId) - it.soLuong;
-      const maxAllow = Math.max(1, stock - othersInCart);
-
+      const availMax = getAvailable(it.sanPhamId) + it.soLuong;
       let newQty = parseInt(document.getElementById('mdlQty').value)||1;
-      if (newQty > maxAllow) {
-        alert(`Số lượng vượt tồn. Tối đa: ${maxAllow}`);
-        newQty = maxAllow;
+      if (newQty > availMax) {
+        alert(`Số lượng vượt tồn. Tối đa: ${availMax}`);
+        newQty = availMax;
       }
 
       it.doNgotId  = parseInt(document.getElementById('mdlDoNgot').value)||null;
@@ -746,6 +822,7 @@
       it.toppingIds = topIds; it.tienTopping = topMoney;
       it.soLuong = newQty;
 
+      rebuildReserved(); searchProducts(PAGE);
       bootstrap.Modal.getInstance(document.getElementById('modalItem')).hide();
       renderCart();
     }
@@ -757,7 +834,7 @@
 
     // VietQR
     const VIETQR_BASE = "https://img.vietqr.io/image/mbbank-0834119666-compact2.jpg";
-    const getPayable = () => Math.max(0, Math.floor(PAYABLE));
+    const getPayable = () => Math.max(0, Math.floor(CUR().payable||0));
     function buildAddInfo() {
       const phone = (document.getElementById('txtPhone')?.value || '').trim();
       const note  = (document.getElementById('txtNote')?.value  || '').trim();
@@ -787,6 +864,8 @@
     function renderCart(){
       const wrap = document.getElementById('cartList');
       wrap.innerHTML='';
+      const CART = CUR().cart;
+
       if(CART.length===0){ wrap.innerHTML='<div class="text-muted">Chưa có sản phẩm</div>'; recalcTotals(); return; }
 
       CART.forEach((it,idx)=>{
@@ -825,51 +904,81 @@
       recalcTotals();
     }
 
+    // Đồng bộ form (pay, loại, phone, note, ship) với tab hiện tại
+    function syncFormFromTab(){
+      const t = CUR();
+      document.getElementById('selPay').value = t.payMethod || '1';
+      document.getElementById('selLoai').value = t.loai || 'TaiQuay';
+      document.getElementById('txtPhone').value = t.phone || '';
+      document.getElementById('txtNote').value  = t.note  || '';
+      document.getElementById('txtShipAddress').value = t.shipAddr || '';
+      onLoaiChange();
+      // Voucher UI
+      document.getElementById('txtVoucher').value = t.voucher?.code || '';
+      document.getElementById('voucherMsg').textContent = t.voucher ? `Đang áp dụng voucher ${t.voucher.code}` : '';
+    }
+    function syncTabFromForm(){
+      const t = CUR();
+      t.payMethod = document.getElementById('selPay').value;
+      t.loai = document.getElementById('selLoai').value;
+      t.phone = (document.getElementById('txtPhone').value||'').trim();
+      t.note  = (document.getElementById('txtNote').value||'').trim();
+      t.shipAddr = (document.getElementById('txtShipAddress').value||'').trim();
+    }
+
     // TÍNH LẠI – tự huỷ voucher khi không đủ điều kiện
     function recalcTotals(){
-      const tam = CART.reduce((s,it)=> s + (it.donGia + it.sizeExtra + it.tienTopping)*it.soLuong, 0);
+      const t = CUR();
+      const tam = t.cart.reduce((s,it)=> s + (it.donGia + it.sizeExtra + it.tienTopping)*it.soLuong, 0);
 
-      if (VOUCHER) {
-        if (VOUCHER.minOrder && tam < VOUCHER.minOrder) {
-          cancelVoucher(`Đơn đã giảm xuống dưới ${fmtVND(VOUCHER.minOrder)} – voucher đã huỷ.`);
+      if (t.voucher) {
+        if (t.voucher.minOrder && tam < t.voucher.minOrder) {
+          cancelVoucher('Đơn đã giảm xuống dưới mức tối thiểu — voucher đã huỷ.');
         }
       }
 
       let giam = 0;
-
-      if (VOUCHER) {
-        if (VOUCHER.type === 'percent') {
-          const pct = Number(VOUCHER.pct) || 0;
+      if (t.voucher) {
+        if (t.voucher.type === 'percent') {
+          const pct = Number(t.voucher.pct) || 0;
           giam = tam * (pct / 100);
-        } else if (VOUCHER.type === 'fixed') {
-          giam = Number(VOUCHER.amount) || 0;
+        } else if (t.voucher.type === 'fixed') {
+          giam = Number(t.voucher.amount) || 0;
         }
-        // áp trần
         giam = Math.min(giam, tam * 0.5);
-
         if (giam <= 0) {
           cancelVoucher('Voucher không còn mang lại giảm giá – đã huỷ.');
           giam = 0;
         } else {
           const msg = document.getElementById('voucherMsg');
-          if (msg && VOUCHER.type === 'percent') {
-            msg.textContent = `Áp dụng ${VOUCHER.pct}% (đã áp trần 50% nếu cần). Giảm ${fmtVND(giam)}.`;
+          if (msg && t.voucher.type === 'percent') {
+            msg.textContent = `Áp dụng ${t.voucher.pct}% (đã áp trần 50% nếu cần). Giảm ${fmtVND(giam)}.`;
           }
         }
       }
 
-      DISCOUNT = giam;
-      const pay = Math.max(0, tam - giam);
-      PAYABLE = pay;
+      t.discount = giam;
+      t.payable  = Math.max(0, tam - giam);
 
       document.getElementById('lblTamTinh').textContent   = fmtVND(tam);
       document.getElementById('lblGiam').textContent      = giam > 0 ? `- ${fmtVND(giam)}` : '0';
-      document.getElementById('lblThanhToan').textContent = fmtVND(pay);
+      document.getElementById('lblThanhToan').textContent = fmtVND(t.payable);
     }
 
     // Voucher
+    function cancelVoucher(reason) {
+      const t = CUR();
+      t.voucher = null;
+      t.discount = 0;
+      const msg = document.getElementById('voucherMsg');
+      if (msg) msg.textContent = reason || 'Voucher đã được huỷ.';
+      const txt = document.getElementById('txtVoucher');
+      if (txt) txt.value = '';
+    }
+
     async function applyVoucher(){
       const code = (document.getElementById('txtVoucher').value||'').trim();
+      const t = CUR();
 
       if(!code){
         cancelVoucher('');
@@ -877,7 +986,7 @@
         return;
       }
 
-      const tam = CART.reduce((s,it)=> s + (it.donGia + it.sizeExtra + it.tienTopping)*it.soLuong, 0);
+      const tam = t.cart.reduce((s,it)=> s + (it.donGia + it.sizeExtra + it.tienTopping)*it.soLuong, 0);
 
       try{
         const res = await fetch('/BanHangTaiQuay/CheckVoucher', {
@@ -903,14 +1012,12 @@
           return;
         }
 
-        if (!pct && tam > 0) {
-          pct = Math.round((discount / tam) * 100);
-        }
+        if (!pct && tam > 0) { pct = Math.round((discount / tam) * 100); }
 
-        VOUCHER = { id: voucherId, code: codeReturn, pct, minOrder, type:'percent' };
-        DISCOUNT = discount; // UI tức thời, recalcTotals sẽ tính chuẩn
+        t.voucher = { id: voucherId, code: codeReturn, pct, minOrder, type:'percent' };
+        t.discount = discount;
         const msg = document.getElementById('voucherMsg');
-        if (msg) msg.textContent = `${message || 'Áp dụng voucher thành công.'} Giảm ${fmtVND(DISCOUNT)}.`;
+        if (msg) msg.textContent = `${message || 'Áp dụng voucher thành công.'} Giảm ${fmtVND(t.discount)}.`;
         recalcTotals();
 
       }catch(e){
@@ -920,13 +1027,17 @@
     }
 
     const clearCart = ()=>{
-      CART=[]; cancelVoucher('');
+      CUR().cart = [];
+      cancelVoucher('');
+      rebuildReserved();
+      searchProducts(PAGE);
       renderCart();
     };
 
     function onLoaiChange(){
       const loai = document.getElementById('selLoai').value;
       document.getElementById('shipAddressWrap').style.display = (loai === 'GiaoHang') ? '' : 'none';
+      CUR().loai = loai;
     }
 
     const fmtDateTime = (d) => { try { const dt = (d instanceof Date) ? d : new Date(d); return dt.toLocaleString('vi-VN'); } catch { return d || ''; } }
@@ -1025,33 +1136,37 @@
     }
 
     async function taoHoaDon(){
+      const CART = CUR().cart;
       if(CART.length===0){ alert('Giỏ hàng trống.'); return; }
 
-      // kiểm tồn lần cuối ở client
+      // kiểm tồn lần cuối ở client theo tồn khả dụng
       for (const it of CART) {
-        const prod = SOURCE.find(x=>x.ID_San_Pham==it.sanPhamId);
-        if (!prod) { alert('Không tìm thấy sản phẩm trong danh sách.'); return; }
-        const stock = prod.__Stock||0;
-        if (it.soLuong > stock) {
-          alert(`"${it.ten}" đã vượt tồn.\nTồn: ${stock}, bạn đang đặt: ${it.soLuong}`);
+        const avail = getAvailable(it.sanPhamId) + it.soLuong; // đã giữ chỗ, nên cho phép đến đúng số đang có
+        if (it.soLuong > avail) {
+          alert(`"${it.ten}" đã vượt tồn.\nKhả dụng: ${avail}, bạn đang đặt: ${it.soLuong}`);
           return;
         }
       }
 
       const method = parseInt(document.getElementById('selPay').value, 10) || 1;
+      CUR().payMethod = String(method);
       if (method === 3) { openQRModal(); return; }
       await reallyCreateHoaDon();
     }
 
     async function reallyCreateHoaDon(){
+      syncTabFromForm();
+      const t = CUR();
+      const CART = t.cart;
+
       const btn = document.getElementById('btnCreate');
       btn.disabled = true;
 
       const tam  = CART.reduce((s,it)=> s + (it.donGia + it.sizeExtra + it.tienTopping)*it.soLuong, 0);
-      const giam = Math.min(DISCOUNT, tam*0.5);
+      const giam = Math.min(t.discount||0, tam*0.5);
 
-      const loai = document.getElementById('selLoai').value;
-      const shipAddr = (document.getElementById('txtShipAddress')?.value || '').trim();
+      const loai = t.loai || 'TaiQuay';
+      const shipAddr = t.shipAddr || '';
       if (loai === 'GiaoHang' && !shipAddr) {
         alert('Vui lòng nhập địa chỉ giao hàng.');
         btn.disabled = false;
@@ -1059,17 +1174,15 @@
       }
 
       // Gộp SĐT vào ghi chú
-      const phoneRaw = (document.getElementById('txtPhone').value || '').trim();
-      const noteRaw  = (document.getElementById('txtNote').value  || '').trim();
-      const noteCombined = phoneRaw ? `[SDT: ${phoneRaw}] ${noteRaw}` : noteRaw;
+      const noteCombined = t.phone ? `[SDT: ${t.phone}] ${t.note||''}` : (t.note||'');
 
       const payload = {
-        HinhThucThanhToanId: parseInt(document.getElementById('selPay').value,10) || 1,
+        HinhThucThanhToanId: parseInt(t.payMethod||'1',10) || 1,
         LoaiHoaDon: loai,
         KhachHang_SDT: null,
         GhiChu: noteCombined,
-        VoucherId: VOUCHER?.id || null,
-        VoucherCode: VOUCHER?.code || (document.getElementById('txtVoucher').value || '').trim() || null,
+        VoucherId: t.voucher?.id || null,
+        VoucherCode: t.voucher?.code || (document.getElementById('txtVoucher').value || '').trim() || null,
         TongTien: tam,
         TienGiam: giam,
         DiaChiTuNhap: loai === 'GiaoHang' ? shipAddr : null,
@@ -1107,7 +1220,7 @@
           DiaChi: payload.DiaChiTuNhap,
           HinhThucThanhToanId: payload.HinhThucThanhToanId,
           GhiChu: payload.GhiChu,
-          VoucherCode: (VOUCHER?.code || null),
+          VoucherCode: (t.voucher?.code || null),
           Tong: tam, Giam: giam, ThanhToan: tam - giam,
           Items: CART.map(it=>({
             Ten: it.ten, DonGia: it.donGia, SizeExtra: it.sizeExtra, SizeName: it.sizeName,
@@ -1115,22 +1228,29 @@
             DoNgotName: findName(OPTIONS.doNgots,'ID_DoNgot','Muc_Do',it.doNgotId),
             LuongDaName: findName(OPTIONS.luongDas,'ID_LuongDa','Ten_LuongDa',it.luongDaId) || findName(OPTIONS.luongDas,'ID_LuongDa','Muc_Da',it.luongDaId),
             ToppingNames: (it.toppingIds||[]).map(id=>{
-              const o=(OPTIONS.toppings||[]).find(t=>t.ID_Topping==id);
+              const o=(OPTIONS.toppings||[]).find(tp=>tp.ID_Topping==id);
               return o ? (o.Ten || o.Ten_Topping || ('Topping #' + id)) : ('Topping #' + id);
             })
           }))
         };
 
-        // Trừ tồn & refresh client
-        CART.forEach(it=>{
-          const prod = SOURCE.find(p=>p.ID_San_Pham==it.sanPhamId);
-          if (prod) { prod.__Stock = Math.max(0, (prod.__Stock||0) - it.soLuong); }
-        });
-        searchProducts(PAGE);
+        // Chốt bán: giảm tồn gốc và bỏ giữ chỗ của tab hiện tại
+        for (const it of CART){
+          const baseNow = getBase(it.sanPhamId);
+          const newBase = Math.max(0, baseNow - it.soLuong);
+          const src = SOURCE.find(p=>p.ID_San_Pham==it.sanPhamId);
+          if (src) src.__StockBase = newBase;
+        }
+        // xoá cart -> bỏ giữ chỗ -> rebuild reserved
+        t.cart = [];
+        t.voucher = null; t.discount = 0; t.payable = 0; t.phone=''; t.note=''; t.shipAddr=''; t.loai='TaiQuay';
+        rebuildReserved();
 
-        clearCart();
-        const addr = document.getElementById('txtShipAddress'); if (addr) addr.value='';
-        onLoaiChange();
+        // refresh UI
+        renderTabs();
+        syncFormFromTab();
+        searchProducts(PAGE);
+        renderCart();
 
         openPrintModal(inv);
 
@@ -1141,11 +1261,16 @@
       }
     }
 
-    window.addEventListener('DOMContentLoaded', ()=>{
+    function buildInitialState(){
+      TABS = [ newEmptyTab() ];
+      ACTIVE = 0;
+      renderTabs();
       searchProducts(1);
+      syncFormFromTab();
       renderCart();
-      onLoaiChange();
-    });
+    }
+
+    window.addEventListener('DOMContentLoaded', buildInitialState);
 </script>
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
