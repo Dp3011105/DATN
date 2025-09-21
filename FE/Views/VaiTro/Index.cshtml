@@ -117,9 +117,6 @@
         <div class="card shadow border-0">
             <div class="card-header d-flex justify-content-between align-items-center">
                 <h4 class="mb-0"><i class="fas fa-user-shield icon-primary me-2"></i> Quản lý Vai trò</h4>
-                <a asp-action="Create" class="btn btn-gradient btn-sm rounded-pill px-4">
-                    <i class="fas fa-plus-circle icon-success me-1"></i> Thêm vai trò
-                </a>
             </div>
             <div class="card-body">
                 <table id="vaiTroTable" class="table table-hover table-bordered table-striped align-middle">
@@ -127,7 +124,7 @@
                         <tr>
                             <th style="width: 10%"><i class="fas fa-id-badge icon-primary"></i> ID</th>
                             <th><i class="fas fa-tag icon-primary"></i> Tên vai trò</th>
-                            <th style="width: 20%" class="text-center"><i class="fas fa-cog icon-primary"></i> Thao tác</th>
+                         
                         </tr>
                     </thead>
                     <tbody>
@@ -144,17 +141,6 @@
                                 <tr>
                                     <td>@item.ID_Vai_Tro</td>
                                     <td>@item.Ten_Vai_Tro</td>
-                                    <td class="text-center">
-                                        <a asp-action="Edit" asp-route-id="@item.ID_Vai_Tro" class="btn btn-warning-gradient btn-sm rounded-pill me-1">
-                                            <i class="fas fa-edit"></i>
-                                        </a>
-                                        <form asp-action="Delete" asp-route-id="@item.ID_Vai_Tro" method="post" class="d-inline"
-                                              onsubmit="return confirm('Bạn có chắc muốn xóa vai trò này?');">
-                                            <button type="submit" class="btn btn-danger-gradient btn-sm rounded-pill">
-                                                <i class="fas fa-trash"></i>
-                                            </button>
-                                        </form>
-                                    </td>
                                 </tr>
                             }
                         }
