@@ -6,7 +6,7 @@ namespace Repository.IRepository
     {
         Task<IEnumerable<TaiKhoan>> GetAllAsync();
         Task<TaiKhoan> GetByIdAsync(int id);
-        Task AddAsync(TaiKhoan entity);
+        Task<TaiKhoan> AddAsync(TaiKhoan entity);
         Task UpdateAsync(int id,TaiKhoan entity);
         Task DeleteAsync(int id);
     }
