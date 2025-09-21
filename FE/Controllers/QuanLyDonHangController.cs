@@ -51,7 +51,7 @@ namespace FE.Controllers
                 ["Huy_Don"] = 5
             };
 
-        // Luồng chuyển hợp lệ
+        // Luồng chuyển hợp lệ (cho các nút bước trạng thái; riêng Hủy cho phép theo quy tắc đặt ra)
         private static readonly Dictionary<string, string[]> AllowedTransitions =
             new(StringComparer.OrdinalIgnoreCase)
             {
@@ -452,10 +452,10 @@ namespace FE.Controllers
             return RedirectToAction(nameof(Index));
         }
 
-        // ============== HỦY + KHÔI PHỤC TỒN ==============
+        // ============== HỦY + KHÔI PHỤC TỒN (theo quy tắc mới) ==============
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Huy(int id, string lyDo, int[] khoiPhucIds, int[] khoiPhucQtys)
+        public async Task<IActionResult> Huy(int id, string lyDo, int[]? khoiPhucIds, int[]? khoiPhucQtys)
         {
             if (string.IsNullOrWhiteSpace(lyDo))
             {
@@ -466,70 +466,121 @@ namespace FE.Controllers
             var hd = await _hoaDonService.GetByIdAsync(id);
             if (hd == null) return NotFound();
 
+            var curr = hd.Trang_Thai?.Trim() ?? "";
+
             // Không cho hủy nếu đã hoàn thành hoặc đã hủy
-            if (string.Equals(hd.Trang_Thai, "Hoan_Thanh", StringComparison.OrdinalIgnoreCase) ||
-                string.Equals(hd.Trang_Thai, "Huy_Don", StringComparison.OrdinalIgnoreCase))
+            if (string.Equals(curr, "Hoan_Thanh", StringComparison.OrdinalIgnoreCase) ||
+                string.Equals(curr, "Huy_Don", StringComparison.OrdinalIgnoreCase))
             {
                 TempData["msg"] = "Đơn đã hoàn tất hoặc đã huỷ. Không thể huỷ.";
                 return RedirectToAction(nameof(Index));
             }
 
-            var mapCt = (hd.HoaDonChiTiets ?? new List<HoaDonChiTiet>())
-                        .ToDictionary(x => x.ID_HoaDon_ChiTiet, x => x);
+            var chiTiets = hd.HoaDonChiTiets ?? new List<HoaDonChiTiet>();
+            var mapCt = chiTiets.ToDictionary(x => x.ID_HoaDon_ChiTiet, x => x);
 
-            // Nếu trạng thái = "Chua_Xac_Nhan" → KHÔNG hồi số lượng
-            if (string.Equals(hd.Trang_Thai, "Chua_Xac_Nhan", StringComparison.OrdinalIgnoreCase))
+            bool restockOk = true;
+            int totalRestockQty = 0;
+
+            // ========== QUY TẮC ==========
+            // 1) Chua_Xac_Nhan => KHÔI PHỤC TOÀN BỘ TỒN tự động
+            if (string.Equals(curr, "Chua_Xac_Nhan", StringComparison.OrdinalIgnoreCase))
             {
+                var restockAll = chiTiets
+                    .GroupBy(ct => ct.ID_San_Pham)
+                    .Select(g => (productId: g.Key, quantity: g.Sum(ct => Math.Max(0, ct.So_Luong))))
+                    .Where(x => x.productId > 0 && x.quantity > 0)
+                    .ToList();
+
+                if (restockAll.Count > 0)
+                {
+                    restockOk = await _productService.RestockBatchAsync(restockAll);
+                    totalRestockQty = restockAll.Sum(x => x.quantity);
+                }
+
                 var updateOk = await _hoaDonService.UpdateTrangThaiAsync(id, "Huy_Don", lyDo.Trim());
                 if (updateOk) AddToFocus(id);
-                TempData["msg"] = updateOk ? "Đã hủy đơn (chưa xác nhận, không khôi phục tồn)." : "Hủy đơn thất bại.";
+
+                TempData["msg"] = (updateOk && restockOk)
+                    ? $"Đã hủy đơn và khôi phục toàn bộ tồn ({totalRestockQty} sp)."
+                    : (updateOk ? "Đã hủy đơn nhưng KHÔNG khôi phục tồn (lỗi cập nhật sản phẩm)."
+                                : "Hủy đơn thất bại.");
+
                 return RedirectToAction(nameof(Index));
             }
 
-            var selections = new List<(int chiTietId, int soLuong)>();
-            if (khoiPhucIds != null && khoiPhucQtys != null && khoiPhucIds.Length == khoiPhucQtys.Length)
+            // 2) Dang_Giao_Hang => HỦY KHÔNG KHÔI PHỤC TỒN
+            if (string.Equals(curr, "Dang_Giao_Hang", StringComparison.OrdinalIgnoreCase))
             {
-                for (int i = 0; i < khoiPhucIds.Length; i++)
+                var updateOk = await _hoaDonService.UpdateTrangThaiAsync(id, "Huy_Don", lyDo.Trim());
+                if (updateOk) AddToFocus(id);
+
+                TempData["msg"] = updateOk
+                    ? "Đã hủy đơn trong trạng thái Đang giao hàng (KHÔNG khôi phục tồn)."
+                    : "Hủy đơn thất bại.";
+
+                return RedirectToAction(nameof(Index));
+            }
+
+            // 3) Da_Xac_Nhan hoặc Dang_Xu_Ly => CHO PHÉP CHỌN SỐ LƯỢNG ĐỂ KHÔI PHỤC
+            if (string.Equals(curr, "Da_Xac_Nhan", StringComparison.OrdinalIgnoreCase) ||
+                string.Equals(curr, "Dang_Xu_Ly", StringComparison.OrdinalIgnoreCase))
+            {
+                var selections = new List<(int chiTietId, int soLuong)>();
+                if (khoiPhucIds != null && khoiPhucQtys != null && khoiPhucIds.Length == khoiPhucQtys.Length)
                 {
-                    var cid = khoiPhucIds[i];
-                    var q = Math.Max(0, khoiPhucQtys[i]);
-                    if (cid <= 0 || q <= 0) continue;
+                    for (int i = 0; i < khoiPhucIds.Length; i++)
+                    {
+                        var cid = khoiPhucIds[i];
+                        var q = Math.Max(0, khoiPhucQtys[i]);
+                        if (cid <= 0 || q <= 0) continue;
 
-                    if (!mapCt.TryGetValue(cid, out var ct)) continue;
+                        if (!mapCt.TryGetValue(cid, out var ct)) continue;
 
-                    var max = Math.Max(0, ct.So_Luong);
-                    if (q > max) q = max;
-                    if (q > 0) selections.Add((cid, q));
+                        var max = Math.Max(0, ct.So_Luong);
+                        if (q > max) q = max;
+                        if (q > 0) selections.Add((cid, q));
+                    }
                 }
-            }
 
-            var restockByProduct = selections
-                .Select(sel =>
+                var restockByProduct = selections
+                    .Select(sel =>
+                    {
+                        var ct = mapCt[sel.chiTietId];
+                        return new { productId = ct.ID_San_Pham, qty = sel.soLuong };
+                    })
+                    .Where(x => x.productId > 0 && x.qty > 0)
+                    .GroupBy(x => x.productId)
+                    .Select(g => (productId: g.Key, quantity: g.Sum(z => z.qty)))
+                    .ToList();
+
+                if (restockByProduct.Count > 0)
                 {
-                    var ct = mapCt[sel.chiTietId];
-                    return new { productId = ct.ID_San_Pham, qty = sel.soLuong };
-                })
-                .Where(x => x.productId > 0 && x.qty > 0)
-                .GroupBy(x => x.productId)
-                .Select(g => (productId: g.Key, quantity: g.Sum(z => z.qty)))
-                .ToList();
+                    restockOk = await _productService.RestockBatchAsync(restockByProduct);
+                    totalRestockQty = restockByProduct.Sum(x => x.quantity);
+                }
 
-            bool restockOk = true;
-            if (restockByProduct.Count > 0)
-            {
-                restockOk = await _productService.RestockBatchAsync(restockByProduct);
+                var updateStatusOk = await _hoaDonService.UpdateTrangThaiAsync(id, "Huy_Don", lyDo.Trim());
+                if (updateStatusOk) AddToFocus(id);
+
+                TempData["msg"] = (updateStatusOk && restockOk)
+                    ? $"Đã huỷ đơn và khôi phục tồn theo lựa chọn ({totalRestockQty} sp)."
+                    : (updateStatusOk ? "Đã huỷ đơn nhưng KHÔNG khôi phục tồn (lỗi cập nhật sản phẩm)."
+                                      : "Hủy đơn thất bại.");
+
+                return RedirectToAction(nameof(Index));
             }
 
-            var updateStatusOk = await _hoaDonService.UpdateTrangThaiAsync(id, "Huy_Don", lyDo.Trim());
-            if (updateStatusOk) AddToFocus(id);
+            // Các trạng thái khác (phòng thủ): hủy nhưng không khôi phục
+            {
+                var updateOk = await _hoaDonService.UpdateTrangThaiAsync(id, "Huy_Don", lyDo.Trim());
+                if (updateOk) AddToFocus(id);
 
-            var totalQty = restockByProduct.Sum(x => x.quantity);
-            TempData["msg"] = (updateStatusOk && restockOk)
-                ? $"Đã huỷ đơn và khôi phục tồn ({totalQty} sp)."
-                : (updateStatusOk ? "Đã huỷ đơn nhưng KHÔNG khôi phục tồn (lỗi khi cập nhật sản phẩm)."
-                                  : "Hủy đơn thất bại.");
-
-            return RedirectToAction(nameof(Index));
+                TempData["msg"] = updateOk
+                    ? "Đã hủy đơn."
+                    : "Hủy đơn thất bại.";
+                return RedirectToAction(nameof(Index));
+            }
         }
 
         // ============== Gỡ đơn khỏi khung thao tác nhanh ==============

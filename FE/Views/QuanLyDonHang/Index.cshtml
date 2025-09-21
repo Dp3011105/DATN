@@ -77,7 +77,7 @@
         <button class="btn btn-secondary" type="submit">Tải lại</button>
     </form>
 
-    @* ===== Khung thao tác nhanh (đơn vừa tương tác, giữ trong 30 phút) ===== *@
+    @* ===== Khung thao tác nhanh ===== *@
     @if (Model.FocusedHoaDon != null && Model.FocusedHoaDon.Any())
     {
         <div class="card shadow-sm mb-4 border-primary">
@@ -156,6 +156,7 @@
                                             </form>
                                         }
 
+                                        @* Nút Hủy *@
                                         @if (!string.Equals(dbStatus, "Hoan_Thanh", StringComparison.OrdinalIgnoreCase)
                                                                         && !string.Equals(dbStatus, "Huy_Don", StringComparison.OrdinalIgnoreCase))
                                         {
@@ -328,7 +329,7 @@
     </div>
 </div>
 
-<!-- Modal Hủy đơn (giữ nguyên logic) -->
+<!-- Modal Hủy đơn -->
 <div class="modal fade" id="modalHuyDon" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-xl modal-dialog-scrollable">
         <div class="modal-content">
@@ -348,6 +349,7 @@
                         <textarea class="form-control" id="huy-lydo" name="lyDo" rows="2" required></textarea>
                     </div>
 
+                    <!-- Khu vực chọn khôi phục -->
                     <div id="khophuc-wrapper">
                         <div class="d-flex justify-content-between align-items-center mb-2">
                             <div class="fw-semibold">Khôi phục tồn cho các cốc đã chọn</div>
@@ -375,8 +377,13 @@
                         </div>
                     </div>
 
-                    <div id="no-restock-alert" class="alert alert-warning d-none">
-                        Đơn hàng này chưa trừ số lượng nên không thể hoàn lại số lượng sản phẩm.
+                    <!-- Cảnh báo theo trạng thái -->
+                    <div id="alert-auto-restock-all" class="alert alert-info d-none mt-3">
+                        Trạng thái <strong>Chưa xác nhận</strong>: hệ thống sẽ <strong>tự động khôi phục TOÀN BỘ</strong> tồn khi hủy. Bạn chỉ cần nhập lý do và xác nhận.
+                    </div>
+
+                    <div id="alert-no-restock-shipping" class="alert alert-warning d-none mt-3">
+                        Trạng thái <strong>Đang giao hàng</strong>: hủy đơn <strong>KHÔNG khôi phục tồn</strong>.
                     </div>
                 </div>
 
@@ -419,51 +426,69 @@
             const btn = e.relatedTarget;
             const id = btn?.getAttribute('data-id');
             const ma = btn?.getAttribute('data-ma');
-            const status = btn?.getAttribute('data-status') || "";
+            const status = (btn?.getAttribute('data-status') || "").trim();
 
             document.getElementById('huy-id').value = id || '';
             document.getElementById('huy-status').value = status || '';
             document.getElementById('huy-mahd').textContent = ma ? `(#${ma})` : '';
 
+            // reset textarea
             const textarea = document.getElementById('huy-lydo');
             if (textarea) textarea.value = '';
 
-            const body = tblBody();
-
+            // Toggle khu vực chọn và cảnh báo theo trạng thái
             const wrapper = document.getElementById('khophuc-wrapper');
-            const alertBox = document.getElementById('no-restock-alert');
+            const alertAutoAll = document.getElementById('alert-auto-restock-all');
+            const alertNoRestock = document.getElementById('alert-no-restock-shipping');
+
+            // Mặc định ẩn cảnh báo
+            alertAutoAll.classList.add("d-none");
+            alertNoRestock.classList.add("d-none");
+
             if (status === "Chua_Xac_Nhan") {
+                // Auto khôi phục toàn bộ -> ẩn bảng chọn
                 wrapper.classList.add("d-none");
-                alertBox.classList.remove("d-none");
-            } else {
-                wrapper.classList.remove("d-none");
-                alertBox.classList.add("d-none");
+                alertAutoAll.classList.remove("d-none");
+                return; // không tải chi tiết
+            }
 
-                body.innerHTML = `<tr><td colspan="5" class="text-muted">Đang tải...</td></tr>`;
-                try {
-                    const url = `@Url.Action("ChiTietJson", "QuanLyDonHang")?id=${0}`.replace('0', encodeURIComponent(id));
-                    const res = await fetch(url, { credentials: 'same-origin' });
-                    const data = await res.json();
+            if (status === "Dang_Giao_Hang") {
+                // Không khôi phục -> ẩn bảng chọn
+                wrapper.classList.add("d-none");
+                alertNoRestock.classList.remove("d-none");
+                return; // không tải chi tiết
+            }
 
-                    if (!data?.ok) {
-                        body.innerHTML = `<tr><td colspan="5" class="text-danger">Không tải được chi tiết hóa đơn.</td></tr>`;
-                        return;
-                    }
+            // Các trạng thái được chọn khôi phục (Da_Xac_Nhan, Dang_Xu_Ly, …)
+            wrapper.classList.remove("d-none");
 
-                    if (!data.items || data.items.length === 0) {
-                        body.innerHTML = `<tr><td colspan="5" class="text-muted">Đơn hàng không có chi tiết.</td></tr>`;
-                        return;
-                    }
+            const body = tblBody();
+            body.innerHTML = `<tr><td colspan="5" class="text-muted">Đang tải...</td></tr>`;
 
-                    body.innerHTML = '';
-                    data.items.forEach(it => body.appendChild(buildRow(it)));
-                } catch (err) {
-                    body.innerHTML = `<tr><td colspan="5" class="text-danger">Lỗi khi tải dữ liệu.</td></tr>`;
+            try {
+                const url = `@Url.Action("ChiTietJson", "QuanLyDonHang")?id=${0}`.replace('0', encodeURIComponent(id));
+                const res = await fetch(url, { credentials: 'same-origin' });
+                const data = await res.json();
+
+                if (!data?.ok) {
+                    body.innerHTML = `<tr><td colspan="5" class="text-danger">Không tải được chi tiết hóa đơn.</td></tr>`;
+                    return;
                 }
+
+                if (!data.items || data.items.length === 0) {
+                    body.innerHTML = `<tr><td colspan="5" class="text-muted">Đơn hàng không có chi tiết.</td></tr>`;
+                    return;
+                }
+
+                body.innerHTML = '';
+                data.items.forEach(it => body.appendChild(buildRow(it)));
+            } catch (err) {
+                body.innerHTML = `<tr><td colspan="5" class="text-danger">Lỗi khi tải dữ liệu.</td></tr>`;
             }
         });
     }
 
+    // Chọn tất cả
     document.addEventListener('change', function (e) {
         if (e.target?.id === 'chk-all') {
             const on = e.target.checked;
@@ -477,32 +502,38 @@
         }
     });
 
+    // Submit: đóng gói khoiPhucIds/khoiPhucQtys
     const form = document.getElementById('form-huy-don');
     if (form) {
-        form.addEventListener('submit', function (e) {
+        form.addEventListener('submit', function () {
             const btn = document.getElementById('btn-huy');
             if (btn) btn.disabled = true;
 
+            // Xóa input ẩn cũ (nếu có)
             form.querySelectorAll('input[name="khoiPhucIds"], input[name="khoiPhucQtys"]').forEach(n => n.remove());
 
-            const rows = document.querySelectorAll('#tbl-kphoiphuc tbody tr');
-            rows.forEach(tr => {
-                const cb = tr.querySelector('.chk-row');
-                const inp = tr.querySelector('.input-sl');
-                if (cb?.checked && inp) {
-                    const id = inp.getAttribute('data-id');
-                    const qty = inp.value;
-                    if (id) {
-                        const hidden1 = document.createElement('input');
-                        hidden1.type = 'hidden'; hidden1.name = 'khoiPhucIds'; hidden1.value = id;
-                        form.appendChild(hidden1);
+            // Với các trạng thái có wrapper hiển thị (Da_Xac_Nhan, Dang_Xu_Ly)
+            const wrapper = document.getElementById('khophuc-wrapper');
+            if (!wrapper.classList.contains('d-none')) {
+                const rows = document.querySelectorAll('#tbl-kphoiphuc tbody tr');
+                rows.forEach(tr => {
+                    const cb = tr.querySelector('.chk-row');
+                    const inp = tr.querySelector('.input-sl');
+                    if (cb?.checked && inp) {
+                        const id = inp.getAttribute('data-id');
+                        const qty = inp.value;
+                        if (id) {
+                            const hidden1 = document.createElement('input');
+                            hidden1.type = 'hidden'; hidden1.name = 'khoiPhucIds'; hidden1.value = id;
+                            form.appendChild(hidden1);
 
-                        const hidden2 = document.createElement('input');
-                        hidden2.type = 'hidden'; hidden2.name = 'khoiPhucQtys'; hidden2.value = qty;
-                        form.appendChild(hidden2);
+                            const hidden2 = document.createElement('input');
+                            hidden2.type = 'hidden'; hidden2.name = 'khoiPhucQtys'; hidden2.value = qty;
+                            form.appendChild(hidden2);
+                        }
                     }
-                }
-            });
+                });
+            }
         });
     }
 </script>
