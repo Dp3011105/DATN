@@ -6,6 +6,7 @@ namespace BE.Repository.IRepository
     public interface IProfileRepository
     {
         Task<KhachHang> GetKhachHangByIdAsync(int khachHangId);
+        Task<KhachHang> GetKhachHangByEmailAsync(string email); // Thêm method này
         Task<bool> UpdateKhachHangAsync(KhachHang khachHang);
         Task<List<DiaChi>> GetDiaChiByKhachHangIdAsync(int khachHangId);
         Task<DiaChi> GetDiaChiByIdAsync(int diaChiId);

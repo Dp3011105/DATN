@@ -10,8 +10,10 @@ namespace FE.Models
         [Display(Name = "Họ và tên")]
         public string Ho_Ten { get; set; }
 
+        [Required(ErrorMessage = "Email là bắt buộc")]
+        [EmailAddress(ErrorMessage = "Email không hợp lệ")]
         [Display(Name = "Email")]
-        public string Email { get; set; }
+        public string Email { get; set; } // Bỏ readonly
 
         [Display(Name = "Số điện thoại")]
         public string So_Dien_Thoai { get; set; }
@@ -47,6 +49,10 @@ namespace FE.Models
     {
         [Required(ErrorMessage = "Họ tên là bắt buộc")]
         public string Ho_Ten { get; set; }
+
+        [Required(ErrorMessage = "Email là bắt buộc")]
+        [EmailAddress(ErrorMessage = "Email không hợp lệ")]
+        public string Email { get; set; } // Thêm email vào update model
 
         public string So_Dien_Thoai { get; set; }
 

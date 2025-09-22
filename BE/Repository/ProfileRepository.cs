@@ -20,6 +20,13 @@ namespace BE.Repository
                 .FirstOrDefaultAsync(k => k.ID_Khach_Hang == khachHangId);
         }
 
+        // Thêm method kiểm tra email đã tồn tại
+        public async Task<KhachHang> GetKhachHangByEmailAsync(string email)
+        {
+            return await _context.Khach_Hang
+                .FirstOrDefaultAsync(k => k.Email == email);
+        }
+
         public async Task<bool> UpdateKhachHangAsync(KhachHang khachHang)
         {
             try
@@ -30,8 +37,9 @@ namespace BE.Repository
 
                 if (existingKhachHang != null)
                 {
-                    // Update properties explicitly
+                    // Update properties explicitly including email
                     existingKhachHang.Ho_Ten = khachHang.Ho_Ten;
+                    existingKhachHang.Email = khachHang.Email; // Cho phép cập nhật email
                     existingKhachHang.So_Dien_Thoai = khachHang.So_Dien_Thoai;
                     existingKhachHang.GioiTinh = khachHang.GioiTinh;
                     existingKhachHang.Ghi_Chu = khachHang.Ghi_Chu;
