@@ -1,8 +1,10 @@
-﻿using BE.DTOs;
+﻿using BE.Data;
+using BE.DTOs;
 using BE.models;
 using BE.Repository.IRepository;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 using Repository;
 using Repository.IRepository;
 
@@ -12,12 +14,14 @@ namespace BE.Controllers
     [ApiController]
     public class Gio_HangController : ControllerBase
     {
+        private readonly MyDbContext     _context;
 
         private readonly IGio_HangRepository _cartRepository;
 
-        public Gio_HangController(IGio_HangRepository cartRepository)
+        public Gio_HangController(IGio_HangRepository cartRepository , MyDbContext context)
         {
             _cartRepository = cartRepository;
+            _context = context;
         }
 
         [HttpGet("{idKhachHang}")]
@@ -198,5 +202,43 @@ namespace BE.Controllers
 
 
 
+        // PUT: api/GioHangChiTiet/5
+        [HttpPut("{id}")]
+        public async Task<IActionResult> UpdateSoLuong(int id, [FromBody] UpdateSoLuongDto request)
+        {
+            if (request.So_Luong <= 0)
+                return BadRequest("Số lượng phải lớn hơn 0");
+
+            var gioHangChiTiet = await _context.GioHang_ChiTiet
+                .FirstOrDefaultAsync(g => g.ID_GioHang_ChiTiet == id);
+
+            if (gioHangChiTiet == null)
+                return NotFound("Không tìm thấy chi tiết giỏ hàng");
+
+            gioHangChiTiet.So_Luong = request.So_Luong;
+
+            _context.GioHang_ChiTiet.Update(gioHangChiTiet);
+            await _context.SaveChangesAsync();
+
+            return Ok(new
+            {
+                message = "Cập nhật số lượng thành công",
+                data = new
+                {
+                    gioHangChiTiet.ID_GioHang_ChiTiet,
+                    gioHangChiTiet.So_Luong
+                }
+            });
+        }
+
+
     }
+
+
+
+    public class UpdateSoLuongDto
+    {
+        public int So_Luong { get; set; }
+    }
+
 }

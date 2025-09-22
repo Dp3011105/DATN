@@ -31,6 +31,7 @@ namespace BE.Controllers
                 .Select(hd => new
                 {
                     hd.Ma_Hoa_Don,
+                    hd.ID_Hoa_Don,
                     hd.Ghi_Chu,
                     hd.Dia_Chi_Tu_Nhap,
                     hd.Ngay_Tao,
@@ -67,6 +68,7 @@ namespace BE.Controllers
             return Ok(new
             {
                 hoaDon.Ma_Hoa_Don,
+                hoaDon.ID_Hoa_Don,
                 hoaDon.Dia_Chi_Tu_Nhap,
                 hoaDon.Ngay_Tao,
                 hoaDon.Tong_Tien,
@@ -74,11 +76,87 @@ namespace BE.Controllers
                 hoaDon.Ghi_Chu
             });
         }
+
+
+
+
+        [HttpPost("hoan-tra/{idHoaDon}")]
+        public async Task<IActionResult> HoanTraSanPhamVaTopping(int idHoaDon, [FromBody] HoanTraRequest request)
+        {
+            if (string.IsNullOrEmpty(request?.LyDoHuyDon))
+            {
+                return BadRequest(new { message = "Lý do hủy đơn hàng là bắt buộc" });
+            }
+
+            using var tx = await _context.Database.BeginTransactionAsync();
+
+            try
+            {
+                // Truy vấn thông tin hóa đơn cùng với chi tiết sản phẩm và topping
+                var invoice = await _context.Hoa_Don
+                    .Include(h => h.HoaDonChiTiets)
+                        .ThenInclude(hdct => hdct.SanPham)
+                    .Include(h => h.HoaDonChiTiets)
+                        .ThenInclude(hdct => hdct.HoaDonChiTietToppings)
+                        .ThenInclude(hdctt => hdctt.Topping)
+                    .FirstOrDefaultAsync(h => h.ID_Hoa_Don == idHoaDon);
+
+                if (invoice == null)
+                {
+                    return NotFound(new { message = $"Không tìm thấy hóa đơn với ID {idHoaDon}" });
+                }
+
+                // Đổi trạng thái hóa đơn thành Huy_Don và lưu lý do
+                invoice.Trang_Thai = "Huy_Don";
+                invoice.LyDoHuyDon = request.LyDoHuyDon;
+                _context.Hoa_Don.Update(invoice);
+
+                // Hoàn trả số lượng sản phẩm
+                foreach (var hdct in invoice.HoaDonChiTiets)
+                {
+                    if (hdct.SanPham != null)
+                    {
+                        hdct.SanPham.So_Luong += hdct.So_Luong;
+                        _context.San_Pham.Update(hdct.SanPham);
+                    }
+
+                    // Hoàn trả số lượng topping
+                    foreach (var hdctt in hdct.HoaDonChiTietToppings)
+                    {
+                        if (hdctt.Topping != null)
+                        {
+                            int soLuongTopping = hdctt.So_Luong ?? 0;
+                            hdctt.Topping.So_Luong += soLuongTopping;
+                            _context.Topping.Update(hdctt.Topping);
+                        }
+                    }
+                }
+
+                // Lưu tất cả thay đổi vào cơ sở dữ liệu
+                await _context.SaveChangesAsync();
+                await tx.CommitAsync();
+
+                return Ok(new { message = $"Hủy hóa đơn {idHoaDon} và hoàn trả số lượng sản phẩm, topping thành công" });
+            }
+            catch (Exception ex)
+            {
+                // Rollback giao dịch nếu có lỗi
+                await tx.RollbackAsync();
+                return StatusCode(500, new { message = "Đã xảy ra lỗi khi xử lý yêu cầu", error = ex.Message });
+            }
+        }
+
+
     }
 
     public class CheckHoaDonRequest
     {
         public string MaHoaDon { get; set; }
         public string SoDienThoai { get; set; }
+    }
+
+    public class HoanTraRequest
+    {
+        public string LyDoHuyDon { get; set; }
     }
 }
