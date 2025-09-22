@@ -15,8 +15,13 @@ namespace BE.DTOs
 
     public class ProfileUpdateRequest
     {
-        [Required]
+        [Required(ErrorMessage = "Họ tên là bắt buộc")]
         public string Ho_Ten { get; set; }
+
+        [Required(ErrorMessage = "Email là bắt buộc")]
+        [EmailAddress(ErrorMessage = "Email không hợp lệ")]
+        public string Email { get; set; } // Thêm email vào request
+
         public string So_Dien_Thoai { get; set; }
         public bool GioiTinh { get; set; }
         public string Ghi_Chu { get; set; }

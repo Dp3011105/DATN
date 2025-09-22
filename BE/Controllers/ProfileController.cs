@@ -34,7 +34,7 @@ namespace BE.Controllers
                     ID_Khach_Hang = khachHang.ID_Khach_Hang,
                     Ho_Ten = khachHang.Ho_Ten,
                     Email = khachHang.Email,
-                    So_Dien_Thoai = khachHang.So_Dien_Thoai, // Fixed typo here
+                    So_Dien_Thoai = khachHang.So_Dien_Thoai,
                     GioiTinh = khachHang.GioiTinh,
                     Ghi_Chu = khachHang.Ghi_Chu,
                     DiaChis = diaChis.Select(dc => new AddressResponse
@@ -66,8 +66,19 @@ namespace BE.Controllers
                     return NotFound("Không tìm thấy khách hàng.");
                 }
 
-                // Update all fields properly
+                // Kiểm tra email đã tồn tại hay chưa (nếu email thay đổi)
+                if (!string.IsNullOrEmpty(request.Email) && request.Email != khachHang.Email)
+                {
+                    var existingCustomer = await _profileRepository.GetKhachHangByEmailAsync(request.Email);
+                    if (existingCustomer != null && existingCustomer.ID_Khach_Hang != khachHangId)
+                    {
+                        return BadRequest("Email này đã được sử dụng bởi tài khoản khác.");
+                    }
+                }
+
+                // Update all fields including email
                 khachHang.Ho_Ten = request.Ho_Ten;
+                khachHang.Email = request.Email; // Cho phép cập nhật email
                 khachHang.So_Dien_Thoai = request.So_Dien_Thoai;
                 khachHang.GioiTinh = request.GioiTinh;
                 khachHang.Ghi_Chu = request.Ghi_Chu;
@@ -95,7 +106,7 @@ namespace BE.Controllers
                 var diaChi = new DiaChi
                 {
                     Dia_Chi = request.Dia_Chi,
-                    Tinh_Thanh = "Hà Nội", // Mặc định là Hà Nội
+                    Tinh_Thanh = "Hà Nội",
                     Ghi_Chu = request.Ghi_Chu,
                     Trang_Thai = true
                 };
@@ -127,7 +138,7 @@ namespace BE.Controllers
                 }
 
                 diaChi.Dia_Chi = request.Dia_Chi;
-                diaChi.Tinh_Thanh = "Hà Nội"; // Mặc định là Hà Nội
+                diaChi.Tinh_Thanh = "Hà Nội";
                 diaChi.Ghi_Chu = request.Ghi_Chu;
                 diaChi.Trang_Thai = request.Trang_Thai;
 
