@@ -133,6 +133,17 @@ namespace FE.Controllers
             return 999; // không map thì đẩy xuống cuối
         }
 
+        // ======= Helper điều hướng theo nguồn gọi =======
+        private IActionResult GoBack(string? from, int id)
+        {
+            if (string.Equals(from, "detail", StringComparison.OrdinalIgnoreCase))
+            {
+                return RedirectToAction(nameof(ChiTiet), new { id });
+            }
+            // mặc định về Index
+            return RedirectToAction(nameof(Index));
+        }
+
         // ============== LIST ==============
         [HttpGet]
         public async Task<IActionResult> Index(string tuKhoa = "", string trangThai = "TẤT CẢ")
@@ -366,7 +377,7 @@ namespace FE.Controllers
         // ============== STATE TRANSITIONS ==============
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> XacNhan(int id)
+        public async Task<IActionResult> XacNhan(int id, string? from)
         {
             var hd = await _hoaDonService.GetByIdAsync(id);
             if (hd == null) return NotFound();
@@ -377,18 +388,18 @@ namespace FE.Controllers
             if (!AllowedTransitions.TryGetValue(curr, out var allows) || !allows.Contains(next, StringComparer.OrdinalIgnoreCase))
             {
                 TempData["msg"] = "Trạng thái hiện tại không cho phép xác nhận.";
-                return RedirectToAction(nameof(Index));
+                return GoBack(from, id);
             }
 
             var ok = await _hoaDonService.UpdateTrangThaiAsync(id, next, null);
-            if (ok) AddToFocus(id); // đẩy lên khung
+            if (ok) AddToFocus(id);
             TempData["msg"] = ok ? "Đã xác nhận đơn. Tiếp theo hãy 'Bắt đầu xử lý'." : "Cập nhật thất bại.";
-            return RedirectToAction(nameof(Index));
+            return GoBack(from, id);
         }
 
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> BatDauXuLy(int id)
+        public async Task<IActionResult> BatDauXuLy(int id, string? from)
         {
             var hd = await _hoaDonService.GetByIdAsync(id);
             if (hd == null) return NotFound();
@@ -399,18 +410,18 @@ namespace FE.Controllers
             if (!AllowedTransitions.TryGetValue(curr, out var allows) || !allows.Contains(next, StringComparer.OrdinalIgnoreCase))
             {
                 TempData["msg"] = "Chỉ có thể chuyển sang 'Đang xử lý' khi đơn đã xác nhận.";
-                return RedirectToAction(nameof(Index));
+                return GoBack(from, id);
             }
 
             var ok = await _hoaDonService.UpdateTrangThaiAsync(id, next, null);
             if (ok) AddToFocus(id);
             TempData["msg"] = ok ? "Đơn đã chuyển sang Đang xử lý." : "Cập nhật thất bại.";
-            return RedirectToAction(nameof(Index));
+            return GoBack(from, id);
         }
 
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> BatDauGiaoHang(int id)
+        public async Task<IActionResult> BatDauGiaoHang(int id, string? from)
         {
             var hd = await _hoaDonService.GetByIdAsync(id);
             if (hd == null) return NotFound();
@@ -421,18 +432,18 @@ namespace FE.Controllers
             if (!AllowedTransitions.TryGetValue(curr, out var allows) || !allows.Contains(next, StringComparer.OrdinalIgnoreCase))
             {
                 TempData["msg"] = "Chỉ có thể 'Bắt đầu giao' khi đơn đang ở trạng thái Đang xử lý.";
-                return RedirectToAction(nameof(Index));
+                return GoBack(from, id);
             }
 
             var ok = await _hoaDonService.UpdateTrangThaiAsync(id, next, null);
             if (ok) AddToFocus(id);
             TempData["msg"] = ok ? "Đơn đã chuyển sang Đang giao hàng." : "Cập nhật thất bại.";
-            return RedirectToAction(nameof(Index));
+            return GoBack(from, id);
         }
 
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> GiaoHangThanhCong(int id)
+        public async Task<IActionResult> GiaoHangThanhCong(int id, string? from)
         {
             var hd = await _hoaDonService.GetByIdAsync(id);
             if (hd == null) return NotFound();
@@ -443,24 +454,24 @@ namespace FE.Controllers
             if (!AllowedTransitions.TryGetValue(curr, out var allows) || !allows.Contains(next, StringComparer.OrdinalIgnoreCase))
             {
                 TempData["msg"] = "Chỉ có thể hoàn thành khi đơn đang ở trạng thái Đang giao hàng.";
-                return RedirectToAction(nameof(Index));
+                return GoBack(from, id);
             }
 
             var ok = await _hoaDonService.UpdateTrangThaiAsync(id, next, null);
             if (ok) AddToFocus(id);
             TempData["msg"] = ok ? "Đã xác nhận giao hàng thành công." : "Cập nhật thất bại.";
-            return RedirectToAction(nameof(Index));
+            return GoBack(from, id);
         }
 
         // ============== HỦY + KHÔI PHỤC TỒN (theo quy tắc mới) ==============
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Huy(int id, string lyDo, int[]? khoiPhucIds, int[]? khoiPhucQtys)
+        public async Task<IActionResult> Huy(int id, string lyDo, int[]? khoiPhucIds, int[]? khoiPhucQtys, string? from)
         {
             if (string.IsNullOrWhiteSpace(lyDo))
             {
                 TempData["msg"] = "Vui lòng nhập lý do hủy.";
-                return RedirectToAction(nameof(Index));
+                return GoBack(from, id);
             }
 
             var hd = await _hoaDonService.GetByIdAsync(id);
@@ -473,7 +484,7 @@ namespace FE.Controllers
                 string.Equals(curr, "Huy_Don", StringComparison.OrdinalIgnoreCase))
             {
                 TempData["msg"] = "Đơn đã hoàn tất hoặc đã huỷ. Không thể huỷ.";
-                return RedirectToAction(nameof(Index));
+                return GoBack(from, id);
             }
 
             var chiTiets = hd.HoaDonChiTiets ?? new List<HoaDonChiTiet>();
@@ -482,7 +493,6 @@ namespace FE.Controllers
             bool restockOk = true;
             int totalRestockQty = 0;
 
-            // ========== QUY TẮC ==========
             // 1) Chua_Xac_Nhan => KHÔI PHỤC TOÀN BỘ TỒN tự động
             if (string.Equals(curr, "Chua_Xac_Nhan", StringComparison.OrdinalIgnoreCase))
             {
@@ -506,7 +516,7 @@ namespace FE.Controllers
                     : (updateOk ? "Đã hủy đơn nhưng KHÔNG khôi phục tồn (lỗi cập nhật sản phẩm)."
                                 : "Hủy đơn thất bại.");
 
-                return RedirectToAction(nameof(Index));
+                return GoBack(from, id);
             }
 
             // 2) Dang_Giao_Hang => HỦY KHÔNG KHÔI PHỤC TỒN
@@ -519,7 +529,7 @@ namespace FE.Controllers
                     ? "Đã hủy đơn trong trạng thái Đang giao hàng (KHÔNG khôi phục tồn)."
                     : "Hủy đơn thất bại.";
 
-                return RedirectToAction(nameof(Index));
+                return GoBack(from, id);
             }
 
             // 3) Da_Xac_Nhan hoặc Dang_Xu_Ly => CHO PHÉP CHỌN SỐ LƯỢNG ĐỂ KHÔI PHỤC
@@ -568,7 +578,7 @@ namespace FE.Controllers
                     : (updateStatusOk ? "Đã huỷ đơn nhưng KHÔNG khôi phục tồn (lỗi cập nhật sản phẩm)."
                                       : "Hủy đơn thất bại.");
 
-                return RedirectToAction(nameof(Index));
+                return GoBack(from, id);
             }
 
             // Các trạng thái khác (phòng thủ): hủy nhưng không khôi phục
@@ -579,17 +589,18 @@ namespace FE.Controllers
                 TempData["msg"] = updateOk
                     ? "Đã hủy đơn."
                     : "Hủy đơn thất bại.";
-                return RedirectToAction(nameof(Index));
+                return GoBack(from, id);
             }
         }
 
         // ============== Gỡ đơn khỏi khung thao tác nhanh ==============
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public IActionResult BoFocus(int id)
+        public IActionResult BoFocus(int id, string? from)
         {
             RemoveFromFocus(id);
-            return RedirectToAction(nameof(Index));
+            TempData["msg"] = "Đã bỏ đơn khỏi khung thao tác nhanh.";
+            return GoBack(from, id);
         }
     }
 

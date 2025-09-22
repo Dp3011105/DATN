@@ -144,6 +144,7 @@
                 <form method="post" action="@Url.Action("XacNhan","QuanLyDonHang")" class="d-inline">
                     @Html.AntiForgeryToken()
                     <input type="hidden" name="id" value="@Model.HoaDon.ID_Hoa_Don" />
+                    <input type="hidden" name="from" value="detail" />
                     <button class="btn btn-sm btn-primary">Xác nhận</button>
                 </form>
             }
@@ -152,6 +153,7 @@
                 <form method="post" action="@Url.Action("BatDauXuLy","QuanLyDonHang")" class="d-inline">
                     @Html.AntiForgeryToken()
                     <input type="hidden" name="id" value="@Model.HoaDon.ID_Hoa_Don" />
+                    <input type="hidden" name="from" value="detail" />
                     <button class="btn btn-sm btn-secondary">Bắt đầu xử lý</button>
                 </form>
             }
@@ -160,6 +162,7 @@
                 <form method="post" action="@Url.Action("BatDauGiaoHang","QuanLyDonHang")" class="d-inline">
                     @Html.AntiForgeryToken()
                     <input type="hidden" name="id" value="@Model.HoaDon.ID_Hoa_Don" />
+                    <input type="hidden" name="from" value="detail" />
                     <button class="btn btn-sm btn-info">Bắt đầu giao</button>
                 </form>
             }
@@ -168,6 +171,7 @@
                 <form method="post" action="@Url.Action("GiaoHangThanhCong","QuanLyDonHang")" class="d-inline">
                     @Html.AntiForgeryToken()
                     <input type="hidden" name="id" value="@Model.HoaDon.ID_Hoa_Don" />
+                    <input type="hidden" name="from" value="detail" />
                     <button class="btn btn-sm btn-success">Giao hàng thành công</button>
                 </form>
             }
@@ -252,7 +256,7 @@
             </div>
         </div>
 
-        @* ===== Tổng kết (giữ nguyên logic của bạn) ===== *@
+        @* ===== Tổng kết giữ nguyên ===== *@
         <div class="col-lg-6">
             @{
                 var toppingMapSubtotal = ViewBag.ToppingMap as Dictionary<int, (string Ten, decimal Gia)>
@@ -394,7 +398,7 @@
     </div>
 </div>
 
-@* ================== MODAL HỦY (giống Index, theo 3 quy tắc) ================== *@
+@* ================== MODAL HỦY (trang ChiTiet) ================== *@
 <div class="modal fade" id="modalHuyDon" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-xl modal-dialog-scrollable">
         <div class="modal-content">
@@ -407,6 +411,7 @@
                 @Html.AntiForgeryToken()
                 <input type="hidden" name="id" id="huy-id" />
                 <input type="hidden" name="status" id="huy-status" />
+                <input type="hidden" name="from" value="detail" />
 
                 <div class="modal-body">
                     <div class="mb-3">
@@ -512,7 +517,7 @@
           return;
         }
 
-        // Cho phép chọn (Da_Xac_Nhan, Dang_Xu_Ly)
+        // Cho phép chọn
         wrapper.classList.remove('d-none');
         const body=tblBody();
         body.innerHTML=`<tr><td colspan="5" class="text-muted">Đang tải...</td></tr>`;
