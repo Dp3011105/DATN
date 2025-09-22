@@ -1,186 +1,4 @@
 ﻿@* @{
-    Layout = null; // Tắt Layout để không kế thừa _Layout.cshtml
-}
-
-
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>AI Chat Widget</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <style>
-        /* Ensure no conflict with host page CSS */
-        .chat-widget * {
-            box-sizing: border-box;
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-        }
-
-        .chat-widget {
-            isolation: isolate; /* Prevent style conflicts with host page */
-        }
-
-            /* Size variants */
-            .chat-widget.size-small {
-                width: 100%;
-                max-width: 20rem; /* 320px */
-                height: 24rem;
-            }
-
-            .chat-widget.size-medium {
-                width: 100%;
-                max-width: 24rem; /* 384px */
-                height: 28rem;
-            }
-
-            .chat-widget.size-large {
-                width: 100%;
-                max-width: 28rem; /* 448px */
-                height: 32rem;
-            }
-
-        /* Responsive adjustments */
-        media (max-width: 640px) {
-            .chat-widget
-
-        {
-            max-width: 100% !important;
-            width: 100% !important;
-            bottom: 0;
-            right: 0;
-            border-radius: 0;
-        }
-
-        }
-    </style>
-</head>
-<body>
-    <div id="chat-box" class="chat-widget fixed bottom-4 right-4 bg-white rounded-2xl shadow-2xl flex flex-col z-50 size-medium">
-        <div class="bg-gradient-to-r from-blue-500 to-indigo-600 text-white p-4 rounded-t-2xl">
-            <h3 class="text-lg font-semibold">AI Chat</h3>
-        </div>
-        <div id="chat-messages" class="flex-1 overflow-y-auto p-4 space-y-3 bg-gray-50 relative">
-            <div id="loading-indicator" class="hidden absolute inset-0 flex items-center justify-center bg-gray-50 bg-opacity-75">
-                <div class="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-blue-500"></div>
-            </div>
-        </div>
-        <div class="p-4 bg-white border-t border-gray-200 rounded-b-2xl">
-            <div class="flex items-center gap-2">
-                <input type="text" id="chat-input" class="flex-1 p-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="Type your message..." />
-                <button onclick="sendMessage()" class="bg-blue-500 text-white p-2 rounded-lg hover:bg-blue-600 transition">
-                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
-                    </svg>
-                </button>
-            </div>
-        </div>
-    </div>
-
-    <script>
-        // Configuration for widget size (can be set externally when embedding)
-        const widgetConfig = {
-            size: 'medium', // Options: 'small', 'medium', 'large'
-            apiUrl: 'https://localhost:7169/api/AIChat/chat' // API endpoint
-        };
-
-        // Apply size class based on config
-        function applyWidgetSize() {
-            const chatBox = document.getElementById('chat-box');
-            chatBox.classList.remove('size-small', 'size-medium', 'size-large');
-            chatBox.classList.add(`size-${widgetConfig.size}`);
-        }
-
-        async function sendMessage() {
-            const input = document.getElementById('chat-input');
-            const query = input.value.trim();
-            if (!query) return;
-
-            // Display user message
-            appendMessage(query, 'user');
-            input.value = '';
-
-            // Show loading indicator
-            const loadingIndicator = document.getElementById('loading-indicator');
-            loadingIndicator.classList.remove('hidden');
-
-            try {
-                const response = await fetch(widgetConfig.apiUrl, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify({ query: query })
-                });
-
-                if (!response.ok) throw new Error('API call failed');
-
-                const data = await response.json();
-
-                // Simulate 2-second delay
-                await new Promise(resolve => setTimeout(resolve, 2000));
-
-                // Hide loading indicator
-                loadingIndicator.classList.add('hidden');
-
-                // Display text responses with typewriter effect
-                for (const text of data.textResponses) {
-                    await typeMessage(text, 'bot');
-                }
-            } catch (error) {
-                // Hide loading indicator
-                loadingIndicator.classList.add('hidden');
-                await typeMessage('Error: Unable to connect to AI service', 'bot');
-            }
-        }
-
-        function appendMessage(text, sender) {
-            const messagesDiv = document.getElementById('chat-messages');
-            const messageDiv = document.createElement('div');
-            messageDiv.className = `p-3 rounded-lg max-w-[80%] ${sender === 'user' ? 'bg-blue-100 ml-auto' : 'bg-gray-200 mr-auto'}`;
-            messageDiv.textContent = text;
-            messagesDiv.appendChild(messageDiv);
-            messagesDiv.scrollTop = messagesDiv.scrollHeight;
-        }
-
-        async function typeMessage(text, sender) {
-            const messagesDiv = document.getElementById('chat-messages');
-            const messageDiv = document.createElement('div');
-            messageDiv.className = `p-3 rounded-lg max-w-[80%] ${sender === 'user' ? 'bg-blue-100 ml-auto' : 'bg-gray-200 mr-auto'}`;
-            messagesDiv.appendChild(messageDiv);
-
-            // Typewriter effect
-            for (let i = 0; i < text.length; i++) {
-                messageDiv.textContent += text[i];
-                messagesDiv.scrollTop = messagesDiv.scrollHeight;
-                await new Promise(resolve => setTimeout(resolve, 30)); // Adjust speed (30ms per character)
-            }
-        }
-
-        // Send message on Enter key
-        document.getElementById('chat-input').addEventListener('keypress', function (e) {
-            if (e.key === 'Enter') {
-                sendMessage();
-            }
-        });
-
-        // Initialize widget size
-        applyWidgetSize();
-
-        // Optional: Allow external configuration via window object
-        window.addEventListener('load', () => {
-            if (window.chatWidgetConfig) {
-                Object.assign(widgetConfig, window.chatWidgetConfig);
-                applyWidgetSize();
-            }
-        });
-    </script>
-</body>
-</html> *@
-
-
-
-@{
     Layout = null; // Không kế thừa layout
 }
 
@@ -206,7 +24,7 @@
     <div id="chat-box" class="chat-widget fixed inset-0 w-screen h-screen bg-white shadow-2xl flex flex-col z-50">
         <!-- Header -->
         <div class="bg-gradient-to-r from-blue-500 to-indigo-600 text-white p-4">
-            <h3 class="text-lg font-semibold">AI Chat</h3>
+            <h3 class="text-lg font-semibold">Chat Với AI THEBOY</h3>
         </div>
 
         <!-- Messages -->
@@ -296,6 +114,152 @@
         document.getElementById('chat-input').addEventListener('keypress', function (e) {
             if (e.key === 'Enter') sendMessage();
         });
+    </script>
+</body>
+</html>
+ *@
+
+
+
+
+
+
+
+
+
+
+
+
+
+@{
+    Layout = null; // Không kế thừa layout
+}
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>AI Chat Fullscreen</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        .chat-widget * {
+            box-sizing: border-box;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+        }
+
+        .chat-widget {
+            isolation: isolate;
+        }
+    </style>
+</head>
+<body class="m-0 p-0">
+    <div id="chat-box" class="chat-widget fixed inset-0 w-screen h-screen bg-white shadow-2xl flex flex-col z-50">
+        <!-- Header -->
+        <div class="bg-gradient-to-r from-blue-500 to-indigo-600 text-white p-4">
+            <h3 class="text-lg font-semibold">Bot TheBoy </h3>
+        </div>
+
+        <!-- Messages -->
+        <div id="chat-messages" class="flex-1 overflow-y-auto p-4 space-y-3 bg-gray-50 relative">
+            <div id="loading-indicator" class="hidden absolute inset-0 flex items-center justify-center bg-gray-50 bg-opacity-75">
+                <div class="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-blue-500"></div>
+            </div>
+        </div>
+
+        <!-- Input -->
+        <div class="p-4 bg-white border-t border-gray-200">
+            <div class="flex items-center gap-2">
+                <input type="text" id="chat-input"
+                       class="flex-1 p-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                       placeholder="Nhập tin nhắn..." />
+                <button id="send-button" onclick="sendMessage()"
+                        class="bg-blue-500 text-white p-2 rounded-lg hover:bg-blue-600 transition">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                              d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
+                    </svg>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const widgetConfig = {
+            apiUrl: 'https://localhost:7169/api/AIChat/chat'
+        };
+
+        async function sendMessage() {
+            const input = document.getElementById('chat-input');
+            const sendButton = document.getElementById('send-button');
+            const query = input.value.trim();
+            if (!query) return;
+
+            appendMessage(query, 'user');
+            input.value = '';
+
+            const loadingIndicator = document.getElementById('loading-indicator');
+            loadingIndicator.classList.remove('hidden');
+            input.disabled = true;
+            sendButton.disabled = true;
+
+            try {
+                const response = await fetch(widgetConfig.apiUrl, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ query })
+                });
+
+                if (!response.ok) throw new Error('API call failed');
+                const data = await response.json();
+
+                await new Promise(resolve => setTimeout(resolve, 1000));
+                loadingIndicator.classList.add('hidden');
+
+                for (const text of data.textResponses) {
+                    await typeMessage(text, 'bot');
+                }
+            } catch (error) {
+                loadingIndicator.classList.add('hidden');
+                await typeMessage('⚠️ Lỗi: Không thể kết nối tới dịch vụ AI', 'bot');
+            } finally {
+                input.disabled = false;
+                sendButton.disabled = false;
+            }
+        }
+
+        function appendMessage(text, sender) {
+            const messagesDiv = document.getElementById('chat-messages');
+            const messageDiv = document.createElement('div');
+            messageDiv.className = `p-3 rounded-lg max-w-[80%] break-words ${sender === 'user' ? 'bg-blue-100 ml-auto' : 'bg-gray-200 mr-auto'}`;
+            messageDiv.textContent = text;
+            messagesDiv.appendChild(messageDiv);
+            messagesDiv.scrollTop = messagesDiv.scrollHeight;
+        }
+
+        async function typeMessage(text, sender) {
+            const messagesDiv = document.getElementById('chat-messages');
+            const messageDiv = document.createElement('div');
+            messageDiv.className = `p-3 rounded-lg max-w-[80%] break-words ${sender === 'user' ? 'bg-blue-100 ml-auto' : 'bg-gray-200 mr-auto'}`;
+            messagesDiv.appendChild(messageDiv);
+
+            for (let i = 0; i < text.length; i++) {
+                messageDiv.textContent += text[i];
+                messagesDiv.scrollTop = messagesDiv.scrollHeight;
+                await new Promise(resolve => setTimeout(resolve, 20));
+            }
+        }
+
+        document.getElementById('chat-input').addEventListener('keypress', function (e) {
+            if (e.key === 'Enter') sendMessage();
+        });
+
+        async function initChat() {
+            await typeMessage("Bạn cần mình tìm kiếm sản phẩm gì nào ?", 'bot');
+            await typeMessage("Trò chuyện 1 xíu để cùng tìm kiếm nhé", 'bot');
+        }
+
+        initChat();
     </script>
 </body>
 </html>

@@ -6,7 +6,7 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace FE.Controllers
 {
-    [RoleAuthorize(2, 3)] // Trang cho phép cả vai trò 2,3
+    [RoleAuthorize(2)] // Trang cho phép cả vai trò 2,3
     // Phương thức này đươc để trong thư mục Filters nhé ae
     public class VoucherFEController : Controller
     {

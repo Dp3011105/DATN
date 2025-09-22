@@ -169,7 +169,7 @@ namespace BE.Controllers
             var emailBody = $"Chào mừng bạn đến với Trà Sữa TheBoy!\n\nTên người dùng: {request.Ten_Nguoi_Dung}\nCảm ơn bạn đã đăng ký tài khoản.";
             await _emailService.SendEmailAsync(khachHang.Email, "Chào mừng đến với Trà Sữa TheBoy", emailBody);
 
-            return Ok("Đăng ký thành công. Vui lòng kiểm tra email để nhận thông báo chào mừng.");
+            return Ok("Bạn đã đăng ký thành công , Chào mừng bạn đến với Trà Sữa TheBoy ");
         }
 
 

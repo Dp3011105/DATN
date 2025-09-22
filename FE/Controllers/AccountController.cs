@@ -128,13 +128,17 @@ namespace FE.Controllers
                         });
 
                         // Kiểm tra vai trò và chuyển hướng
-                        if (response.VaiTros.Contains(2) || response.VaiTros.Contains(3)) // Admin hoặc Nhân Viên
+                        if (response.VaiTros.Contains(2) ) // Admin 
                         {
                             return RedirectToAction("Index", "ThongKe");
                         }
                         else if (response.VaiTros.Contains(1)) // Khách Hàng
                         {
                             return RedirectToAction("Index", "HomeKhachHang");
+                        }
+                        else if (response.VaiTros.Contains(3)) // nhan vien
+                        {
+                            return RedirectToAction("Index", "QuanLyDonHang");
                         }
                         else
                         {

@@ -3,25 +3,22 @@
 }
 
 <div class="container mt-5">
-    <div class="card shadow-lg border-0 rounded-4">
-        <div class="card-header bg-primary text-white text-center rounded-top-4">
+    <div class="card shadow border-0 rounded-3">
+        <div class="card-header bg-primary text-white text-center rounded-top-3">
             <h3>🔍 Tra cứu hóa đơn</h3>
-            <p class="mb-0">Nhập thông tin để kiểm tra trạng thái đơn hàng</p>
         </div>
         <div class="card-body p-4">
             <form method="post" class="row g-3">
                 <div class="col-md-6">
-                    <label for="maHoaDon" class="form-label fw-bold">Mã hóa đơn</label>
-                    <input type="text" name="maHoaDon" class="form-control form-control-lg border-primary" placeholder="Nhập mã hóa đơn" required />
+                    <label class="form-label">Mã hóa đơn</label>
+                    <input type="text" name="maHoaDon" class="form-control" placeholder="Nhập mã hóa đơn" required />
                 </div>
                 <div class="col-md-6">
-                    <label for="soDienThoai" class="form-label fw-bold">Số điện thoại</label>
-                    <input type="text" name="soDienThoai" class="form-control form-control-lg border-primary" placeholder="Nhập số điện thoại" required />
+                    <label class="form-label">Số điện thoại</label>
+                    <input type="text" name="soDienThoai" class="form-control" placeholder="Nhập số điện thoại" required />
                 </div>
                 <div class="col-12 text-center">
-                    <button type="submit" class="btn btn-primary btn-lg px-5 rounded-pill shadow">
-                        Tra cứu
-                    </button>
+                    <button type="submit" class="btn btn-primary px-4">Tra cứu</button>
                 </div>
             </form>
         </div>
@@ -29,19 +26,17 @@
 
     @if (ViewBag.Error != null)
     {
-        <div class="alert alert-danger mt-4 text-center fw-bold shadow rounded-3">
-            ❌ @ViewBag.Error
-        </div>
+        <div class="alert alert-danger mt-3 text-center">@ViewBag.Error</div>
     }
 
     @if (ViewBag.Result != null)
     {
         var result = ViewBag.Result;
-        <div class="card mt-4 shadow-lg border-success rounded-4">
-            <div class="card-header bg-success text-white text-center rounded-top-4">
+        <div class="card mt-4 shadow border rounded-3">
+            <div class="card-header bg-success text-white text-center rounded-top-3">
                 <h4>📄 Kết quả tra cứu</h4>
             </div>
-            <div class="card-body p-4">
+            <div class="card-body">
                 <ul class="list-group list-group-flush">
                     <li class="list-group-item"><b>Mã Hóa Đơn:</b> @result.ma_Hoa_Don</li>
                     <li class="list-group-item"><b>Địa Chỉ:</b> @result.dia_Chi_Tu_Nhap</li>
@@ -50,7 +45,78 @@
                     <li class="list-group-item"><b>Trạng Thái:</b> <span class="badge bg-warning text-dark">@result.trang_Thai</span></li>
                     <li class="list-group-item"><b>Ghi Chú:</b> @result.ghi_Chu</li>
                 </ul>
+
+                @if (result.trang_Thai == "Chua_Xac_Nhan")
+                {
+                    <div class="mt-3 text-center">
+                        <button class="btn btn-danger" onclick="showCancelModal(@result.iD_Hoa_Don)">Hủy đơn hàng</button>
+                    </div>
+                }
             </div>
         </div>
     }
 </div>
+
+<!-- Modal nhập lý do hủy -->
+<div class="modal fade" id="cancelModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header bg-danger text-white">
+                <h5 class="modal-title">Hủy đơn hàng</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <input type="hidden" id="cancelOrderId" />
+                <div class="mb-3">
+                    <label class="form-label">Lý do hủy</label>
+                    <textarea class="form-control" id="cancelReason" rows="3" placeholder="Nhập lý do hủy đơn..." required></textarea>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Đóng</button>
+                <button type="button" class="btn btn-danger" onclick="submitCancel()">Xác nhận hủy</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        function showCancelModal(orderId) {
+            document.getElementById("cancelOrderId").value = orderId;
+            var modal = new bootstrap.Modal(document.getElementById('cancelModal'));
+            modal.show();
+        }
+
+        async function submitCancel() {
+            const orderId = document.getElementById("cancelOrderId").value;
+            const reason = document.getElementById("cancelReason").value.trim();
+
+            if (!reason) {
+                alert("Vui lòng nhập lý do hủy đơn!");
+                return;
+            }
+
+            try {
+                const response = await fetch(`https://localhost:7169/api/TraCuuHoaDon/hoan-tra/${orderId}`, {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ lyDoHuyDon: reason })
+                });
+
+                const text = await response.text();
+                let data;
+                try { data = JSON.parse(text); } catch { data = { message: text }; }
+
+                if (response.ok) {
+                    alert(data.message || "Đã hủy đơn thành công.");
+                    location.reload();
+                } else {
+                    alert("Hủy đơn thất bại: " + (data.message || text));
+                }
+            } catch (err) {
+                alert("Có lỗi khi gọi API: " + err.message);
+            }
+        }
+    </script>
+}
