@@ -1,4 +1,4 @@
-﻿@model FE.Models.ProductDetailViewModel
+﻿@* @model FE.Models.ProductDetailViewModel
 @{
     Layout = "~/Views/Shared/_AdminLayout.cshtml";
     ViewData["Title"] = "Quản lý chi tiết sản phẩm";
@@ -1182,4 +1182,1113 @@
     </script>
 </body>
 </html>
-```
+ *@
+
+
+
+@model FE.Models.ProductDetailViewModel
+@{
+    Layout = "~/Views/Shared/_AdminLayout.cshtml";
+    ViewData["Title"] = "Quản lý chi tiết sản phẩm";
+
+    TimeZoneInfo vnTimeZone;
+    try
+    {
+        vnTimeZone = TimeZoneInfo.FindSystemTimeZoneById("SE Asia Standard Time");
+    }
+    catch
+    {
+        vnTimeZone = TimeZoneInfo.FindSystemTimeZoneById("Asia/Ho_Chi_Minh");
+    }
+    var currentDate = TimeZoneInfo.ConvertTimeFromUtc(DateTime.UtcNow, vnTimeZone);
+    ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+    ///
+    ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+    int pageSize = 10;
+    int doNgotActivePage = ViewBag.DoNgotActivePage != null ? (int)ViewBag.DoNgotActivePage : 1;
+    int doNgotInactivePage = ViewBag.DoNgotInactivePage != null ? (int)ViewBag.DoNgotInactivePage : 1;
+    int sizeActivePage = ViewBag.SizeActivePage != null ? (int)ViewBag.SizeActivePage : 1;
+    int sizeInactivePage = ViewBag.SizeInactivePage != null ? (int)ViewBag.SizeInactivePage : 1;
+    int toppingActivePage = ViewBag.ToppingActivePage != null ? (int)ViewBag.ToppingActivePage : 1;
+    int toppingInactivePage = ViewBag.ToppingInactivePage != null ? (int)ViewBag.ToppingInactivePage : 1;
+    int luongDaActivePage = ViewBag.LuongDaActivePage != null ? (int)ViewBag.LuongDaActivePage : 1;
+    int luongDaInactivePage = ViewBag.LuongDaInactivePage != null ? (int)ViewBag.LuongDaInactivePage : 1;
+
+
+    // dùng OrderBy để đảo ngược nhá , tôi nghĩ để hiển thị dữ liệu mới nhất hơn
+    var doNgotActive = Model.DoNgots.Where(x => x.Trang_Thai).OrderByDescending(x => x.ID_DoNgot).ToList();
+    var doNgotInactive = Model.DoNgots.Where(x => !x.Trang_Thai).OrderByDescending(x => x.ID_DoNgot).ToList();
+    var sizeActive = Model.Sizes.Where(x => x.Trang_Thai).OrderByDescending(x => x.ID_Size).ToList();
+    var sizeInactive = Model.Sizes.Where(x => !x.Trang_Thai).OrderByDescending(x => x.ID_Size).ToList();
+    var toppingActive = Model.Toppings.Where(x => x.Trang_Thai).OrderByDescending(x => x.ID_Topping).ToList();
+    var toppingInactive = Model.Toppings.Where(x => !x.Trang_Thai).OrderByDescending(x => x.ID_Topping).ToList();
+    var luongDaActive = Model.LuongDas.Where(x => x.Trang_Thai).OrderByDescending(x => x.ID_LuongDa).ToList();
+    var luongDaInactive = Model.LuongDas.Where(x => !x.Trang_Thai).OrderByDescending(x => x.ID_LuongDa).ToList();
+
+    int totalDoNgotActivePages = (int)Math.Ceiling((double)doNgotActive.Count / pageSize);
+    int totalDoNgotInactivePages = (int)Math.Ceiling((double)doNgotInactive.Count / pageSize);
+    int totalSizeActivePages = (int)Math.Ceiling((double)sizeActive.Count / pageSize);
+    int totalSizeInactivePages = (int)Math.Ceiling((double)sizeInactive.Count / pageSize);
+    int totalToppingActivePages = (int)Math.Ceiling((double)toppingActive.Count / pageSize);
+    int totalToppingInactivePages = (int)Math.Ceiling((double)toppingInactive.Count / pageSize);
+    int totalLuongDaActivePages = (int)Math.Ceiling((double)luongDaActive.Count / pageSize);
+    int totalLuongDaInactivePages = (int)Math.Ceiling((double)luongDaInactive.Count / pageSize);
+
+    var pagedDoNgotActive = doNgotActive.Skip((doNgotActivePage - 1) * pageSize).Take(pageSize).ToList();
+    var pagedDoNgotInactive = doNgotInactive.Skip((doNgotInactivePage - 1) * pageSize).Take(pageSize).ToList();
+    var pagedSizeActive = sizeActive.Skip((sizeActivePage - 1) * pageSize).Take(pageSize).ToList();
+    var pagedSizeInactive = sizeInactive.Skip((sizeInactivePage - 1) * pageSize).Take(pageSize).ToList();
+    var pagedToppingActive = toppingActive.Skip((toppingActivePage - 1) * pageSize).Take(pageSize).ToList();
+    var pagedToppingInactive = toppingInactive.Skip((toppingInactivePage - 1) * pageSize).Take(pageSize).ToList();
+    var pagedLuongDaActive = luongDaActive.Skip((luongDaActivePage - 1) * pageSize).Take(pageSize).ToList();
+    var pagedLuongDaInactive = luongDaInactive.Skip((luongDaInactivePage - 1) * pageSize).Take(pageSize).ToList();
+}
+
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quản lý chi tiết sản phẩm</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css" />
+</head>
+<body>
+    <div class="container-fluid my-5">
+        <div class="stats-container">
+            <button class="stat-card stat-total" onclick="filterStatus('all')">
+                <i class="fas fa-boxes"></i>
+                Tổng mục
+                <strong>@(Model.DoNgots.Count + Model.Sizes.Count + Model.Toppings.Count + Model.LuongDas.Count)</strong>
+            </button>
+            <button class="stat-card stat-active" onclick="filterStatus('active')">
+                <i class="fas fa-check-circle"></i>
+                Hoạt động
+                <strong>@(doNgotActive.Count + sizeActive.Count + toppingActive.Count + luongDaActive.Count)</strong>
+            </button>
+            <button class="stat-card stat-inactive" onclick="filterStatus('inactive')">
+                <i class="fas fa-ban"></i>
+                Không hoạt động
+                <strong>@(doNgotInactive.Count + sizeInactive.Count + toppingInactive.Count + luongDaInactive.Count)</strong>
+            </button>
+        </div>
+
+        <ul class="nav nav-tabs mb-4" id="productTabs" role="tablist">
+            <li class="nav-item">
+                <a class="nav-link active" id="doNgot-tab" data-bs-toggle="tab" href="#doNgot" role="tab">Độ ngọt</a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" id="size-tab" data-bs-toggle="tab" href="#size" role="tab">Size</a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" id="topping-tab" data-bs-toggle="tab" href="#topping" role="tab">Topping</a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" id="luongDa-tab" data-bs-toggle="tab" href="#luongDa" role="tab">Lượng đá</a>
+            </li>
+        </ul>
+
+        <div class="tab-content">
+            <div class="tab-pane fade show active" id="doNgot" role="tabpanel">
+                <div class="d-flex justify-content-between mb-3">
+                    <button class="btn btn-primary btn-sm" onclick="showAddModal('DoNgot')">
+                        <i class="fas fa-plus me-2"></i>Thêm độ ngọt
+                    </button>
+                    <div class="input-group w-50">
+                        <span class="input-group-text"><i class="fas fa-search"></i></span>
+                        <input type="text" class="form-control" id="doNgotSearch" placeholder="Tìm kiếm độ ngọt..." onkeyup="searchTable('doNgot')">
+                    </div>
+                </div>
+                <ul class="nav nav-pills mb-3" id="doNgotStatusTabs" role="tablist">
+                    <li class="nav-item">
+                        <a class="nav-link active" id="doNgot-active-tab" data-bs-toggle="pill" href="#doNgot-active" role="tab">Hoạt động</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" id="doNgot-inactive-tab" data-bs-toggle="pill" href="#doNgot-inactive" role="tab">Không hoạt động</a>
+                    </li>
+                </ul>
+                <div class="tab-content">
+                    <div class="tab-pane fade show active" id="doNgot-active" role="tabpanel">
+                        <table class="table table-hover table-bordered table-custom">
+                            <thead class="table-dark">
+                                <tr>
+                                    <th>ID</th>
+                                    <th>Mức độ</th>
+                                    <th>Ghi chú</th>
+                                    <th>Hành động</th>
+                                </tr>
+                            </thead>
+                            <tbody id="doNgotTableActive">
+                                @foreach (var item in pagedDoNgotActive)
+                                {
+                                    <tr>
+                                        <td>@item.ID_DoNgot</td>
+                                        <td>@item.Muc_Do</td>
+                                        <td>@item.Ghi_Chu</td>
+                                        <td>
+                                            <button class="btn btn-info btn-sm me-1" onclick="showDetailModal('DoNgot', @item.ID_DoNgot)">
+                                                <i class="bi bi-eye"></i> Chi tiết
+                                            </button>
+                                            <button class="btn btn-warning btn-sm" onclick="showEditModal('DoNgot', @item.ID_DoNgot)">
+                                                <i class="bi bi-pencil"></i> Sửa
+                                            </button>
+                                        </td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                        <div class="pagination-container">
+                            <ul class="pagination">
+                                <li class="@(doNgotActivePage == 1 ? "disabled" : "")">
+                                    <a href="@Url.Action("Index", new { doNgotActivePage = doNgotActivePage - 1, doNgotInactivePage, sizeActivePage, sizeInactivePage, toppingActivePage, toppingInactivePage, luongDaActivePage, luongDaInactivePage })">&laquo;</a>
+                                </li>
+                                @for (int i = 1; i <= totalDoNgotActivePages; i++)
+                                {
+                                    <li class="@(i == doNgotActivePage ? "active" : "")">
+                                        <a href="@Url.Action("Index", new { doNgotActivePage = i, doNgotInactivePage, sizeActivePage, sizeInactivePage, toppingActivePage, toppingInactivePage, luongDaActivePage, luongDaInactivePage })">@i</a>
+                                    </li>
+                                }
+                                <li class="@(doNgotActivePage == totalDoNgotActivePages ? "disabled" : "")">
+                                    <a href="@Url.Action("Index", new { doNgotActivePage = doNgotActivePage + 1, doNgotInactivePage, sizeActivePage, sizeInactivePage, toppingActivePage, toppingInactivePage, luongDaActivePage, luongDaInactivePage })">&raquo;</a>
+                                </li>
+                            </ul>
+                        </div>
+                    </div>
+                    <div class="tab-pane fade" id="doNgot-inactive" role="tabpanel">
+                        <table class="table table-hover table-bordered table-custom">
+                            <thead class="table-dark">
+                                <tr>
+                                    <th>ID</th>
+                                    <th>Mức độ</th>
+                                    <th>Ghi chú</th>
+                                    <th>Hành động</th>
+                                </tr>
+                            </thead>
+                            <tbody id="doNgotTableInactive">
+                                @foreach (var item in pagedDoNgotInactive)
+                                {
+                                    <tr>
+                                        <td>@item.ID_DoNgot</td>
+                                        <td>@item.Muc_Do</td>
+                                        <td>@item.Ghi_Chu</td>
+                                        <td>
+                                            <button class="btn btn-info btn-sm me-1" onclick="showDetailModal('DoNgot', @item.ID_DoNgot)">
+                                                <i class="bi bi-eye"></i> Chi tiết
+                                            </button>
+                                            <button class="btn btn-warning btn-sm" onclick="showEditModal('DoNgot', @item.ID_DoNgot)">
+                                                <i class="bi bi-pencil"></i> Sửa
+                                            </button>
+                                        </td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                        <div class="pagination-container">
+                            <ul class="pagination">
+                                <li class="@(doNgotInactivePage == 1 ? "disabled" : "")">
+                                    <a href="@Url.Action("Index", new { doNgotActivePage, doNgotInactivePage = doNgotInactivePage - 1, sizeActivePage, sizeInactivePage, toppingActivePage, toppingInactivePage, luongDaActivePage, luongDaInactivePage })">&laquo;</a>
+                                </li>
+                                @for (int i = 1; i <= totalDoNgotInactivePages; i++)
+                                {
+                                    <li class="@(i == doNgotInactivePage ? "active" : "")">
+                                        <a href="@Url.Action("Index", new { doNgotActivePage, doNgotInactivePage = i, sizeActivePage, sizeInactivePage, toppingActivePage, toppingInactivePage, luongDaActivePage, luongDaInactivePage })">@i</a>
+                                    </li>
+                                }
+                                <li class="@(doNgotInactivePage == totalDoNgotInactivePages ? "disabled" : "")">
+                                    <a href="@Url.Action("Index", new { doNgotActivePage, doNgotInactivePage = doNgotInactivePage + 1, sizeActivePage, sizeInactivePage, toppingActivePage, toppingInactivePage, luongDaActivePage, luongDaInactivePage })">&raquo;</a>
+                                </li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="tab-pane fade" id="size" role="tabpanel">
+                <div class="d-flex justify-content-between mb-3">
+                    <button class="btn btn-primary btn-sm" onclick="showAddModal('Size')">
+                        <i class="fas fa-plus me-2"></i>Thêm size
+                    </button>
+                    <div class="input-group w-50">
+                        <span class="input-group-text"><i class="fas fa-search"></i></span>
+                        <input type="text" class="form-control" id="sizeSearch" placeholder="Tìm kiếm size..." onkeyup="searchTable('size')">
+                    </div>
+                </div>
+                <ul class="nav nav-pills mb-3" id="sizeStatusTabs" role="tablist">
+                    <li class="nav-item">
+                        <a class="nav-link active" id="size-active-tab" data-bs-toggle="pill" href="#size-active" role="tab">Hoạt động</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" id="size-inactive-tab" data-bs-toggle="pill" href="#size-inactive" role="tab">Không hoạt động</a>
+                    </li>
+                </ul>
+                <div class="tab-content">
+                    <div class="tab-pane fade show active" id="size-active" role="tabpanel">
+                        <table class="table table-hover table-bordered table-custom">
+                            <thead class="table-dark">
+                                <tr>
+                                    <th>ID</th>
+                                    <th>Tên size</th>
+                                    <th>Giá</th>
+                                    <th>Hành động</th>
+                                </tr>
+                            </thead>
+                            <tbody id="sizeTableActive">
+                                @foreach (var item in pagedSizeActive)
+                                {
+                                    <tr>
+                                        <td>@item.ID_Size</td>
+                                        <td>@item.SizeName</td>
+                                        <td>@string.Format("{0:N0} đ", item.Gia)</td>
+                                        <td>
+                                            <button class="btn btn-info btn-sm me-1" onclick="showDetailModal('Size', @item.ID_Size)">
+                                                <i class="bi bi-eye"></i> Chi tiết
+                                            </button>
+                                            <button class="btn btn-warning btn-sm" onclick="showEditModal('Size', @item.ID_Size)">
+                                                <i class="bi bi-pencil"></i> Sửa
+                                            </button>
+                                        </td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                        <div class="pagination-container">
+                            <ul class="pagination">
+                                <li class="@(sizeActivePage == 1 ? "disabled" : "")">
+                                    <a href="@Url.Action("Index", new { doNgotActivePage, doNgotInactivePage, sizeActivePage = sizeActivePage - 1, sizeInactivePage, toppingActivePage, toppingInactivePage, luongDaActivePage, luongDaInactivePage })">&laquo;</a>
+                                </li>
+                                @for (int i = 1; i <= totalSizeActivePages; i++)
+                                {
+                                    <li class="@(i == sizeActivePage ? "active" : "")">
+                                        <a href="@Url.Action("Index", new { doNgotActivePage, doNgotInactivePage, sizeActivePage = i, sizeInactivePage, toppingActivePage, toppingInactivePage, luongDaActivePage, luongDaInactivePage })">@i</a>
+                                    </li>
+                                }
+                                <li class="@(sizeActivePage == totalSizeActivePages ? "disabled" : "")">
+                                    <a href="@Url.Action("Index", new { doNgotActivePage, doNgotInactivePage, sizeActivePage = sizeActivePage + 1, sizeInactivePage, toppingActivePage, toppingInactivePage, luongDaActivePage, luongDaInactivePage })">&raquo;</a>
+                                </li>
+                            </ul>
+                        </div>
+                    </div>
+                    <div class="tab-pane fade" id="size-inactive" role="tabpanel">
+                        <table class="table table-hover table-bordered table-custom">
+                            <thead class="table-dark">
+                                <tr>
+                                    <th>ID</th>
+                                    <th>Tên size</th>
+                                    <th>Giá</th>
+                                    <th>Hành động</th>
+                                </tr>
+                            </thead>
+                            <tbody id="sizeTableInactive">
+                                @foreach (var item in pagedSizeInactive)
+                                {
+                                    <tr>
+                                        <td>@item.ID_Size</td>
+                                        <td>@item.SizeName</td>
+                                        <td>@string.Format("{0:N0} đ", item.Gia)</td>
+                                        <td>
+                                            <button class="btn btn-info btn-sm me-1" onclick="showDetailModal('Size', @item.ID_Size)">
+                                                <i class="bi bi-eye"></i> Chi tiết
+                                            </button>
+                                            <button class="btn btn-warning btn-sm" onclick="showEditModal('Size', @item.ID_Size)">
+                                                <i class="bi bi-pencil"></i> Sửa
+                                            </button>
+                                        </td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                        <div class="pagination-container">
+                            <ul class="pagination">
+                                <li class="@(sizeInactivePage == 1 ? "disabled" : "")">
+                                    <a href="@Url.Action("Index", new { doNgotActivePage, doNgotInactivePage, sizeActivePage, sizeInactivePage = sizeInactivePage - 1, toppingActivePage, toppingInactivePage, luongDaActivePage, luongDaInactivePage })">&laquo;</a>
+                                </li>
+                                @for (int i = 1; i <= totalSizeInactivePages; i++)
+                                {
+                                    <li class="@(i == sizeInactivePage ? "active" : "")">
+                                        <a href="@Url.Action("Index", new { doNgotActivePage, doNgotInactivePage, sizeActivePage, sizeInactivePage = i, toppingActivePage, toppingInactivePage, luongDaActivePage, luongDaInactivePage })">@i</a>
+                                    </li>
+                                }
+                                <li class="@(sizeInactivePage == totalSizeInactivePages ? "disabled" : "")">
+                                    <a href="@Url.Action("Index", new { doNgotActivePage, doNgotInactivePage, sizeActivePage, sizeInactivePage = sizeInactivePage + 1, toppingActivePage, toppingInactivePage, luongDaActivePage, luongDaInactivePage })">&raquo;</a>
+                                </li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="tab-pane fade" id="topping" role="tabpanel">
+                <div class="d-flex justify-content-between mb-3">
+                    <button class="btn btn-primary btn-sm" onclick="showAddModal('Topping')">
+                        <i class="fas fa-plus me-2"></i>Thêm topping
+                    </button>
+                    <div class="input-group w-50">
+                        <span class="input-group-text"><i class="fas fa-search"></i></span>
+                        <input type="text" class="form-control" id="toppingSearch" placeholder="Tìm kiếm topping..." onkeyup="searchTable('topping')">
+                    </div>
+                </div>
+                <ul class="nav nav-pills mb-3" id="toppingStatusTabs" role="tablist">
+                    <li class="nav-item">
+                        <a class="nav-link active" id="topping-active-tab" data-bs-toggle="pill" href="#topping-active" role="tab">Hoạt động</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" id="topping-inactive-tab" data-bs-toggle="pill" href="#topping-inactive" role="tab">Không hoạt động</a>
+                    </li>
+                </ul>
+                <div class="tab-content">
+                    <div class="tab-pane fade show active" id="topping-active" role="tabpanel">
+                        <table class="table table-hover table-bordered table-custom">
+                            <thead class="table-dark">
+                                <tr>
+                                    <th>ID</th>
+                                    <th>Tên</th>
+                                    <th>Giá</th>
+                                    <th>Số lượng</th>
+                                    <th>Hình ảnh</th>
+                                    <th>Ghi chú</th>
+                                    <th>Hành động</th>
+                                </tr>
+                            </thead>
+                            <tbody id="toppingTableActive">
+                                @foreach (var item in pagedToppingActive)
+                                {
+                                    <tr>
+                                        <td>@item.ID_Topping</td>
+                                        <td>@item.Ten</td>
+                                        <td>@string.Format("{0:N0} đ", item.Gia)</td>
+                                        <td>@item.So_Luong</td>
+                                        <td>
+                                            @{
+                                                var imageUrl = string.IsNullOrEmpty(item.Hinh_Anh) ? "https://via.placeholder.com/50" : "https://localhost:7169" + item.Hinh_Anh;
+                                                <img src="@imageUrl" alt="@item.Ten" style="width: 50px; height: 50px; object-fit: cover;" loading="lazy" />
+                                            }
+                                        </td>
+                                        <td>@item.Ghi_Chu</td>
+                                        <td>
+                                            <button class="btn btn-info btn-sm me-1" onclick="showDetailModal('Topping', @item.ID_Topping)">
+                                                <i class="bi bi-eye"></i> Chi tiết
+                                            </button>
+                                            <button class="btn btn-warning btn-sm" onclick="showEditModal('Topping', @item.ID_Topping)">
+                                                <i class="bi bi-pencil"></i> Sửa
+                                            </button>
+                                        </td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                        <div class="pagination-container">
+                            <ul class="pagination">
+                                <li class="@(toppingActivePage == 1 ? "disabled" : "")">
+                                    <a href="@Url.Action("Index", new { doNgotActivePage, doNgotInactivePage, sizeActivePage, sizeInactivePage, toppingActivePage = toppingActivePage - 1, toppingInactivePage, luongDaActivePage, luongDaInactivePage })">&laquo;</a>
+                                </li>
+                                @for (int i = 1; i <= totalToppingActivePages; i++)
+                                {
+                                    <li class="@(i == toppingActivePage ? "active" : "")">
+                                        <a href="@Url.Action("Index", new { doNgotActivePage, doNgotInactivePage, sizeActivePage, sizeInactivePage, toppingActivePage = i, toppingInactivePage, luongDaActivePage, luongDaInactivePage })">@i</a>
+                                    </li>
+                                }
+                                <li class="@(toppingActivePage == totalToppingActivePages ? "disabled" : "")">
+                                    <a href="@Url.Action("Index", new { doNgotActivePage, doNgotInactivePage, sizeActivePage, sizeInactivePage, toppingActivePage = toppingActivePage + 1, toppingInactivePage, luongDaActivePage, luongDaInactivePage })">&raquo;</a>
+                                </li>
+                            </ul>
+                        </div>
+                    </div>
+                    <div class="tab-pane fade" id="topping-inactive" role="tabpanel">
+                        <table class="table table-hover table-bordered table-custom">
+                            <thead class="table-dark">
+                                <tr>
+                                    <th>ID</th>
+                                    <th>Tên</th>
+                                    <th>Giá</th>
+                                    <th>Số lượng</th>
+                                    <th>Hình ảnh</th>
+                                    <th>Ghi chú</th>
+                                    <th>Hành động</th>
+                                </tr>
+                            </thead>
+                            <tbody id="toppingTableInactive">
+                                @foreach (var item in pagedToppingInactive)
+                                {
+                                    <tr>
+                                        <td>@item.ID_Topping</td>
+                                        <td>@item.Ten</td>
+                                        <td>@string.Format("{0:N0} đ", item.Gia)</td>
+                                        <td>@item.So_Luong</td>
+                                        <td>
+                                            @{
+                                                var imageUrl = string.IsNullOrEmpty(item.Hinh_Anh) ? "https://via.placeholder.com/50" : "https://localhost:7169" + item.Hinh_Anh;
+                                                <img src="@imageUrl" alt="@item.Ten" style="width: 50px; height: 50px; object-fit: cover;" loading="lazy" />
+                                            }
+                                        </td>
+                                        <td>@item.Ghi_Chu</td>
+                                        <td>
+                                            <button class="btn btn-info btn-sm me-1" onclick="showDetailModal('Topping', @item.ID_Topping)">
+                                                <i class="bi bi-eye"></i> Chi tiết
+                                            </button>
+                                            <button class="btn btn-warning btn-sm" onclick="showEditModal('Topping', @item.ID_Topping)">
+                                                <i class="bi bi-pencil"></i> Sửa
+                                            </button>
+                                        </td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                        <div class="pagination-container">
+                            <ul class="pagination">
+                                <li class="@(toppingInactivePage == 1 ? "disabled" : "")">
+                                    <a href="@Url.Action("Index", new { doNgotActivePage, doNgotInactivePage, sizeActivePage, sizeInactivePage, toppingActivePage, toppingInactivePage = toppingInactivePage - 1, luongDaActivePage, luongDaInactivePage })">&laquo;</a>
+                                </li>
+                                @for (int i = 1; i <= totalToppingInactivePages; i++)
+                                {
+                                    <li class="@(i == toppingInactivePage ? "active" : "")">
+                                        <a href="@Url.Action("Index", new { doNgotActivePage, doNgotInactivePage, sizeActivePage, sizeInactivePage, toppingActivePage, toppingInactivePage = i, luongDaActivePage, luongDaInactivePage })">@i</a>
+                                    </li>
+                                }
+                                <li class="@(toppingInactivePage == totalToppingInactivePages ? "disabled" : "")">
+                                    <a href="@Url.Action("Index", new { doNgotActivePage, doNgotInactivePage, sizeActivePage, sizeInactivePage, toppingActivePage, toppingInactivePage = toppingInactivePage + 1, luongDaActivePage, luongDaInactivePage })">&raquo;</a>
+                                </li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="tab-pane fade" id="luongDa" role="tabpanel">
+                <div class="d-flex justify-content-between mb-3">
+                    <button class="btn btn-primary btn-sm" onclick="showAddModal('LuongDa')">
+                        <i class="fas fa-plus me-2"></i>Thêm lượng đá
+                    </button>
+                    <div class="input-group w-50">
+                        <span class="input-group-text"><i class="fas fa-search"></i></span>
+                        <input type="text" class="form-control" id="luongDaSearch" placeholder="Tìm kiếm lượng đá..." onkeyup="searchTable('luongDa')">
+                    </div>
+                </div>
+                <ul class="nav nav-pills mb-3" id="luongDaStatusTabs" role="tablist">
+                    <li class="nav-item">
+                        <a class="nav-link active" id="luongDa-active-tab" data-bs-toggle="pill" href="#luongDa-active" role="tab">Hoạt động</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" id="luongDa-inactive-tab" data-bs-toggle="pill" href="#luongDa-inactive" role="tab">Không hoạt động</a>
+                    </li>
+                </ul>
+                <div class="tab-content">
+                    <div class="tab-pane fade show active" id="luongDa-active" role="tabpanel">
+                        <table class="table table-hover table-bordered table-custom">
+                            <thead class="table-dark">
+                                <tr>
+                                    <th>ID</th>
+                                    <th>Tên lượng đá</th>
+                                    <th>Hành động</th>
+                                </tr>
+                            </thead>
+                            <tbody id="luongDaTableActive">
+                                @foreach (var item in pagedLuongDaActive)
+                                {
+                                    <tr>
+                                        <td>@item.ID_LuongDa</td>
+                                        <td>@item.Ten_LuongDa</td>
+                                        <td>
+                                            <button class="btn btn-info btn-sm me-1" onclick="showDetailModal('LuongDa', @item.ID_LuongDa)">
+                                                <i class="bi bi-eye"></i> Chi tiết
+                                            </button>
+                                            <button class="btn btn-warning btn-sm" onclick="showEditModal('LuongDa', @item.ID_LuongDa)">
+                                                <i class="bi bi-pencil"></i> Sửa
+                                            </button>
+                                        </td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                        <div class="pagination-container">
+                            <ul class="pagination">
+                                <li class="@(luongDaActivePage == 1 ? "disabled" : "")">
+                                    <a href="@Url.Action("Index", new { doNgotActivePage, doNgotInactivePage, sizeActivePage, sizeInactivePage, toppingActivePage, toppingInactivePage, luongDaActivePage = luongDaActivePage - 1, luongDaInactivePage })">&laquo;</a>
+                                </li>
+                                @for (int i = 1; i <= totalLuongDaActivePages; i++)
+                                {
+                                    <li class="@(i == luongDaActivePage ? "active" : "")">
+                                        <a href="@Url.Action("Index", new { doNgotActivePage, doNgotInactivePage, sizeActivePage, sizeInactivePage, toppingActivePage, toppingInactivePage, luongDaActivePage = i, luongDaInactivePage })">@i</a>
+                                    </li>
+                                }
+                                <li class="@(luongDaActivePage == totalLuongDaActivePages ? "disabled" : "")">
+                                    <a href="@Url.Action("Index", new { doNgotActivePage, doNgotInactivePage, sizeActivePage, sizeInactivePage, toppingActivePage, toppingInactivePage, luongDaActivePage = luongDaActivePage + 1, luongDaInactivePage })">&raquo;</a>
+                                </li>
+                            </ul>
+                        </div>
+                    </div>
+                    <div class="tab-pane fade" id="luongDa-inactive" role="tabpanel">
+                        <table class="table table-hover table-bordered table-custom">
+                            <thead class="table-dark">
+                                <tr>
+                                    <th>ID</th>
+                                    <th>Tên lượng đá</th>
+                                    <th>Hành động</th>
+                                </tr>
+                            </thead>
+                            <tbody id="luongDaTableInactive">
+                                @foreach (var item in pagedLuongDaInactive)
+                                {
+                                    <tr>
+                                        <td>@item.ID_LuongDa</td>
+                                        <td>@item.Ten_LuongDa</td>
+                                        <td>
+                                            <button class="btn btn-info btn-sm me-1" onclick="showDetailModal('LuongDa', @item.ID_LuongDa)">
+                                                <i class="bi bi-eye"></i> Chi tiết
+                                            </button>
+                                            <button class="btn btn-warning btn-sm" onclick="showEditModal('LuongDa', @item.ID_LuongDa)">
+                                                <i class="bi bi-pencil"></i> Sửa
+                                            </button>
+                                        </td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                        <div class="pagination-container">
+                            <ul class="pagination">
+                                <li class="@(luongDaInactivePage == 1 ? "disabled" : "")">
+                                    <a href="@Url.Action("Index", new { doNgotActivePage, doNgotInactivePage, sizeActivePage, sizeInactivePage, toppingActivePage, toppingInactivePage, luongDaActivePage, luongDaInactivePage = luongDaInactivePage - 1 })">&laquo;</a>
+                                </li>
+                                @for (int i = 1; i <= totalLuongDaInactivePages; i++)
+                                {
+                                    <li class="@(i == luongDaInactivePage ? "active" : "")">
+                                        <a href="@Url.Action("Index", new { doNgotActivePage, doNgotInactivePage, sizeActivePage, sizeInactivePage, toppingActivePage, toppingInactivePage, luongDaActivePage, luongDaInactivePage = i })">@i</a>
+                                    </li>
+                                }
+                                <li class="@(luongDaInactivePage == totalLuongDaInactivePages ? "disabled" : "")">
+                                    <a href="@Url.Action("Index", new { doNgotActivePage, doNgotInactivePage, sizeActivePage, sizeInactivePage, toppingActivePage, toppingInactivePage, luongDaActivePage, luongDaInactivePage = luongDaInactivePage + 1 })">&raquo;</a>
+                                </li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="modal fade" id="productModal" tabindex="-1" aria-labelledby="productModalLabel" aria-hidden="true">
+            <div class="modal-dialog modal-lg">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="productModalLabel">Chi tiết</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body" id="modalBody">
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Đóng</button>
+                        <button type="button" class="btn btn-primary" id="saveButton" style="display: none;">Lưu</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <style>
+        .container-fluid {
+            background: #f8f9fa;
+            border-radius: 8px;
+            padding: 20px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        .stats-container {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 18px;
+            margin-bottom: 25px;
+        }
+
+        .stat-card {
+            padding: 25px 15px;
+            border-radius: 18px;
+            text-align: center;
+            font-weight: 600;
+            font-size: 1rem;
+            color: #fff;
+            cursor: pointer;
+            position: relative;
+            overflow: hidden;
+            transition: all 0.4s ease;
+        }
+
+            .stat-card i {
+                font-size: 1.8rem;
+                margin-bottom: 10px;
+                opacity: 0.9;
+            }
+
+            .stat-card strong {
+                display: block;
+                font-size: 1.5rem;
+                margin-top: 5px;
+            }
+
+            .stat-card:hover {
+                transform: translateY(-6px) scale(1.05);
+                box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+            }
+
+        .stat-total {
+            background: linear-gradient(135deg, #2563eb, #3b82f6);
+        }
+
+        .stat-active {
+            background: linear-gradient(135deg, #059669, #10b981);
+        }
+
+        .stat-inactive {
+            background: linear-gradient(135deg, #dc2626, #ef4444);
+        }
+
+        .nav-tabs .nav-link {
+            border-radius: 8px;
+            margin-right: 5px;
+        }
+
+            .nav-tabs .nav-link.active {
+                background-color: #007bff;
+                color: white;
+            }
+
+        .nav-pills .nav-link {
+            border-radius: 8px;
+            margin-right: 5px;
+        }
+
+            .nav-pills .nav-link.active {
+                background-color: #28a745;
+                color: white;
+            }
+
+        .table-custom {
+            border-radius: 8px;
+            overflow: hidden;
+            background: #fff;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+
+            .table-custom thead {
+                background: #343a40;
+                color: #fff;
+            }
+
+            .table-custom tbody tr:hover {
+                background: #f8f9fa;
+            }
+
+        .table th, .table td {
+            vertical-align: middle;
+        }
+
+        .btn-sm {
+            border-radius: 4px;
+            font-weight: 500;
+            padding: 0.25rem 0.5rem;
+        }
+
+        .form-control, .form-select {
+            border-radius: 4px;
+            border: 1px solid #ced4da;
+        }
+
+            .form-control:focus {
+                border-color: #80bdff;
+                box-shadow: 0 0 0 0.2rem rgba(0,123,255,.25);
+            }
+
+        .modal-content {
+            border-radius: 8px;
+        }
+
+        .form-switch .form-check-input {
+            height: 1.5em;
+            width: 3em;
+        }
+
+        .pagination-container {
+            display: flex;
+            justify-content: center;
+            margin-top: 20px;
+        }
+
+        .pagination {
+            gap: 5px;
+        }
+
+            .pagination li a {
+                width: 32px;
+                height: 32px;
+                border-radius: 4px;
+                color: #007bff;
+                background: #fff;
+                border: 1px solid #dee2e6;
+            }
+
+                .pagination li a:hover {
+                    background: #e9ecef;
+                }
+
+            .pagination li.active a {
+                background: #007bff;
+                color: #fff;
+                border-color: #007bff;
+            }
+
+            .pagination li.disabled a {
+                color: #6c757d;
+                background: #fff;
+                border-color: #dee2e6;
+            }
+    </style>
+
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js" integrity="sha256-/xUj+3OJU5yExlq6GSYGSHk7tPXikynS7ogEvDej/m4=" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        function checkCorsError(xhr, error) {
+            if (xhr.status === 0) {
+                return "Yêu cầu bị chặn, có thể do CORS hoặc mixed content (HTTP/HTTPS). Vui lòng kiểm tra: \n" +
+                       "- Server API có cấu hình CORS cho phép origin '" + window.location.origin + "'.\n" +
+                       "- Frontend và API có cùng giao thức (HTTP/HTTPS).\n" +
+                       "- Mạng hoặc firewall không chặn yêu cầu.";
+            }
+            return `Lỗi: ${xhr.status} - ${xhr.statusText}. Phản hồi: ${xhr.responseText || 'Không có phản hồi chi tiết'}`;
+        }
+
+        function getForm(type, data, readOnly = false) {
+            let form = '';
+            if (type === 'DoNgot') {
+                form = `
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Mức độ</label>
+                        <input type="text" class="form-control" id="muc_do" value="${data.muc_Do || ''}" ${readOnly ? 'readonly' : ''} required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Ghi chú</label>
+                        <input type="text" class="form-control" id="ghi_chu" value="${data.ghi_Chu || ''}" ${readOnly ? 'readonly' : ''}>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Trạng thái</label>
+                        <select class="form-select" id="trang_thai" ${readOnly ? 'disabled' : ''}>
+                            <option value="true" ${data.trang_Thai ? 'selected' : ''}>Hoạt động</option>
+                            <option value="false" ${!data.trang_Thai ? 'selected' : ''}>Không hoạt động</option>
+                        </select>
+                    </div>`;
+            } else if (type === 'Size') {
+                form = `
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Tên size</label>
+                        <input type="text" class="form-control" id="sizeName" value="${data.sizeName || ''}" ${readOnly ? 'readonly' : ''} required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Giá</label>
+                        <input type="number" class="form-control" id="gia" value="${data.gia || 0}" ${readOnly ? 'readonly' : ''} required min="0">
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Trạng thái</label>
+                        <select class="form-select" id="trang_thai" ${readOnly ? 'disabled' : ''}>
+                            <option value="true" ${data.trang_Thai ? 'selected' : ''}>Hoạt động</option>
+                            <option value="false" ${!data.trang_Thai ? 'selected' : ''}>Không hoạt động</option>
+                        </select>
+                    </div>`;
+            } else if (type === 'Topping') {
+                const imageUrl = data.hinh_Anh ? `https://localhost:7169${data.hinh_Anh}` : '';
+                form = `
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Tên</label>
+                        <input type="text" class="form-control" id="ten" value="${data.ten || ''}" ${readOnly ? 'readonly' : ''} required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Giá</label>
+                        <input type="number" class="form-control" id="gia" value="${data.gia || 0}" ${readOnly ? 'readonly' : ''} required min="0">
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Số lượng</label>
+                        <input type="number" class="form-control" id="so_luong" value="${data.so_Luong || 0}" ${readOnly ? 'readonly' : ''} required min="0">
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Hình ảnh</label>
+                        ${readOnly && data.hinh_Anh ? `<img src="${imageUrl}" alt="Hình topping" class="img-fluid mb-2" style="max-width: 150px; aspect-ratio: 4/3; object-fit: cover;" />` : ''}
+                        ${!readOnly ? `
+                            <div class="form-check form-switch mb-2">
+                                <input class="form-check-input" type="checkbox" id="changeImageSwitch" />
+                                <label class="form-check-label" for="changeImageSwitch">Thay đổi hình ảnh</label>
+                            </div>
+                            <div id="imageUploadSection" style="display: none;">
+                                <input type="file" class="form-control" id="hinh_anh" accept="image/*" />
+                            </div>` : ''}
+                        ${readOnly && !data.hinh_Anh ? `<span>Không có hình</span>` : ''}
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Ghi chú</label>
+                        <input type="text" class="form-control" id="ghi_chu" value="${data.ghi_Chu || ''}" ${readOnly ? 'readonly' : ''}>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Trạng thái</label>
+                        <select class="form-select" id="trang_thai" ${readOnly ? 'disabled' : ''}>
+                            <option value="true" ${data.trang_Thai ? 'selected' : ''}>Hoạt động</option>
+                            <option value="false" ${!data.trang_Thai ? 'selected' : ''}>Không hoạt động</option>
+                        </select>
+                    </div>`;
+            } else if (type === 'LuongDa') {
+                form = `
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Tên lượng đá</label>
+                        <input type="text" class="form-control" id="ten_luongDa" value="${data.ten_LuongDa || ''}" ${readOnly ? 'readonly' : ''} required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Trạng thái</label>
+                        <select class="form-select" id="trang_thai" ${readOnly ? 'disabled' : ''}>
+                            <option value="true" ${data.trang_Thai ? 'selected' : ''}>Hoạt động</option>
+                            <option value="false" ${!data.trang_Thai ? 'selected' : ''}>Không hoạt động</option>
+                        </select>
+                    </div>`;
+            }
+            return form;
+        }
+
+        async function uploadImage(file) {
+            if (!file) return null;
+            const formData = new FormData();
+            formData.append("image", file);
+            try {
+                const response = await $.ajax({
+                    url: "https://localhost:7169/api/SanPham/upload-image",
+                    type: "POST",
+                    data: formData,
+                    processData: false,
+                    contentType: false
+                });
+                return response;
+            } catch (error) {
+                alert("Lỗi khi upload hình ảnh: " + checkCorsError(error, error));
+                return null;
+            }
+        }
+
+        async function deleteImage(imagePath) {
+            if (!imagePath) return;
+            try {
+                await $.ajax({
+                    url: `https://localhost:7169/api/SanPham/delete-image?imagePath=${encodeURIComponent(imagePath)}`,
+                    type: "DELETE"
+                });
+            } catch (error) {
+                alert("Lỗi khi xóa hình ảnh: " + checkCorsError(error, error));
+            }
+        }
+
+        function showAddModal(type) {
+            $('#productModalLabel').text('Thêm mới ' + type);
+            $('#saveButton').show();
+            $('#modalBody').html(getForm(type, {}));
+            $('#saveButton').off('click').on('click', async function () {
+                if (validateForm(type)) {
+                    await saveData(type, 0);
+                }
+            });
+            $('#productModal').modal('show');
+            toggleImageUpload();
+        }
+
+        function showDetailModal(type, id) {
+            $('#productModalLabel').text('Chi tiết ' + type);
+            $('#saveButton').hide();
+            $.ajax({
+                url: `https://localhost:7169/api/${type}/${id}`,
+                type: 'GET',
+                success: function (data) {
+                    $('#modalBody').html(getForm(type, data, true));
+                    $('#productModal').modal('show');
+                },
+                error: function (xhr, status, error) {
+                    alert(`Lỗi khi lấy chi tiết ${type} (ID: ${id}): ${checkCorsError(xhr, error)}`);
+                }
+            });
+        }
+
+        function showEditModal(type, id) {
+            $('#productModalLabel').text('Sửa ' + type);
+            $('#saveButton').show();
+            $.ajax({
+                url: `https://localhost:7169/api/${type}/${id}`,
+                type: 'GET',
+                success: function (data) {
+                    $('#modalBody').html(getForm(type, data));
+                    $('#saveButton').off('click').on('click', async function () {
+                        if (validateForm(type)) {
+                            await saveData(type, id);
+                        }
+                    });
+                    $('#productModal').modal('show');
+                    toggleImageUpload();
+                },
+                error: function (xhr, status, error) {
+                    alert(`Lỗi khi lấy dữ liệu sửa ${type} (ID: ${id}): ${checkCorsError(xhr, error)}`);
+                }
+            });
+        }
+
+        function toggleImageUpload() {
+            $('#changeImageSwitch').on('change', function () {
+                if ($(this).is(':checked')) {
+                    $('#imageUploadSection').show();
+                    $('#hinh_anh').attr('required', 'required');
+                } else {
+                    $('#imageUploadSection').hide();
+                    $('#hinh_anh').removeAttr('required');
+                }
+            });
+        }
+
+        function validateForm(type) {
+            let isValid = true;
+            if (type === 'DoNgot') {
+                if (!$('#muc_do').val().trim()) {
+                    alert('Mức độ không được để trống!');
+                    isValid = false;
+                }
+            } else if (type === 'Size') {
+                if (!$('#sizeName').val().trim()) {
+                    alert('Tên size không được để trống!');
+                    isValid = false;
+                }
+                if (!$('#gia').val() || parseFloat($('#gia').val()) < 0) {
+                    alert('Giá phải là số không âm!');
+                    isValid = false;
+                }
+            } else if (type === 'Topping') {
+                if (!$('#ten').val().trim()) {
+                    alert('Tên topping không được để trống!');
+                    isValid = false;
+                }
+                if (!$('#gia').val() || parseFloat($('#gia').val()) < 0) {
+                    alert('Giá phải là số không âm!');
+                    isValid = false;
+                }
+                if (!$('#so_luong').val() || parseInt($('#so_luong').val()) < 0) {
+                    alert('Số lượng phải là số không âm!');
+                    isValid = false;
+                }
+                if ($('#changeImageSwitch').is(':checked') && !$('#hinh_anh')[0].files.length) {
+                    alert('Vui lòng chọn hình ảnh mới!');
+                    isValid = false;
+                }
+            } else if (type === 'LuongDa') {
+                if (!$('#ten_luongDa').val().trim()) {
+                    alert('Tên lượng đá không được để trống!');
+                    isValid = false;
+                }
+            }
+            return isValid;
+        }
+
+        async function saveData(type, id) {
+            let data = {};
+            if (type === 'DoNgot') {
+                data = {
+                    iD_DoNgot: id,
+                    muc_Do: $('#muc_do').val().trim(),
+                    ghi_Chu: $('#ghi_chu').val().trim(),
+                    trang_Thai: $('#trang_thai').val() === 'true'
+                };
+            } else if (type === 'Size') {
+                data = {
+                    iD_Size: id,
+                    sizeName: $('#sizeName').val().trim(),
+                    gia: parseFloat($('#gia').val()) || 0,
+                    trang_Thai: $('#trang_thai').val() === 'true'
+                };
+            } else if (type === 'Topping') {
+                let imagePath = id > 0 ? (await $.ajax({ url: `https://localhost:7169/api/Topping/${id}` })).hinh_Anh : null;
+                const fileInput = $('#hinh_anh')[0];
+                if ($('#changeImageSwitch').is(':checked') && fileInput && fileInput.files.length > 0) {
+                    if (id > 0 && imagePath) {
+                        await deleteImage(imagePath);
+                    }
+                    imagePath = await uploadImage(fileInput.files[0]);
+                    if (!imagePath) return;
+                }
+                data = {
+                    iD_Topping: id,
+                    ten: $('#ten').val().trim(),
+                    gia: parseFloat($('#gia').val()) || 0,
+                    so_Luong: parseInt($('#so_luong').val()) || 0,
+                    hinh_Anh: imagePath || (id > 0 ? imagePath : ''),
+                    ghi_Chu: $('#ghi_chu').val().trim(),
+                    trang_Thai: $('#trang_thai').val() === 'true'
+                };
+            } else if (type === 'LuongDa') {
+                data = {
+                    iD_LuongDa: id,
+                    ten_LuongDa: $('#ten_luongDa').val().trim(),
+                    trang_Thai: $('#trang_thai').val() === 'true'
+                };
+            }
+
+            let url = `https://localhost:7169/api/${type}${id > 0 ? '/' + id : ''}`;
+            let method = id > 0 ? 'PUT' : 'POST';
+
+            $.ajax({
+                url: url,
+                type: method,
+                contentType: 'application/json',
+                data: JSON.stringify(data),
+                success: function () {
+                    $('#productModal').modal('hide');
+                    location.reload();
+                },
+                error: function (xhr, status, error) {
+                    alert(`Lỗi khi lưu dữ liệu ${type} (ID: ${id}): ${checkCorsError(xhr, error)}`);
+                }
+            });
+        }
+
+        function searchTable(type) {
+            const searchInput = $(`#${type}Search`).val().toLowerCase();
+            $(`#${type}TableActive tr, #${type}TableInactive tr`).each(function () {
+                const rowText = $(this).text().toLowerCase();
+                $(this).toggle(rowText.includes(searchInput));
+            });
+        }
+
+        function filterStatus(type) {
+            const tabs = ['doNgot', 'size', 'topping', 'luongDa'];
+            tabs.forEach(tab => {
+                if (type === 'all') {
+                    $(`#${tab}-active-tab`).tab('show');
+                } else if (type === 'active') {
+                    $(`#${tab}-active-tab`).tab('show');
+                } else if (type === 'inactive') {
+                    $(`#${tab}-inactive-tab`).tab('show');
+                }
+            });
+        }
+
+        $(document).ready(function () {
+            const activeMainTab = localStorage.getItem('activeMainTab');
+            const activeSubTabs = JSON.parse(localStorage.getItem('activeSubTabs')) || {};
+
+            if (activeMainTab) {
+                $(`#${activeMainTab}-tab`).tab('show');
+            }
+
+            ['doNgot', 'size', 'topping', 'luongDa'].forEach(tab => {
+                if (activeSubTabs[tab]) {
+                    $(`#${tab}-${activeSubTabs[tab]}-tab`).tab('show');
+                }
+            });
+
+            $('#productTabs a[data-bs-toggle="tab"]').on('shown.bs.tab', function (e) {
+                localStorage.setItem('activeMainTab', e.target.id.replace('-tab', ''));
+            });
+
+            $('ul.nav-pills a[data-bs-toggle="pill"]').on('shown.bs.tab', function (e) {
+                const mainTab = $(e.target).closest('.tab-pane').attr('id');
+                const subTab = e.target.id.split('-')[1];
+                activeSubTabs[mainTab] = subTab;
+                localStorage.setItem('activeSubTabs', JSON.stringify(activeSubTabs));
+            });
+        });
+    </script>
+</body>
+</html>
