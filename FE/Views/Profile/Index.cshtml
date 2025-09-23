@@ -1,23 +1,41 @@
-﻿
-@model FE.Models.ProfileModel
+﻿@model FE.Models.ProfileModel
 
 @{
     ViewData["Title"] = "Thông tin cá nhân";
 }
 
+<!-- Thêm các thư viện cần thiết -->
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css">
+
 <style>
-    /* Profile Page CSS - Vietnamese Layout */
-    /* (Existing styles remain unchanged) */
+    :root {
+        --primary: #3B82F6;
+        --primary-dark: #2563EB;
+        --secondary: #F59E0B;
+        --light-bg: #F8FAFC;
+        --card-bg: #FFFFFF;
+        --text-primary: #1F2937;
+        --text-secondary: #6B7280;
+        --success: #10B981;
+        --danger: #EF4444;
+        --hot-badge: #EF4444;
+    }
+
     body {
         background-color: #f8f9fa;
         font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
         color: #333;
+        min-height: 100vh;
+        display: flex;
+        flex-direction: column;
     }
 
     .container {
         max-width: 1200px;
         margin: 0 auto;
         padding: 20px 15px;
+        flex: 1 0 auto;
     }
 
     .card {
@@ -31,7 +49,7 @@
     .card-header {
         background: linear-gradient(135deg, #007bff, #0056b3);
         color: white;
-        border-radius: 12px 12px 0 0 !important;
+        border-radius: 12px 12px 0 0;
         padding: 20px;
         border: none;
     }
@@ -144,19 +162,19 @@
     }
 
     .card.border-light {
-        border: 2px solid #e9ecef !important;
+        border: 2px solid #e9ecef;
         transition: all 0.3s ease;
         background: #fafbfc;
     }
 
         .card.border-light:hover {
-            border-color: #007bff !important;
+            border-color: #007bff;
             box-shadow: 0 4px 15px rgba(0, 123, 255, 0.1);
             transform: translateY(-2px);
         }
 
     .card-title.text-primary {
-        color: #007bff !important;
+        color: #007bff;
         font-weight: 600;
         font-size: 1rem;
         margin-bottom: 12px;
@@ -175,11 +193,11 @@
     }
 
         .badge.bg-success {
-            background: linear-gradient(135deg, #28a745, #1e7e34) !important;
+            background: linear-gradient(135deg, #28a745, #1e7e34);
         }
 
         .badge.bg-secondary {
-            background: linear-gradient(135deg, #6c757d, #495057) !important;
+            background: linear-gradient(135deg, #6c757d, #495057);
         }
 
     .modal-content {
@@ -231,12 +249,12 @@
     }
 
     .text-muted {
-        color: #8a8a8a !important;
+        color: #8a8a8a;
         font-style: italic;
     }
 
     .fw-bold {
-        font-weight: 600 !important;
+        font-weight: 600;
     }
 
     .btn-group-sm {
@@ -250,7 +268,7 @@
             padding: 8px 16px;
             font-size: 0.85rem;
             font-weight: 600;
-            border-radius: 8px !important;
+            border-radius: 8px;
             transition: all 0.3s ease;
             border: 2px solid;
             position: relative;
@@ -326,6 +344,49 @@
         padding-right: 40px;
     }
 
+    .toggle-password-form {
+        display: none;
+        transition: all 0.3s ease;
+    }
+
+        .toggle-password-form.active {
+            display: block;
+        }
+
+    .btn-toggle-password {
+        background: linear-gradient(135deg, #007bff, #0056b3);
+        color: white;
+        border: none;
+        border-radius: 8px;
+        padding: 12px 24px;
+        font-size: 0.95rem;
+        font-weight: 600;
+        transition: all 0.3s ease;
+        cursor: pointer;
+    }
+
+        .btn-toggle-password:hover {
+            background: linear-gradient(135deg, #0056b3, #004085);
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(0, 123, 255, 0.3);
+        }
+
+        .btn-toggle-password::before {
+            content: '';
+            display: inline-block;
+            width: 16px;
+            height: 16px;
+            margin-right: 6px;
+            background-size: contain;
+            background-repeat: no-repeat;
+            background-position: center;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='white' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M12 3a6 6 0 0 0 9 9 6 6 0 0 0-9-9zm0 0a6 6 0 0 0-9 9 6 6 0 0 0 9-9zm6 6h3m-3 6h3m-12 0h3m-3-6h3m6 3v3m-6 0v3m-6 0v-3m6-6v-3'/%3E%3C/svg%3E");
+        }
+
+        .btn-toggle-password.active::before {
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='white' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M6 12h12'/%3E%3C/svg%3E");
+        }
+
     .toast-container {
         position: fixed;
         top: 20px;
@@ -341,37 +402,52 @@
         backdrop-filter: blur(10px);
         margin-bottom: 10px;
         overflow: hidden;
-        animation: slideInRight 0.4s ease-out;
+        animation: slideInRight 0.4s ease-out forwards;
     }
 
         .toast.hide {
             animation: slideOutRight 0.4s ease-in forwards;
         }
 
-  
+    keyframes slideInRight {
+        0%
 
     {
         transform: translateX(100%);
         opacity: 0;
     }
 
-    to {
+    100% {
         transform: translateX(0);
         opacity: 1;
     }
 
     }
 
-  
+    keyframes slideOutRight {
+        0%
 
     {
         transform: translateX(0);
         opacity: 1;
     }
 
-    to {
+    100% {
         transform: translateX(100%);
         opacity: 0;
+    }
+
+    }
+
+    keyframes progressBar {
+        0%
+
+    {
+        width: 100%;
+    }
+
+    100% {
+        width: 0%;
     }
 
     }
@@ -487,160 +563,13 @@
         animation: progressBar 5s linear forwards;
     }
 
-   
-
-    {
-        width: 100%;
-    }
-
-    to {
-        width: 0%;
-    }
-
-    }
-
-    
-
-    {
-        padding: 15px 10px;
-    }
-
-    .card-body {
-        padding: 20px;
-    }
-
-    .modal-body, .modal-header, .modal-footer {
-        padding: 20px;
-    }
-
-    .col-md-6.mb-3 {
-        margin-bottom: 20px !important;
-    }
-
-    .btn-group-sm {
-        flex-direction: column;
-        gap: 8px;
-    }
-
-        .btn-group-sm .btn {
-            width: 100%;
-            margin-right: 0;
-            min-height: 42px;
-        }
-
-    .toast-container {
-        top: 10px;
-        right: 10px;
-        left: 10px;
-        max-width: none;
-    }
-
-    .toast {
-        margin-bottom: 8px;
-    }
-
-    .toast-header {
-        padding: 10px 12px;
-        font-size: 0.9rem;
-    }
-
-    .toast-body {
-        padding: 10px 12px;
-        font-size: 0.85rem;
-    }
-
-    }
-
-    .mb-3 {
-        margin-bottom: 1.5rem !important;
-    }
-
-    .mt-1 {
-        margin-top: 0.5rem !important;
-    }
-
-    .card:not(.border-light):hover {
-        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.12);
-    }
-
-    .text-danger {
-        font-size: 0.85rem;
-        margin-top: 5px;
-        font-weight: 500;
-    }
-
-    textarea.form-control {
-        resize: vertical;
-        min-height: 100px;
-    }
-
-        textarea.form-control::-webkit-scrollbar {
-            width: 6px;
-        }
-
-        textarea.form-control::-webkit-scrollbar-track {
-            background: #f1f1f1;
-            border-radius: 3px;
-        }
-
-        textarea.form-control::-webkit-scrollbar-thumb {
-            background: #007bff;
-            border-radius: 3px;
-        }
-
-    .btn:disabled {
-        opacity: 0.6;
-        cursor: not-allowed;
-        transform: none !important;
-    }
-
-    .d-flex.justify-content-between.align-items-center {
-        margin-bottom: 25px;
-    }
-
-    .btn-group-sm .btn:disabled {
-        opacity: 0.6;
-        cursor: not-allowed;
-        transform: none !important;
-    }
-
-        .btn-group-sm .btn:disabled::before {
-            opacity: 0.5;
-        }
-
-    .btn-group-sm .btn:focus {
-        outline: none;
-        box-shadow: 0 0 0 3px rgba(0, 123, 255, 0.25);
-    }
-
-    .btn-group-sm .btn-outline-danger:focus {
-        box-shadow: 0 0 0 3px rgba(220, 53, 69, 0.25);
-    }
-
-    .card.border-light:hover .btn-group-sm .btn {
-        transform: scale(1.02);
-    }
-
-        .card.border-light:hover .btn-group-sm .btn:hover {
-            transform: scale(1.05) translateY(-2px);
-        }
-
-
-
-
-
-
-
-
-    /* === FOOTER CSS === */
-    /* Footer full-width, responsive, với background tối và text trắng */
     .footer {
         background: linear-gradient(135deg, #1F2937 0%, #111827 100%);
         color: white;
         padding: 3rem 0 1rem;
         width: 100%;
         flex-shrink: 0;
-        margin-top: auto; /* Đảm bảo footer luôn ở dưới cùng */
+        margin-top: auto;
     }
 
     .footer-container {
@@ -704,8 +633,7 @@
         font-size: 0.85rem;
     }
 
-    /* Responsive Footer */
-    media (max-width: 768px) {
+    media screen and (max-width: 768px) {
         .footer
 
     {
@@ -718,36 +646,128 @@
 
     }
 
-    /* Responsive */
-    media (max-width: 768px) {
-        .hero-section
+    media screen and (max-width: 576px) {
+        .card-body
 
     {
-        height: 40vh;
+        padding: 15px 10px;
     }
 
-    .most-purchased-section .grid {
-        grid-template-columns: repeat(2, 1fr);
+    .modal-body, .modal-header, .modal-footer {
+        padding: 20px;
     }
 
-    .main-grid .grid {
-        grid-template-columns: repeat(2, 1fr);
+    .col-md-6.mb-3 {
+        margin-bottom: 20px;
+    }
+
+    .btn-group-sm {
+        flex-direction: column;
+        gap: 8px;
+    }
+
+        .btn-group-sm .btn {
+            width: 100%;
+            margin-right: 0;
+            min-height: 42px;
+        }
+
+    .toast-container {
+        top: 10px;
+        right: 10px;
+        left: 10px;
+        max-width: none;
+    }
+
+    .toast {
+        margin-bottom: 8px;
+    }
+
+    .toast-header {
+        padding: 10px 12px;
+        font-size: 0.9rem;
+    }
+
+    .toast-body {
+        padding: 10px 12px;
+        font-size: 0.85rem;
     }
 
     }
 
-    media (max-width: 480px) {
-        .most-purchased-section .grid
-
-    {
-        grid-template-columns: 1fr;
+    .mb-3 {
+        margin-bottom: 1.5rem;
     }
 
-    .main-grid .grid {
-        grid-template-columns: 1fr;
+    .mt-1 {
+        margin-top: 0.5rem;
     }
 
+    .card:not(.border-light):hover {
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.12);
     }
+
+    .text-danger {
+        font-size: 0.85rem;
+        margin-top: 5px;
+        font-weight: 500;
+    }
+
+    textarea.form-control {
+        resize: vertical;
+        min-height: 100px;
+    }
+
+        textarea.form-control::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        textarea.form-control::-webkit-scrollbar-track {
+            background: #f1f1f1;
+            border-radius: 3px;
+        }
+
+        textarea.form-control::-webkit-scrollbar-thumb {
+            background: #007bff;
+            border-radius: 3px;
+        }
+
+    .btn:disabled {
+        opacity: 0.6;
+        cursor: not-allowed;
+        transform: none;
+    }
+
+    .d-flex.justify-content-between.align-items-center {
+        margin-bottom: 25px;
+    }
+
+    .btn-group-sm .btn:disabled {
+        opacity: 0.6;
+        cursor: not-allowed;
+        transform: none;
+    }
+
+        .btn-group-sm .btn:disabled::before {
+            opacity: 0.5;
+        }
+
+    .btn-group-sm .btn:focus {
+        outline: none;
+        box-shadow: 0 0 0 3px rgba(0, 123, 255, 0.25);
+    }
+
+    .btn-group-sm .btn-outline-danger:focus {
+        box-shadow: 0 0 0 3px rgba(220, 53, 69, 0.25);
+    }
+
+    .card.border-light:hover .btn-group-sm .btn {
+        transform: scale(1.02);
+    }
+
+        .card.border-light:hover .btn-group-sm .btn:hover {
+            transform: scale(1.05) translateY(-2px);
+        }
 </style>
 
 <div class="container mt-4">
@@ -793,10 +813,7 @@
                                 </div>
                             </div>
                         </div>
-                        <div class="mb-3">
-                            <label class="form-label">Ghi chú</label>
-                            <textarea asp-for="Ghi_Chu" class="form-control" rows="3"></textarea>
-                        </div>
+                        <input type="hidden" asp-for="Ghi_Chu" value="Không có" />
                         <button type="submit" class="btn btn-primary">Cập nhật thông tin</button>
                     </form>
 
@@ -804,8 +821,13 @@
 
                     <!-- Đổi mật khẩu -->
                     <div class="mt-4">
-                        <h5>Đổi mật khẩu</h5>
-                        <form id="changePasswordForm">
+                        <div class="d-flex justify-content-between align-items-center mb-3">
+                            <h5>Đổi mật khẩu</h5>
+                            <button type="button" class="btn-toggle-password" id="togglePasswordForm">
+                                Bấm để đổi mật khẩu
+                            </button>
+                        </div>
+                        <form id="changePasswordForm" class="toggle-password-form">
                             <div class="row">
                                 <div class="col-md-6">
                                     <div class="mb-3">
@@ -850,12 +872,12 @@
                                     <div class="col-md-6 mb-3">
                                         <div class="card border-light">
                                             <div class="card-body">
-                                                <h6 class="card-title text-primary">@address.Dia_Chi</h6>
+                                                <h6 class="card-title text-primary address-display" data-code="@address.Dia_Chi"></h6>
                                                 <p class="card-text">
                                                     @if (!string.IsNullOrEmpty(address.Ghi_Chu))
                                                     {
                                                         <span class="fw-bold">@address.Ghi_Chu</span>
-                                                        <br>
+                                                        <br />
                                                     }
                                                     @if (address.Trang_Thai == true)
                                                     {
@@ -906,44 +928,15 @@
                         <div class="col-md-6">
                             <div class="mb-3">
                                 <label class="form-label">Quận/Huyện *</label>
-                                <select name="district" id="districtSelect" class="form-select" required>
+                                <select name="DistrictID" id="districtSelect" class="form-select" required>
                                     <option value="">Chọn Quận/Huyện</option>
-                                    <option value="Ba Đình">Ba Đình</option>
-                                    <option value="Hoàn Kiếm">Hoàn Kiếm</option>
-                                    <option value="Tây Hồ">Tây Hồ</option>
-                                    <option value="Long Biên">Long Biên</option>
-                                    <option value="Cầu Giấy">Cầu Giấy</option>
-                                    <option value="Đống Đa">Đống Đa</option>
-                                    <option value="Hai Bà Trưng">Hai Bà Trưng</option>
-                                    <option value="Hoàng Mai">Hoàng Mai</option>
-                                    <option value="Thanh Xuân">Thanh Xuân</option>
-                                    <option value="Nam Từ Liêm">Nam Từ Liêm</option>
-                                    <option value="Bắc Từ Liêm">Bắc Từ Liêm</option>
-                                    <option value="Hà Đông">Hà Đông</option>
-                                    <option value="Sóc Sơn">Sóc Sơn</option>
-                                    <option value="Đông Anh">Đông Anh</option>
-                                    <option value="Gia Lâm">Gia Lâm</option>
-                                    <option value="Thanh Trì">Thanh Trì</option>
-                                    <option value="Hoài Đức">Hoài Đức</option>
-                                    <option value="Đan Phượng">Đan Phượng</option>
-                                    <option value="Thường Tín">Thường Tín</option>
-                                    <option value="Phú Xuyên">Phú Xuyên</option>
-                                    <option value="Ứng Hòa">Ứng Hòa</option>
-                                    <option value="Mỹ Đức">Mỹ Đức</option>
-                                    <option value="Chương Mỹ">Chương Mỹ</option>
-                                    <option value="Quốc Oai">Quốc Oai</option>
-                                    <option value="Thạch Thất">Thạch Thất</option>
-                                    <option value="Ba Vì">Ba Vì</option>
-                                    <option value="Phúc Thọ">Phúc Thọ</option>
-                                    <option value="Mê Linh">Mê Linh</option>
-                                    <option value="Sơn Tây">Sơn Tây</option>
                                 </select>
                             </div>
                         </div>
                         <div class="col-md-6">
                             <div class="mb-3">
                                 <label class="form-label">Phường/Xã *</label>
-                                <select name="ward" id="wardSelect" class="form-select" required>
+                                <select name="WardCode" id="wardSelect" class="form-select" required>
                                     <option value="">Chọn Phường/Xã</option>
                                 </select>
                             </div>
@@ -951,8 +944,9 @@
                     </div>
                     <div class="mb-3">
                         <label class="form-label">Địa chỉ chi tiết (tự động tạo)</label>
-                        <input name="Dia_Chi" id="addressDisplay" class="form-control bg-light" readonly
+                        <input id="addressDisplay" class="form-control bg-light" readonly
                                placeholder="Sẽ hiển thị sau khi chọn Quận/Huyện và Phường/Xã" />
+                        <input type="hidden" name="Dia_Chi" id="addressCode" />
                         <input type="hidden" name="Tinh_Thanh" value="Hà Nội" />
                     </div>
                     <div class="mb-3">
@@ -985,44 +979,15 @@
                         <div class="col-md-6">
                             <div class="mb-3">
                                 <label class="form-label">Quận/Huyện *</label>
-                                <select name="editDistrict" id="editDistrictSelect" class="form-select" required>
+                                <select name="DistrictID" id="editDistrictSelect" class="form-select" required>
                                     <option value="">Chọn Quận/Huyện</option>
-                                    <option value="Ba Đình">Ba Đình</option>
-                                    <option value="Hoàn Kiếm">Hoàn Kiếm</option>
-                                    <option value="Tây Hồ">Tây Hồ</option>
-                                    <option value="Long Biên">Long Biên</option>
-                                    <option value="Cầu Giấy">Cầu Giấy</option>
-                                    <option value="Đống Đa">Đống Đa</option>
-                                    <option value="Hai Bà Trưng">Hai Bà Trưng</option>
-                                    <option value="Hoàng Mai">Hoàng Mai</option>
-                                    <option value="Thanh Xuân">Thanh Xuân</option>
-                                    <option value="Nam Từ Liêm">Nam Từ Liêm</option>
-                                    <option value="Bắc Từ Liêm">Bắc Từ Liêm</option>
-                                    <option value="Hà Đông">Hà Đông</option>
-                                    <option value="Sóc Sơn">Sóc Sơn</option>
-                                    <option value="Đông Anh">Đông Anh</option>
-                                    <option value="Gia Lâm">Gia Lâm</option>
-                                    <option value="Thanh Trì">Thanh Trì</option>
-                                    <option value="Hoài Đức">Hoài Đức</option>
-                                    <option value="Đan Phượng">Đan Phượng</option>
-                                    <option value="Thường Tín">Thường Tín</option>
-                                    <option value="Phú Xuyên">Phú Xuyên</option>
-                                    <option value="Ứng Hòa">Ứng Hòa</option>
-                                    <option value="Mỹ Đức">Mỹ Đức</option>
-                                    <option value="Chương Mỹ">Chương Mỹ</option>
-                                    <option value="Quốc Oai">Quốc Oai</option>
-                                    <option value="Thạch Thất">Thạch Thất</option>
-                                    <option value="Ba Vì">Ba Vì</option>
-                                    <option value="Phúc Thọ">Phúc Thọ</option>
-                                    <option value="Mê Linh">Mê Linh</option>
-                                    <option value="Sơn Tây">Sơn Tây</option>
                                 </select>
                             </div>
                         </div>
                         <div class="col-md-6">
                             <div class="mb-3">
                                 <label class="form-label">Phường/Xã *</label>
-                                <select name="editWard" id="editWardSelect" class="form-select" required>
+                                <select name="WardCode" id="editWardSelect" class="form-select" required>
                                     <option value="">Chọn Phường/Xã</option>
                                 </select>
                             </div>
@@ -1030,7 +995,8 @@
                     </div>
                     <div class="mb-3">
                         <label class="form-label">Địa chỉ chi tiết (tự động tạo)</label>
-                        <input name="Dia_Chi" id="editAddressDisplay" class="form-control bg-light" readonly />
+                        <input id="editAddressDisplay" class="form-control bg-light" readonly />
+                        <input type="hidden" name="Dia_Chi" id="editAddressCode" />
                         <input type="hidden" name="Tinh_Thanh" value="Hà Nội" />
                     </div>
                     <div class="mb-3">
@@ -1055,14 +1021,10 @@
     </div>
 </div>
 
-
-
-
 <!-- Footer -->
 <footer class="footer">
     <div class="footer-container">
         <div class="grid grid-cols-1 md:grid-cols-4 gap-6">
-            <!-- Thông tin cửa hàng -->
             <div class="footer-section">
                 <h3 class="footer-title">TheBoy Trà Sữa</h3>
                 <p class="text-sm text-gray-300 mb-4">Cửa hàng trà sữa tươi ngon, nguyên liệu chất lượng cao. Mang đến những ly trà sữa thơm ngon, đậm đà hương vị Việt Nam.</p>
@@ -1079,8 +1041,6 @@
                     <span class="text-sm">theboy@trasua.vn</span>
                 </div>
             </div>
-
-            <!-- Menu nhanh -->
             <div class="footer-section">
                 <h3 class="footer-title">Menu</h3>
                 <a href="/" class="footer-link">Trang chủ</a>
@@ -1089,8 +1049,6 @@
                 <a href="/LienHe" class="footer-link">Liên hệ</a>
                 <a href="/KhuyenMai" class="footer-link">Khuyến mãi</a>
             </div>
-
-            <!-- Dịch vụ -->
             <div class="footer-section">
                 <h3 class="footer-title">Dịch vụ</h3>
                 <a href="/GiaoHang" class="footer-link">Giao hàng</a>
@@ -1098,8 +1056,6 @@
                 <a href="/ChinhSach" class="footer-link">Chính sách</a>
                 <a href="/HoiDap" class="footer-link">Hỏi đáp</a>
             </div>
-
-            <!-- Mạng xã hội -->
             <div class="footer-section">
                 <h3 class="footer-title">Theo dõi chúng tôi</h3>
                 <div class="footer-social">
@@ -1125,111 +1081,50 @@
     </div>
 </footer>
 
-
 @section Scripts {
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script>
-        // Toast Notification Functions
-        function showToast(type = 'info', title = '', message = '', duration = 5000) {
-            const icons = {
-                success: 'fas fa-check-circle',
-                error: 'fas fa-exclamation-circle',
-                warning: 'fas fa-exclamation-triangle',
-                info: 'fas fa-info-circle'
-            };
-
-            const toastId = 'toast-' + Date.now() + '-' + Math.random().toString(36).substr(2, 9);
-
-            const toastHTML = `
-                <div id="${toastId}" class="toast toast-${type}" role="alert" aria-live="assertive" aria-atomic="true">
-                    <div class="toast-header">
-                        <i class="${icons[type]} toast-icon"></i>
-                        <strong class="me-auto">${title}</strong>
-                        <button type="button" class="btn-close" data-bs-dismiss="toast" aria-label="Close"></button>
-                    </div>
-                    <div class="toast-body">
-                        ${message}
-                    </div>
-                    <div class="toast-progress">
-                        <div class="toast-progress-bar"></div>
-                    </div>
+        // Toast Notification Function
+        function showToast(type, title, message, duration = 5000) {
+            const toastContainer = document.querySelector('.toast-container');
+            const toast = document.createElement('div');
+            toast.className = `toast toast-${type} show`;
+            toast.innerHTML = `
+                <div class="toast-header">
+                    <i class="bi bi-${type === 'success' ? 'check-circle-fill' : type === 'error' ? 'exclamation-circle-fill' : type === 'warning' ? 'exclamation-triangle-fill' : 'info-circle-fill'} toast-icon"></i>
+                    <strong class="me-auto">${title}</strong>
+                    <button type="button" class="btn-close" data-bs-dismiss="toast" aria-label="Close"></button>
                 </div>
+                <div class="toast-body">${message}</div>
+                <div class="toast-progress"><div class="toast-progress-bar"></div></div>
             `;
+            toastContainer.appendChild(toast);
 
-            const container = document.querySelector('.toast-container');
-            container.insertAdjacentHTML('beforeend', toastHTML);
-
-            const toastElement = document.getElementById(toastId);
-
-            const bsToast = new bootstrap.Toast(toastElement, {
-                autohide: true,
-                delay: duration
-            });
-
+            const bsToast = new bootstrap.Toast(toast, { delay: duration });
             bsToast.show();
 
-            toastElement.addEventListener('hidden.bs.toast', function () {
-                this.remove();
-            });
-
-            toastElement.addEventListener('click', function(e) {
-                if (!e.target.classList.contains('btn-close')) {
-                    bsToast.hide();
-                }
-            });
-
-            setTimeout(() => {
-                const progressBar = toastElement.querySelector('.toast-progress-bar');
-                if (progressBar) {
-                    progressBar.style.animationPlayState = 'running';
-                }
-            }, 100);
-
-            return bsToast;
+            toast.addEventListener('hidden.bs.toast', () => toast.remove());
         }
 
-        // Dữ liệu phường xã theo quận huyện
-        const wardsData = {
-            'Ba Đình': ['Phúc Xá', 'Trúc Bạch', 'Vĩnh Phúc', 'Cống Vị', 'Liễu Giai', 'Nguyễn Trung Trực', 'Quán Thánh', 'Ngọc Hà', 'Đội Cấn', 'Ngọc Khánh', 'Kim Mã', 'Giảng Võ', 'Điện Biên', 'Thành Công'],
-            'Hoàn Kiếm': ['Phúc Tấn', 'Đồng Xuân', 'Hàng Mã', 'Hàng Buồm', 'Hàng Đào', 'Hàng Bồ', 'Cửa Đông', 'Lý Thái Tổ', 'Hàng Bạc', 'Hàng Gai', 'Chương Dương Độ', 'Cửa Nam', 'Hàng Trống', 'Tràng Tiền', 'Trần Hưng Đạo', 'Phan Chu Trinh', 'Hàng Bông', 'Hàng Thiếc'],
-            'Tây Hồ': ['Phú Thượng', 'Nhật Tân', 'Tứ Liên', 'Quảng An', 'Xuân La', 'Yến Phụ', 'Bưởi', 'Thụy Khuê'],
-            'Long Biên': ['Thượng Thanh', 'Ngọc Thụy', 'Giang Biên', 'Đức Giang', 'Việt Hưng', 'Gia Thụy', 'Ngọc Lâm', 'Phúc Lợi', 'Bo Đề', 'Sài Đồng', 'Long Biên', 'Thạch Bàn', 'Phúc Đồng', 'Cự Khối'],
-            'Cầu Giấy': ['Nghĩa Đô', 'Nghĩa Tân', 'Mai Dịch', 'Dịch Vọng', 'Dịch Vọng Hậu', 'Quan Hoa', 'Yên Hòa', 'Trung Hòa'],
-            'Đống Đa': ['Cát Linh', 'Văn Miếu', 'Quốc Tử Giám', 'Láng Thượng', 'Ô Chợ Dừa', 'Văn Chương', 'Hàng Bột', 'Nam Đồng', 'Trung Liệt', 'Khâm Thiên', 'Thổ Quan', 'Nam Thành', 'Kim Liên', 'Phương Liên', 'Thịnh Quang', 'Trung Phụng', 'Quang Trung', 'Ngã Tư Sở', 'Khương Thượng', 'Láng Hạ', 'Phương Mai'],
-            'Hai Bà Trưng': ['Nguyễn Du', 'Bạch Đằng', 'Phạm Đình Hổ', 'Lê Đại Hành', 'Đồng Nhân', 'Phố Huế', 'Đống Mác', 'Thanh Lương', 'Thanh Nhàn', 'Cầu Dền', 'Bách Khoa', 'Đồng Tâm', 'Vĩnh Tuy', 'Bạch Mai', 'Quỳnh Mai', 'Quỳnh Lôi', 'Minh Khai', 'Trương Định'],
-            'Hoàng Mai': ['Thịnh Liệt', 'Trần Phú', 'Hoàng Văn Thụ', 'Tân Mai', 'Vĩnh Hưng', 'Định Công', 'Mai Động', 'Tương Mai', 'Đại Kim', 'Tân Triều', 'Thanh Trì', 'Linh Đàm', 'Hoàng Liệt', 'Yên Sở'],
-            'Thanh Xuân': ['Hạ Đình', 'Khương Đình', 'Khương Trung', 'Khương Mai', 'Thanh Xuân Bắc', 'Thanh Xuân Nam', 'Thanh Xuân Trung', 'Nhân Chính', 'Thượng Đình', 'Kim Giang'],
-            'Nam Từ Liêm': ['Mễ Trì', 'Phú Đô', 'Phương Canh', 'Mỹ Đình 1', 'Mỹ Đình 2', 'Tây Mỗ', 'Xuân Phương', 'Phúc Diễn', 'Cầu Diễn'],
-            'Bắc Từ Liêm': ['Thượng Cát', 'Liên Mạc', 'Đông Ngạc', 'Đức Thắng', 'Thụy Phương', 'Tây Tựu', 'Xuân Đỉnh', 'Minh Khai', 'Cổ Nhuế 1', 'Cổ Nhuế 2', 'Phú Diễn', 'Phúc Diễn'],
-            'Hà Đông': ['Nguyễn Trãi', 'Mộ Lao', 'Hà Cầu', 'Văn Quán', 'Vạn Phúc', 'Yết Kiêu', 'Quang Trung', 'La Khê', 'Phú La', 'Phú Lãm', 'Phú Lương', 'Kiến Hưng', 'Yên Nghĩa', 'Binh Hưng', 'Phan Sào Nam', 'Cự Khối', 'Đồng Mai']
-        };
-
-        // Password validation function
+        // Password Validation Function
         function validatePassword(password) {
             const errors = [];
-            if (password.length < 8) {
-                errors.push("Mật khẩu mới phải có ít nhất 8 ký tự.");
-            }
-            if (!/[A-Z]/.test(password)) {
-                errors.push("Mật khẩu mới phải chứa ít nhất một chữ cái in hoa.");
-            }
-            if (!/[a-z]/.test(password)) {
-                errors.push("Mật khẩu mới phải chứa ít nhất một chữ cái thường.");
-            }
-            if (!/[0-9]/.test(password)) {
-                errors.push("Mật khẩu mới phải chứa ít nhất một số.");
-            }
-            if (!/[!@@#$%^&*(),.?":{}|<>]/.test(password)) {
-                errors.push("Mật khẩu mới phải chứa ít nhất một ký tự đặc biệt.");
-            }
+            if (password.length < 8) errors.push("Mật khẩu mới phải có ít nhất 8 ký tự.");
+            if (!/[A-Z]/.test(password)) errors.push("Mật khẩu mới phải chứa ít nhất một chữ cái in hoa.");
+            if (!/[a-z]/.test(password)) errors.push("Mật khẩu mới phải chứa ít nhất một chữ cái thường.");
+            if (!/[0-9]/.test(password)) errors.push("Mật khẩu mới phải chứa ít nhất một số.");
+            if (!/[!@@#$%^&*(),.?":{}|<>]/.test(password)) errors.push("Mật khẩu mới phải chứa ít nhất một ký tự đặc biệt.");
             return errors;
         }
 
-        // Change password function
+        // Change Password Function
         async function changePassword() {
             const oldPassword = document.getElementById('oldPassword').value;
             const newPassword = document.getElementById('newPassword').value;
             const confirmPassword = document.getElementById('confirmPassword').value;
             const changePasswordButton = document.getElementById('changePasswordButton');
+            const passwordForm = document.getElementById('changePasswordForm');
+            const toggleButton = document.getElementById('togglePasswordForm');
 
             // Clear previous error messages
             document.getElementById('oldPasswordError').textContent = '';
@@ -1257,9 +1152,7 @@
             changePasswordButton.disabled = true;
 
             try {
-                // Fetch idKhachHang (assuming it's stored in a hidden input or model)
                 const idKhachHang = @Model.ID_Khach_Hang; // Adjust based on your model
-
                 const response = await fetch('https://localhost:7169/api/Auth/change-password', {
                     method: 'POST',
                     headers: {
@@ -1274,80 +1167,193 @@
 
                 if (response.ok) {
                     showToast('success', 'Thành công!', 'Đổi mật khẩu thành công.');
-                    // Clear form
-                    document.getElementById('changePasswordForm').reset();
+                    passwordForm.reset();
+                    passwordForm.classList.remove('active');
+                    toggleButton.textContent = 'Bấm để đổi mật khẩu ';
+                    toggleButton.classList.remove('active');
                 } else {
                     const errorData = await response.json();
                     showToast('error', 'Lỗi!', errorData.message || 'Đổi mật khẩu thất bại. Vui lòng thử lại.');
                 }
             } catch (error) {
-                showToast('error', 'Lỗi!', 'Có lỗi xảy ra khi kết nối đến server.');
+                showToast('error', 'Lỗi mạng yếu!', 'Mạng yếu gây tải chậm dữ liệu ');
             } finally {
                 changePasswordButton.disabled = false;
             }
         }
 
-        function editAddress(id, address, note, status) {
-            document.getElementById('editAddressId').value = id;
-            document.getElementById('editAddressNote').value = note || '';
-            document.getElementById('editAddressStatus').checked = status;
+        // Address Management
+        let districtsData = [];
+        let wardsByDistrict = {};
 
-            if (address) {
-                const parts = address.split(' - ');
-                if (parts.length >= 2) {
-                    const ward = parts[0].trim();
-                    const district = parts[1].trim();
+        async function loadDistricts() {
+            try {
+                const response = await fetch('https://localhost:7169/api/Shipping/districts/201', {
+                    method: 'GET',
+                    headers: { 'Content-Type': 'application/json' }
+                });
 
-                    document.getElementById('editDistrictSelect').value = district;
-                    updateWards(document.getElementById('editDistrictSelect'), document.getElementById('editWardSelect'));
-                    setTimeout(() => {
-                        document.getElementById('editWardSelect').value = ward;
-                        updateAddressDisplay('edit');
-                    }, 100);
+                if (response.ok) {
+                    const result = await response.json();
+                    if (result.code === 200) {
+                        districtsData = result.data || [];
+                        populateDistricts('districtSelect');
+                        populateDistricts('editDistrictSelect');
+                        updateAddressDisplays();
+                    } else {
+                        showToast('error', 'Lỗi!', 'Không thể tải danh sách quận/huyện.');
+                    }
+                } else {
+                    showToast('error', 'Lỗi!', 'Lỗi khi gọi API quận/huyện.');
                 }
+            } catch (error) {
+                showToast('error', 'Lỗi mạng yếu!', 'Mạng yếu gây tải chậm dữ liệu ');
+            }
+        }
+
+        function populateDistricts(selectId) {
+            const districtSelect = document.getElementById(selectId);
+            districtSelect.innerHTML = '<option value="">Chọn Quận/Huyện</option>';
+            districtsData.forEach(district => {
+                const option = document.createElement('option');
+                option.value = district.DistrictID;
+                option.textContent = district.DistrictName;
+                districtSelect.appendChild(option);
+            });
+        }
+
+        async function loadWards(districtId, selectId, callback) {
+            if (!districtId) {
+                const wardSelect = document.getElementById(selectId);
+                wardSelect.innerHTML = '<option value="">Chọn Phường/Xã</option>';
+                if (callback) callback();
+                return;
             }
 
-            var modal = new bootstrap.Modal(document.getElementById('editAddressModal'));
-            modal.show();
+            if (wardsByDistrict[districtId]) {
+                populateWards(selectId, wardsByDistrict[districtId]);
+                if (callback) callback();
+                return;
+            }
+
+            try {
+                const response = await fetch(`https://localhost:7169/api/Shipping/wards/${districtId}`, {
+                    method: 'GET',
+                    headers: { 'Content-Type': 'application/json' }
+                });
+
+                if (response.ok) {
+                    const result = await response.json();
+                    if (result.code === 200) {
+                        wardsByDistrict[districtId] = result.data || [];
+                        populateWards(selectId, result.data);
+                        if (callback) callback();
+                    } else {
+                        showToast('error', 'Lỗi!', 'Không thể tải danh sách phường/xã.');
+                    }
+                } else {
+                    showToast('error', 'Lỗi!', 'Lỗi khi gọi API phường/xã.');
+                }
+            } catch (error) {
+               showToast('error', 'Lỗi mạng yếu!', 'Mạng yếu gây tải chậm dữ liệu ');
+            }
+        }
+
+        function populateWards(selectId, wardsData) {
+            const wardSelect = document.getElementById(selectId);
+            wardSelect.innerHTML = '<option value="">Chọn Phường/Xã</option>';
+            wardsData.forEach(ward => {
+                const option = document.createElement('option');
+                option.value = ward.WardCode;
+                option.textContent = ward.WardName;
+                wardSelect.appendChild(option);
+            });
         }
 
         function updateAddressDisplay(mode) {
             const districtSelect = mode === 'edit' ? document.getElementById('editDistrictSelect') : document.getElementById('districtSelect');
             const wardSelect = mode === 'edit' ? document.getElementById('editWardSelect') : document.getElementById('wardSelect');
             const addressDisplay = mode === 'edit' ? document.getElementById('editAddressDisplay') : document.getElementById('addressDisplay');
+            const addressCode = mode === 'edit' ? document.getElementById('editAddressCode') : document.getElementById('addressCode');
 
-            const district = districtSelect.value;
-            const ward = wardSelect.value;
+            const districtId = districtSelect.value;
+            const wardCode = wardSelect.value;
 
-            if (district && ward) {
-                addressDisplay.value = `${ward} - ${district} - Hà Nội`;
+            if (districtId && wardCode && districtsData.length && wardsByDistrict[districtId]) {
+                const district = districtsData.find(d => d.DistrictID == districtId);
+                const ward = wardsByDistrict[districtId].find(w => w.WardCode == wardCode);
+                if (district && ward) {
+                    addressDisplay.value = `${ward.WardName} - ${district.DistrictName} - Hà Nội`;
+                    addressCode.value = `${wardCode},${districtId}`;
+                } else {
+                    addressDisplay.value = '';
+                    addressCode.value = '';
+                }
             } else {
                 addressDisplay.value = '';
+                addressCode.value = '';
             }
         }
 
-        function updateWards(districtSelect, wardSelect) {
-            const district = districtSelect.value;
-            wardSelect.innerHTML = '<option value="">Chọn Phường/Xã</option>';
-
-            if (district && wardsData[district]) {
-                wardsData[district].forEach(ward => {
-                    const option = document.createElement('option');
-                    option.value = ward;
-                    option.textContent = ward;
-                    wardSelect.appendChild(option);
-                });
+        async function updateAddressDisplays() {
+            const addressElements = document.querySelectorAll('.address-display');
+            for (const elem of addressElements) {
+                const code = elem.dataset.code;
+                if (code) {
+                    const [wardCode, districtId] = code.split(',');
+                    if (districtId && wardCode) {
+                        const district = districtsData.find(d => d.DistrictID == districtId);
+                        if (district) {
+                            if (!wardsByDistrict[districtId]) {
+                                await loadWards(districtId, null);
+                            }
+                            const ward = wardsByDistrict[districtId]?.find(w => w.WardCode == wardCode);
+                            if (ward) {
+                                elem.textContent = `${ward.WardName} - ${district.DistrictName} - Hà Nội`;
+                            } else {
+                                elem.textContent = 'Địa chỉ không hợp lệ';
+                            }
+                        } else {
+                            elem.textContent = 'Địa chỉ không hợp lệ';
+                        }
+                    }
+                }
             }
         }
 
-        document.addEventListener('DOMContentLoaded', function() {
+        function editAddress(id, address, note, status) {
+            document.getElementById('editAddressId').value = id;
+            document.getElementById('editAddressNote').value = note || '';
+            document.getElementById('editAddressStatus').checked = status === 'true';
+
+            if (address) {
+                const [wardCode, districtId] = address.split(',');
+                const districtSelect = document.getElementById('editDistrictSelect');
+                districtSelect.value = districtId || '';
+
+                if (districtId) {
+                    loadWards(districtId, 'editWardSelect', () => {
+                        const wardSelect = document.getElementById('editWardSelect');
+                        wardSelect.value = wardCode || '';
+                        updateAddressDisplay('edit');
+                    });
+                } else {
+                    updateAddressDisplay('edit');
+                }
+            }
+
+            const modal = new bootstrap.Modal(document.getElementById('editAddressModal'));
+            modal.show();
+        }
+
+        document.addEventListener('DOMContentLoaded', function () {
+            // Show TempData messages
             @if (TempData["SuccessMessage"] != null)
             {
                     <text>
                     showToast('success', 'Thành công!', '@Html.Raw(TempData["SuccessMessage"])');
                     </text>
             }
-
             @if (TempData["ErrorMessage"] != null)
             {
                     <text>
@@ -1355,33 +1361,50 @@
                     </text>
             }
 
+            // Toggle password form
+            const toggleButton = document.getElementById('togglePasswordForm');
+            const passwordForm = document.getElementById('changePasswordForm');
+            toggleButton.addEventListener('click', function () {
+                if (passwordForm.classList.contains('active')) {
+                    passwordForm.classList.remove('active');
+                    toggleButton.textContent = 'Bấm để đổi mật khẩu';
+                    toggleButton.classList.remove('active');
+                } else {
+                    passwordForm.classList.add('active');
+                    toggleButton.textContent = 'Ẩn';
+                    toggleButton.classList.add('active');
+                }
+            });
+
+            // Load districts
+            loadDistricts();
+
+            // Address form event listeners
             const districtSelect = document.getElementById('districtSelect');
             const wardSelect = document.getElementById('wardSelect');
             const editDistrictSelect = document.getElementById('editDistrictSelect');
             const editWardSelect = document.getElementById('editWardSelect');
 
-            districtSelect.addEventListener('change', function() {
-                updateWards(this, wardSelect);
+            districtSelect.addEventListener('change', function () {
+                loadWards(this.value, 'wardSelect', () => updateAddressDisplay('add'));
+            });
+
+            wardSelect.addEventListener('change', function () {
                 updateAddressDisplay('add');
             });
 
-            wardSelect.addEventListener('change', function() {
-                updateAddressDisplay('add');
+            editDistrictSelect.addEventListener('change', function () {
+                loadWards(this.value, 'editWardSelect', () => updateAddressDisplay('edit'));
             });
 
-            editDistrictSelect.addEventListener('change', function() {
-                updateWards(this, editWardSelect);
-                updateAddressDisplay('edit');
-            });
-
-            editWardSelect.addEventListener('change', function() {
+            editWardSelect.addEventListener('change', function () {
                 updateAddressDisplay('edit');
             });
 
             const addAddressForm = document.getElementById('addAddressForm');
-            addAddressForm.addEventListener('submit', function(e) {
-                const districtInput = document.querySelector('select[name="district"]');
-                const wardInput = document.querySelector('select[name="ward"]');
+            addAddressForm.addEventListener('submit', function (e) {
+                const districtInput = document.getElementById('districtSelect');
+                const wardInput = document.getElementById('wardSelect');
 
                 if (!districtInput.value) {
                     e.preventDefault();
@@ -1397,9 +1420,9 @@
             });
 
             const editAddressForm = document.getElementById('editAddressForm');
-            editAddressForm.addEventListener('submit', function(e) {
-                const districtInput = document.querySelector('select[name="editDistrict"]');
-                const wardInput = document.querySelector('select[name="editWard"]');
+            editAddressForm.addEventListener('submit', function (e) {
+                const districtInput = document.getElementById('editDistrictSelect');
+                const wardInput = document.getElementById('editWardSelect');
 
                 if (!districtInput.value) {
                     e.preventDefault();
@@ -1416,7 +1439,7 @@
 
             // Handle password change form submission
             const changePasswordForm = document.getElementById('changePasswordForm');
-            changePasswordForm.addEventListener('submit', function(e) {
+            changePasswordForm.addEventListener('submit', function (e) {
                 e.preventDefault();
                 changePassword();
             });

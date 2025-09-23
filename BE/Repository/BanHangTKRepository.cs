@@ -840,7 +840,7 @@ namespace BE.Repository
                 decimal tongTienHienThi = (decimal)hoaDon.Tong_Tien + (decimal)hoaDon.Phi_Ship;
                 emailBody.AppendLine($@"<div class='summary'>
             <p>Phí ship: {hoaDon.Phi_Ship:N0} đ</p>
-            {(voucher != null ? $"<p>Giảm giá voucher ({voucher.Ma_Voucher}): -{giamGiaVoucher:N0} đ</p>" : "")}
+            {(voucher != null ? $"<p>Giảm giá voucher ({voucher.Ma_Voucher}): -{giamGiaVoucher:N0} %</p>" : "")}
             <p>Thành tiền: {tongTienHienThi - giamGiaVoucher:N0} đ</p>
         </div>
         <div class='footer'>
