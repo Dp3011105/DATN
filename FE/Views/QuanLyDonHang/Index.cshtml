@@ -1,4 +1,4 @@
-﻿@{
+﻿@* @{
     Layout = "_AdminLayout";
 }
 @model FE.Controllers.QuanLyDonHangViewModel
@@ -46,6 +46,15 @@
         null => "—",
         _ => id.ToString()!
     };
+
+    (string WardCode, string DistrictId) ParseAddress(string address)
+    {
+        if (string.IsNullOrWhiteSpace(address) || !address.Contains(","))
+            return ("", "");
+
+        var parts = address.Split(',', StringSplitOptions.TrimEntries);
+        return parts.Length >= 2 ? (parts[0], parts[1]) : ("", "");
+    }
 }
 
 <div class="container-fluid py-3">
@@ -76,7 +85,6 @@
         <button class="btn btn-secondary" type="submit">Tải lại</button>
     </form>
 
-    @* ===== Khung thao tác nhanh ===== *@
     @if (Model.FocusedHoaDon != null && Model.FocusedHoaDon.Any())
     {
         <div class="card shadow-sm mb-4 border-primary">
@@ -159,7 +167,6 @@
                                             </form>
                                         }
 
-                                        @* Nút Hủy *@
                                         @if (!string.Equals(dbStatus, "Hoan_Thanh", StringComparison.OrdinalIgnoreCase)
                                                                         && !string.Equals(dbStatus, "Huy_Don", StringComparison.OrdinalIgnoreCase))
                                         {
@@ -215,17 +222,18 @@
                 </tr>
             </thead>
             <tbody>
-                @if (Model.DanhSachHoaDon == null || Model.DanhSachHoaDon.Count == 0)
+                @if (Model.DanhSachHoaDon == null || !Model.DanhSachHoaDon.Any())
                 {
                     <tr><td colspan="9" class="text-muted">Không có dữ liệu</td></tr>
                 }
                 else
                 {
-                    foreach (var hd in Model.DanhSachHoaDon)
+                    @foreach (var hd in Model.DanhSachHoaDon)
                     {
                         var dbStatus = hd.Trang_Thai ?? "";
                         var tenKhach = hd.KhachHang?.Ho_Ten;
                         var sdt = hd.KhachHang?.So_Dien_Thoai;
+                        var (wardCode, districtId) = ParseAddress(hd.ID_Dia_Chi.HasValue && hd.DiaChi != null ? hd.DiaChi.Dia_Chi : "" );
 
                         <tr>
                             <td>
@@ -234,38 +242,30 @@
                                     @hd.Ma_Hoa_Don
                                 </a>
                             </td>
-
                             <td>
                                 <div>@(string.IsNullOrWhiteSpace(tenKhach) ? "Khách lẻ" : tenKhach)</div>
-                                <div class="small text-muted">
-                                    @(string.IsNullOrWhiteSpace(sdt) ? "—" : sdt)
-                                </div>
+                                <div class="small text-muted">@(string.IsNullOrWhiteSpace(sdt) ? "—" : sdt)</div>
                             </td>
-
                             <td>@hd.Ngay_Tao.ToString("dd/MM/yyyy HH:mm")</td>
                             <td>@PayText(hd.ID_Hinh_Thuc_Thanh_Toan)</td>
                             <td>@(string.IsNullOrWhiteSpace(hd.Loai_Hoa_Don) ? "—" : hd.Loai_Hoa_Don)</td>
+                            <td class="address-cell" data-district-id="@districtId" data-ward-code="@wardCode">
+                                <span class="address-display">
+                                    @(string.Equals(hd.Loai_Hoa_Don, "TaiQuay", StringComparison.OrdinalIgnoreCase)
+                                                                ? "Tại quầy"
+                                                                : (hd.ID_Dia_Chi.HasValue && hd.DiaChi != null && !string.IsNullOrWhiteSpace(hd.DiaChi.Dia_Chi)
+                                                                ? hd.DiaChi.Dia_Chi 
+                                                                : (string.IsNullOrWhiteSpace(hd.Dia_Chi_Tu_Nhap) ? "—" : hd.Dia_Chi_Tu_Nhap)))
+                        </span>
+                        <span class="address-loading d-none">Đang tải...</span>
+                    </td>
+                    <td class="text-end">@VND(hd.Tong_Tien)</td>
+                    <td><span class="badge @BadgeClass(dbStatus)">@HumanStatus(dbStatus)</span></td>
+                    <td class="text-end">
+                        <a class="btn btn-sm btn-outline-secondary me-1"
+                           href="@Url.Action("ChiTiet", "QuanLyDonHang", new { id = hd.ID_Hoa_Don })">Chi tiết</a>
 
-                            <td>
-                                @{
-                                    string diaChiHienThi =
-                                    string.Equals(hd.Loai_Hoa_Don, "TaiQuay", StringComparison.OrdinalIgnoreCase)
-                                    ? "Tại quầy"
-                                    : ((hd.ID_Dia_Chi.HasValue && hd.DiaChi != null && !string.IsNullOrWhiteSpace(hd.DiaChi.Dia_Chi))
-                                    ? hd.DiaChi.Dia_Chi
-                                    : (string.IsNullOrWhiteSpace(hd.Dia_Chi_Tu_Nhap) ? "—" : hd.Dia_Chi_Tu_Nhap));
-                                }
-                                @diaChiHienThi
-                            </td>
-
-                            <td class="text-end">@VND(hd.Tong_Tien)</td>
-                            <td><span class="badge @BadgeClass(dbStatus)">@HumanStatus(dbStatus)</span></td>
-
-                            <td class="text-end">
-                                <a class="btn btn-sm btn-outline-secondary me-1"
-                                   href="@Url.Action("ChiTiet", "QuanLyDonHang", new { id = hd.ID_Hoa_Don })">Chi tiết</a>
-
-                                @if (string.Equals(dbStatus, "Chua_Xac_Nhan", StringComparison.OrdinalIgnoreCase))
+                        @if (string.Equals(dbStatus, "Chua_Xac_Nhan", StringComparison.OrdinalIgnoreCase))
                                 {
                                     <form method="post" class="d-inline" action="@Url.Action("XacNhan","QuanLyDonHang")">
                                         @Html.AntiForgeryToken()
@@ -274,7 +274,6 @@
                                         <button class="btn btn-sm btn-primary me-1" type="submit">Xác nhận</button>
                                     </form>
                                 }
-
                                 @if (string.Equals(dbStatus, "Da_Xac_Nhan", StringComparison.OrdinalIgnoreCase))
                                 {
                                     <form method="post" class="d-inline" action="@Url.Action("BatDauXuLy","QuanLyDonHang")">
@@ -284,7 +283,6 @@
                                         <button class="btn btn-sm btn-secondary me-1" type="submit">Bắt đầu xử lý</button>
                                     </form>
                                 }
-
                                 @if (string.Equals(dbStatus, "Dang_Xu_Ly", StringComparison.OrdinalIgnoreCase))
                                 {
                                     <form method="post" class="d-inline" action="@Url.Action("BatDauGiaoHang","QuanLyDonHang")">
@@ -294,7 +292,6 @@
                                         <button class="btn btn-sm btn-info me-1" type="submit">Bắt đầu giao</button>
                                     </form>
                                 }
-
                                 @if (string.Equals(dbStatus, "Dang_Giao_Hang", StringComparison.OrdinalIgnoreCase))
                                 {
                                     <form method="post" class="d-inline" action="@Url.Action("GiaoHangThanhCong","QuanLyDonHang")">
@@ -304,15 +301,13 @@
                                         <button class="btn btn-sm btn-success me-1" type="submit">Giao hàng thành công</button>
                                     </form>
                                 }
-
-                                @* Nút Hủy *@
                                 @if (!string.Equals(dbStatus, "Hoan_Thanh", StringComparison.OrdinalIgnoreCase)
                                                         && !string.Equals(dbStatus, "Huy_Don", StringComparison.OrdinalIgnoreCase))
                                 {
                                     if (string.Equals(dbStatus, "Chua_Thanh_Toan", StringComparison.OrdinalIgnoreCase))
                                     {
                                         <button type="button" class="btn btn-sm btn-outline-danger" disabled
-                                                title="Trạng Thái Chưa Thanh Toán chỉ được Hủy bởi hệ thống tự động. Vui lòng đợi chuyển qua trạng thái 'Đã Xác nhận'.">
+                                                title="Trạng Thái Chưa Thanh Toán chỉ được Hủy bởi hệ thống tự động.">
                                             Hủy
                                         </button>
                                     }
@@ -337,7 +332,6 @@
     </div>
 </div>
 
-<!-- Modal Hủy đơn (trang Index) -->
 <div class="modal fade" id="modalHuyDon" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-xl modal-dialog-scrollable">
         <div class="modal-content">
@@ -345,19 +339,16 @@
                 <h5 class="modal-title">Hủy đơn <span id="huy-mahd" class="text-muted"></span></h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Đóng"></button>
             </div>
-
             <form id="form-huy-don" method="post" action="@Url.Action("Huy","QuanLyDonHang")">
                 @Html.AntiForgeryToken()
                 <input type="hidden" name="id" id="huy-id" />
                 <input type="hidden" name="status" id="huy-status" />
                 <input type="hidden" name="from" value="index" />
-
                 <div class="modal-body">
                     <div class="mb-3">
                         <label class="form-label fw-semibold">Lý do hủy <span class="text-danger">*</span></label>
                         <textarea class="form-control" id="huy-lydo" name="lyDo" rows="2" required></textarea>
                     </div>
-
                     <div id="khophuc-wrapper">
                         <div class="d-flex justify-content-between align-items-center mb-2">
                             <div class="fw-semibold">Khôi phục tồn cho các cốc đã chọn</div>
@@ -366,7 +357,6 @@
                                 <label class="form-check-label" for="chk-all">Chọn tất cả</label>
                             </div>
                         </div>
-
                         <div class="table-responsive border rounded">
                             <table class="table table-sm mb-0" id="tbl-kphoiphuc">
                                 <thead class="table-light">
@@ -384,16 +374,13 @@
                             </table>
                         </div>
                     </div>
-
                     <div id="alert-auto-restock-all" class="alert alert-info d-none mt-3">
                         Trạng thái <strong>Chưa xác nhận</strong>: hệ thống sẽ <strong>tự động khôi phục TOÀN BỘ</strong> tồn khi hủy. Bạn chỉ cần nhập lý do và xác nhận.
                     </div>
-
                     <div id="alert-no-restock-shipping" class="alert alert-warning d-none mt-3">
                         Trạng thái <strong>Đang giao hàng</strong>: hủy đơn <strong>KHÔNG khôi phục tồn</strong>.
                     </div>
                 </div>
-
                 <div class="modal-footer">
                     <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Đóng</button>
                     <button type="submit" id="btn-huy" class="btn btn-danger">Xác nhận hủy</button>
@@ -409,7 +396,7 @@
     const tblBody = () => document.querySelector('#tbl-kphoiphuc tbody');
 
     function escapeHtml(str) {
-        return (str || '').replace(/[&<>"']/g, s => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[s]));
+        return (str || '').replace(/[&<>"']/g, s => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#039;' }[s]));
     }
 
     function buildRow(item) {
@@ -419,8 +406,7 @@
             <td>${escapeHtml(item.ten)}</td>
             <td class="text-end"><span class="sl-dat" data-max="${item.soLuong}">${item.soLuong}</span></td>
             <td class="text-end">
-                <input type="number" min="0" max="${item.soLuong}" step="1" class="form-control form-control-sm input-sl"
-                       value="${item.daLam ? 0 : item.soLuong}" data-id="${item.id}">
+                <input type="number" min="0" max="${item.soLuong}" step="1" class="form-control form-control-sm input-sl" value="${item.daLam ? 0 : item.soLuong}" data-id="${item.id}">
             </td>
             <td>${item.daLam ? '<span class="badge text-bg-warning">Đã làm</span>' : '<span class="badge text-bg-success">Chưa làm</span>'}</td>
         `;
@@ -428,115 +414,753 @@
         return tr;
     }
 
+    async function loadAddress(districtId, wardCode, addressCell) {
+        const display = addressCell.querySelector('.address-display');
+        const loading = addressCell.querySelector('.address-loading');
+        const originalText = display.textContent;
+
+        if (originalText === 'Tại quầy' || !districtId || !wardCode) {
+            display.textContent = originalText === '—' ? '—' : originalText;
+            return;
+        }
+
+        try {
+            loading.classList.remove('d-none');
+            display.classList.add('d-none');
+
+            const districtRes = await fetch('https://localhost:7169/api/Shipping/districts/201');
+            const districtData = await districtRes.json();
+            if (districtData.code !== 200 || !districtData.data) {
+                throw new Error(`District API error: ${districtData.message || 'No data'}`);
+            }
+
+            const district = districtData.data.find(d => d.DistrictID === parseInt(districtId));
+            if (!district) {
+                throw new Error(`District not found for DistrictID: ${districtId}`);
+            }
+
+            const wardRes = await fetch(`https://localhost:7169/api/Shipping/wards/${districtId}`);
+            const wardData = await wardRes.json();
+            if (wardData.code !== 200 || !wardData.data) {
+                throw new Error(`Ward API error: ${wardData.message || 'No data'}`);
+            }
+
+            const ward = wardData.data.find(w => w.WardCode === wardCode);
+            if (!ward) {
+                throw new Error(`Ward not found for WardCode: ${wardCode}`);
+            }
+
+            display.textContent = `${ward.WardName}, ${district.DistrictName}`;
+        } catch (err) {
+            console.error(`Address load error for DistrictID: ${districtId}, WardCode: ${wardCode}:`, err.message);
+            display.textContent = originalText; // Fallback to original DiaChi.Dia_Chi or Dia_Chi_Tu_Nhap
+        } finally {
+            loading.classList.add('d-none');
+            display.classList.remove('d-none');
+        }
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+        const addressCells = document.querySelectorAll('.address-cell');
+        Promise.all(Array.from(addressCells).map(cell =>
+            loadAddress(cell.dataset.districtId, cell.dataset.wardCode, cell)
+        )).catch(err => console.error('Batch address load error:', err));
+    });
+
     if (modal) {
-        modal.addEventListener('show.bs.modal', async function (e) {
+        modal.addEventListener('show.bs.modal', async e => {
             const btn = e.relatedTarget;
-            const id = btn?.getAttribute('data-id');
-            const ma = btn?.getAttribute('data-ma');
-            const status = (btn?.getAttribute('data-status') || "").trim();
+            const id = btn?.dataset.id;
+            const ma = btn?.dataset.ma;
+            const status = (btn?.dataset.status || '').trim();
 
             document.getElementById('huy-id').value = id || '';
             document.getElementById('huy-status').value = status || '';
             document.getElementById('huy-mahd').textContent = ma ? `(#${ma})` : '';
+            document.getElementById('huy-lydo').value = '';
 
-            // reset textarea
-            const textarea = document.getElementById('huy-lydo');
-            if (textarea) textarea.value = '';
-
-            // Toggle khu vực chọn và cảnh báo theo trạng thái
             const wrapper = document.getElementById('khophuc-wrapper');
             const alertAutoAll = document.getElementById('alert-auto-restock-all');
             const alertNoRestock = document.getElementById('alert-no-restock-shipping');
 
-            // Mặc định ẩn cảnh báo
-            alertAutoAll.classList.add("d-none");
-            alertNoRestock.classList.add("d-none");
+            alertAutoAll.classList.add('d-none');
+            alertNoRestock.classList.add('d-none');
 
-            if (status === "Chua_Xac_Nhan") {
-                wrapper.classList.add("d-none");
-                alertAutoAll.classList.remove("d-none");
+            if (status === 'Chua_Xac_Nhan') {
+                wrapper.classList.add('d-none');
+                alertAutoAll.classList.remove('d-none');
                 return;
             }
 
-            if (status === "Dang_Giao_Hang") {
-                wrapper.classList.add("d-none");
-                alertNoRestock.classList.remove("d-none");
+            if (status === 'Dang_Giao_Hang') {
+                wrapper.classList.add('d-none');
+                alertNoRestock.classList.remove('d-none');
                 return;
             }
 
-            // Các trạng thái được chọn khôi phục (Da_Xac_Nhan, Dang_Xu_Ly, …)
-            wrapper.classList.remove("d-none");
-
+            wrapper.classList.remove('d-none');
             const body = tblBody();
-            body.innerHTML = `<tr><td colspan="5" class="text-muted">Đang tải...</td></tr>`;
+            body.innerHTML = '<tr><td colspan="5" class="text-muted">Đang tải...</td></tr>';
 
             try {
-                const url = `@Url.Action("ChiTietJson", "QuanLyDonHang")?id=${0}`.replace('0', encodeURIComponent(id));
-                const res = await fetch(url, { credentials: 'same-origin' });
+                const url = '@Url.Action("ChiTietJson", "QuanLyDonHang")?id=' + encodeURIComponent(id);
+                const res = await fetch(url);
                 const data = await res.json();
 
                 if (!data?.ok) {
-                    body.innerHTML = `<tr><td colspan="5" class="text-danger">Không tải được chi tiết hóa đơn.</td></tr>`;
+                    body.innerHTML = '<tr><td colspan="5" class="text-danger">Không tải được chi tiết hóa đơn.</td></tr>';
                     return;
                 }
 
-                if (!data.items || data.items.length === 0) {
-                    body.innerHTML = `<tr><td colspan="5" class="text-muted">Đơn hàng không có chi tiết.</td></tr>`;
+                if (!data.items?.length) {
+                    body.innerHTML = '<tr><td colspan="5" class="text-muted">Đơn hàng không có chi tiết.</td></tr>';
                     return;
                 }
 
                 body.innerHTML = '';
-                data.items.forEach(it => body.appendChild(buildRow(it)));
+                data.items.forEach(item => body.appendChild(buildRow(item)));
             } catch (err) {
-                body.innerHTML = `<tr><td colspan="5" class="text-danger">Lỗi khi tải dữ liệu.</td></tr>`;
+                body.innerHTML = '<tr><td colspan="5" class="text-danger">Lỗi khi tải dữ liệu.</td></tr>';
             }
         });
     }
 
-    // Chọn tất cả
-    document.addEventListener('change', function (e) {
-        if (e.target?.id === 'chk-all') {
-            const on = e.target.checked;
+    document.addEventListener('change', e => {
+        if (e.target.id === 'chk-all') {
+            const checked = e.target.checked;
             document.querySelectorAll('#tbl-kphoiphuc .chk-row').forEach(cb => {
-                cb.checked = on;
+                cb.checked = checked;
                 const tr = cb.closest('tr');
-                const inp = tr?.querySelector('.input-sl');
-                const max = parseInt(inp?.getAttribute('max') || '0');
-                if (on && parseInt(inp.value || '0') === 0 && max > 0) inp.value = String(max);
+                const inp = tr.querySelector('.input-sl');
+                const max = parseInt(inp.dataset.max || '0');
+                if (checked && parseInt(inp.value || '0') === 0 && max > 0) {
+                    inp.value = max;
+                }
             });
         }
     });
 
-    // Submit: đóng gói khoiPhucIds/khoiPhucQtys
-    const form = document.getElementById('form-huy-don');
-    if (form) {
-        form.addEventListener('submit', function () {
-            const btn = document.getElementById('btn-huy');
-            if (btn) btn.disabled = true;
+    document.getElementById('form-huy-don')?.addEventListener('submit', e => {
+        const btn = document.getElementById('btn-huy');
+        btn.disabled = true;
 
+        const wrapper = document.getElementById('khophuc-wrapper');
+        if (!wrapper.classList.contains('d-none')) {
+            const form = e.target;
             form.querySelectorAll('input[name="khoiPhucIds"], input[name="khoiPhucQtys"]').forEach(n => n.remove());
 
-            const wrapper = document.getElementById('khophuc-wrapper');
-            if (!wrapper.classList.contains('d-none')) {
-                const rows = document.querySelectorAll('#tbl-kphoiphuc tbody tr');
-                rows.forEach(tr => {
-                    const cb = tr.querySelector('.chk-row');
-                    const inp = tr.querySelector('.input-sl');
-                    if (cb?.checked && inp) {
-                        const id = inp.getAttribute('data-id');
-                        const qty = inp.value;
-                        if (id) {
-                            const hidden1 = document.createElement('input');
-                            hidden1.type = 'hidden'; hidden1.name = 'khoiPhucIds'; hidden1.value = id;
-                            form.appendChild(hidden1);
+            document.querySelectorAll('#tbl-kphoiphuc .chk-row:checked').forEach(cb => {
+                const tr = cb.closest('tr');
+                const inp = tr.querySelector('.input-sl');
+                const id = inp.dataset.id;
+                const qty = inp.value;
 
-                            const hidden2 = document.createElement('input');
-                            hidden2.type = 'hidden'; hidden2.name = 'khoiPhucQtys'; hidden2.value = qty;
-                            form.appendChild(hidden2);
-                        }
+                if (id && qty) {
+                    const hidden1 = document.createElement('input');
+                    hidden1.type = 'hidden';
+                    hidden1.name = 'khoiPhucIds';
+                    hidden1.value = id;
+                    form.appendChild(hidden1);
+
+                    const hidden2 = document.createElement('input');
+                    hidden2.type = 'hidden';
+                    hidden2.name = 'khoiPhucQtys';
+                    hidden2.value = qty;
+                    form.appendChild(hidden2);
+                }
+            });
+        }
+    });
+</script> *@
+
+
+
+
+
+
+
+
+
+@{
+    Layout = "_AdminLayout";
+}
+@model FE.Controllers.QuanLyDonHangViewModel
+@using System.Globalization
+@using System.Linq
+@{
+    ViewData["Title"] = "Quản lý đơn hàng";
+}
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" />
+
+@functions {
+    string HumanStatus(string db) => db switch
+    {
+        "Chua_Xac_Nhan" => "Chờ xác nhận",
+        "Chua_Thanh_Toan" => "Chưa Thanh Toán",
+        "Da_Xac_Nhan" => "Chờ xử lý",
+        "Dang_Xu_Ly" => "Đang xử lý",
+        "Dang_Giao_Hang" => "Vận chuyển",
+        "Hoan_Thanh" => "Hoàn thành",
+        "Huy_Don" => "Đã huỷ",
+        _ => db ?? ""
+    };
+
+    string BadgeClass(string db) => db switch
+    {
+        "Chua_Xac_Nhan" => "text-bg-warning",
+        "Chua_Thanh_Toan" => "text-bg-dark",
+        "Da_Xac_Nhan" => "text-bg-primary",
+        "Dang_Xu_Ly" => "text-bg-secondary",
+        "Dang_Giao_Hang" => "text-bg-info",
+        "Hoan_Thanh" => "text-bg-success",
+        "Huy_Don" => "text-bg-danger",
+        _ => "text-bg-secondary"
+    };
+
+    string VND(decimal n) => string.Format(new CultureInfo("vi-VN"), "{0:c0}", n);
+
+    string PayText(int? id) => id switch
+    {
+        1 => "Tiền mặt",
+        2 => "Thẻ",
+        3 => "Chuyển khoản",
+        4 => "Thanh Toán Khi Nhận Hàng",
+        5 => "VNPay",
+        null => "—",
+        _ => id.ToString()!
+    };
+
+    (string WardCode, string DistrictId) ParseAddress(string address)
+    {
+        if (string.IsNullOrWhiteSpace(address) || !address.Contains(","))
+            return ("", "");
+
+        var parts = address.Split(',', StringSplitOptions.TrimEntries);
+        return parts.Length >= 2 ? (parts[0], parts[1]) : ("", "");
+    }
+}
+
+<div class="container-fluid py-3">
+    <h3 class="mb-3">Quản lý đơn hàng</h3>
+
+    @if (TempData["msg"] is string msg && !string.IsNullOrWhiteSpace(msg))
+    {
+        <div class="toast align-items-center text-bg-info border-0 show position-fixed top-0 end-0 m-3" role="alert">
+            <div class="d-flex">
+                <div class="toast-body">@msg</div>
+                <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
+            </div>
+        </div>
+    }
+
+    <form method="get" class="d-flex flex-wrap align-items-center gap-2 mb-3">
+        <input name="tuKhoa" id="tuKhoa" class="form-control" style="max-width:360px"
+               value="@Model.TuKhoa" placeholder="Tìm theo mã / tên khách / SĐT..." />
+
+        <select name="trangThai" id="selTrangThai" class="form-select" style="max-width:220px">
+            @foreach (var t in Model.TrangThaiList)
+            {
+                var label = t.Equals("TẤT CẢ", StringComparison.OrdinalIgnoreCase) ? "TẤT CẢ" : HumanStatus(t);
+                <option value="@t" selected="@(t == Model.TrangThai)">@label</option>
+            }
+        </select>
+
+        <button class="btn btn-secondary" type="submit">Tải lại</button>
+    </form>
+
+    @if (Model.FocusedHoaDon != null && Model.FocusedHoaDon.Any())
+    {
+        <div class="card shadow-sm mb-4 border-primary">
+            <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
+                <span class="fw-semibold">Khung thao tác nhanh (30 phút)</span>
+                <small class="opacity-75">Đơn bạn vừa thao tác sẽ nằm ở đây để xử lý tiếp</small>
+            </div>
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-sm align-middle mb-0">
+                        <thead class="table-light">
+                            <tr>
+                                <th style="width:140px">Mã đơn</th>
+                                <th>Khách hàng</th>
+                                <th style="width:160px">Ngày tạo</th>
+                                <th style="width:140px">Thanh toán</th>
+                                <th style="width:160px">Trạng thái</th>
+                                <th class="text-end" style="width:420px">Thao tác</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var hd in Model.FocusedHoaDon)
+                            {
+                                var dbStatus = hd.Trang_Thai ?? "";
+                                var tenKhach = hd.KhachHang?.Ho_Ten;
+                                var sdt = hd.KhachHang?.So_Dien_Thoai;
+
+                                <tr>
+                                    <td>
+                                        <a class="text-decoration-none fw-semibold"
+                                           href="@Url.Action("ChiTiet", "QuanLyDonHang", new { id = hd.ID_Hoa_Don })">
+                                            @hd.Ma_Hoa_Don
+                                        </a>
+                                    </td>
+                                    <td>
+                                        <div>@(string.IsNullOrWhiteSpace(tenKhach) ? "Khách lẻ" : tenKhach)</div>
+                                        <div class="small text-muted">@(string.IsNullOrWhiteSpace(sdt) ? "—" : sdt)</div>
+                                    </td>
+                                    <td>@hd.Ngay_Tao.ToString("dd/MM/yyyy HH:mm")</td>
+                                    <td>@PayText(hd.ID_Hinh_Thuc_Thanh_Toan)</td>
+                                    <td><span class="badge @BadgeClass(dbStatus)">@HumanStatus(dbStatus)</span></td>
+                                    <td class="text-end">
+                                        <a class="btn btn-sm btn-outline-secondary me-1"
+                                           href="@Url.Action("ChiTiet", "QuanLyDonHang", new { id = hd.ID_Hoa_Don })">Chi tiết</a>
+
+                                        @if (string.Equals(dbStatus, "Chua_Xac_Nhan", StringComparison.OrdinalIgnoreCase))
+                                        {
+                                            <form method="post" class="d-inline" action="@Url.Action("XacNhan","QuanLyDonHang")">
+                                                @Html.AntiForgeryToken()
+                                                <input type="hidden" name="id" value="@hd.ID_Hoa_Don" />
+                                                <input type="hidden" name="from" value="index" />
+                                                <button class="btn btn-sm btn-primary me-1" type="submit">Xác nhận</button>
+                                            </form>
+                                        }
+                                        @if (string.Equals(dbStatus, "Da_Xac_Nhan", StringComparison.OrdinalIgnoreCase))
+                                        {
+                                            <form method="post" class="d-inline" action="@Url.Action("BatDauXuLy","QuanLyDonHang")">
+                                                @Html.AntiForgeryToken()
+                                                <input type="hidden" name="id" value="@hd.ID_Hoa_Don" />
+                                                <input type="hidden" name="from" value="index" />
+                                                <button class="btn btn-sm btn-secondary me-1" type="submit">Bắt đầu xử lý</button>
+                                            </form>
+                                        }
+                                        @if (string.Equals(dbStatus, "Dang_Xu_Ly", StringComparison.OrdinalIgnoreCase))
+                                        {
+                                            <form method="post" class="d-inline" action="@Url.Action("BatDauGiaoHang","QuanLyDonHang")">
+                                                @Html.AntiForgeryToken()
+                                                <input type="hidden" name="id" value="@hd.ID_Hoa_Don" />
+                                                <input type="hidden" name="from" value="index" />
+                                                <button class="btn btn-sm btn-info me-1" type="submit">Bắt đầu giao</button>
+                                            </form>
+                                        }
+                                        @if (string.Equals(dbStatus, "Dang_Giao_Hang", StringComparison.OrdinalIgnoreCase))
+                                        {
+                                            <form method="post" class="d-inline" action="@Url.Action("GiaoHangThanhCong","QuanLyDonHang")">
+                                                @Html.AntiForgeryToken()
+                                                <input type="hidden" name="id" value="@hd.ID_Hoa_Don" />
+                                                <input type="hidden" name="from" value="index" />
+                                                <button class="btn btn-sm btn-success me-1" type="submit">Giao hàng thành công</button>
+                                            </form>
+                                        }
+
+                                        @if (!string.Equals(dbStatus, "Hoan_Thanh", StringComparison.OrdinalIgnoreCase)
+                                                                        && !string.Equals(dbStatus, "Huy_Don", StringComparison.OrdinalIgnoreCase))
+                                        {
+                                            if (string.Equals(dbStatus, "Chua_Thanh_Toan", StringComparison.OrdinalIgnoreCase))
+                                            {
+                                                <button type="button" class="btn btn-sm btn-outline-danger" disabled
+                                                        title="Trạng Thái Chưa Thanh Toán chỉ được Hủy bởi hệ thống tự động.">
+                                                    Hủy
+                                                </button>
+                                            }
+                                            else
+                                            {
+                                                <button type="button" class="btn btn-sm btn-outline-danger"
+                                                        data-bs-toggle="modal"
+                                                        data-bs-target="#modalHuyDon"
+                                                        data-id="@hd.ID_Hoa_Don"
+                                                        data-ma="@hd.Ma_Hoa_Don"
+                                                        data-status="@dbStatus">
+                                                    Hủy
+                                                </button>
+                                            }
+                                        }
+
+                                        <form method="post" class="d-inline" action="@Url.Action("BoFocus","QuanLyDonHang")">
+                                            @Html.AntiForgeryToken()
+                                            <input type="hidden" name="id" value="@hd.ID_Hoa_Don" />
+                                            <input type="hidden" name="from" value="index" />
+                                            <button class="btn btn-sm btn-outline-secondary ms-1" type="submit" title="Bỏ khỏi khung">Bỏ</button>
+                                        </form>
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    }
+
+    <div class="table-responsive">
+        <table class="table table-hover align-middle">
+            <thead class="table-light">
+                <tr>
+                    <th>Mã đơn</th>
+                    <th>Khách hàng</th>
+                    <th>Ngày tạo</th>
+                    <th>Thanh toán</th>
+                    <th>Loại HD</th>
+                    <th>Địa chỉ</th>
+                    <th class="text-end">Tổng tiền</th>
+                    <th>Trạng thái</th>
+                    <th class="text-end" style="width:420px">Thao tác</th>
+                </tr>
+            </thead>
+            <tbody>
+                @if (Model.DanhSachHoaDon == null || !Model.DanhSachHoaDon.Any())
+                {
+                    <tr><td colspan="9" class="text-muted">Không có dữ liệu</td></tr>
+                }
+                else
+                {
+                    @foreach (var hd in Model.DanhSachHoaDon)
+                    {
+                        var dbStatus = hd.Trang_Thai ?? "";
+                        var tenKhach = hd.KhachHang?.Ho_Ten;
+                        var sdt = hd.KhachHang?.So_Dien_Thoai;
+                        var (wardCode, districtId) = ParseAddress(hd.ID_Dia_Chi.HasValue && hd.DiaChi != null ? hd.DiaChi.Dia_Chi : "");
+                        var ghiChu = hd.ID_Dia_Chi.HasValue && hd.DiaChi != null && !string.IsNullOrWhiteSpace(hd.DiaChi.Ghi_Chu) ? $" ({hd.DiaChi.Ghi_Chu})" : "";
+
+                        <tr>
+                            <td>
+                                <a class="text-decoration-none fw-semibold"
+                                   href="@Url.Action("ChiTiet", "QuanLyDonHang", new { id = hd.ID_Hoa_Don })">
+                                    @hd.Ma_Hoa_Don
+                                </a>
+                            </td>
+                            <td>
+                                <div>@(string.IsNullOrWhiteSpace(tenKhach) ? "Khách lẻ" : tenKhach)</div>
+                                <div class="small text-muted">@(string.IsNullOrWhiteSpace(sdt) ? "—" : sdt)</div>
+                            </td>
+                            <td>@hd.Ngay_Tao.ToString("dd/MM/yyyy HH:mm")</td>
+                            <td>@PayText(hd.ID_Hinh_Thuc_Thanh_Toan)</td>
+                            <td>@(string.IsNullOrWhiteSpace(hd.Loai_Hoa_Don) ? "—" : hd.Loai_Hoa_Don)</td>
+                            <td class="address-cell" data-district-id="@districtId" data-ward-code="@wardCode" data-ghi-chu="@(hd.DiaChi?.Ghi_Chu ?? "")">
+                                <span class="address-display">
+                                    @(string.Equals(hd.Loai_Hoa_Don, "TaiQuay", StringComparison.OrdinalIgnoreCase)
+                                                                ? "Tại quầy"
+                                                                : (hd.ID_Dia_Chi.HasValue && hd.DiaChi != null && !string.IsNullOrWhiteSpace(hd.DiaChi.Dia_Chi)
+                                                                ? hd.DiaChi.Dia_Chi + ghiChu
+                                                                : (string.IsNullOrWhiteSpace(hd.Dia_Chi_Tu_Nhap) ? "—" : hd.Dia_Chi_Tu_Nhap)))
+                        </span>
+                        <span class="address-loading d-none">Đang tải...</span>
+                    </td>
+                    <td class="text-end">@VND(hd.Tong_Tien)</td>
+                    <td><span class="badge @BadgeClass(dbStatus)">@HumanStatus(dbStatus)</span></td>
+                    <td class="text-end">
+                        <!-- Giữ nguyên các nút thao tác -->
+                        <a class="btn btn-sm btn-outline-secondary me-1"
+                           href="@Url.Action("ChiTiet", "QuanLyDonHang", new { id = hd.ID_Hoa_Don })">Chi tiết</a>
+
+                        @if (string.Equals(dbStatus, "Chua_Xac_Nhan", StringComparison.OrdinalIgnoreCase))
+                                {
+                                    <form method="post" class="d-inline" action="@Url.Action("XacNhan","QuanLyDonHang")">
+                                        @Html.AntiForgeryToken()
+                                        <input type="hidden" name="id" value="@hd.ID_Hoa_Don" />
+                                        <input type="hidden" name="from" value="index" />
+                                        <button class="btn btn-sm btn-primary me-1" type="submit">Xác nhận</button>
+                                    </form>
+                                }
+                                @if (string.Equals(dbStatus, "Da_Xac_Nhan", StringComparison.OrdinalIgnoreCase))
+                                {
+                                    <form method="post" class="d-inline" action="@Url.Action("BatDauXuLy","QuanLyDonHang")">
+                                        @Html.AntiForgeryToken()
+                                        <input type="hidden" name="id" value="@hd.ID_Hoa_Don" />
+                                        <input type="hidden" name="from" value="index" />
+                                        <button class="btn btn-sm btn-secondary me-1" type="submit">Bắt đầu xử lý</button>
+                                    </form>
+                                }
+                                @if (string.Equals(dbStatus, "Dang_Xu_Ly", StringComparison.OrdinalIgnoreCase))
+                                {
+                                    <form method="post" class="d-inline" action="@Url.Action("BatDauGiaoHang","QuanLyDonHang")">
+                                        @Html.AntiForgeryToken()
+                                        <input type="hidden" name="id" value="@hd.ID_Hoa_Don" />
+                                        <input type="hidden" name="from" value="index" />
+                                        <button class="btn btn-sm btn-info me-1" type="submit">Bắt đầu giao</button>
+                                    </form>
+                                }
+                                @if (string.Equals(dbStatus, "Dang_Giao_Hang", StringComparison.OrdinalIgnoreCase))
+                                {
+                                    <form method="post" class="d-inline" action="@Url.Action("GiaoHangThanhCong","QuanLyDonHang")">
+                                        @Html.AntiForgeryToken()
+                                        <input type="hidden" name="id" value="@hd.ID_Hoa_Don" />
+                                        <input type="hidden" name="from" value="index" />
+                                        <button class="btn btn-sm btn-success me-1" type="submit">Giao hàng thành công</button>
+                                    </form>
+                                }
+                                @if (!string.Equals(dbStatus, "Hoan_Thanh", StringComparison.OrdinalIgnoreCase)
+                                                        && !string.Equals(dbStatus, "Huy_Don", StringComparison.OrdinalIgnoreCase))
+                                {
+                                    if (string.Equals(dbStatus, "Chua_Thanh_Toan", StringComparison.OrdinalIgnoreCase))
+                                    {
+                                        <button type="button" class="btn btn-sm btn-outline-danger" disabled
+                                                title="Trạng Thái Chưa Thanh Toán chỉ được Hủy bởi hệ thống tự động.">
+                                            Hủy
+                                        </button>
+                                    }
+                                    else
+                                    {
+                                        <button type="button" class="btn btn-sm btn-outline-danger"
+                                                data-bs-toggle="modal"
+                                                data-bs-target="#modalHuyDon"
+                                                data-id="@hd.ID_Hoa_Don"
+                                                data-ma="@hd.Ma_Hoa_Don"
+                                                data-status="@dbStatus">
+                                            Hủy
+                                        </button>
+                                    }
+                                }
+                            </td>
+                        </tr>
                     }
-                });
+                }
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<div class="modal fade" id="modalHuyDon" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-xl modal-dialog-scrollable">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Hủy đơn <span id="huy-mahd" class="text-muted"></span></h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Đóng"></button>
+            </div>
+            <form id="form-huy-don" method="post" action="@Url.Action("Huy","QuanLyDonHang")">
+                @Html.AntiForgeryToken()
+                <input type="hidden" name="id" id="huy-id" />
+                <input type="hidden" name="status" id="huy-status" />
+                <input type="hidden" name="from" value="index" />
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold">Lý do hủy <span class="text-danger">*</span></label>
+                        <textarea class="form-control" id="huy-lydo" name="lyDo" rows="2" required></textarea>
+                    </div>
+                    <div id="khophuc-wrapper">
+                        <div class="d-flex justify-content-between align-items-center mb-2">
+                            <div class="fw-semibold">Khôi phục tồn cho các cốc đã chọn</div>
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" id="chk-all" />
+                                <label class="form-check-label" for="chk-all">Chọn tất cả</label>
+                            </div>
+                        </div>
+                        <div class="table-responsive border rounded">
+                            <table class="table table-sm mb-0" id="tbl-kphoiphuc">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th style="width:40px"></th>
+                                        <th>Mặt hàng</th>
+                                        <th class="text-end" style="width:110px">SL đặt</th>
+                                        <th class="text-end" style="width:150px">SL khôi phục</th>
+                                        <th style="width:120px">Trạng thái pha</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr><td colspan="5" class="text-muted">Đang tải...</td></tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                    <div id="alert-auto-restock-all" class="alert alert-info d-none mt-3">
+                        Trạng thái <strong>Chưa xác nhận</strong>: hệ thống sẽ <strong>tự động khôi phục TOÀN BỘ</strong> tồn khi hủy. Bạn chỉ cần nhập lý do và xác nhận.
+                    </div>
+                    <div id="alert-no-restock-shipping" class="alert alert-warning d-none mt-3">
+                        Trạng thái <strong>Đang giao hàng</strong>: hủy đơn <strong>KHÔNG khôi phục tồn</strong>.
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Đóng</button>
+                    <button type="submit" id="btn-huy" class="btn btn-danger">Xác nhận hủy</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+    const modal = document.getElementById('modalHuyDon');
+    const tblBody = () => document.querySelector('#tbl-kphoiphuc tbody');
+
+    function escapeHtml(str) {
+        return (str || '').replace(/[&<>"']/g, s => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#039;' }[s]));
+    }
+
+    function buildRow(item) {
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+            <td><input type="checkbox" class="chk-row" data-id="${item.id}"></td>
+            <td>${escapeHtml(item.ten)}</td>
+            <td class="text-end"><span class="sl-dat" data-max="${item.soLuong}">${item.soLuong}</span></td>
+            <td class="text-end">
+                <input type="number" min="0" max="${item.soLuong}" step="1" class="form-control form-control-sm input-sl" value="${item.daLam ? 0 : item.soLuong}" data-id="${item.id}">
+            </td>
+            <td>${item.daLam ? '<span class="badge text-bg-warning">Đã làm</span>' : '<span class="badge text-bg-success">Chưa làm</span>'}</td>
+        `;
+        tr.querySelector('.chk-row').checked = !item.daLam && item.soLuong > 0;
+        return tr;
+    }
+
+       async function loadAddress(districtId, wardCode, addressCell) {
+        const display = addressCell.querySelector('.address-display');
+        const loading = addressCell.querySelector('.address-loading');
+        const originalText = display.textContent;
+        const ghiChu = addressCell.dataset.ghiChu ? ` (${addressCell.dataset.ghiChu})` : '';
+
+        if (originalText.startsWith('Tại quầy') || !districtId || !wardCode) {
+            display.textContent = originalText;
+            return;
+        }
+
+        try {
+            loading.classList.remove('d-none');
+            display.classList.add('d-none');
+
+            const districtRes = await fetch('https://localhost:7169/api/Shipping/districts/201');
+            const districtData = await districtRes.json();
+            if (districtData.code !== 200 || !districtData.data) {
+                throw new Error(`District API error: ${districtData.message || 'No data'}`);
+            }
+
+            const district = districtData.data.find(d => d.DistrictID === parseInt(districtId));
+            if (!district) {
+                throw new Error(`District not found for DistrictID: ${districtId}`);
+            }
+
+            const wardRes = await fetch(`https://localhost:7169/api/Shipping/wards/${districtId}`);
+            const wardData = await wardRes.json();
+            if (wardData.code !== 200 || !wardData.data) {
+                throw new Error(`Ward API error: ${wardData.message || 'No data'}`);
+            }
+
+            const ward = wardData.data.find(w => w.WardCode === wardCode);
+            if (!ward) {
+                throw new Error(`Ward not found for WardCode: ${wardCode}`);
+            }
+
+            display.textContent = `${ward.WardName}, ${district.DistrictName}${ghiChu}`;
+        } catch (err) {
+            console.error(`Address load error for DistrictID: ${districtId}, WardCode: ${wardCode}:`, err.message);
+            display.textContent = originalText; // Fallback to DiaChi.Dia_Chi + Ghi_Chu
+        } finally {
+            loading.classList.add('d-none');
+            display.classList.remove('d-none');
+        }
+    }
+
+       document.addEventListener('DOMContentLoaded', () => {
+        const addressCells = document.querySelectorAll('.address-cell');
+        Promise.allSettled(Array.from(addressCells).map(cell =>
+            loadAddress(cell.dataset.districtId, cell.dataset.wardCode, cell)
+        )).then(results => {
+            results.forEach((result, index) => {
+                if (result.status === 'rejected') {
+                    console.error(`Batch address load error for cell ${index}:`, result.reason);
+                }
+            });
+        });
+    });
+
+    if (modal) {
+        modal.addEventListener('show.bs.modal', async e => {
+            const btn = e.relatedTarget;
+            const id = btn?.dataset.id;
+            const ma = btn?.dataset.ma;
+            const status = (btn?.dataset.status || '').trim();
+
+            document.getElementById('huy-id').value = id || '';
+            document.getElementById('huy-status').value = status || '';
+            document.getElementById('huy-mahd').textContent = ma ? `(#${ma})` : '';
+            document.getElementById('huy-lydo').value = '';
+
+            const wrapper = document.getElementById('khophuc-wrapper');
+            const alertAutoAll = document.getElementById('alert-auto-restock-all');
+            const alertNoRestock = document.getElementById('alert-no-restock-shipping');
+
+            alertAutoAll.classList.add('d-none');
+            alertNoRestock.classList.add('d-none');
+
+            if (status === 'Chua_Xac_Nhan') {
+                wrapper.classList.add('d-none');
+                alertAutoAll.classList.remove('d-none');
+                return;
+            }
+
+            if (status === 'Dang_Giao_Hang') {
+                wrapper.classList.add('d-none');
+                alertNoRestock.classList.remove('d-none');
+                return;
+            }
+
+            wrapper.classList.remove('d-none');
+            const body = tblBody();
+            body.innerHTML = '<tr><td colspan="5" class="text-muted">Đang tải...</td></tr>';
+
+            try {
+                const url = '@Url.Action("ChiTietJson", "QuanLyDonHang")?id=' + encodeURIComponent(id);
+                const res = await fetch(url);
+                const data = await res.json();
+
+                if (!data?.ok) {
+                    body.innerHTML = '<tr><td colspan="5" class="text-danger">Không tải được chi tiết hóa đơn.</td></tr>';
+                    return;
+                }
+
+                if (!data.items?.length) {
+                    body.innerHTML = '<tr><td colspan="5" class="text-muted">Đơn hàng không có chi tiết.</td></tr>';
+                    return;
+                }
+
+                body.innerHTML = '';
+                data.items.forEach(item => body.appendChild(buildRow(item)));
+            } catch (err) {
+                body.innerHTML = '<tr><td colspan="5" class="text-danger">Lỗi khi tải dữ liệu.</td></tr>';
             }
         });
     }
+
+    document.addEventListener('change', e => {
+        if (e.target.id === 'chk-all') {
+            const checked = e.target.checked;
+            document.querySelectorAll('#tbl-kphoiphuc .chk-row').forEach(cb => {
+                cb.checked = checked;
+                const tr = cb.closest('tr');
+                const inp = tr.querySelector('.input-sl');
+                const max = parseInt(inp.dataset.max || '0');
+                if (checked && parseInt(inp.value || '0') === 0 && max > 0) {
+                    inp.value = max;
+                }
+            });
+        }
+    });
+
+    document.getElementById('form-huy-don')?.addEventListener('submit', e => {
+        const btn = document.getElementById('btn-huy');
+        btn.disabled = true;
+
+        const wrapper = document.getElementById('khophuc-wrapper');
+        if (!wrapper.classList.contains('d-none')) {
+            const form = e.target;
+            form.querySelectorAll('input[name="khoiPhucIds"], input[name="khoiPhucQtys"]').forEach(n => n.remove());
+
+            document.querySelectorAll('#tbl-kphoiphuc .chk-row:checked').forEach(cb => {
+                const tr = cb.closest('tr');
+                const inp = tr.querySelector('.input-sl');
+                const id = inp.dataset.id;
+                const qty = inp.value;
+
+                if (id && qty) {
+                    const hidden1 = document.createElement('input');
+                    hidden1.type = 'hidden';
+                    hidden1.name = 'khoiPhucIds';
+                    hidden1.value = id;
+                    form.appendChild(hidden1);
+
+                    const hidden2 = document.createElement('input');
+                    hidden2.type = 'hidden';
+                    hidden2.name = 'khoiPhucQtys';
+                    hidden2.value = qty;
+                    form.appendChild(hidden2);
+                }
+            });
+        }
+    });
 </script>

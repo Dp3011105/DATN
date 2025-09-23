@@ -55,9 +55,58 @@ namespace BE.Controllers
             }
         }
 
+        //[HttpPut("{khachHangId}")]
+        //public async Task<IActionResult> UpdateProfile(int khachHangId, [FromBody] ProfileUpdateRequest request)
+        //{
+        //    try
+        //    {
+        //        var khachHang = await _profileRepository.GetKhachHangByIdAsync(khachHangId);
+        //        if (khachHang == null)
+        //        {
+        //            return NotFound("Không tìm thấy khách hàng.");
+        //        }
+
+        //        // Kiểm tra email đã tồn tại hay chưa (nếu email thay đổi)
+        //        if (!string.IsNullOrEmpty(request.Email) && request.Email != khachHang.Email)
+        //        {
+        //            var existingCustomer = await _profileRepository.GetKhachHangByEmailAsync(request.Email);
+        //            if (existingCustomer != null && existingCustomer.ID_Khach_Hang != khachHangId)
+        //            {
+        //                return BadRequest("Email này đã được sử dụng bởi tài khoản khác.");
+        //            }
+        //        }
+
+        //        // Update all fields including email
+        //        khachHang.Ho_Ten = request.Ho_Ten;
+        //        khachHang.Email = request.Email; // Cho phép cập nhật email
+        //        khachHang.So_Dien_Thoai = request.So_Dien_Thoai;
+        //        khachHang.GioiTinh = request.GioiTinh;
+        //        khachHang.Ghi_Chu = request.Ghi_Chu;
+
+        //        var success = await _profileRepository.UpdateKhachHangAsync(khachHang);
+        //        if (!success)
+        //        {
+        //            return BadRequest("Không thể cập nhật thông tin.");
+        //        }
+
+        //        await _profileRepository.SaveChangesAsync();
+        //        return Ok("Cập nhật thông tin thành công.");
+        //    }
+        //    catch (Exception ex)
+        //    {
+        //        return StatusCode(500, $"Lỗi server: {ex.Message}");
+        //    }
+        //}
+
+        //fix cái ghi chú null , để không phải đổi model , không để ghi chú ở view nữa nhá , cáu 
         [HttpPut("{khachHangId}")]
         public async Task<IActionResult> UpdateProfile(int khachHangId, [FromBody] ProfileUpdateRequest request)
         {
+            if (request == null)
+            {
+                return BadRequest("Dữ liệu không hợp lệ.");
+            }
+
             try
             {
                 var khachHang = await _profileRepository.GetKhachHangByIdAsync(khachHangId);
@@ -66,8 +115,9 @@ namespace BE.Controllers
                     return NotFound("Không tìm thấy khách hàng.");
                 }
 
-                // Kiểm tra email đã tồn tại hay chưa (nếu email thay đổi)
-                if (!string.IsNullOrEmpty(request.Email) && request.Email != khachHang.Email)
+                // Kiểm tra email đã tồn tại hay chưa (chỉ khi thay đổi email)
+                if (!string.IsNullOrWhiteSpace(request.Email) &&
+                    !request.Email.Equals(khachHang.Email, StringComparison.OrdinalIgnoreCase))
                 {
                     var existingCustomer = await _profileRepository.GetKhachHangByEmailAsync(request.Email);
                     if (existingCustomer != null && existingCustomer.ID_Khach_Hang != khachHangId)
@@ -76,12 +126,14 @@ namespace BE.Controllers
                     }
                 }
 
-                // Update all fields including email
-                khachHang.Ho_Ten = request.Ho_Ten;
-                khachHang.Email = request.Email; // Cho phép cập nhật email
-                khachHang.So_Dien_Thoai = request.So_Dien_Thoai;
+                // Cập nhật thông tin khách hàng
+                khachHang.Ho_Ten = request.Ho_Ten?.Trim();
+                khachHang.Email = request.Email?.Trim();
+                khachHang.So_Dien_Thoai = request.So_Dien_Thoai?.Trim();
                 khachHang.GioiTinh = request.GioiTinh;
-                khachHang.Ghi_Chu = request.Ghi_Chu;
+                khachHang.Ghi_Chu = string.IsNullOrWhiteSpace(request.Ghi_Chu)
+                                            ? "Không có"
+                                            : request.Ghi_Chu.Trim();
 
                 var success = await _profileRepository.UpdateKhachHangAsync(khachHang);
                 if (!success)
@@ -94,9 +146,13 @@ namespace BE.Controllers
             }
             catch (Exception ex)
             {
+                // Log lỗi (nếu có hệ thống logging)
                 return StatusCode(500, $"Lỗi server: {ex.Message}");
             }
         }
+
+
+
 
         [HttpPost("{khachHangId}/address")]
         public async Task<IActionResult> AddAddress(int khachHangId, [FromBody] AddressCreateRequest request)
