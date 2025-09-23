@@ -290,6 +290,109 @@ namespace BE.Repository
         }
 
 
+        //public async Task<SanPhamDTO> UpdateSanPhamAsync(int id, SanPhamDTO sanPhamDTO, string imagePath)
+        //{
+        //    var sanPham = await _context.San_Pham
+        //        .Include(sp => sp.SanPhamSizes)
+        //        .Include(sp => sp.SanPhamLuongDas)
+        //        .Include(sp => sp.SanPhamDoNgots)
+        //        .Include(sp => sp.SanPhamToppings)
+        //        .FirstOrDefaultAsync(sp => sp.ID_San_Pham == id);
+
+        //    if (sanPham == null)
+        //    {
+        //        return null;
+        //    }
+
+        //    // Cập nhật thông tin sản phẩm
+        //    sanPham.Ten_San_Pham = sanPhamDTO.Ten_San_Pham;
+        //    sanPham.Gia = sanPhamDTO.Gia;
+        //    sanPham.So_Luong = sanPhamDTO.So_Luong ?? 0;
+        //    sanPham.Hinh_Anh = imagePath ?? sanPham.Hinh_Anh;
+        //    sanPham.Mo_Ta = sanPhamDTO.Mo_Ta;
+        //    sanPham.Trang_Thai = sanPhamDTO.Trang_Thai;
+
+        //    // Xóa các quan hệ cũ
+        //    _context.SanPham_Size.RemoveRange(sanPham.SanPhamSizes);
+        //    _context.SanPhamLuongDa.RemoveRange(sanPham.SanPhamLuongDas);
+        //    _context.SanPham_DoNgot.RemoveRange(sanPham.SanPhamDoNgots);
+        //    _context.SanPham_Topping.RemoveRange(sanPham.SanPhamToppings);
+
+        //    // Thêm Sizes mới
+        //    if (sanPhamDTO.Sizes != null && sanPhamDTO.Sizes.Any())
+        //    {
+        //        foreach (var sizeId in sanPhamDTO.Sizes)
+        //        {
+        //            _context.SanPham_Size.Add(new SanPhamSize
+        //            {
+        //                ID_San_Pham = sanPham.ID_San_Pham,
+        //                ID_Size = sizeId
+        //            });
+        //        }
+        //    }
+
+        //    // Thêm Lượng Đá mới
+        //    if (sanPhamDTO.LuongDas != null && sanPhamDTO.LuongDas.Any())
+        //    {
+        //        foreach (var luongDaId in sanPhamDTO.LuongDas)
+        //        {
+        //            _context.SanPhamLuongDa.Add(new SanPhamLuongDa
+        //            {
+        //                ID_San_Pham = sanPham.ID_San_Pham,
+        //                ID_LuongDa = luongDaId
+        //            });
+        //        }
+        //    }
+
+        //    // Thêm Độ Ngọt mới
+        //    if (sanPhamDTO.DoNgots != null && sanPhamDTO.DoNgots.Any())
+        //    {
+        //        foreach (var doNgotId in sanPhamDTO.DoNgots)
+        //        {
+        //            _context.SanPham_DoNgot.Add(new SanPhamDoNgot
+        //            {
+        //                ID_San_Pham = sanPham.ID_San_Pham,
+        //                ID_DoNgot = doNgotId
+        //            });
+        //        }
+        //    }
+
+        //    // Thêm Toppings mới
+        //    if (sanPhamDTO.Toppings != null && sanPhamDTO.Toppings.Any())
+        //    {
+        //        foreach (var toppingId in sanPhamDTO.Toppings)
+        //        {
+        //            _context.SanPham_Topping.Add(new SanPhamTopping
+        //            {
+        //                ID_San_Pham = sanPham.ID_San_Pham,
+        //                ID_Topping = toppingId
+        //            });
+        //        }
+        //    }
+
+        //    await _context.SaveChangesAsync();
+
+        //    // Trả về DTO để tránh vòng lặp
+        //    return new SanPhamDTO
+        //    {
+        //        ID_San_Pham = sanPham.ID_San_Pham,
+        //        Ten_San_Pham = sanPham.Ten_San_Pham,
+        //        Gia = sanPham.Gia,
+        //        So_Luong = sanPham.So_Luong,
+        //        Hinh_Anh = sanPham.Hinh_Anh,
+        //        Mo_Ta = sanPham.Mo_Ta,
+        //        Trang_Thai = sanPham.Trang_Thai,
+        //        Sizes = sanPhamDTO.Sizes,
+        //        LuongDas = sanPhamDTO.LuongDas,
+        //        DoNgots = sanPhamDTO.DoNgots,
+        //        Toppings = sanPhamDTO.Toppings
+        //    };
+        //}
+
+
+        // vì Khuyến Mãi được Fix cứng theo giá sản phẩm cũ vậy nên gây sai lệch giá khi có khuyến mãi 
+        //Bản sửa lỗi 
+
         public async Task<SanPhamDTO> UpdateSanPhamAsync(int id, SanPhamDTO sanPhamDTO, string imagePath)
         {
             var sanPham = await _context.San_Pham
@@ -367,6 +470,26 @@ namespace BE.Repository
                         ID_San_Pham = sanPham.ID_San_Pham,
                         ID_Topping = toppingId
                     });
+                }
+            }
+
+            // Update ngầm SanPhamKhuyenMai: Lấy các khuyến mãi đang active (Trang_Thai = true) và tính Gia_Giam dựa trên Gia mới
+            var sanPhamKhuyenMais = await _context.SanPhamKhuyenMai
+                .Include(spkm => spkm.BangKhuyenMai)
+                .Where(spkm => spkm.ID_San_Pham == sanPham.ID_San_Pham && spkm.BangKhuyenMai.Trang_Thai == true)
+                .ToListAsync();
+
+            foreach (var spkm in sanPhamKhuyenMais)
+            {
+                // Kiểm tra nếu có Phan_Tram_Giam và Gia có giá trị
+                if (spkm.Phan_Tram_Giam > 0 && sanPham.Gia.HasValue)
+                {
+                    decimal giamGia = sanPham.Gia.Value * (spkm.Phan_Tram_Giam / 100m); // Sử dụng 100m để đảm bảo decimal
+                    spkm.Gia_Giam = sanPham.Gia.Value - giamGia;
+                }
+                else
+                {
+                    spkm.Gia_Giam = null; // Nếu không có giá hoặc không có phần trăm giảm, đặt Gia_Giam về null
                 }
             }
 
