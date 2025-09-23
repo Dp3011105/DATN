@@ -169,7 +169,7 @@ namespace FE.Controllers
                 }
             }
 
-            // Lưu các giá trị vào ViewBag
+           
             ViewBag.SearchTerm = searchTerm;
             ViewBag.StatusFilter = statusFilter;
             ViewBag.PromotionFilter = promotionFilter;
