@@ -183,6 +183,164 @@ namespace BE.Repository
 
 
         //Đổi trạng thái gửi gmail ở quản lý đơn hàng nhưng gửi gmail cho khách vãng lai nữa 
+        //đoạn code này trừ số lượng trong kho khi xác nhận đơn hàng , nhưng luông mới Chua_Xac_Nhan đã trừ kho rồi phải command lại 
+        //        public async Task<bool> UpdateTrangThaiAsync(int id, string trangThai, string? lyDoHuy, EmailService emailService)
+        //        {
+        //            try
+        //            {
+        //                // Truy vấn hóa đơn với các navigation cần thiết
+        //                var hd = await _context.Hoa_Don
+        //                    .Include(h => h.KhachHang)
+        //                    .Include(h => h.HoaDonChiTiets).ThenInclude(hdct => hdct.SanPham)
+        //                    .Include(h => h.HoaDonChiTiets).ThenInclude(hdct => hdct.HoaDonChiTietToppings).ThenInclude(hdctt => hdctt.Topping)
+        //                    .FirstOrDefaultAsync(x => x.ID_Hoa_Don == id);
+
+        //                if (hd == null) return false;
+
+        //                if (trangThai == "Da_Xac_Nhan")
+        //                {
+        //                    foreach (var hdct in hd.HoaDonChiTiets)
+        //                    {
+        //                        var sanPham = hdct.SanPham;
+        //                        if (sanPham == null)
+        //                            throw new Exception($"Sản phẩm với ID {hdct.ID_San_Pham} không tồn tại.");
+        //                        if (sanPham.So_Luong < hdct.So_Luong)
+        //                            throw new Exception($"Sản phẩm {sanPham.Ten_San_Pham} không đủ số lượng.");
+
+        //                        sanPham.So_Luong -= hdct.So_Luong;
+
+        //                        if (hdct.HoaDonChiTietToppings?.Any() == true)
+        //                        {
+        //                            foreach (var topping in hdct.HoaDonChiTietToppings)
+        //                            {
+        //                                var toppingEntity = topping.Topping;
+        //                                if (toppingEntity == null)
+        //                                    throw new Exception($"Topping với ID {topping.ID_Topping} không tồn tại.");
+        //                                if (toppingEntity.So_Luong < topping.So_Luong)
+        //                                    throw new Exception($"Topping {toppingEntity.Ten} không đủ số lượng.");
+
+        //                                toppingEntity.So_Luong -= topping.So_Luong ?? 0;
+        //                            }
+        //                        }
+        //                    }
+        //                }
+
+        //                // Cập nhật trạng thái và lý do hủy
+        //                hd.Trang_Thai = trangThai;
+        //                if (!string.IsNullOrWhiteSpace(lyDoHuy) && trangThai == "Huy_Don")
+        //                    hd.LyDoHuyDon = lyDoHuy;
+
+        //                await _context.SaveChangesAsync();
+
+        //                // Trích xuất email và họ tên
+        //                string? email = null;
+        //                string? hoTen = null;
+        //                if (hd.KhachHang != null && !string.IsNullOrWhiteSpace(hd.KhachHang.Email))
+        //                {
+        //                    email = hd.KhachHang.Email;
+        //                    hoTen = hd.KhachHang.Ho_Ten;
+        //                }
+        //                else if (!string.IsNullOrWhiteSpace(hd.Ghi_Chu))
+        //                {
+        //                    try
+        //                    {
+        //                        // Regex cho "Họ và Tên: [value]" (lấy đến dấu phẩy hoặc cuối chuỗi)
+        //                        var hoTenMatch = Regex.Match(hd.Ghi_Chu, @"Họ và Tên\s*:\s*(.+?)(?=,\s*|\s*$)", RegexOptions.IgnoreCase);
+        //                        if (hoTenMatch.Success)
+        //                        {
+        //                            hoTen = hoTenMatch.Groups[1].Value.Trim();
+        //                        }
+
+        //                        // Regex cho "Email: [value]" (lấy email hợp lệ, hỗ trợ .com hoặc các domain khác)
+        //                        var emailMatch = Regex.Match(hd.Ghi_Chu, @"Email\s*:\s*([\w\.-]+@[\w\.-]+\.[\w\.-]+)", RegexOptions.IgnoreCase);
+        //                        if (emailMatch.Success)
+        //                        {
+        //                            var potentialEmail = emailMatch.Groups[1].Value.Trim();
+        //                            if (Regex.IsMatch(potentialEmail, @"^[^@\s]+@[^@\s]+\.[^@\s]+$"))
+        //                            {
+        //                                email = potentialEmail;
+        //                            }
+        //                        }
+        //                    }
+        //                    catch (Exception ex)
+        //                    {
+        //                        // Log lỗi nếu cần
+        //                        // _logger.LogError("Lỗi phân tích Ghi_Chu: {Message}", ex.Message);
+        //                    }
+        //                }
+
+        //                // Gửi email thông báo
+        //                if (!string.IsNullOrWhiteSpace(email) && Regex.IsMatch(email, @"^[^@\s]+@[^@\s]+\.[^@\s]+$"))
+        //                {
+        //                    var subject = $"Cập nhật trạng thái hóa đơn #{hd.Ma_Hoa_Don}";
+        //                    var productList = string.Join("", hd.HoaDonChiTiets.Select(hdct =>
+        //                    {
+        //                        var toppingList = hdct.HoaDonChiTietToppings?.Any() == true
+        //                            ? string.Join("", hdct.HoaDonChiTietToppings.Select(t =>
+        //                                $"<li>Topping: {System.Security.SecurityElement.Escape(t.Topping?.Ten)} (Số lượng: {t.So_Luong}, Giá: {t.Gia_Topping:N0} VNĐ)</li>"))
+        //                            : "<li>Không có topping</li>";
+        //                        return $"<li>{System.Security.SecurityElement.Escape(hdct.SanPham?.Ten_San_Pham)} (Số lượng: {hdct.So_Luong}, Giá: {hdct.Gia_San_Pham:N0} VNĐ)<ul>{toppingList}</ul></li>";
+        //                    }));
+        //                    var body = @"<!DOCTYPE html>
+        //<html lang=""vi"">
+        //<head>
+        //    <meta charset=""UTF-8"">
+        //    <meta name=""viewport"" content=""width=device-width, initial-scale=1.0"">
+        //    <style>
+        //        body { font-family: 'Segoe UI', Arial, sans-serif; color: #333; background: #f5f5f5; margin: 0; padding: 20px; }
+        //        .container { max-width: 600px; margin: 0 auto; background: #fff; border-radius: 10px; overflow: hidden; box-shadow: 0 2px 8px rgba(0,0,0,0.1); }
+        //        .header { background: #1e88e5; color: #fff; padding: 15px; text-align: center; }
+        //        .header h1 { font-size: 22px; margin: 0; }
+        //        .content { padding: 20px; line-height: 1.6; }
+        //        .content p { margin: 10px 0; }
+        //        .highlight { font-weight: bold; color: #d32f2f; }
+        //        .button { display: inline-block; padding: 10px 20px; background: #1e88e5; color: #fff; text-decoration: none; border-radius: 5px; margin: 10px 0; font-weight: 500; }
+        //        .button:hover { background: #1565c0; }
+        //        .footer { padding: 10px; text-align: center; font-size: 12px; color: #666; border-top: 1px solid #eee; }
+        //        .logo { max-width: 150px; margin: 10px auto; display: block; }
+        //        ul { margin: 10px 0; padding-left: 20px; }
+        //        li { margin-bottom: 5px; }
+        //    </style>
+        //</head>
+        //<body>
+        //    <div class=""container"">
+        //        <div class=""header"">
+        //            <img src=""https://localhost:7081/Logo/logo.png"" alt=""Company Logo"" class=""logo"">
+        //            <h1>Cập Nhật Trạng Thái Hóa Đơn</h1>
+        //        </div>
+        //        <div class=""content"">
+        //            <p>Kính gửi " + System.Security.SecurityElement.Escape(hoTen ?? "Quý khách") + @",</p>
+        //            <p>Hóa đơn của bạn với mã <span class=""highlight"">#" + hd.Ma_Hoa_Don + @"</span> đã được cập nhật trạng thái thành: <strong>" + System.Security.SecurityElement.Escape(trangThai) + @"</strong>.</p>
+        //            <p><strong>Chi tiết sản phẩm và topping:</strong></p>
+        //            <ul>" + productList + @"</ul>
+        //            " + (trangThai == "Huy_Don" && !string.IsNullOrWhiteSpace(lyDoHuy) ? $"<p><strong>Lý do hủy:</strong> {System.Security.SecurityElement.Escape(lyDoHuy)}</p>" : "") + @"
+
+        //            <p>Liên hệ chúng tôi qua email blackmoondoge@gmail.com hoặc hotline 0834119666 nếu bạn cần hỗ trợ.</p>
+        //        </div>
+        //        <div class=""footer"">
+        //            <p>Trân trọng,<br>Trà Sữa TheBoy <br><a href=""https://localhost:7081/"">yourdomain.com</a></p>
+        //        </div>
+        //    </div>
+        //</body>
+        //</html>";
+
+        //                    await emailService.SendEmailAsync(email, subject, body);
+        //                }
+
+        //                return true;
+        //            }
+        //            catch (Exception ex)
+        //            {
+        //                // Log lỗi nếu cần
+        //                // _logger.LogError("Lỗi cập nhật trạng thái hóa đơn {HoaDonId}: {Message}", id, ex.Message);
+        //                return false;
+        //            }
+        //        }
+
+
+
+
+
 
         public async Task<bool> UpdateTrangThaiAsync(int id, string trangThai, string? lyDoHuy, EmailService emailService)
         {
@@ -197,6 +355,7 @@ namespace BE.Repository
 
                 if (hd == null) return false;
 
+                // Kiểm tra số lượng khi ở trạng thái Da_Xac_Nhan, nhưng không trừ
                 if (trangThai == "Da_Xac_Nhan")
                 {
                     foreach (var hdct in hd.HoaDonChiTiets)
@@ -207,8 +366,6 @@ namespace BE.Repository
                         if (sanPham.So_Luong < hdct.So_Luong)
                             throw new Exception($"Sản phẩm {sanPham.Ten_San_Pham} không đủ số lượng.");
 
-                        sanPham.So_Luong -= hdct.So_Luong;
-
                         if (hdct.HoaDonChiTietToppings?.Any() == true)
                         {
                             foreach (var topping in hdct.HoaDonChiTietToppings)
@@ -218,8 +375,6 @@ namespace BE.Repository
                                     throw new Exception($"Topping với ID {topping.ID_Topping} không tồn tại.");
                                 if (toppingEntity.So_Luong < topping.So_Luong)
                                     throw new Exception($"Topping {toppingEntity.Ten} không đủ số lượng.");
-
-                                toppingEntity.So_Luong -= topping.So_Luong ?? 0;
                             }
                         }
                     }
@@ -244,14 +399,12 @@ namespace BE.Repository
                 {
                     try
                     {
-                        // Regex cho "Họ và Tên: [value]" (lấy đến dấu phẩy hoặc cuối chuỗi)
                         var hoTenMatch = Regex.Match(hd.Ghi_Chu, @"Họ và Tên\s*:\s*(.+?)(?=,\s*|\s*$)", RegexOptions.IgnoreCase);
                         if (hoTenMatch.Success)
                         {
                             hoTen = hoTenMatch.Groups[1].Value.Trim();
                         }
 
-                        // Regex cho "Email: [value]" (lấy email hợp lệ, hỗ trợ .com hoặc các domain khác)
                         var emailMatch = Regex.Match(hd.Ghi_Chu, @"Email\s*:\s*([\w\.-]+@[\w\.-]+\.[\w\.-]+)", RegexOptions.IgnoreCase);
                         if (emailMatch.Success)
                         {
@@ -262,10 +415,9 @@ namespace BE.Repository
                             }
                         }
                     }
-                    catch (Exception ex)
+                    catch (Exception)
                     {
-                        // Log lỗi nếu cần
-                        // _logger.LogError("Lỗi phân tích Ghi_Chu: {Message}", ex.Message);
+                        // Có thể thêm logging nếu cần
                     }
                 }
 
@@ -281,25 +433,26 @@ namespace BE.Repository
                             : "<li>Không có topping</li>";
                         return $"<li>{System.Security.SecurityElement.Escape(hdct.SanPham?.Ten_San_Pham)} (Số lượng: {hdct.So_Luong}, Giá: {hdct.Gia_San_Pham:N0} VNĐ)<ul>{toppingList}</ul></li>";
                     }));
-                    var body = @"<!DOCTYPE html>
+
+                    var body = $@"<!DOCTYPE html>
 <html lang=""vi"">
 <head>
     <meta charset=""UTF-8"">
     <meta name=""viewport"" content=""width=device-width, initial-scale=1.0"">
     <style>
-        body { font-family: 'Segoe UI', Arial, sans-serif; color: #333; background: #f5f5f5; margin: 0; padding: 20px; }
-        .container { max-width: 600px; margin: 0 auto; background: #fff; border-radius: 10px; overflow: hidden; box-shadow: 0 2px 8px rgba(0,0,0,0.1); }
-        .header { background: #1e88e5; color: #fff; padding: 15px; text-align: center; }
-        .header h1 { font-size: 22px; margin: 0; }
-        .content { padding: 20px; line-height: 1.6; }
-        .content p { margin: 10px 0; }
-        .highlight { font-weight: bold; color: #d32f2f; }
-        .button { display: inline-block; padding: 10px 20px; background: #1e88e5; color: #fff; text-decoration: none; border-radius: 5px; margin: 10px 0; font-weight: 500; }
-        .button:hover { background: #1565c0; }
-        .footer { padding: 10px; text-align: center; font-size: 12px; color: #666; border-top: 1px solid #eee; }
-        .logo { max-width: 150px; margin: 10px auto; display: block; }
-        ul { margin: 10px 0; padding-left: 20px; }
-        li { margin-bottom: 5px; }
+        body {{ font-family: 'Segoe UI', Arial, sans-serif; color: #333; background: #f5f5f5; margin: 0; padding: 20px; }}
+        .container {{ max-width: 600px; margin: 0 auto; background: #fff; border-radius: 10px; overflow: hidden; box-shadow: 0 2px 8px rgba(0,0,0,0.1); }}
+        .header {{ background: #1e88e5; color: #fff; padding: 15px; text-align: center; }}
+        .header h1 {{ font-size: 22px; margin: 0; }}
+        .content {{ padding: 20px; line-height: 1.6; }}
+        .content p {{ margin: 10px 0; }}
+        .highlight {{ font-weight: bold; color: #d32f2f; }}
+        .button {{ display: inline-block; padding: 10px 20px; background: #1e88e5; color: #fff; text-decoration: none; border-radius: 5px; margin: 10px 0; font-weight: 500; }}
+        .button:hover {{ background: #1565c0; }}
+        .footer {{ padding: 10px; text-align: center; font-size: 12px; color: #666; border-top: 1px solid #eee; }}
+        .logo {{ max-width: 150px; margin: 10px auto; display: block; }}
+        ul {{ margin: 10px 0; padding-left: 20px; }}
+        li {{ margin-bottom: 5px; }}
     </style>
 </head>
 <body>
@@ -309,12 +462,11 @@ namespace BE.Repository
             <h1>Cập Nhật Trạng Thái Hóa Đơn</h1>
         </div>
         <div class=""content"">
-            <p>Kính gửi " + System.Security.SecurityElement.Escape(hoTen ?? "Quý khách") + @",</p>
-            <p>Hóa đơn của bạn với mã <span class=""highlight"">#" + hd.Ma_Hoa_Don + @"</span> đã được cập nhật trạng thái thành: <strong>" + System.Security.SecurityElement.Escape(trangThai) + @"</strong>.</p>
+            <p>Kính gửi {System.Security.SecurityElement.Escape(hoTen ?? "Quý khách")},</p>
+            <p>Hóa đơn của bạn với mã <span class=""highlight"">#{hd.Ma_Hoa_Don}</span> đã được cập nhật trạng thái thành: <strong>{System.Security.SecurityElement.Escape(trangThai)}</strong>.</p>
             <p><strong>Chi tiết sản phẩm và topping:</strong></p>
-            <ul>" + productList + @"</ul>
-            " + (trangThai == "Huy_Don" && !string.IsNullOrWhiteSpace(lyDoHuy) ? $"<p><strong>Lý do hủy:</strong> {System.Security.SecurityElement.Escape(lyDoHuy)}</p>" : "") + @"
-           
+            <ul>{productList}</ul>
+            {(trangThai == "Huy_Don" && !string.IsNullOrWhiteSpace(lyDoHuy) ? $"<p><strong>Lý do hủy:</strong> {System.Security.SecurityElement.Escape(lyDoHuy)}</p>" : "")}
             <p>Liên hệ chúng tôi qua email blackmoondoge@gmail.com hoặc hotline 0834119666 nếu bạn cần hỗ trợ.</p>
         </div>
         <div class=""footer"">
@@ -329,10 +481,9 @@ namespace BE.Repository
 
                 return true;
             }
-            catch (Exception ex)
+            catch (Exception)
             {
-                // Log lỗi nếu cần
-                // _logger.LogError("Lỗi cập nhật trạng thái hóa đơn {HoaDonId}: {Message}", id, ex.Message);
+                // Có thể thêm logging nếu cần
                 return false;
             }
         }
