@@ -36,332 +36,6 @@
             }
 
         .navbar-brand img {
-            height: 45px;
-            transition: transform .3s;
-        }
-
-            .navbar-brand img:hover {
-                transform: scale(1.08);
-            }
-
-        .nav-link {
-            font-weight: 500;
-            color: #333 !important;
-            margin: 0 .4rem;
-            position: relative;
-            transition: color .3s;
-        }
-
-            .nav-link::after {
-                content: "";
-                position: absolute;
-                bottom: -4px;
-                left: 0;
-                width: 0;
-                height: 2px;
-                background: #ff4d6d;
-                transition: width .3s;
-            }
-
-            .nav-link:hover::after {
-                width: 100%;
-            }
-        /* Nút đơn hàng và giỏ hàng */
-        .order-link, .cart-link {
-            display: flex;
-            align-items: center;
-            gap: 6px;
-            background: #ff4d6d;
-            color: #fff !important;
-            padding: 0.4rem 0.8rem;
-            border-radius: 20px;
-            font-size: 0.9rem;
-            transition: background 0.3s, transform 0.2s;
-        }
-
-            .order-link:hover, .cart-link:hover {
-                background: #e63956;
-                transform: translateY(-2px);
-            }
-
-            .cart-link .cart-count {
-                background: #fff;
-                color: #ff4d6d;
-                border-radius: 50%;
-                width: 20px;
-                height: 20px;
-                display: flex;
-                align-items: center;
-                justify-content: center;
-                font-size: 0.8rem;
-                font-weight: bold;
-            }
-        /* Trang cá nhân */
-        .user-link {
-            display: flex;
-            align-items: center;
-            gap: 6px;
-            padding: 0.3rem 0.7rem;
-            border-radius: 50px;
-            color: #333 !important;
-            font-size: 0.9rem;
-            transition: background .3s, transform .2s, color .3s;
-        }
-
-            .user-link i {
-                font-size: 1.3rem;
-            }
-
-            .user-link img {
-                width: 28px;
-                height: 28px;
-                border-radius: 50%;
-                object-fit: cover;
-            }
-
-            .user-link:hover {
-                background: rgba(255, 77, 109, 0.1);
-                color: #ff4d6d !important;
-                transform: scale(1.05);
-            }
-
-        .user-text {
-            display: none;
-        }
-        /* Footer */
-        .footer {
-            background: #222;
-            color: #aaa;
-            text-align: center;
-            padding: 1rem 0;
-            font-size: 0.85rem;
-            width: 100%;
-            flex-shrink: 0;
-            margin-top: auto;
-        }
-
-            .footer a {
-                color: #ff4d6d;
-                text-decoration: none;
-                transition: color .3s;
-            }
-
-                .footer a:hover {
-                    color: #fff;
-                }
-    </style>
-</head>
-<body>
-    <!-- Navbar -->
-    <header>
-        <nav class="navbar navbar-expand-lg fixed-top">
-            <div class="container">
-                <a class="navbar-brand" asp-controller="Home" asp-action="Index">
-                    <img src="/Logo/logo.png" alt="Trà Sữa Ngon Logo" />
-                </a>
-                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
-                    <span class="fas fa-bars"></span>
-                </button>
-                <div class="collapse navbar-collapse" id="navbarNav">
-                    <ul class="navbar-nav ms-auto mb-2 mb-lg-0">
-                        <li class="nav-item">
-                            <a class="nav-link" asp-controller="Home" asp-action="Index">Trang chủ</a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link" asp-controller="SanPhamtk" asp-action="Index">Sản phẩm</a>
-                        </li>
-                        @if (Context.Request.Cookies["UserData"] != null)
-                        {
-                            <li class="nav-item">
-                                <a class="nav-link user-link" asp-controller="Profile" asp-action="Index" title="Trang cá nhân">
-                                    <i class="fas fa-user-circle"></i>
-                                    <span class="user-text">Cá nhân</span>
-                                </a>
-                            </li>
-                            <li class="nav-item">
-                                <a class="nav-link order-link" asp-controller="QLDonHangTk" asp-action="Index">
-                                    <i class="fas fa-box-open"></i> Đơn hàng
-                                </a>
-                            </li>
-                            <li class="nav-item">
-                                <a class="nav-link cart-link" asp-controller="Carttk" asp-action="Index">
-                                    <i class="fas fa-shopping-cart"></i> Giỏ hàng
-                                    <span class="cart-count" id="cartCount">0</span>
-                                </a>
-                            </li>
-                            <li class="nav-item">
-                                <a class="nav-link" asp-controller="Account" asp-action="Logout">Đăng xuất</a>
-                            </li>
-                        }
-                        else
-                        {
-                            <li class="nav-item">
-                                <a class="nav-link" asp-controller="Account" asp-action="Login">Đăng nhập</a>
-                            </li>
-                            <li class="nav-item">
-                                <a class="nav-link" asp-controller="Account" asp-action="Register">Đăng ký</a>
-                            </li>
-                            <li class="nav-item">
-                                <a class="nav-link cart-link" asp-controller="CartCK" asp-action="Index">
-                                    <i class="fas fa-shopping-cart"></i> Giỏ hàng
-                                    <span class="cart-count" id="cartCount">0</span>
-                                </a>
-                            </li>
-                        }
-                    </ul>
-                </div>
-            </div>
-        </nav>
-    </header>
-    <!-- Content -->
-    <main role="main" class="pt-5 mt-5">
-        @RenderBody()
-    </main>
-    <!-- Footer -->
-    <footer class="footer">
-        <p>&copy; 2025 Trà Sữa Ngon - <a asp-controller="Home" asp-action="Privacy">Privacy</a></p>
-    </footer>
-    <!-- Scripts -->
-    <script src="~/lib/jquery/dist/jquery.min.js"></script>
-    <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
-    <script src="~/js/site.js" asp-append-version="true"></script>
-    <script>
-        // Navbar scroll effect
-        window.addEventListener("scroll", function () {
-            const navbar = document.querySelector(".navbar");
-            if (window.scrollY > 30) {
-                navbar.classList.add("scrolled");
-            } else {
-                navbar.classList.remove("scrolled");
-            }
-        });
-        // Lấy ID khách hàng từ cookie
-        function getCustomerId() {
-            const cookies = document.cookie.split(';');
-            let userData = null;
-            for (let cookie of cookies) {
-                const [name, value] = cookie.trim().split('=');
-                if (name === 'UserData') {
-                    userData = value;
-                    break;
-                }
-            }
-            if (userData) {
-                try {
-                    // Decode chuỗi cookie để xử lý các ký tự đặc biệt
-                    const decodedData = decodeURIComponent(userData);
-                    const parsedData = JSON.parse(decodedData);
-                    return parsedData.ID_Khach_Hang || null;
-                } catch (e) {
-                    console.error("Lỗi khi parse cookie UserData:", e);
-                    return null;
-                }
-            }
-            return null;
-        }
-        // Lấy số lượng sản phẩm từ cookie guestCart
-        function getGuestCartCount() {
-            const guestCart = getCookie('guestCart');
-            return guestCart ? guestCart.length : 0;
-        }
-        // Hàm lấy cookie
-        function getCookie(name) {
-            const nameEQ = name + "=";
-            const cookies = document.cookie.split(';');
-            for (let cookie of cookies) {
-                cookie = cookie.trim();
-                if (cookie.startsWith(nameEQ)) {
-                    try {
-                        return JSON.parse(decodeURIComponent(cookie.substring(nameEQ.length)));
-                    } catch (e) {
-                        console.error(`Error parsing cookie ${name}:`, e);
-                        return null;
-                    }
-                }
-            }
-            return null;
-        }
-        // Gọi API hoặc cookie để lấy số lượng sản phẩm trong giỏ hàng
-        async function fetchCartCount() {
-            const customerId = getCustomerId();
-            const cartCountElement = document.getElementById('cartCount');
-            if (!customerId) {
-                // Trường hợp khách vãng lai: lấy số lượng từ cookie guestCart
-                const cartCount = getGuestCartCount();
-                cartCountElement.textContent = cartCount;
-                return;
-            }
-            // Trường hợp người dùng đăng nhập: gọi API
-            try {
-                const response = await fetch(`https://localhost:7169/api/Gio_Hang/${customerId}`);
-                if (!response.ok) {
-                    throw new Error(`HTTP error! Status: ${response.status}`);
-                }
-                const data = await response.json();
-                const cartCount = data.chi_Tiet_Gio_Hang ? data.chi_Tiet_Gio_Hang.length : 0;
-                cartCountElement.textContent = cartCount;
-            } catch (error) {
-                console.error('Lỗi khi lấy dữ liệu giỏ hàng:', error);
-                cartCountElement.textContent = '0';
-            }
-        }
-        // Gọi hàm fetchCartCount khi trang được tải
-        document.addEventListener('DOMContentLoaded', fetchCartCount);
-    </script>
-    @await RenderSectionAsync("Scripts", required: false)
-</body>
-</html> *@
-
-
-
-
-
-
-
-
-
-
-
-
-
-<!DOCTYPE html>
-<html lang="vi">
-<head>
-    <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>@ViewData["Title"] - Trà Sữa Ngon</title>
-    <!-- Bootstrap & Icons -->
-    <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css" />
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css" />
-    <!-- Custom -->
-    <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
-    <link rel="stylesheet" href="~/FE.styles.css" asp-append-version="true" />
-    <style>
-        body {
-            display: flex;
-            flex-direction: column;
-            min-height: 100vh;
-            margin: 0;
-            font-family: 'Poppins', 'Segoe UI', sans-serif;
-            background-color: #fafafa;
-        }
-
-        main {
-            flex: 1;
-        }
-        /* Navbar */
-        .navbar {
-            padding: 0.8rem 1rem;
-            transition: background 0.3s ease, box-shadow 0.3s ease;
-        }
-
-            .navbar.scrolled {
-                background: rgba(255, 255, 255, 0.95);
-                box-shadow: 0 2px 10px rgba(0,0,0,0.08);
-            }
-
-        .navbar-brand img {
             height: 64px;
             transition: transform .3s;
         }
@@ -638,6 +312,233 @@
         }
         // Gọi hàm fetchCartCount khi trang được tải
         document.addEventListener('DOMContentLoaded', fetchCartCount);
+    </script>
+    @await RenderSectionAsync("Scripts", required: false)
+</body>
+</html> *@
+
+
+
+
+
+
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@ViewData["Title"] - Trà Sữa Ngon</title>
+    <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css" />
+    <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/FE.styles.css" asp-append-version="true" />
+    <style>
+        body {
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+            margin: 0;
+            font-family: 'Poppins', 'Segoe UI', sans-serif;
+            background-color: #fafafa;
+        }
+
+        main {
+            flex: 1;
+        }
+
+        .navbar {
+            padding: 0.8rem 1rem;
+            transition: background 0.3s ease, box-shadow 0.3s ease;
+        }
+
+            .navbar.scrolled {
+                background: rgba(255, 255, 255, 0.95);
+                box-shadow: 0 2px 10px rgba(0,0,0,0.08);
+            }
+
+        .navbar-brand img {
+            height: 64px;
+            transition: transform .3s;
+        }
+
+            .navbar-brand img:hover {
+                transform: scale(1.08);
+            }
+
+        .nav-link {
+            font-weight: 500;
+            color: #333 !important;
+            margin: 0 .4rem;
+            position: relative;
+            transition: color .3s;
+        }
+
+            .nav-link::after {
+                content: "";
+                position: absolute;
+                bottom: -4px;
+                left: 0;
+                width: 0;
+                height: 2px;
+                background: #ff4d6d;
+                transition: width .3s;
+            }
+
+            .nav-link:hover::after {
+                width: 100%;
+            }
+
+        .order-link, .cart-link, .tracuu-link {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            background: #ff4d6d;
+            color: #fff !important;
+            padding: 0.4rem 0.8rem;
+            border-radius: 20px;
+            font-size: 0.9rem;
+            transition: background 0.3s, transform 0.2s;
+        }
+
+            .order-link:hover, .cart-link:hover, .tracuu-link:hover {
+                background: #e63956;
+                transform: translateY(-2px);
+            }
+
+        .user-link {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            padding: 0.3rem 0.7rem;
+            border-radius: 50px;
+            color: #333 !important;
+            font-size: 0.9rem;
+            transition: background .3s, transform .2s, color .3s;
+        }
+
+            .user-link i {
+                font-size: 1.3rem;
+            }
+
+            .user-link img {
+                width: 28px;
+                height: 28px;
+                border-radius: 50%;
+                object-fit: cover;
+            }
+
+            .user-link:hover {
+                background: rgba(255, 77, 109, 0.1);
+                color: #ff4d6d !important;
+                transform: scale(1.05);
+            }
+
+        .user-text {
+            display: none;
+        }
+
+        .footer {
+            background: #222;
+            color: #aaa;
+            text-align: center;
+            padding: 1rem 0;
+            font-size: 0.85rem;
+            width: 100%;
+            flex-shrink: 0;
+            margin-top: auto;
+        }
+
+            .footer a {
+                color: #ff4d6d;
+                text-decoration: none;
+                transition: color .3s;
+            }
+
+                .footer a:hover {
+                    color: #fff;
+                }
+    </style>
+</head>
+<body>
+    <header>
+        <nav class="navbar navbar-expand-lg fixed-top">
+            <div class="container">
+                <a class="navbar-brand" asp-controller="Home" asp-action="Index">
+                    <img src="/Logo/logo.png" alt="Trà Sữa Ngon Logo" />
+                </a>
+                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                    <span class="fas fa-bars"></span>
+                </button>
+                <div class="collapse navbar-collapse" id="navbarNav">
+                    <ul class="navbar-nav ms-auto mb-2 mb-lg-0">
+                        <li class="nav-item">
+                            <a class="nav-link" asp-controller="Home" asp-action="Index">Trang chủ</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" asp-controller="SanPhamtk" asp-action="Index">Sản phẩm</a>
+                        </li>
+                        @if (Context.Request.Cookies["UserData"] != null)
+                        {
+                            <li class="nav-item">
+                                <a class="nav-link user-link" asp-controller="Profile" asp-action="Index" title="Trang cá nhân">
+                                    <i class="fas fa-user-circle"></i>
+                                    <span class="user-text">Cá nhân</span>
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link order-link" asp-controller="QLDonHangTk" asp-action="Index">
+                                    <i class="fas fa-box-open"></i> Đơn hàng
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link cart-link" asp-controller="Carttk" asp-action="Index">
+                                    <i class="fas fa-shopping-cart"></i> Giỏ hàng
+                                </a>
+                            </li>
+                        }
+                        else
+                        {
+                            <li class="nav-item">
+                                <a class="nav-link" asp-controller="Account" asp-action="Login">Đăng nhập</a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link" asp-controller="Account" asp-action="Register">Đăng ký</a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link tracuu-link" asp-controller="TraCuu" asp-action="index">
+                                    <i class="fas fa-receipt"></i> Tra Cứu Hóa Đơn
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link cart-link" asp-controller="CartCK" asp-action="Index">
+                                    <i class="fas fa-shopping-cart"></i> Giỏ hàng
+                                </a>
+                            </li>
+                        }
+                    </ul>
+                </div>
+            </div>
+        </nav>
+    </header>
+    <main role="main" class="pt-5 mt-5">
+        @RenderBody()
+    </main>
+    <footer class="footer">
+        <p>&copy; 2025 Trà Sữa Ngon - <a asp-controller="Home" asp-action="Privacy">Privacy</a></p>
+    </footer>
+    <script src="~/lib/jquery/dist/jquery.min.js"></script>
+    <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="~/js/site.js" asp-append-version="true"></script>
+    <script>
+        window.addEventListener("scroll", function () {
+            const navbar = document.querySelector(".navbar");
+            if (window.scrollY > 30) {
+                navbar.classList.add("scrolled");
+            } else {
+                navbar.classList.remove("scrolled");
+            }
+        });
     </script>
     @await RenderSectionAsync("Scripts", required: false)
 </body>
