@@ -432,7 +432,11 @@
     // Anti-forgery
     const getAFT = () => document.querySelector('#__afForm input[name="__RequestVerificationToken"]')?.value || '';
 
+    // ====== CONFIG BE ======
     const BE_BASE = "https://localhost:7169";
+    const BE_HOLD_URL   = `${BE_BASE}/api/SanPham/giu-ton`;
+    const BE_RELEASE_URL= `${BE_BASE}/api/SanPham/khoi-phuc-ton`;
+
     const imgUrl = path => {
       if (!path) return "https://placehold.co/400x400?text=Drink";
       path = String(path).replace(/^~\//, "/");
@@ -458,7 +462,7 @@
       return pct>0 ? pct : null;
     };
 
-    // ===== STOCK MODEL with RESERVATION =====
+    // ===== STOCK MODEL with RESERVATION (client) =====
     const SOURCE = (window.__DATA.products || []).map(p => ({ ...p, __StockBase: pickStock(p) })); // gốc từ BE
     function pickStock(p){
       const keys = ['SoLuongTon','So_Luong','So_Luong_Ton','SoLuong','Stock','TonKho','Ton_kho'];
@@ -486,13 +490,63 @@
       }
     }
 
+    // ====== RESERVATION with BE ======
+    function uuidv4() {
+      // simple uuid
+      return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, c => {
+        const r = Math.random()*16|0, v = c === 'x' ? r : (r&0x3|0x8);
+        return v.toString(16);
+      });
+    }
+
+    // Chuẩn hoá payload items
+    const toHoldItems = (rows) => rows
+      .filter(r => r && r.ID_San_Pham && r.SoLuong > 0)
+      .map(r => ({ ID_San_Pham: r.ID_San_Pham, SoLuong: r.SoLuong }));
+
+    async function callHoldAPI(holdId, items) {
+      if (!items.length) return { ok: true };
+      try {
+        const res = await fetch(BE_HOLD_URL, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ holdId, items })
+        });
+        if (!res.ok) {
+          const t = await res.text();
+          return { ok: false, message: t };
+        }
+        return { ok: true };
+      } catch (e) {
+        return { ok: false, message: e?.message || e };
+      }
+    }
+
+    async function callReleaseAPI(holdId, items) {
+      if (!items.length) return { ok: true };
+      try {
+        const res = await fetch(BE_RELEASE_URL, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ holdId, items })
+        });
+        if (!res.ok) {
+          const t = await res.text();
+          return { ok: false, message: t };
+        }
+        return { ok: true };
+      } catch (e) {
+        return { ok: false, message: e?.message || e };
+      }
+    }
+
     // ===== TABS (multi carts) =====
     const MAX_TABS = 5;
-    let TABS = []; // { cart:[], voucher:null|{...}, discount:0, payable:0, note:'', shipAddr:'', phone:'' }
+    let TABS = []; // { cart:[], voucher:null|{...}, discount:0, payable:0, note:'', shipAddr:'', phone:'', loai, payMethod, holdId }
     let ACTIVE = 0;
 
     function newEmptyTab(){
-      return { cart:[], voucher:null, discount:0, payable:0, phone:'', note:'', shipAddr:'', loai:'TaiQuay' };
+      return { cart:[], voucher:null, discount:0, payable:0, phone:'', note:'', shipAddr:'', loai:'TaiQuay', payMethod:'1', holdId: uuidv4() };
     }
 
     function renderTabs(){
@@ -511,7 +565,10 @@
         close.className='tab-close ms-2';
         close.innerHTML='&times;';
         close.title='Đóng tab';
-        close.onclick=(e)=>{ e.stopPropagation(); closeTab(i); };
+        close.onclick=async (e)=>{
+          e.stopPropagation();
+          await closeTab(i);
+        };
 
         li.appendChild(a);
         if (TABS.length>1) a.appendChild(close);
@@ -528,11 +585,20 @@
       renderCart();
     }
 
-    function closeTab(idx){
+    async function closeTab(idx){
       if (TABS.length === 1){ // luôn giữ ít nhất 1 tab
-        clearCart(); return;
+        await clearCart(); return;
       }
-      // Trả lại giữ chỗ của tab sắp đóng
+      // Trả lại BE phần đang giữ của tab này
+      const t = TABS[idx];
+      const rel = t.cart.reduce((arr, it)=>{
+        arr.push({ ID_San_Pham: it.sanPhamId, SoLuong: it.soLuong });
+        return arr;
+      }, []);
+      if (rel.length) {
+        await callReleaseAPI(t.holdId, toHoldItems(rel)); // không chặn UI nếu fail
+      }
+      // Loại bỏ tab
       TABS.splice(idx, 1);
       if (ACTIVE >= TABS.length) ACTIVE = TABS.length - 1;
       rebuildReserved();
@@ -651,9 +717,17 @@
       return price;
     }
 
+    // ====== ADD to cart with BE hold ======
     async function addToCart(id, name){
       const base = toNumber(basePriceAfterPromo(id));
       if(!ensureNotOverStock(id, 1)) return;
+
+      // Gọi BE giữ tạm trước
+      const holdRes = await callHoldAPI(CUR().holdId, toHoldItems([{ ID_San_Pham: id, SoLuong: 1 }]));
+      if (!holdRes.ok) {
+        alert('Giữ tạm tồn kho thất bại: ' + (holdRes.message || ''));
+        return;
+      }
 
       const allowed = await fetchAllowedOptions(id);
       const defaultSize = allowed.sizeIds.length ? allowed.sizeIds[0] : 1;
@@ -664,30 +738,91 @@
         donGia: base, // sau KM (chưa size/topping)
         soLuong:1, doNgotId:null, luongDaId:null, toppingIds:[], tienTopping:0
       });
-      rebuildReserved();        // giữ chỗ ngay
+      rebuildReserved();        // giữ chỗ client
       searchProducts(PAGE);     // cập nhật tồn khả dụng hiển thị
       renderCart();
     }
 
-    const removeItem = i => { CUR().cart.splice(i,1); rebuildReserved(); searchProducts(PAGE); renderCart(); };
-    const decQty = i => { if(CUR().cart[i].soLuong>1){ CUR().cart[i].soLuong--; rebuildReserved(); searchProducts(PAGE); renderCart(); } };
-    const incQty = i => {
+    async function removeItem(i){
       const it = CUR().cart[i];
+      if (!it) return;
+      // Trả lại BE phần đang giữ của item
+      const rel = [{ ID_San_Pham: it.sanPhamId, SoLuong: it.soLuong }];
+      const relRes = await callReleaseAPI(CUR().holdId, toHoldItems(rel));
+      if (!relRes.ok) {
+        // Cho phép xoá trên UI, nhưng cảnh báo
+        console.warn('Khoi phuc ton that bai:', relRes.message);
+        alert('Khôi phục tồn kho thất bại ở BE. Vui lòng kiểm tra lại!');
+      }
+      CUR().cart.splice(i,1);
+      rebuildReserved(); searchProducts(PAGE); renderCart();
+    }
+
+    async function decQty(i){
+      const it = CUR().cart[i];
+      if(!it) return;
+      if(it.soLuong<=1){
+        await removeItem(i);
+        return;
+      }
+      // Giảm 1 -> release 1 ở BE
+      const relRes = await callReleaseAPI(CUR().holdId, toHoldItems([{ ID_San_Pham: it.sanPhamId, SoLuong: 1 }]));
+      if (!relRes.ok) {
+        alert('Khôi phục tồn kho thất bại: ' + (relRes.message || ''));
+        return;
+      }
+      it.soLuong--;
+      rebuildReserved(); searchProducts(PAGE); renderCart();
+    }
+
+    async function incQty(i){
+      const it = CUR().cart[i];
+      if(!it) return;
       if(!ensureNotOverStock(it.sanPhamId, 1)) return;
+      // Giữ thêm 1 ở BE
+      const holdRes = await callHoldAPI(CUR().holdId, toHoldItems([{ ID_San_Pham: it.sanPhamId, SoLuong: 1 }]));
+      if (!holdRes.ok) {
+        alert('Giữ tạm tồn kho thất bại: ' + (holdRes.message || ''));
+        return;
+      }
       it.soLuong++; rebuildReserved(); searchProducts(PAGE); renderCart();
-    };
-    const setQty = (i,val) => {
-      let v=parseInt(val)||1; if(v<1)v=1;
+    }
+
+    async function setQty(i,val){
       const it = CUR().cart[i];
-      // số lượng muốn tăng thêm so với hiện tại
-      const delta = v - it.soLuong;
-      if (delta>0 && !ensureNotOverStock(it.sanPhamId, delta)) {
-        // giữ nguyên
+      if(!it) return;
+      let v=parseInt(val)||1; if(v<1)v=1;
+      const current = it.soLuong;
+      const delta = v - current;
+      if (delta === 0) return;
+
+      if (delta > 0) {
+        if (!ensureNotOverStock(it.sanPhamId, delta)) {
+          // giữ nguyên
+          renderCart();
+          return;
+        }
+        const holdRes = await callHoldAPI(CUR().holdId, toHoldItems([{ ID_San_Pham: it.sanPhamId, SoLuong: delta }]));
+        if (!holdRes.ok) {
+          alert('Giữ tạm tồn kho thất bại: ' + (holdRes.message || ''));
+          renderCart();
+          return;
+        }
+        it.soLuong = v;
       } else {
+        // giảm -> release abs(delta)
+        const releaseQty = Math.abs(delta);
+        const relRes = await callReleaseAPI(CUR().holdId, toHoldItems([{ ID_San_Pham: it.sanPhamId, SoLuong: releaseQty }]));
+        if (!relRes.ok) {
+          alert('Khôi phục tồn kho thất bại: ' + (relRes.message || ''));
+          renderCart();
+          return;
+        }
         it.soLuong = v;
       }
+
       rebuildReserved(); searchProducts(PAGE); renderCart();
-    };
+    }
 
     // Modal cấu hình
     async function openConfig(idx){
@@ -820,6 +955,7 @@
         if(ch.checked){ topIds.push(parseInt(ch.value)); topMoney += toNumber(ch.getAttribute('data-price')||'0'); }
       });
       it.toppingIds = topIds; it.tienTopping = topMoney;
+      // Lưu ý: thay đổi modal không tự đổi số lượng ở BE (đã validate avail ở client). Nếu muốn, có thể hỗ trợ sau.
       it.soLuong = newQty;
 
       rebuildReserved(); searchProducts(PAGE);
@@ -1026,13 +1162,22 @@
       }
     }
 
-    const clearCart = ()=>{
-      CUR().cart = [];
+    async function clearCart(){
+      const t = CUR();
+      if (t.cart.length) {
+        const items = t.cart.map(it => ({ ID_San_Pham: it.sanPhamId, SoLuong: it.soLuong }));
+        // trả lại BE
+        const relRes = await callReleaseAPI(t.holdId, toHoldItems(items));
+        if (!relRes.ok) {
+          alert('Khôi phục tồn kho thất bại: ' + (relRes.message || ''));
+        }
+      }
+      t.cart = [];
       cancelVoucher('');
       rebuildReserved();
       searchProducts(PAGE);
       renderCart();
-    };
+    }
 
     function onLoaiChange(){
       const loai = document.getElementById('selLoai').value;
@@ -1234,7 +1379,7 @@
           }))
         };
 
-        // Chốt bán: giảm tồn gốc và bỏ giữ chỗ của tab hiện tại
+        // Chốt bán: giảm tồn gốc và bỏ giữ chỗ của tab hiện tại (không cần gọi khoi-phuc-ton – vì đã bán)
         for (const it of CART){
           const baseNow = getBase(it.sanPhamId);
           const newBase = Math.max(0, baseNow - it.soLuong);
@@ -1270,6 +1415,24 @@
       renderCart();
     }
 
+    // ====== RELEASE khi đóng trang (sendBeacon) ======
+    function releaseAllTabsOnUnload() {
+      try {
+        const releases = [];
+        for (const t of TABS) {
+          if (!t || !t.cart || !t.cart.length) continue;
+          const items = t.cart.map(it => ({ ID_San_Pham: it.sanPhamId, SoLuong: it.soLuong }));
+          if (!items.length) continue;
+          const body = JSON.stringify({ holdId: t.holdId, items });
+          const blob = new Blob([body], { type: 'application/json' });
+          navigator.sendBeacon(BE_RELEASE_URL, blob);
+        }
+      } catch (e) {
+        // ignore
+      }
+    }
+
+    window.addEventListener('beforeunload', releaseAllTabsOnUnload);
     window.addEventListener('DOMContentLoaded', buildInitialState);
 </script>
 
