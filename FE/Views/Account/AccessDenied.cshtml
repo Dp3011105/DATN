@@ -1,130 +1,85 @@
-﻿
+﻿@{
+    Layout = null; // Không dùng _Layout
+    Context.Response.StatusCode = 404; // Đặt mã lỗi 404 đúng cách
+}
+
 <!DOCTYPE html>
-<html>
+<html lang="vi">
 <head>
-    <title>Access Denied - HuHu!</title>
+    <meta charset="utf-8" />
+    <title>404 - Không tìm thấy trang</title>
     <style>
         body {
+            margin: 0;
+            padding: 0;
+            height: 100vh;
             display: flex;
             flex-direction: column;
-            align-items: center;
             justify-content: center;
-            height: 100vh;
-            font-family: 'Comic Sans MS', cursive, sans-serif;
-            text-align: center;
-            background: linear-gradient(135deg, #ffcccb, #add8e6);
+            align-items: center;
+            font-family: Arial, Helvetica, sans-serif;
+            background: #f8f9fa;
             color: #333;
-            margin: 0;
-            overflow: hidden;
-        }
-
-        img {
-            width: 350px; /* Tăng kích thước hình ảnh */
-            height: auto;
-            margin-bottom: 20px;
-            border: 8px solid #ff69b4;
-            border-radius: 20px;
-            animation: shake 0.5s infinite;
+            text-align: center;
         }
 
         h1 {
-            font-size: 36px; /* Tăng kích thước font */
-            color: #ff0000; /* Màu đỏ tươi nổi bật */
-            text-shadow: 3px 3px #ffd700;
-            margin-bottom: 15px;
-            animation: blink 1s infinite; /* Hiệu ứng nhấp nháy */
+            font-size: 120px;
+            margin: 0;
+            color: #d32f2f;
+        }
+
+        h2 {
+            font-size: 32px;
+            margin: 10px 0;
         }
 
         p {
-            font-size: 24px;
-            color: #333;
-            margin-bottom: 20px;
+            font-size: 18px;
+            margin: 5px 0 20px;
         }
 
-        #countdown {
-            font-size: 28px;
-            color: #ff4500;
+        .countdown {
+            font-size: 20px;
+            margin: 15px 0;
+            color: #ff5722;
             font-weight: bold;
         }
-        
 
-        {
-            transform: translate(1px, 1px) rotate(0deg);
+        .btn-back {
+            display: inline-block;
+            padding: 12px 24px;
+            font-size: 18px;
+            font-weight: bold;
+            background: #007bff;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            text-decoration: none;
+            transition: background 0.3s;
         }
 
-        10% {
-            transform: translate(-1px, -2px) rotate(-1deg);
-        }
-
-        20% {
-            transform: translate(-3px, 0px) rotate(1deg);
-        }
-
-        30% {
-            transform: translate(3px, 2px) rotate(0deg);
-        }
-
-        40% {
-            transform: translate(1px, -1px) rotate(1deg);
-        }
-
-        50% {
-            transform: translate(-1px, 2px) rotate(-1deg);
-        }
-
-        60% {
-            transform: translate(-3px, 1px) rotate(0deg);
-        }
-
-        70% {
-            transform: translate(3px, 1px) rotate(-1deg);
-        }
-
-        80% {
-            transform: translate(-1px, -1px) rotate(1deg);
-        }
-
-        90% {
-            transform: translate(1px, 2px) rotate(0deg);
-        }
-
-        100% {
-            transform: translate(1px, -2px) rotate(-1deg);
-        }
-
-        }
-      
-
-        {
-            opacity: 1;
-        }
-
-        50% {
-            opacity: 0.3;
-        }
-
-        100% {
-            opacity: 1;
-        }
-
-        }
+            .btn-back:hover {
+                background: #0056b3;
+            }
     </style>
 </head>
 <body>
-    <img src="https://img.tripi.vn/cdn-cgi/image/width=700,height=700/https://gcs.tripi.vn/public-tripi/tripi-feed/img/482756lQJ/anh-mo-ta.png" alt="Crying Cat Meme" />
-    <h1>HuHu bạn không được truy cập trang này 😭</h1>
-    <p>Bảo Admin cấp quyền rồi ta cùng làm nhé! 😜</p>
-    <p>Chuyển hướng về <a href="@Url.Action("Index", "Home")">trang chủ</a> sau <span id="countdown">17</span> giây...</p>
+    <h1>404</h1>
+    <h2>Trang này không tồn tại </h2>
+    <p class="countdown">Tự động quay lại sau <span id="countdown">17</span> giây...</p>
+    <button class="btn-back" onclick="history.back()">⬅ Quay lại ngay</button>
 
     <script>
-        let timeLeft = 17; // Tăng thời gian đếm ngược lên 17 giây
+        let timeLeft = 17;
         const countdownElement = document.getElementById('countdown');
         const countdown = setInterval(() => {
             timeLeft--;
             countdownElement.textContent = timeLeft;
             if (timeLeft <= 0) {
                 clearInterval(countdown);
-                window.location.href = '@Url.Action("Index", "Home")';
+                history.back();
             }
         }, 1000);
     </script>
