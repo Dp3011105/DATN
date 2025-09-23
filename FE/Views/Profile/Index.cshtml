@@ -1,4 +1,4 @@
-﻿@model FE.Models.ProfileModel
+﻿@* @model FE.Models.ProfileModel
 
 @{
     ViewData["Title"] = "Thông tin cá nhân";
@@ -1359,6 +1359,1433 @@
                     <text>
                     showToast('error', 'Lỗi!', '@Html.Raw(TempData["ErrorMessage"])');
                     </text>
+            }
+
+            // Toggle password form
+            const toggleButton = document.getElementById('togglePasswordForm');
+            const passwordForm = document.getElementById('changePasswordForm');
+            toggleButton.addEventListener('click', function () {
+                if (passwordForm.classList.contains('active')) {
+                    passwordForm.classList.remove('active');
+                    toggleButton.textContent = 'Bấm để đổi mật khẩu';
+                    toggleButton.classList.remove('active');
+                } else {
+                    passwordForm.classList.add('active');
+                    toggleButton.textContent = 'Ẩn';
+                    toggleButton.classList.add('active');
+                }
+            });
+
+            // Load districts
+            loadDistricts();
+
+            // Address form event listeners
+            const districtSelect = document.getElementById('districtSelect');
+            const wardSelect = document.getElementById('wardSelect');
+            const editDistrictSelect = document.getElementById('editDistrictSelect');
+            const editWardSelect = document.getElementById('editWardSelect');
+
+            districtSelect.addEventListener('change', function () {
+                loadWards(this.value, 'wardSelect', () => updateAddressDisplay('add'));
+            });
+
+            wardSelect.addEventListener('change', function () {
+                updateAddressDisplay('add');
+            });
+
+            editDistrictSelect.addEventListener('change', function () {
+                loadWards(this.value, 'editWardSelect', () => updateAddressDisplay('edit'));
+            });
+
+            editWardSelect.addEventListener('change', function () {
+                updateAddressDisplay('edit');
+            });
+
+            const addAddressForm = document.getElementById('addAddressForm');
+            addAddressForm.addEventListener('submit', function (e) {
+                const districtInput = document.getElementById('districtSelect');
+                const wardInput = document.getElementById('wardSelect');
+
+                if (!districtInput.value) {
+                    e.preventDefault();
+                    showToast('warning', 'Cảnh báo!', 'Vui lòng chọn Quận/Huyện!');
+                    return;
+                }
+
+                if (!wardInput.value) {
+                    e.preventDefault();
+                    showToast('warning', 'Cảnh báo!', 'Vui lòng chọn Phường/Xã!');
+                    return;
+                }
+            });
+
+            const editAddressForm = document.getElementById('editAddressForm');
+            editAddressForm.addEventListener('submit', function (e) {
+                const districtInput = document.getElementById('editDistrictSelect');
+                const wardInput = document.getElementById('editWardSelect');
+
+                if (!districtInput.value) {
+                    e.preventDefault();
+                    showToast('warning', 'Cảnh báo!', 'Vui lòng chọn Quận/Huyện!');
+                    return;
+                }
+
+                if (!wardInput.value) {
+                    e.preventDefault();
+                    showToast('warning', 'Cảnh báo!', 'Vui lòng chọn Phường/Xã!');
+                    return;
+                }
+            });
+
+            // Handle password change form submission
+            const changePasswordForm = document.getElementById('changePasswordForm');
+            changePasswordForm.addEventListener('submit', function (e) {
+                e.preventDefault();
+                changePassword();
+            });
+        });
+    </script>
+} *@
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+@model FE.Models.ProfileModel
+
+@{
+    ViewData["Title"] = "Thông tin cá nhân";
+}
+
+<!-- Thêm các thư viện cần thiết -->
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css">
+
+<style>
+    :root {
+        --primary: #3B82F6;
+        --primary-dark: #2563EB;
+        --secondary: #F59E0B;
+        --light-bg: #F8FAFC;
+        --card-bg: #FFFFFF;
+        --text-primary: #1F2937;
+        --text-secondary: #6B7280;
+        --success: #10B981;
+        --danger: #EF4444;
+        --hot-badge: #EF4444;
+    }
+
+    body {
+        background-color: #f8f9fa;
+        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        color: #333;
+        min-height: 100vh;
+        display: flex;
+        flex-direction: column;
+    }
+
+    .container {
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 20px 15px;
+        flex: 1 0 auto;
+    }
+
+    .card {
+        border: none;
+        border-radius: 12px;
+        background: white;
+        margin-bottom: 20px;
+    }
+
+    .card-header {
+        background: linear-gradient(135deg, #007bff, #0056b3);
+        color: white;
+        border-radius: 12px 12px 0 0;
+        padding: 20px;
+        border: none;
+    }
+
+        .card-header h4 {
+            margin: 0;
+            font-weight: 600;
+            font-size: 1.25rem;
+        }
+
+    .card-body {
+        padding: 30px;
+    }
+
+    .form-label {
+        font-weight: 600;
+        color: #495057;
+        margin-bottom: 8px;
+        font-size: 0.95rem;
+    }
+
+    .form-control, .form-select {
+        border: 2px solid #e9ecef;
+        border-radius: 8px;
+        padding: 12px 15px;
+        font-size: 0.95rem;
+        transition: all 0.3s ease;
+    }
+
+        .form-control:focus, .form-select:focus {
+            border-color: #007bff;
+            outline: none;
+        }
+
+        .form-control[readonly] {
+            background-color: #f8f9fa;
+            border-color: #dee2e6;
+            color: #6c757d;
+        }
+
+    .btn {
+        border-radius: 8px;
+        font-weight: 600;
+        padding: 12px 24px;
+        font-size: 0.95rem;
+        transition: all 0.3s ease;
+        border: none;
+    }
+
+    .btn-primary {
+        background: linear-gradient(135deg, #007bff, #0056b3);
+        color: white;
+    }
+
+        .btn-primary:hover {
+            background: linear-gradient(135deg, #0056b3, #004085);
+        }
+
+    .btn-success {
+        background: linear-gradient(135deg, #28a745, #1e7e34);
+        color: white;
+    }
+
+        .btn-success:hover {
+            background: linear-gradient(135deg, #1e7e34, #155724);
+        }
+
+    .btn-outline-primary {
+        border: 2px solid #007bff;
+        color: #007bff;
+        background: transparent;
+    }
+
+        .btn-outline-primary:hover {
+            background: #007bff;
+            color: white;
+        }
+
+    .btn-outline-danger {
+        border: 2px solid #dc3545;
+        color: #dc3545;
+        background: transparent;
+    }
+
+        .btn-outline-danger:hover {
+            background: #dc3545;
+            color: white;
+        }
+
+    .btn-secondary {
+        background: #6c757d;
+        color: white;
+    }
+
+    .btn-sm {
+        padding: 8px 16px;
+        font-size: 0.875rem;
+    }
+
+    .btn-logout {
+        background: linear-gradient(135deg, #dc3545, #c82333);
+        color: white;
+        margin-left: 10px;
+    }
+
+        .btn-logout:hover {
+            background: linear-gradient(135deg, #c82333, #a71d2a);
+        }
+
+    .mt-4 h5 {
+        color: #495057;
+        font-weight: 700;
+        margin-bottom: 20px;
+    }
+
+    .card.border-light {
+        border: 2px solid #e9ecef;
+        transition: all 0.3s ease;
+        background: #fafbfc;
+    }
+
+    .card-title.text-primary {
+        color: #007bff;
+        font-weight: 600;
+        font-size: 1rem;
+        margin-bottom: 12px;
+    }
+
+    .card-text {
+        font-size: 0.9rem;
+        line-height: 1.6;
+    }
+
+    .badge {
+        font-size: 0.8rem;
+        padding: 6px 12px;
+        border-radius: 20px;
+        font-weight: 600;
+    }
+
+        .badge.bg-success {
+            background: linear-gradient(135deg, #28a745, #1e7e34);
+        }
+
+        .badge.bg-secondary {
+            background: linear-gradient(135deg, #6c757d, #495057);
+        }
+
+    .modal-content {
+        border: none;
+        border-radius: 12px;
+    }
+
+    .modal-header {
+        background: linear-gradient(135deg, #007bff, #0056b3);
+        color: white;
+        border-radius: 12px 12px 0 0;
+        padding: 20px 30px;
+        border-bottom: none;
+    }
+
+    .modal-title {
+        font-weight: 600;
+        font-size: 1.2rem;
+    }
+
+    .modal-body {
+        padding: 30px;
+    }
+
+    .modal-footer {
+        padding: 20px 30px;
+        border-top: 1px solid #e9ecef;
+        background: #fafbfc;
+        border-radius: 0 0 12px 12px;
+    }
+
+    .form-check-input {
+        width: 1.2em;
+        height: 1.2em;
+        border: 2px solid #007bff;
+        border-radius: 4px;
+    }
+
+        .form-check-input:checked {
+            background-color: #007bff;
+            border-color: #007bff;
+        }
+
+    .form-check-label {
+        font-weight: 500;
+        color: #495057;
+        margin-left: 8px;
+    }
+
+    .text-muted {
+        color: #8a8a8a;
+        font-style: italic;
+    }
+
+    .fw-bold {
+        font-weight: 600;
+    }
+
+    .btn-group-sm {
+        display: flex;
+        gap: 8px;
+        margin-top: 12px;
+    }
+
+        .btn-group-sm .btn {
+            flex: 1;
+            padding: 8px 16px;
+            font-size: 0.85rem;
+            font-weight: 600;
+            border-radius: 8px;
+            transition: all 0.3s ease;
+            border: 2px solid;
+            position: relative;
+            overflow: hidden;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 36px;
+        }
+
+        .btn-group-sm .btn-outline-primary {
+            background: linear-gradient(135deg, #ffffff, #f8f9fa);
+            border-color: #007bff;
+            color: #007bff;
+        }
+
+            .btn-group-sm .btn-outline-primary:hover {
+                background: linear-gradient(135deg, #007bff, #0056b3);
+                border-color: #0056b3;
+                color: white;
+            }
+
+        .btn-group-sm .btn-outline-danger {
+            background: linear-gradient(135deg, #ffffff, #f8f9fa);
+            border-color: #dc3545;
+            color: #dc3545;
+        }
+
+            .btn-group-sm .btn-outline-danger:hover {
+                background: linear-gradient(135deg, #dc3545, #c82333);
+                border-color: #c82333;
+                color: white;
+            }
+
+        .btn-group-sm .btn::before {
+            content: '';
+            width: 16px;
+            height: 16px;
+            margin-right: 6px;
+            background-size: contain;
+            background-repeat: no-repeat;
+            background-position: center;
+        }
+
+        .btn-group-sm .btn-outline-primary::before {
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23007bff' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7'%3E%3C/path%3E%3Cpath d='m18.5 2.5 a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z'%3E%3C/path%3E%3C/svg%3E");
+        }
+
+        .btn-group-sm .btn-outline-primary:hover::before {
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='white' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7'%3E%3C/path%3E%3Cpath d='m18.5 2.5 a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z'%3E%3C/path%3E%3C/svg%3E");
+        }
+
+        .btn-group-sm .btn-outline-danger::before {
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23dc3545' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='3,6 5,6 21,6'%3E%3C/polyline%3E%3Cpath d='m19,6v14a2,2 0 0,1 -2,2H7a2,2 0 0,1 -2,-2V6m3,0V4a2,2 0 0,1 2,-2h4a2,2 0 0,1 2,2v2'%3E%3C/path%3E%3Cline x1='10' y1='11' x2='10' y2='17'%3E%3C/line%3E%3Cline x1='14' y1='11' x2='14' y2='17'%3E%3C/line%3E%3C/svg%3E");
+        }
+
+        .btn-group-sm .btn-outline-danger:hover::before {
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='white' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='3,6 5,6 21,6'%3E%3C/polyline%3E%3Cpath d='m19,6v14a2,2 0 0,1 -2,2H7a2,2 0 0,1 -2,-2V6m3,0V4a2,2 0 0,1 2,-2h4a2,2 0 0,1 2,2v2'%3E%3C/path%3E%3Cline x1='10' y1='11' x2='10' y2='17'%3E%3C/line%3E%3Cline x1='14' y1='11' x2='14' y2='17'%3E%3C/line%3E%3C/svg%3E");
+        }
+
+    select.form-select {
+        background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3e%3cpath fill='none' stroke='%23343a40' stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='m1 6 7 7 7-7'/%3e%3c/svg%3e");
+        background-repeat: no-repeat;
+        background-position: right 12px center;
+        background-size: 16px 12px;
+        padding-right: 40px;
+    }
+
+    .toggle-password-form {
+        display: none;
+        transition: all 0.3s ease;
+    }
+
+        .toggle-password-form.active {
+            display: block;
+        }
+
+    .btn-toggle-password {
+        background: linear-gradient(135deg, #007bff, #0056b3);
+        color: white;
+        border: none;
+        border-radius: 8px;
+        padding: 12px 24px;
+        font-size: 0.95rem;
+        font-weight: 600;
+        transition: all 0.3s ease;
+        cursor: pointer;
+    }
+
+        .btn-toggle-password:hover {
+            background: linear-gradient(135deg, #0056b3, #004085);
+        }
+
+        .btn-toggle-password::before {
+            content: '';
+            display: inline-block;
+            width: 16px;
+            height: 16px;
+            margin-right: 6px;
+            background-size: contain;
+            background-repeat: no-repeat;
+            background-position: center;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='white' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M12 3a6 6 0 0 0 9 9 6 6 0 0 0-9-9zm0 0a6 6 0 0 0-9 9 6 6 0 0 0 9-9zm6 6h3m-3 6h3m-12 0h3m-3-6h3m6 3v3m-6 0v3m-6 0v-3m6-6v-3'/%3E%3C/svg%3E");
+        }
+
+        .btn-toggle-password.active::before {
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='white' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M6 12h12'/%3E%3C/svg%3E");
+        }
+
+    .toast-container {
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        z-index: 9999;
+        max-width: 400px;
+    }
+
+    .toast {
+        border: none;
+        border-radius: 12px;
+        backdrop-filter: blur(10px);
+        margin-bottom: 10px;
+        overflow: hidden;
+        animation: slideInRight 0.4s ease-out forwards;
+    }
+
+        .toast.hide {
+            animation: slideOutRight 0.4s ease-in forwards;
+        }
+
+    keyframes slideInRight {
+        0%
+
+    {
+        transform: translateX(100%);
+        opacity: 0;
+    }
+
+    100% {
+        transform: translateX(0);
+        opacity: 1;
+    }
+
+    }
+
+    keyframes slideOutRight {
+        0%
+
+    {
+        transform: translateX(0);
+        opacity: 1;
+    }
+
+    100% {
+        transform: translateX(100%);
+        opacity: 0;
+    }
+
+    }
+
+    keyframes progressBar {
+        0%
+
+    {
+        width: 100%;
+    }
+
+    100% {
+        width: 0%;
+    }
+
+    }
+
+    .toast.toast-success {
+        background: linear-gradient(135deg, #d4edda 0%, #c3e6cb 100%);
+        border-left: 4px solid #28a745;
+    }
+
+        .toast.toast-success .toast-header {
+            background: rgba(40, 167, 69, 0.1);
+            border-bottom: 1px solid rgba(40, 167, 69, 0.2);
+            color: #155724;
+        }
+
+        .toast.toast-success .toast-body {
+            color: #155724;
+            background: transparent;
+        }
+
+    .toast.toast-error {
+        background: linear-gradient(135deg, #f8d7da 0%, #f1b0b7 100%);
+        border-left: 4px solid #dc3545;
+    }
+
+        .toast.toast-error .toast-header {
+            background: rgba(220, 53, 69, 0.1);
+            border-bottom: 1px solid rgba(220, 53, 69, 0.2);
+            color: #721c24;
+        }
+
+        .toast.toast-error .toast-body {
+            color: #721c24;
+            background: transparent;
+        }
+
+    .toast.toast-warning {
+        background: linear-gradient(135deg, #fff3cd 0%, #ffeaa7 100%);
+        border-left: 4px solid #ffc107;
+    }
+
+        .toast.toast-warning .toast-header {
+            background: rgba(255, 193, 7, 0.1);
+            border-bottom: 1px solid rgba(255, 193, 7, 0.2);
+            color: #856404;
+        }
+
+        .toast.toast-warning .toast-body {
+            color: #856404;
+            background: transparent;
+        }
+
+    .toast.toast-info {
+        background: linear-gradient(135deg, #d1ecf1 0%, #bee5eb 100%);
+        border-left: 4px solid #17a2b8;
+    }
+
+        .toast.toast-info .toast-header {
+            background: rgba(23, 162, 184, 0.1);
+            border-bottom: 1px solid rgba(23, 162, 184, 0.2);
+            color: #0c5460;
+        }
+
+        .toast.toast-info .toast-body {
+            color: #0c5460;
+            background: transparent;
+        }
+
+    .toast-header {
+        padding: 12px 16px;
+        font-weight: 600;
+        font-size: 0.95rem;
+        border-radius: 12px 12px 0 0;
+    }
+
+        .toast-header .toast-icon {
+            font-size: 1.1rem;
+            margin-right: 8px;
+        }
+
+    .toast-body {
+        padding: 12px 16px;
+        font-size: 0.9rem;
+        line-height: 1.5;
+        font-weight: 500;
+    }
+
+    .toast .btn-close {
+        background-size: 0.8em;
+        opacity: 0.7;
+        margin: 0;
+        padding: 0.5rem;
+    }
+
+        .toast .btn-close:hover {
+            opacity: 1;
+        }
+
+    .toast-progress {
+        position: absolute;
+        bottom: 0;
+        left: 0;
+        height: 3px;
+        background: rgba(255, 255, 255, 0.3);
+        width: 100%;
+        overflow: hidden;
+    }
+
+    .toast-progress-bar {
+        height: 100%;
+        background: rgba(255, 255, 255, 0.8);
+        width: 100%;
+        animation: progressBar 5s linear forwards;
+    }
+
+    .footer {
+        background: linear-gradient(135deg, #1F2937 0%, #111827 100%);
+        color: white;
+        padding: 3rem 0 1rem;
+        width: 100%;
+        flex-shrink: 0;
+        margin-top: auto;
+    }
+
+    .footer-container {
+        max-width: 100%;
+        padding-left: 1.5rem;
+        padding-right: 1.5rem;
+        margin: 0 auto;
+    }
+
+    .footer-section {
+        margin-bottom: 2rem;
+    }
+
+    .footer-title {
+        font-size: 1.2rem;
+        font-weight: 600;
+        margin-bottom: 1rem;
+        color: var(--secondary);
+    }
+
+    .footer-link {
+        display: block;
+        color: #D1D5DB;
+        text-decoration: none;
+        font-size: 0.9rem;
+        transition: color 0.2s ease;
+    }
+
+        .footer-link:hover {
+            color: var(--primary);
+        }
+
+    .footer-social {
+        display: flex;
+        gap: 1rem;
+    }
+
+    .social-icon {
+        width: 40px;
+        height: 40px;
+        background: var(--primary);
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+        text-decoration: none;
+        transition: background 0.2s ease;
+    }
+
+        .social-icon:hover {
+            background: var(--primary-dark);
+        }
+
+    .footer-bottom {
+        border-top: 1px solid #374151;
+        padding-top: 1.5rem;
+        text-align: center;
+        color: #9CA3AF;
+        font-size: 0.85rem;
+    }
+
+    media screen and (max-width: 768px) {
+        .footer
+
+    {
+        padding: 2rem 0 1rem;
+    }
+
+    .footer-social {
+        justify-content: center;
+    }
+
+    }
+
+    media screen and (max-width: 576px) {
+        .card-body
+
+    {
+        padding: 15px 10px;
+    }
+
+    .modal-body, .modal-header, .modal-footer {
+        padding: 20px;
+    }
+
+    .col-md-6.mb-3 {
+        margin-bottom: 20px;
+    }
+
+    .btn-group-sm {
+        flex-direction: column;
+        gap: 8px;
+    }
+
+        .btn-group-sm .btn {
+            width: 100%;
+            margin-right: 0;
+            min-height: 42px;
+        }
+
+    .toast-container {
+        top: 10px;
+        right: 10px;
+        left: 10px;
+        max-width: none;
+    }
+
+    .toast {
+        margin-bottom: 8px;
+    }
+
+    .toast-header {
+        padding: 10px 12px;
+        font-size: 0.9rem;
+    }
+
+    .toast-body {
+        padding: 10px 12px;
+        font-size: 0.85rem;
+    }
+
+    }
+
+    .mb-3 {
+        margin-bottom: 1.5rem;
+    }
+
+    .mt-1 {
+        margin-top: 0.5rem;
+    }
+
+    .text-danger {
+        font-size: 0.85rem;
+        margin-top: 5px;
+        font-weight: 500;
+    }
+
+    textarea.form-control {
+        resize: vertical;
+        min-height: 100px;
+    }
+
+        textarea.form-control::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        textarea.form-control::-webkit-scrollbar-track {
+            background: #f1f1f1;
+            border-radius: 3px;
+        }
+
+        textarea.form-control::-webkit-scrollbar-thumb {
+            background: #007bff;
+            border-radius: 3px;
+        }
+
+    .btn:disabled {
+        opacity: 0.6;
+        cursor: not-allowed;
+    }
+
+    .d-flex.justify-content-between.align-items-center {
+        margin-bottom: 25px;
+    }
+
+    .btn-group-sm .btn:disabled {
+        opacity: 0.6;
+        cursor: not-allowed;
+    }
+
+        .btn-group-sm .btn:disabled::before {
+            opacity: 0.5;
+        }
+
+    .btn-group-sm .btn:focus {
+        outline: none;
+    }
+</style>
+
+<div class="container mt-4">
+    <div class="row">
+        <div class="col-md-8 mx-auto">
+            <div class="card">
+                <div class="card-header">
+                    <h4 class="mb-0">Thông tin cá nhân</h4>
+                </div>
+                <div class="card-body">
+                    <!-- Thông tin cá nhân -->
+                    <form asp-action="UpdateProfile" method="post">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label class="form-label">Họ và tên *</label>
+                                    <input asp-for="Ho_Ten" class="form-control" required />
+                                    <span asp-validation-for="Ho_Ten" class="text-danger"></span>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label class="form-label">Email *</label>
+                                    <input asp-for="Email" class="form-control" type="email" required />
+                                    <span asp-validation-for="Email" class="text-danger"></span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label class="form-label">Số điện thoại</label>
+                                    <input asp-for="So_Dien_Thoai" class="form-control" />
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label class="form-label">Giới tính</label>
+                                    <select asp-for="GioiTinh" class="form-select">
+                                        <option value="false">Nữ</option>
+                                        <option value="true">Nam</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+                        <input type="hidden" asp-for="Ghi_Chu" value="Không có" />
+                        <button type="submit" class="btn btn-primary">Cập nhật thông tin</button>
+                        <a asp-controller="Account" asp-action="Logout" class="btn btn-logout">Đăng xuất</a>
+                    </form>
+
+                    <hr />
+
+                    <!-- Đổi mật khẩu -->
+                    <div class="mt-4">
+                        <div class="d-flex justify-content-between align-items-center mb-3">
+                            <h5>Đổi mật khẩu</h5>
+                            <button type="button" class="btn-toggle-password" id="togglePasswordForm">
+                                Bấm để đổi mật khẩu
+                            </button>
+                        </div>
+                        <form id="changePasswordForm" class="toggle-password-form">
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label class="form-label">Mật khẩu hiện tại *</label>
+                                        <input type="password" id="oldPassword" class="form-control" required />
+                                        <span id="oldPasswordError" class="text-danger"></span>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label class="form-label">Mật khẩu mới *</label>
+                                        <input type="password" id="newPassword" class="form-control" required />
+                                        <span id="newPasswordError" class="text-danger"></span>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">Xác nhận mật khẩu mới *</label>
+                                <input type="password" id="confirmPassword" class="form-control" required />
+                                <span id="confirmPasswordError" class="text-danger"></span>
+                            </div>
+                            <button type="submit" class="btn btn-primary" id="changePasswordButton">Đổi mật khẩu</button>
+                        </form>
+                    </div>
+
+                    <hr />
+
+                    <!-- Quản lý địa chỉ -->
+                    <div class="mt-4">
+                        <div class="d-flex justify-content-between align-items-center mb-3">
+                            <h5>Danh sách địa chỉ</h5>
+                            <button type="button" class="btn btn-success btn-sm" data-bs-toggle="modal" data-bs-target="#addAddressModal">
+                                <i class="fas fa-plus"></i> Thêm địa chỉ
+                            </button>
+                        </div>
+
+                        @if (Model.DiaChis != null && Model.DiaChis.Any())
+                        {
+                            <div class="row">
+                                @foreach (var address in Model.DiaChis)
+                                {
+                                    <div class="col-md-6 mb-3">
+                                        <div class="card border-light">
+                                            <div class="card-body">
+                                                <h6 class="card-title text-primary address-display" data-code="@address.Dia_Chi"></h6>
+                                                <p class="card-text">
+                                                    @if (!string.IsNullOrEmpty(address.Ghi_Chu))
+                                                    {
+                                                        <span class="fw-bold">@address.Ghi_Chu</span>
+                                                        <br />
+                                                    }
+                                                    @if (address.Trang_Thai == true)
+                                                    {
+                                                        <span class="badge bg-success mt-1">Đang sử dụng</span>
+                                                    }
+                                                    else
+                                                    {
+                                                        <span class="badge bg-secondary mt-1">Không sử dụng</span>
+                                                    }
+                                                </p>
+                                                <div class="btn-group btn-group-sm">
+                                                    <button type="button" class="btn btn-outline-primary"
+                                                            onclick="editAddress(@address.ID_Dia_Chi, '@Html.Raw(address.Dia_Chi?.Replace("'", "\\'"))', '@Html.Raw(address.Ghi_Chu?.Replace("'", "\\'"))', @address.Trang_Thai.ToString().ToLower())">
+                                                        Sửa
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                }
+                            </div>
+                        }
+                        else
+                        {
+                            <p class="text-muted">Chưa có địa chỉ nào được thêm.</p>
+                        }
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Toast Container -->
+<div class="toast-container"></div>
+
+<!-- Modal thêm địa chỉ -->
+<div class="modal fade" id="addAddressModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <form asp-action="AddAddress" method="post" id="addAddressForm">
+                <div class="modal-header">
+                    <h5 class="modal-title">Thêm địa chỉ mới</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label class="form-label">Quận/Huyện *</label>
+                                <select name="DistrictID" id="districtSelect" class="form-select" required>
+                                    <option value="">Chọn Quận/Huyện</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label class="form-label">Phường/Xã *</label>
+                                <select name="WardCode" id="wardSelect" class="form-select" required>
+                                    <option value="">Chọn Phường/Xã</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Địa chỉ chi tiết (tự động tạo)</label>
+                        <input id="addressDisplay" class="form-control bg-light" readonly
+                               placeholder="Sẽ hiển thị sau khi chọn Quận/Huyện và Phường/Xã" />
+                        <input type="hidden" name="Dia_Chi" id="addressCode" />
+                        <input type="hidden" name="Tinh_Thanh" value="Hà Nội" />
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Địa chỉ cụ thể của bạn</label>
+                        <textarea name="Ghi_Chu" class="form-control" rows="3"
+                                  placeholder="Nhập số nhà, tên đường, ngõ xóm cụ thể..." required></textarea>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
+                    <button type="submit" class="btn btn-primary">Thêm địa chỉ</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Modal sửa địa chỉ -->
+<div class="modal fade" id="editAddressModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <form asp-action="UpdateAddress" method="post" id="editAddressForm">
+                <div class="modal-header">
+                    <h5 class="modal-title">Sửa địa chỉ</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <input type="hidden" name="ID_Dia_Chi" id="editAddressId" />
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label class="form-label">Quận/Huyện *</label>
+                                <select name="DistrictID" id="editDistrictSelect" class="form-select" required>
+                                    <option value="">Chọn Quận/Huyện</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label class="form-label">Phường/Xã *</label>
+                                <select name="WardCode" id="editWardSelect" class="form-select" required>
+                                    <option value="">Chọn Phường/Xã</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Địa chỉ chi tiết (tự động tạo)</label>
+                        <input id="editAddressDisplay" class="form-control bg-light" readonly />
+                        <input type="hidden" name="Dia_Chi" id="editAddressCode" />
+                        <input type="hidden" name="Tinh_Thanh" value="Hà Nội" />
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Địa chỉ cụ thể của bạn</label>
+                        <textarea name="Ghi_Chu" id="editAddressNote" class="form-control" rows="3" required></textarea>
+                    </div>
+                    <div class="mb-3">
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" name="Trang_Thai" id="editAddressStatus" value="true">
+                            <label class="form-check-label" for="editAddressStatus">
+                                Đang sử dụng
+                            </label>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
+                    <button type="submit" class="btn btn-primary">Cập nhật</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Footer -->
+<footer class="footer">
+    <div class="footer-container">
+        <div class="grid grid-cols-1 md:grid-cols-4 gap-6">
+            <div class="footer-section">
+                <h3 class="footer-title">TheBoy Trà Sữa</h3>
+                <p class="text-sm text-gray-300 mb-4">Cửa hàng trà sữa tươi ngon, nguyên liệu chất lượng cao. Mang đến những ly trà sữa thơm ngon, đậm đà hương vị Việt Nam.</p>
+                <div class="flex items-center gap-4">
+                    <i class="bi bi-geo-alt text-primary text-lg"></i>
+                    <span class="text-sm">123 Đường ABC, Quận 1, TP. HCM</span>
+                </div>
+                <div class="flex items-center gap-4 mt-2">
+                    <i class="bi bi-telephone text-primary text-lg"></i>
+                    <span class="text-sm">+84 123 456 789</span>
+                </div>
+                <div class="flex items-center gap-4 mt-2">
+                    <i class="bi bi-envelope text-primary text-lg"></i>
+                    <span class="text-sm">theboy@trasua.vn</span>
+                </div>
+            </div>
+            <div class="footer-section">
+                <h3 class="footer-title">Menu</h3>
+                <a href="/" class="footer-link">Trang chủ</a>
+                <a href="/SanPham" class="footer-link">Sản phẩm</a>
+                <a href="/GioiThieu" class="footer-link">Giới thiệu</a>
+                <a href="/LienHe" class="footer-link">Liên hệ</a>
+                <a href="/KhuyenMai" class="footer-link">Khuyến mãi</a>
+            </div>
+            <div class="footer-section">
+                <h3 class="footer-title">Dịch vụ</h3>
+                <a href="/GiaoHang" class="footer-link">Giao hàng</a>
+                <a href="/ThanhToan" class="footer-link">Thanh toán</a>
+                <a href="/ChinhSach" class="footer-link">Chính sách</a>
+                <a href="/HoiDap" class="footer-link">Hỏi đáp</a>
+            </div>
+            <div class="footer-section">
+                <h3 class="footer-title">Theo dõi chúng tôi</h3>
+                <div class="footer-social">
+                    <a href="https://facebook.com/theboytrasua" class="social-icon" target="_blank" rel="noopener">
+                        <i class="bi bi-facebook"></i>
+                    </a>
+                    <a href="https://instagram.com/theboytrasua" class="social-icon" target="_blank" rel="noopener">
+                        <i class="bi bi-instagram"></i>
+                    </a>
+                    <a href="https://tiktok.com/theboytrasua" class="social-icon" target="_blank" rel="noopener">
+                        <i class="bi bi-tiktok"></i>
+                    </a>
+                    <a href="https://zalo.me/theboytrasua" class="social-icon" target="_blank" rel="noopener">
+                        <i class="bi bi-chat-dots"></i>
+                    </a>
+                </div>
+                <p class="text-sm text-gray-300 mt-4">Nhận ưu đãi đặc biệt qua app!</p>
+            </div>
+        </div>
+        <div class="footer-bottom">
+            <p>&copy; 2025 TheBoy Trà Sữa. Tất cả quyền được bảo lưu. | Thiết kế bởi xAI</p>
+        </div>
+    </div>
+</footer>
+
+@section Scripts {
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // Toast Notification Function
+        function showToast(type, title, message, duration = 5000) {
+            const toastContainer = document.querySelector('.toast-container');
+            const toast = document.createElement('div');
+            toast.className = `toast toast-${type} show`;
+            toast.innerHTML = `
+                <div class="toast-header">
+                    <i class="bi bi-${type === 'success' ? 'check-circle-fill' : type === 'error' ? 'exclamation-circle-fill' : type === 'warning' ? 'exclamation-triangle-fill' : 'info-circle-fill'} toast-icon"></i>
+                    <strong class="me-auto">${title}</strong>
+                    <button type="button" class="btn-close" data-bs-dismiss="toast" aria-label="Close"></button>
+                </div>
+                <div class="toast-body">${message}</div>
+                <div class="toast-progress"><div class="toast-progress-bar"></div></div>
+            `;
+            toastContainer.appendChild(toast);
+
+            const bsToast = new bootstrap.Toast(toast, { delay: duration });
+            bsToast.show();
+
+            toast.addEventListener('hidden.bs.toast', () => toast.remove());
+        }
+
+        // Password Validation Function
+        function validatePassword(password) {
+            const errors = [];
+            if (password.length < 8) errors.push("Mật khẩu mới phải có ít nhất 8 ký tự.");
+            if (!/[A-Z]/.test(password)) errors.push("Mật khẩu mới phải chứa ít nhất một chữ cái in hoa.");
+            if (!/[a-z]/.test(password)) errors.push("Mật khẩu mới phải chứa ít nhất một chữ cái thường.");
+            if (!/[0-9]/.test(password)) errors.push("Mật khẩu mới phải chứa ít nhất một số.");
+            if (!/[!@@#$%^&*(),.?":{}|<>]/.test(password)) errors.push("Mật khẩu mới phải chứa ít nhất một ký tự đặc biệt.");
+            return errors;
+        }
+
+        // Change Password Function
+        async function changePassword() {
+            const oldPassword = document.getElementById('oldPassword').value;
+            const newPassword = document.getElementById('newPassword').value;
+            const confirmPassword = document.getElementById('confirmPassword').value;
+            const changePasswordButton = document.getElementById('changePasswordButton');
+            const passwordForm = document.getElementById('changePasswordForm');
+            const toggleButton = document.getElementById('togglePasswordForm');
+
+            // Clear previous error messages
+            document.getElementById('oldPasswordError').textContent = '';
+            document.getElementById('newPasswordError').textContent = '';
+            document.getElementById('confirmPasswordError').textContent = '';
+
+            // Validate inputs
+            if (!oldPassword) {
+                document.getElementById('oldPasswordError').textContent = 'Vui lòng nhập mật khẩu hiện tại.';
+                return;
+            }
+
+            const passwordErrors = validatePassword(newPassword);
+            if (passwordErrors.length > 0) {
+                document.getElementById('newPasswordError').textContent = passwordErrors.join(' ');
+                return;
+            }
+
+            if (newPassword !== confirmPassword) {
+                document.getElementById('confirmPasswordError').textContent = 'Mật khẩu xác nhận không khớp.';
+                return;
+            }
+
+            // Disable button during API call
+            changePasswordButton.disabled = true;
+
+            try {
+                const idKhachHang = @Model.ID_Khach_Hang; // Adjust based on your model
+                const response = await fetch('https://localhost:7169/api/Auth/change-password', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        idKhachHang: idKhachHang,
+                        oldPassword: oldPassword,
+                        newPassword: newPassword
+                    })
+                });
+
+                if (response.ok) {
+                    showToast('success', 'Thành công!', 'Đổi mật khẩu thành công.');
+                    passwordForm.reset();
+                    passwordForm.classList.remove('active');
+                    toggleButton.textContent = 'Bấm để đổi mật khẩu ';
+                    toggleButton.classList.remove('active');
+                } else {
+                    const errorData = await response.json();
+                    showToast('error', 'Lỗi!', errorData.message || 'Đổi mật khẩu thất bại. Vui lòng thử lại.');
+                }
+            } catch (error) {
+            } finally {
+                changePasswordButton.disabled = false;
+            }
+        }
+
+        // Address Management
+        let districtsData = [];
+        let wardsByDistrict = {};
+
+        async function loadDistricts() {
+            try {
+                const response = await fetch('https://localhost:7169/api/Shipping/districts/201', {
+                    method: 'GET',
+                    headers: { 'Content-Type': 'application/json' }
+                });
+
+                if (response.ok) {
+                    const result = await response.json();
+                    if (result.code === 200) {
+                        districtsData = result.data || [];
+                        populateDistricts('districtSelect');
+                        populateDistricts('editDistrictSelect');
+                        updateAddressDisplays();
+                    } else {
+                        showToast('error', 'Lỗi!', 'Không thể tải danh sách quận/huyện.');
+                    }
+                } else {
+                    showToast('error', 'Lỗi!', 'Lỗi khi gọi API quận/huyện.');
+                }
+            } catch (error) {
+            }
+        }
+
+        function populateDistricts(selectId) {
+            const districtSelect = document.getElementById(selectId);
+            districtSelect.innerHTML = '<option value="">Chọn Quận/Huyện</option>';
+            districtsData.forEach(district => {
+                const option = document.createElement('option');
+                option.value = district.DistrictID;
+                option.textContent = district.DistrictName;
+                districtSelect.appendChild(option);
+            });
+        }
+
+        async function loadWards(districtId, selectId, callback) {
+            if (!districtId) {
+                const wardSelect = document.getElementById(selectId);
+                wardSelect.innerHTML = '<option value="">Chọn Phường/Xã</option>';
+                if (callback) callback();
+                return;
+            }
+
+            if (wardsByDistrict[districtId]) {
+                populateWards(selectId, wardsByDistrict[districtId]);
+                if (callback) callback();
+                return;
+            }
+
+            try {
+                const response = await fetch(`https://localhost:7169/api/Shipping/wards/${districtId}`, {
+                    method: 'GET',
+                    headers: { 'Content-Type': 'application/json' }
+                });
+
+                if (response.ok) {
+                    const result = await response.json();
+                    if (result.code === 200) {
+                        wardsByDistrict[districtId] = result.data || [];
+                        populateWards(selectId, result.data);
+                        if (callback) callback();
+                    } else {
+                        showToast('error', 'Lỗi!', 'Không thể tải danh sách phường/xã.');
+                    }
+                } else {
+                    showToast('error', 'Lỗi!', 'Lỗi khi gọi API phường/xã.');
+                }
+            } catch (error) {
+            }
+        }
+
+        function populateWards(selectId, wardsData) {
+            const wardSelect = document.getElementById(selectId);
+            wardSelect.innerHTML = '<option value="">Chọn Phường/Xã</option>';
+            wardsData.forEach(ward => {
+                const option = document.createElement('option');
+                option.value = ward.WardCode;
+                option.textContent = ward.WardName;
+                wardSelect.appendChild(option);
+            });
+        }
+
+        function updateAddressDisplay(mode) {
+            const districtSelect = mode === 'edit' ? document.getElementById('editDistrictSelect') : document.getElementById('districtSelect');
+            const wardSelect = mode === 'edit' ? document.getElementById('editWardSelect') : document.getElementById('wardSelect');
+            const addressDisplay = mode === 'edit' ? document.getElementById('editAddressDisplay') : document.getElementById('addressDisplay');
+            const addressCode = mode === 'edit' ? document.getElementById('editAddressCode') : document.getElementById('addressCode');
+
+            const districtId = districtSelect.value;
+            const wardCode = wardSelect.value;
+
+            if (districtId && wardCode && districtsData.length && wardsByDistrict[districtId]) {
+                const district = districtsData.find(d => d.DistrictID == districtId);
+                const ward = wardsByDistrict[districtId].find(w => w.WardCode == wardCode);
+                if (district && ward) {
+                    addressDisplay.value = `${ward.WardName} - ${district.DistrictName} - Hà Nội`;
+                    addressCode.value = `${wardCode},${districtId}`;
+                } else {
+                    addressDisplay.value = '';
+                    addressCode.value = '';
+                }
+            } else {
+                addressDisplay.value = '';
+                addressCode.value = '';
+            }
+        }
+
+        async function updateAddressDisplays() {
+            const addressElements = document.querySelectorAll('.address-display');
+            for (const elem of addressElements) {
+                const code = elem.dataset.code;
+                if (code) {
+                    const [wardCode, districtId] = code.split(',');
+                    if (districtId && wardCode) {
+                        const district = districtsData.find(d => d.DistrictID == districtId);
+                        if (district) {
+                            if (!wardsByDistrict[districtId]) {
+                                await loadWards(districtId, null);
+                            }
+                            const ward = wardsByDistrict[districtId]?.find(w => w.WardCode == wardCode);
+                            if (ward) {
+                                elem.textContent = `${ward.WardName} - ${district.DistrictName} - Hà Nội`;
+                            } else {
+                                elem.textContent = 'Địa chỉ không hợp lệ';
+                            }
+                        } else {
+                            elem.textContent = 'Địa chỉ không hợp lệ';
+                        }
+                    }
+                }
+            }
+        }
+
+        function editAddress(id, address, note, status) {
+            document.getElementById('editAddressId').value = id;
+            document.getElementById('editAddressNote').value = note || '';
+            document.getElementById('editAddressStatus').checked = status === 'true';
+
+            if (address) {
+                const [wardCode, districtId] = address.split(',');
+                const districtSelect = document.getElementById('editDistrictSelect');
+                districtSelect.value = districtId || '';
+
+                if (districtId) {
+                    loadWards(districtId, 'editWardSelect', () => {
+                        const wardSelect = document.getElementById('editWardSelect');
+                        wardSelect.value = wardCode || '';
+                        updateAddressDisplay('edit');
+                    });
+                } else {
+                    updateAddressDisplay('edit');
+                }
+            }
+
+            const modal = new bootstrap.Modal(document.getElementById('editAddressModal'));
+            modal.show();
+        }
+
+        document.addEventListener('DOMContentLoaded', function () {
+            // Show TempData messages
+            @if (TempData["SuccessMessage"] != null)
+            {
+                        <text>
+                        showToast('success', 'Thành công!', '@Html.Raw(TempData["SuccessMessage"])');
+                        </text>
+            }
+            @if (TempData["ErrorMessage"] != null)
+            {
+                        <text>
+                        showToast('error', 'Lỗi!', '@Html.Raw(TempData["ErrorMessage"])');
+                        </text>
             }
 
             // Toggle password form

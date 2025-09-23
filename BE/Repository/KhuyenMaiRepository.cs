@@ -62,22 +62,69 @@ namespace BE.Repository
             return khuyenMai;
         }
 
+        //public async Task<KhuyenMai> UpdateAsync(int id, KhuyenMaiDTO khuyenMaiDTO)
+        //{
+        //    var existing = await _context.KhuyenMai.FirstOrDefaultAsync(km => km.ID_Khuyen_Mai == id);
+        //    if (existing == null)
+        //    {
+        //        return null;
+        //    }
+
+        //    existing.Ten_Khuyen_Mai = khuyenMaiDTO.Ten_Khuyen_Mai;
+        //    existing.Ngay_Bat_Dau = khuyenMaiDTO.Ngay_Bat_Dau;
+        //    existing.Ngay_Ket_Thuc = khuyenMaiDTO.Ngay_Ket_Thuc;
+        //    existing.Mo_Ta = khuyenMaiDTO.Mo_Ta;
+        //    existing.Trang_Thai = khuyenMaiDTO.Trang_Thai;
+
+        //    await _context.SaveChangesAsync();
+        //    return existing;
+        //}
+
+
+        // vì sai phân tích ERD vậy nên phải thực hiện xóa thẳng vào báng SanPhamKhuyenMai khi đổi trạng thái từ true sang false
+
+
         public async Task<KhuyenMai> UpdateAsync(int id, KhuyenMaiDTO khuyenMaiDTO)
         {
-            var existing = await _context.KhuyenMai.FirstOrDefaultAsync(km => km.ID_Khuyen_Mai == id);
+            var existing = await _context.KhuyenMai
+                .Include(km => km.SanPhamKhuyenMais)
+                .FirstOrDefaultAsync(km => km.ID_Khuyen_Mai == id);
+
             if (existing == null)
             {
                 return null;
             }
 
+            // Cập nhật các thuộc tính
             existing.Ten_Khuyen_Mai = khuyenMaiDTO.Ten_Khuyen_Mai;
             existing.Ngay_Bat_Dau = khuyenMaiDTO.Ngay_Bat_Dau;
             existing.Ngay_Ket_Thuc = khuyenMaiDTO.Ngay_Ket_Thuc;
             existing.Mo_Ta = khuyenMaiDTO.Mo_Ta;
+
+            // Kiểm tra trạng thái thay đổi từ true sang false
+            if (existing.Trang_Thai && !khuyenMaiDTO.Trang_Thai)
+            {
+                // Xóa các bản ghi trong SanPhamKhuyenMai có ID_Khuyen_Mai = id
+                var recordsToDelete = existing.SanPhamKhuyenMais
+                    .Where(spkm => spkm.ID_Khuyen_Mai == id)
+                    .ToList();
+
+                _context.SanPhamKhuyenMai.RemoveRange(recordsToDelete);
+            }
+
             existing.Trang_Thai = khuyenMaiDTO.Trang_Thai;
 
             await _context.SaveChangesAsync();
             return existing;
         }
+
+
+
+
+
+
+
+
+
     }
 }
