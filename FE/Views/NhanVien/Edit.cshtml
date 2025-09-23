@@ -302,6 +302,11 @@
         padding: 14px 20px;
         box-shadow: 0 4px 12px rgba(0,0,0,0.1);
     }
+
+    .text-danger {
+        font-size: 0.8rem;
+        color: #dc2626 !important;
+    }
 </style>
 
 <!-- Thông báo -->
@@ -323,7 +328,7 @@
         <h2><i class="fas fa-user-edit"></i> Cập nhật thông tin nhân viên</h2>
     </div>
     <div class="edit-body">
-        <form asp-action="Edit" asp-controller="NhanVien" method="post" enctype="multipart/form-data">
+        <form asp-action="Edit" asp-controller="NhanVien" method="post" enctype="multipart/form-data" id="employeeForm">
             <input type="hidden" asp-for="ID_Nhan_Vien" />
 
             <div class="row g-3">
@@ -352,21 +357,25 @@
                         <option value="true">Nam</option>
                         <option value="false">Nữ</option>
                     </select>
+                    <span asp-validation-for="GioiTinh" class="text-danger"></span>
                 </div>
 
                 <div class="col-md-6">
                     <label asp-for="NamSinh" class="form-label">Năm sinh</label>
-                    <input asp-for="NamSinh" type="date" class="form-control" />
+                    <input asp-for="NamSinh" type="date" class="form-control" id="NamSinh" />
+                    <span asp-validation-for="NamSinh" class="text-danger" id="NamSinhError"></span>
                 </div>
 
                 <div class="col-md-6">
                     <label asp-for="CCCD" class="form-label">CCCD</label>
                     <input asp-for="CCCD" class="form-control" />
+                    <span asp-validation-for="CCCD" class="text-danger"></span>
                 </div>
 
                 <div class="col-md-12">
                     <label asp-for="Dia_Chi" class="form-label">Địa chỉ</label>
                     <input asp-for="Dia_Chi" class="form-control" />
+                    <span asp-validation-for="Dia_Chi" class="text-danger"></span>
                 </div>
 
                 <div class="col-md-6">
@@ -375,11 +384,13 @@
                         <option value="true">Đang làm</option>
                         <option value="false">Nghỉ</option>
                     </select>
+                    <span asp-validation-for="Trang_Thai" class="text-danger"></span>
                 </div>
 
                 <div class="col-md-6">
                     <label asp-for="Ghi_Chu" class="form-label">Ghi chú</label>
                     <textarea asp-for="Ghi_Chu" rows="1" class="form-control"></textarea>
+                    <span asp-validation-for="Ghi_Chu" class="text-danger"></span>
                 </div>
 
                 <div class="col-md-6">
@@ -402,4 +413,28 @@
 
 @section Scripts {
     @await Html.PartialAsync("_ValidationScriptsPartial")
+    <script>
+        // Validate NamSinh ngay trên view
+        document.getElementById("employeeForm").addEventListener("submit", function (event) {
+            const namSinhInput = document.getElementById("NamSinh");
+            const namSinhError = document.getElementById("NamSinhError");
+            const namSinhValue = new Date(namSinhInput.value);
+            const currentYear = new Date().getFullYear();
+            const yearOfBirth = namSinhValue.getFullYear();
+            const maxAllowedYear = 2007; // Tuổi trên 18, tính đến năm hiện tại (2025)
+
+            // Kiểm tra nếu năm sinh lớn hơn 2007
+            if (yearOfBirth > maxAllowedYear) {
+                event.preventDefault(); // Ngăn submit form
+                namSinhError.textContent = "Nhân viên phải trên 18 tuổi (năm sinh từ 2007 trở về trước).";
+            } else {
+                namSinhError.textContent = ""; // Xóa thông báo lỗi nếu hợp lệ
+            }
+        });
+
+        // Xóa thông báo lỗi khi người dùng thay đổi giá trị NamSinh
+        document.getElementById("NamSinh").addEventListener("change", function () {
+            document.getElementById("NamSinhError").textContent = "";
+        });
+    </script>
 }

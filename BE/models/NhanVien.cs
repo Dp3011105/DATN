@@ -1,4 +1,5 @@
 ﻿using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
 
 namespace BE.models
 {
@@ -6,6 +7,7 @@ namespace BE.models
     {
         [Key]
         public int ID_Nhan_Vien { get; set; }
+
 
         [Required(ErrorMessage = "Họ tên không được để trống")]
         [StringLength(100, ErrorMessage = "Họ tên không được vượt quá 100 ký tự")]

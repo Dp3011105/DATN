@@ -1,0 +1,94 @@
+﻿@model BE.DTOs.KhachHangDTO
+
+@if (Model == null)
+{
+    <p class="text-danger">Không tìm thấy thông tin khách hàng.</p>
+}
+else
+{
+    <div class="card shadow-lg border-0 rounded-4 overflow-hidden customer-card">
+        <!-- Header -->
+        <div class="card-header text-white fw-bold d-flex align-items-center"
+             style="background: linear-gradient(135deg, #2ecc71, #27ae60); font-size: 1.1rem;">
+            <i class="fas fa-user-circle me-2 fs-5"></i> Thông tin khách hàng
+        </div>
+
+        <!-- Body -->
+        <div class="card-body p-4">
+            <dl class="row customer-detail">
+                <dt class="col-sm-4"><i class="fas fa-id-card me-2 text-success"></i> Mã KH:</dt>
+                <dd class="col-sm-8">@Model.ID_Khach_Hang</dd>
+
+                <dt class="col-sm-4"><i class="fas fa-user me-2 text-success"></i> Họ tên:</dt>
+                <dd class="col-sm-8">@Model.Ho_Ten</dd>
+
+                <dt class="col-sm-4"><i class="fas fa-phone-alt me-2 text-success"></i> SĐT:</dt>
+                <dd class="col-sm-8">@Model.So_Dien_Thoai</dd>
+
+                <dt class="col-sm-4"><i class="fas fa-envelope me-2 text-success"></i> Email:</dt>
+                <dd class="col-sm-8">@Model.Email</dd>
+
+                <dt class="col-sm-4"><i class="fas fa-toggle-on me-2 text-success"></i> Trạng thái:</dt>
+                <dd class="col-sm-8">
+                    <span class="badge px-3 py-2 rounded-pill
+                                         bg-@(Model.Trang_Thai ? "success" : "secondary")">
+                        @(Model.Trang_Thai ? "Đang hoạt động" : "Không hoạt động")
+                    </span>
+                </dd>
+            </dl>
+        </div>
+    </div>
+}
+
+<style>
+    .customer-card {
+        margin-top: 20px;
+        border: none; /* Loại bỏ viền xanh nước biển */
+        border-radius: 12px;
+        overflow: hidden;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        transition: transform 0.3s ease, box-shadow 0.3s ease;
+    }
+
+        .customer-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 6px 18px rgba(46, 204, 113, 0.3);
+        }
+
+    .card-header {
+        background: linear-gradient(135deg, #2ecc71, #27ae60);
+        color: white;
+        font-weight: 600;
+        padding: 12px;
+        font-size: 1.2rem;
+        text-align: center;
+    }
+
+    .card-body {
+        padding: 15px;
+        background-color: #f9fffb;
+    }
+
+    .customer-detail dt {
+        font-weight: 500;
+        color: #27ae60;
+        margin-bottom: 10px;
+        font-size: 1rem;
+    }
+
+    .customer-detail dd {
+        margin-bottom: 10px;
+        font-weight: 400;
+        color: #34495e;
+        font-size: 1rem;
+    }
+
+    .badge {
+        font-size: 0.9rem;
+        padding: 6px 12px;
+        border-radius: 20px;
+        background-color: #2ecc71;
+        color: white;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    }
+</style>

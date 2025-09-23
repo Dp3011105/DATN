@@ -18,7 +18,7 @@
         color: #1e293b;
     }
 
-   keyframes fadeInUp {
+    keyframes fadeInUp {
         from
 
     {
@@ -109,12 +109,10 @@
         color: #dc2626 !important;
     }
 
-    /* Input hover effect */
     .form-control:hover, .form-select:hover {
         border-color: #60a5fa;
     }
 
-    /* Alert message */
     .alert {
         max-width: 600px;
         margin: 20px auto;
@@ -126,7 +124,6 @@
 </style>
 
 <div class="container py-4">
-
     <!-- Hiển thị thông báo -->
     @if (TempData["SuccessMessage"] != null)
     {
@@ -146,7 +143,7 @@
             <i class="fas fa-user-plus me-2"></i> Thêm nhân viên mới
         </div>
         <div class="card-body p-4">
-            <form asp-action="Create" method="post" enctype="multipart/form-data">
+            <form asp-action="Create" asp-controller="NhanVien" method="post" enctype="multipart/form-data" id="employeeForm">
                 <div class="row g-3">
                     <div class="col-md-6">
                         <label asp-for="Ho_Ten" class="form-label"></label>
@@ -174,8 +171,9 @@
                     </div>
                     <div class="col-md-6">
                         <label asp-for="NamSinh" class="form-label"></label>
-                        <input asp-for="NamSinh" type="date" class="form-control" />
+                        <input asp-for="NamSinh" type="date" class="form-control" id="NamSinh" />
                         <span asp-validation-for="NamSinh" class="text-danger"></span>
+                        <span id="NamSinhValidation" class="text-danger"></span>
                     </div>
                     <div class="col-md-6">
                         <label asp-for="CCCD" class="form-label"></label>
@@ -208,4 +206,37 @@
 
 @section Scripts {
     @await Html.PartialAsync("_ValidationScriptsPartial")
+    <script>
+        document.getElementById("employeeForm").addEventListener("submit", function (event) {
+            const namSinhInput = document.getElementById("NamSinh");
+            const namSinhError = document.getElementById("NamSinhValidation");
+            const namSinhValue = new Date(namSinhInput.value);
+            const currentDate = new Date(); // Ngày hiện tại
+
+            if (isNaN(namSinhValue.getTime())) {
+                // Nếu không có giá trị ngày sinh, bỏ qua hoặc xử lý tùy theo yêu cầu
+                return;
+            }
+
+            let age = currentDate.getFullYear() - namSinhValue.getFullYear();
+            const monthDiff = currentDate.getMonth() - namSinhValue.getMonth();
+            const dayDiff = currentDate.getDate() - namSinhValue.getDate();
+
+            if (monthDiff < 0 || (monthDiff === 0 && dayDiff < 0)) {
+                age--;
+            }
+
+            if (age < 18) {
+                event.preventDefault(); // Ngăn submit form
+                namSinhError.textContent = "Nhân viên chưa đủ 18 tuổi.";
+            } else {
+                namSinhError.textContent = ""; // Xóa thông báo lỗi nếu hợp lệ
+            }
+        });
+
+        // Xóa thông báo lỗi khi người dùng thay đổi giá trị NamSinh
+        document.getElementById("NamSinh").addEventListener("change", function () {
+            document.getElementById("NamSinhValidation").textContent = "";
+        });
+    </script>
 }
