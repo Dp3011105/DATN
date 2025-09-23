@@ -67,7 +67,7 @@ namespace FE.Controllers
             {
                 return NotFound();
             }
-            return PartialView("_Details", customer); // Đổi thành PartialView cho modal
+            return PartialView("Details", customer); // Đổi thành PartialView cho modal
         }
 
         [HttpGet]
