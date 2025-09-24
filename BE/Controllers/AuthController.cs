@@ -190,11 +190,7 @@ namespace BE.Controllers
                 return BadRequest("Tài khoản đã bị khóa.");
             }
 
-            // Kiểm tra xung đột ID_Khach_Hang và ID_Nhan_Vien
-            if (taiKhoan.ID_Khach_Hang != null && taiKhoan.ID_Nhan_Vien != null)
-            {
-                return BadRequest("Dữ liệu tài khoản này xung đột: Cả ID_Khach_Hang và ID_Nhan_Vien đều tồn tại.");
-            }
+           
             if (taiKhoan.ID_Khach_Hang == null && taiKhoan.ID_Nhan_Vien == null)
             {
                 return BadRequest("Dữ liệu tài khoản này xung đột: Cả ID_Khach_Hang và ID_Nhan_Vien đều không tồn tại.");

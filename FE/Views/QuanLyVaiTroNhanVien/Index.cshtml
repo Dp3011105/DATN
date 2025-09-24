@@ -195,7 +195,6 @@
     <div id="errorMessage" class="alert alert-danger hidden" role="alert">
         <strong>Lỗi:</strong> <span id="errorText"></span>
     </div>
-    <!-- Xóa div requestLog để không hiển thị JSON gửi đi -->
 
     <ul class="nav nav-tabs flex border-b-2 border-gray-200" id="myTab" role="tablist">
         <li class="nav-item" role="presentation">
@@ -473,7 +472,8 @@
                             <td class="px-4 py-3">${nv.cccd}</td>
                             <td class="px-4 py-3">${nv.vai_Tros && nv.vai_Tros.length > 0 ? nv.vai_Tros.map(v => v.ten_Vai_Tro).join(', ') : '<span class="text-gray-500">Không có vai trò</span>'}</td>
                             <td class="px-4 py-3">
-                                <button class="btn btn-warning btn-sm" data-toggle="modal" data-target="#capNhatVaiTroModal" onclick="loadCapNhatVaiTro(${nv.iD_Tai_Khoan}, '${nv.vai_Tros.map(v => v.iD_Vai_Tro).join(',')}')">Sửa Vai Trò</button>
+                                ${nv.iD_Tai_Khoan === 2 ? '<span class="text-red-500 font-semibold">Không được sửa</span>' :
+                                `<button class="btn btn-warning btn-sm" data-toggle="modal" data-target="#capNhatVaiTroModal" onclick="loadCapNhatVaiTro(${nv.iD_Tai_Khoan}, '${nv.vai_Tros.map(v => v.iD_Vai_Tro).join(',')}')">Sửa Vai Trò</button>`}
                             </td>
                         `;
                         tbody.appendChild(row);
@@ -503,8 +503,12 @@
         document.getElementById('idTaiKhoanThem').value = id;
         document.querySelectorAll('#vaiTroThemCheckboxes input[type="checkbox"]').forEach(cb => cb.checked = false);
     }
-
+    ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
     function loadCapNhatVaiTro(id, currentVaiTroIds) {
+        if (id === 2) {
+            showError('Tài khoản với ID = 2 không được phép sửa vai trò!');
+            return;
+        }
         document.getElementById('idTaiKhoanCapNhat').value = id;
         const ids = currentVaiTroIds ? currentVaiTroIds.split(',').filter(id => id !== '') : [];
         document.querySelectorAll('#vaiTroCapNhatCheckboxes input[type="checkbox"]').forEach(cb => {
@@ -522,8 +526,6 @@
             iD_Tai_Khoan: parseInt(idTaiKhoan),
             danh_Sach_ID_Vai_Tro: danhSachVaiTro
         };
-
-        // Xóa lệnh showLog(data) để không hiển thị JSON gửi đi
 
         fetch('https://localhost:7169/api/QuanLyNhanVienVaiTro/gan-vai-tro', {
             method: 'POST',
@@ -560,6 +562,10 @@
     document.getElementById('capNhatVaiTroForm').addEventListener('submit', function (e) {
         e.preventDefault();
         const idTaiKhoan = document.getElementById('idTaiKhoanCapNhat').value;
+        if (parseInt(idTaiKhoan) === 2) {
+            showError('Tài khoản với ID = 2 không được phép sửa vai trò!');
+            return;
+        }
         const checkboxes = document.querySelectorAll('#vaiTroCapNhatCheckboxes input[type="checkbox"]:checked');
         const danhSachVaiTro = Array.from(checkboxes).map(cb => parseInt(cb.value));
 
@@ -567,8 +573,6 @@
             iD_Tai_Khoan: parseInt(idTaiKhoan),
             danh_Sach_ID_Vai_Tro: danhSachVaiTro
         };
-
-        // Xóa lệnh showLog(data) để không hiển thị JSON gửi đi
 
         fetch('https://localhost:7169/api/QuanLyNhanVienVaiTro/cap-nhat-vai-tro', {
             method: 'PUT',
