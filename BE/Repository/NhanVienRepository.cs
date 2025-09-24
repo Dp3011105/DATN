@@ -1,4 +1,4 @@
-using BE.models;
+﻿using BE.models;
 using BE.Data;
 using Microsoft.EntityFrameworkCore;
 using Repository.IRepository;
@@ -37,8 +37,17 @@ namespace Repository
                 {
                     throw new KeyNotFoundException($"Entity with ID {id} not found.");
                 }
-                entity.Trang_Thai = false; 
+                entity.Trang_Thai = false;
                 _context.Nhan_Vien.Update(entity);
+
+                // Tìm và cập nhật trạng thái tài khoản liên kết thành false
+                var taiKhoan = await _context.Tai_Khoan.FirstOrDefaultAsync(tk => tk.ID_Nhan_Vien == id);
+                if (taiKhoan != null)
+                {
+                    taiKhoan.Trang_Thai = false;
+                    _context.Tai_Khoan.Update(taiKhoan);
+                }
+
                 await _context.SaveChangesAsync();
             }
             catch (Exception ex)
