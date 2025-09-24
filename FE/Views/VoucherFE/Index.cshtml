@@ -1,4 +1,4 @@
-﻿@model IEnumerable<FE.Models.VoucherViewModel>
+﻿@* @model IEnumerable<FE.Models.VoucherViewModel>
 
 @{
     Layout = "~/Views/Shared/_AdminLayout.cshtml";
@@ -108,7 +108,6 @@
                                 <option value="low">1% - 10%</option>
                                 <option value="medium">11% - 30%</option>
                                 <option value="high">31% - 50%</option>
-                                <option value="vip">Trên 50%</option>
                             </select>
                         </div>
                         <div class="col-md-2">
@@ -1184,5 +1183,1213 @@
         font-size: 0.7rem;
     }
 
+    }
+</style> *@
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+@model IEnumerable<FE.Models.VoucherViewModel>
+
+@{
+    Layout = "~/Views/Shared/_AdminLayout.cshtml";
+    ViewData["Title"] = "Quản lý Voucher";
+}
+
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header d-flex justify-content-between align-items-center" style="background: linear-gradient(45deg, #007bff, #0056b3); color: white;">
+                    <h3 class="card-title mb-0">
+                        <i class="fas fa-ticket-alt"></i> Quản lý Voucher
+                    </h3>
+                    <div class="d-flex gap-2">
+                        <!-- Bulk Actions -->
+                        <div class="dropdown" id="bulkActionsDropdown" style="display: none;">
+                            <button class="btn btn-warning dropdown-toggle" type="button" data-bs-toggle="dropdown">
+                                <i class="fas fa-tasks"></i> Thao tác hàng loạt
+                            </button>
+                            <ul class="dropdown-menu">
+                                <li>
+                                    <a class="dropdown-item" href="#" onclick="bulkActivate()">
+                                        <i class="fas fa-play text-success"></i> Kích hoạt đã chọn
+                                    </a>
+                                </li>
+                                <li>
+                                    <a class="dropdown-item" href="#" onclick="bulkDeactivate()">
+                                        <i class="fas fa-stop text-danger"></i> Ngừng hoạt động đã chọn
+                                    </a>
+                                </li>
+                                <li><hr class="dropdown-divider"></li>
+                                <li>
+                                    <a class="dropdown-item" href="#" onclick="exportSelectedToExcel()">
+                                        <i class="fas fa-file-excel text-success"></i> Xuất Excel đã chọn
+                                    </a>
+                                </li>
+                            </ul>
+                        </div>
+                        <!-- Export Actions -->
+                        <div class="dropdown">
+                            <button class="btn btn-success dropdown-toggle" type="button" data-bs-toggle="dropdown">
+                                <i class="fas fa-download"></i> Xuất dữ liệu
+                            </button>
+                            <ul class="dropdown-menu">
+                                <li>
+                                    <a class="dropdown-item" href="#" onclick="exportAllToExcel()">
+                                        <i class="fas fa-file-excel text-success"></i> Xuất tất cả Excel
+                                    </a>
+                                </li>
+                            </ul>
+                        </div>
+                        <a asp-action="Create" class="btn btn-light">
+                            <i class="fas fa-plus"></i> Thêm Voucher
+                        </a>
+                    </div>
+                </div>
+
+                <div class="card-body">
+                    @if (TempData["SuccessMessage"] != null)
+                    {
+                        <div class="alert alert-success alert-dismissible fade show" role="alert" style="border-radius: 12px; border: none; box-shadow: 0 4px 12px rgba(0,0,0,0.1); background: linear-gradient(135deg, #d4edda 0%, #c3e6cb 100%); border-left: 5px solid #28a745;">
+                            <div class="d-flex align-items-start">
+                                <i class="fas fa-check-circle me-2 mt-1 text-success" style="font-size: 1.2em;"></i>
+                                <div class="flex-grow-1">
+                                    <strong>Thành công!</strong>
+                                    <div class="mt-1">@TempData["SuccessMessage"]</div>
+                                </div>
+                            </div>
+                            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                        </div>
+                    }
+
+                    @if (TempData["ErrorMessage"] != null)
+                    {
+                        <div class="alert alert-danger alert-dismissible fade show" role="alert" style="border-radius: 12px; border: none; box-shadow: 0 4px 12px rgba(0,0,0,0.1); background: linear-gradient(135deg, #f8d7da 0%, #f5c6cb 100%); border-left: 5px solid #dc3545;">
+                            <div class="d-flex align-items-start">
+                                <i class="fas fa-exclamation-triangle me-2 mt-1 text-danger" style="font-size: 1.2em;"></i>
+                                <div class="flex-grow-1">
+                                    <strong>Lỗi!</strong>
+                                    <div class="mt-1">@TempData["ErrorMessage"]</div>
+                                </div>
+                            </div>
+                            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                        </div>
+                    }
+
+                    <!-- Filters và Search -->
+                    <div class="row mb-4">
+                        <div class="col-md-4">
+                            <div class="input-group">
+                                <span class="input-group-text"><i class="fas fa-search"></i></span>
+                                <input type="text" id="searchInput" class="form-control" placeholder="Tìm kiếm voucher...">
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <select id="statusFilter" class="form-select">
+                                <option value="">Tất cả trạng thái</option>
+                                <option value="active">Hoạt động</option>
+                                <option value="inactive">Ngừng hoạt động</option>
+                                <option value="expired">Hết hạn</option>
+                            </select>
+                        </div>
+                        <div class="col-md-3">
+                            <select id="discountFilter" class="form-select">
+                                <option value="">Tất cả mức giảm</option>
+                                <option value="low">1% - 10%</option>
+                                <option value="medium">11% - 30%</option>
+                                <option value="high">31% - 50%</option>
+                            </select>
+                        </div>
+                        <div class="col-md-2">
+                            <button type="button" class="btn btn-secondary w-100" onclick="clearFilters()">
+                                <i class="fas fa-sync-alt"></i> Reset
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Statistics -->
+                    <div class="row mb-4">
+                        <div class="col-md-3">
+                            <div class="card bg-primary text-white">
+                                <div class="card-body">
+                                    <div class="d-flex justify-content-between">
+                                        <div>
+                                            <h5 class="card-title">Tổng Voucher</h5>
+                                            <h3 id="totalVouchers">@Model.Count()</h3>
+                                        </div>
+                                        <i class="fas fa-ticket-alt fa-2x opacity-50"></i>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="card bg-success text-white">
+                                <div class="card-body">
+                                    <div class="d-flex justify-content-between">
+                                        <div>
+                                            <h5 class="card-title">Đang hoạt động</h5>
+                                            <h3 id="activeVouchers">@Model.Count(v => v.Trang_Thai == true && !v.IsExpired)</h3>
+                                        </div>
+                                        <i class="fas fa-check-circle fa-2x opacity-50"></i>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="card bg-danger text-white">
+                                <div class="card-body">
+                                    <div class="d-flex justify-content-between">
+                                        <div>
+                                            <h5 class="card-title">Ngừng hoạt động</h5>
+                                            <h3 id="inactiveVouchers">@Model.Count(v => v.Trang_Thai == false && !v.IsExpired)</h3>
+                                        </div>
+                                        <i class="fas fa-times-circle fa-2x opacity-50"></i>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="card bg-warning text-white">
+                                <div class="card-body">
+                                    <div class="d-flex justify-content-between">
+                                        <div>
+                                            <h5 class="card-title">Hết hạn</h5>
+                                            <h3 id="expiredVouchers">@Model.Count(v => v.IsExpired)</h3>
+                                        </div>
+                                        <i class="fas fa-clock fa-2x opacity-50"></i>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Selection Info -->
+                    <div class="alert alert-info" id="selectionInfo" style="display: none;">
+                        <i class="fas fa-info-circle"></i>
+                        Đã chọn <span id="selectedCount">0</span> voucher
+                    </div>
+
+                    <div class="table-responsive">
+                        <table class="table table-striped table-hover" id="voucherTable">
+                            <thead class="table-dark">
+                                <tr>
+                                    <th width="50">
+                                        <div class="form-check">
+                                            <input class="form-check-input" type="checkbox" id="selectAll">
+                                            <label class="form-check-label" for="selectAll"></label>
+                                        </div>
+                                    </th>
+                                    <th>Mã Voucher</th>
+                                    <th>Tên Voucher</th>
+                                    <th>Số lượng</th>
+                                    <th>Phần trăm giảm</th>
+                                    <th>Yêu cầu tối thiểu</th>
+                                    <th>Thời gian</th>
+                                    <th>Trạng thái</th>
+                                    <th>Thao tác</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var item in Model.OrderBy(v => v.TrangThaiOrder).ThenByDescending(v => v.ID_Voucher))
+                                {
+                                    var isUpcoming = item.Ngay_Bat_Dau.HasValue && item.Ngay_Bat_Dau.Value > DateTime.Now;
+
+                                    <tr data-status="@(item.IsExpired ? "expired" : item.Trang_Thai == true ? "active" : "inactive")"
+                                        data-discount="@(item.Gia_Tri_Giam <= 10 ? "low" : item.Gia_Tri_Giam <= 30 ? "medium" : item.Gia_Tri_Giam <= 50 ? "high" : "vip")"
+                                        data-search="@item.Ma_Voucher?.ToLower() @item.Ten?.ToLower()"
+                                        data-voucher-id="@item.ID_Voucher"
+                                        data-voucher-code="@item.Ma_Voucher"
+                                        data-voucher-name="@item.Ten"
+                                        data-voucher-quantity="@item.So_Luong"
+                                        data-voucher-discount="@item.GiaTriGiamText"
+                                        data-voucher-requirement="@item.SoTienDatYeuCauText"
+                                        data-voucher-start="@(item.Ngay_Bat_Dau?.ToString("dd/MM/yyyy") ?? "N/A")"
+                                        data-voucher-end="@(item.Ngay_Ket_Thuc?.ToString("dd/MM/yyyy") ?? "N/A")"
+                                        data-voucher-status="@item.TrangThaiText"
+                                        data-current-status="@(item.Trang_Thai == true ? "active" : "inactive")"
+                                        data-is-expired="@item.IsExpired">
+                                        <td>
+                                            <div class="form-check">
+                                                <input class="form-check-input voucher-checkbox" type="checkbox"
+                                                       value="@item.ID_Voucher" id="check_@item.ID_Voucher">
+                                                <label class="form-check-label" for="check_@item.ID_Voucher"></label>
+                                            </div>
+                                        </td>
+                                        <td>
+                                            <strong class="text-primary">@item.Ma_Voucher</strong>
+                                        </td>
+                                        <td>
+                                            <div>@item.Ten</div>
+                                            @if (item.IsExpired)
+                                            {
+                                                <small class="text-danger"><i class="fas fa-exclamation-triangle"></i> Đã hết hạn</small>
+                                            }
+                                            else if (isUpcoming)
+                                            {
+                                                <small class="text-warning"><i class="fas fa-clock"></i> Sắp diễn ra</small>
+                                            }
+                                        </td>
+                                        <td>
+                                            <span class="badge @(item.So_Luong > 0 ? "bg-success" : "bg-danger")">
+                                                @(item.So_Luong?.ToString("N0") ?? "N/A")
+                                            </span>
+                                        </td>
+                                        <td>
+                                            <strong class="text-success">@item.GiaTriGiamText</strong>
+                                        </td>
+                                        <td>
+                                            @item.SoTienDatYeuCauText
+                                        </td>
+                                        <td>
+                                            <div style="font-size: 0.85em;">
+                                                <div><strong>Từ:</strong> @(item.Ngay_Bat_Dau?.ToString("dd/MM/yyyy") ?? "N/A")</div>
+                                                <div><strong>Đến:</strong> @(item.Ngay_Ket_Thuc?.ToString("dd/MM/yyyy") ?? "N/A")</div>
+                                            </div>
+                                        </td>
+                                        <td>
+                                            <span class="@item.TrangThaiClass">@item.TrangThaiText</span>
+                                        </td>
+                                        <td>
+                                            <div class="btn-group" role="group">
+                                                <a asp-action="Details" asp-route-id="@item.ID_Voucher"
+                                                   class="btn btn-info btn-sm" title="Xem chi tiết">
+                                                    <i class="fas fa-eye"></i>
+                                                </a>
+                                                <a asp-action="Edit" asp-route-id="@item.ID_Voucher"
+                                                   class="btn btn-warning btn-sm" title="Chỉnh sửa">
+                                                    <i class="fas fa-edit"></i>
+                                                </a>
+                                                @if (item.Trang_Thai == true && !item.IsExpired)
+                                                {
+                                                    <button type="button" class="btn btn-danger btn-sm"
+                                                            title="Ngừng hoạt động"
+                                                            onclick="deactivateVoucher(@item.ID_Voucher, '@item.Ma_Voucher')">
+                                                        <i class="fas fa-stop"></i>
+                                                    </button>
+                                                }
+                                            </div>
+                                        </td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+
+                        @if (!Model.Any())
+                        {
+                            <div class="text-center py-5">
+                                <i class="fas fa-ticket-alt fa-3x text-muted mb-3"></i>
+                                <h5 class="text-muted">Chưa có voucher nào</h5>
+                                <p class="text-muted">Bắt đầu tạo voucher đầu tiên của bạn</p>
+                                <a asp-action="Create" class="btn btn-primary">
+                                    <i class="fas fa-plus"></i> Tạo Voucher
+                                </a>
+                            </div>
+                        }
+                    </div>
+
+                    <!-- Pagination placeholder -->
+                    <div class="d-flex justify-content-between align-items-center mt-4">
+                        <div class="text-muted">
+                            Hiển thị <span id="showingCount">@Model.Count()</span> voucher
+                        </div>
+                        <div>
+                            <!-- Pagination sẽ được thêm sau -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal xác nhận ngừng hoạt động -->
+<div class="modal fade" id="deactivateModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Xác nhận ngừng hoạt động</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div class="text-center">
+                    <i class="fas fa-exclamation-triangle fa-3x text-warning mb-3"></i>
+                    <p>Bạn có chắc chắn muốn ngừng hoạt động voucher</p>
+                    <strong class="text-primary" id="voucherCode"></strong>?
+                    <p class="text-muted mt-2">Hành động này sẽ làm voucher không thể sử dụng được nữa.</p>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
+                <form id="deactivateForm" method="post" style="display: inline;">
+                    <button type="submit" class="btn btn-danger">
+                        <i class="fas fa-stop"></i> Ngừng hoạt động
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal xác nhận thao tác hàng loạt -->
+<div class="modal fade" id="bulkActionModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="bulkActionTitle">Xác nhận thao tác</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div class="text-center">
+                    <i class="fas fa-question-circle fa-3x text-warning mb-3"></i>
+                    <p id="bulkActionMessage"></p>
+                    <div class="alert alert-info">
+                        <strong>Voucher đã chọn:</strong>
+                        <div id="selectedVouchersList"></div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
+                <button type="button" class="btn btn-primary" id="confirmBulkAction">Xác nhận</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Loading Modal -->
+<div class="modal fade" id="loadingModal" tabindex="-1" data-bs-backdrop="static">
+    <div class="modal-dialog modal-sm">
+        <div class="modal-content">
+            <div class="modal-body text-center">
+                <div class="spinner-border text-primary" role="status">
+                    <span class="visually-hidden">Loading...</span>
+                </div>
+                <p class="mt-2 mb-0">Đang xử lý...</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<script>
+    $(document).ready(function() {
+        // Search functionality
+        $('#searchInput').on('input', function() {
+            filterTable();
+        });
+
+        // Filter functionality
+        $('#statusFilter, #discountFilter').on('change', function() {
+            filterTable();
+        });
+
+        // Select All functionality
+        $('#selectAll').on('change', function() {
+            const isChecked = $(this).is(':checked');
+            $('.voucher-checkbox:visible').prop('checked', isChecked);
+            updateSelectionInfo();
+        });
+
+        // Individual checkbox change
+        $(document).on('change', '.voucher-checkbox', function() {
+            updateSelectionInfo();
+            updateSelectAllState();
+        });
+
+        // Auto dismiss alerts
+        setTimeout(function() {
+            $('.alert').fadeOut('slow');
+        }, 5000);
+
+        // Auto deactivate expired vouchers
+        autoDeactivateExpiredVouchers();
+    });
+
+    function autoDeactivateExpiredVouchers() {
+        const expiredIds = [];
+        $('#voucherTable tbody tr[data-is-expired="True"][data-current-status="active"]').each(function() {
+            const id = $(this).data('voucher-id');
+            expiredIds.push(id);
+        });
+
+        if (expiredIds.length > 0) {
+            performBulkAction('deactivate', expiredIds);
+        }
+    }
+
+    function updateSelectionInfo() {
+        const selectedCount = $('.voucher-checkbox:checked').length;
+        $('#selectedCount').text(selectedCount);
+
+        if (selectedCount > 0) {
+            $('#selectionInfo').show();
+            $('#bulkActionsDropdown').show();
+        } else {
+            $('#selectionInfo').hide();
+            $('#bulkActionsDropdown').hide();
+        }
+    }
+
+    function updateSelectAllState() {
+        const totalVisible = $('.voucher-checkbox:visible').length;
+        const selectedVisible = $('.voucher-checkbox:visible:checked').length;
+
+        if (selectedVisible === 0) {
+            $('#selectAll').prop('indeterminate', false).prop('checked', false);
+        } else if (selectedVisible === totalVisible) {
+            $('#selectAll').prop('indeterminate', false).prop('checked', true);
+        } else {
+            $('#selectAll').prop('indeterminate', true);
+        }
+    }
+
+    function filterTable() {
+        const searchTerm = $('#searchInput').val().toLowerCase();
+        const statusFilter = $('#statusFilter').val();
+        const discountFilter = $('#discountFilter').val();
+        let visibleCount = 0;
+
+        $('#voucherTable tbody tr').each(function() {
+            const $row = $(this);
+            const searchData = $row.data('search') || '';
+            const status = $row.data('status');
+            const discount = $row.data('discount');
+
+            let showRow = true;
+
+            // Search filter
+            if (searchTerm && !searchData.includes(searchTerm)) {
+                showRow = false;
+            }
+
+            // Status filter
+            if (statusFilter && status !== statusFilter) {
+                showRow = false;
+            }
+
+            // Discount filter
+            if (discountFilter && discount !== discountFilter) {
+                showRow = false;
+            }
+
+            if (showRow) {
+                $row.show();
+                visibleCount++;
+            } else {
+                $row.hide();
+                // Uncheck hidden rows
+                $row.find('.voucher-checkbox').prop('checked', false);
+            }
+        });
+
+        $('#showingCount').text(visibleCount);
+        updateSelectionInfo();
+        updateSelectAllState();
+    }
+
+    function clearFilters() {
+        $('#searchInput').val('');
+        $('#statusFilter').val('');
+        $('#discountFilter').val('');
+        filterTable();
+        showToast('Đã xóa bộ lọc', 'info');
+    }
+
+    function deactivateVoucher(id, code) {
+        document.getElementById('voucherCode').textContent = code;
+        document.getElementById('deactivateForm').action = '/Voucher/Deactivate/' + id;
+
+        const modal = new bootstrap.Modal(document.getElementById('deactivateModal'));
+        modal.show();
+    }
+
+    // Bulk Actions
+    function bulkActivate() {
+        console.log('bulkActivate called'); // Debug log
+        const selectedData = getSelectedVoucherData();
+
+        console.log('Selected data:', selectedData); // Debug log
+
+        if (selectedData.length === 0) {
+            showToast('Vui lòng chọn ít nhất một voucher', 'warning');
+            return;
+        }
+
+        // Filter out expired vouchers and already active vouchers
+        const validVouchers = selectedData.filter(voucher => {
+            const isExpired = voucher.isExpired === true || voucher.isExpired === 'True';
+            const isInactive = voucher.currentStatus === 'inactive';
+            return !isExpired && isInactive;
+        });
+
+        if (validVouchers.length === 0) {
+            showToast('Không có voucher hợp lệ để kích hoạt (loại bỏ voucher đã hết hạn hoặc đã hoạt động)', 'error');
+            return;
+        }
+
+        if (validVouchers.length !== selectedData.length) {
+            showToast(`Chỉ có thể kích hoạt ${validVouchers.length}/${selectedData.length} voucher (loại bỏ voucher không hợp lệ)`, 'warning');
+        }
+
+        console.log('Valid vouchers for activation:', validVouchers); // Debug log
+
+        showBulkActionModal(
+            'Kích hoạt voucher',
+            `Bạn có chắc chắn muốn kích hoạt ${validVouchers.length} voucher đã chọn?`,
+            'success',
+            function() { performBulkAction('activate', validVouchers.map(v => v.id)); }
+        );
+    }
+
+    function bulkDeactivate() {
+        console.log('bulkDeactivate called'); // Debug log
+        const selectedData = getSelectedVoucherData();
+
+        console.log('Selected data:', selectedData); // Debug log
+
+        if (selectedData.length === 0) {
+            showToast('Vui lòng chọn ít nhất một voucher', 'warning');
+            return;
+        }
+
+        // Filter out expired vouchers and inactive vouchers
+        const validVouchers = selectedData.filter(voucher => {
+            const isExpired = voucher.isExpired === true || voucher.isExpired === 'True';
+            const isActive = voucher.currentStatus === 'active';
+            return !isExpired && isActive;
+        });
+
+        if (validVouchers.length === 0) {
+            showToast('Không có voucher hợp lệ để ngừng hoạt động (loại bỏ voucher đã hết hạn hoặc đã ngừng hoạt động)', 'error');
+            return;
+        }
+
+        if (validVouchers.length !== selectedData.length) {
+            showToast(`Chỉ có thể ngừng hoạt động ${validVouchers.length}/${selectedData.length} voucher (loại bỏ voucher không hợp lệ)`, 'warning');
+        }
+
+        console.log('Valid vouchers for deactivation:', validVouchers); // Debug log
+
+        showBulkActionModal(
+            'Ngừng hoạt động voucher',
+            `Bạn có chắc chắn muốn ngừng hoạt động ${validVouchers.length} voucher đã chọn?`,
+            'danger',
+            function() { performBulkAction('deactivate', validVouchers.map(v => v.id)); }
+        );
+    }
+
+    function getSelectedVoucherData() {
+        const selectedData = [];
+        $('.voucher-checkbox:checked:visible').each(function() {
+            const $row = $(this).closest('tr');
+            const isExpired = $row.data('is-expired');
+            const currentStatus = $row.data('current-status');
+
+            console.log('Row data:', {
+                id: $(this).val(),
+                code: $row.data('voucher-code'),
+                isExpired: isExpired,
+                currentStatus: currentStatus,
+                rowDataStatus: $row.data('status')
+            });
+
+            selectedData.push({
+                id: $(this).val(),
+                code: $row.data('voucher-code'),
+                isExpired: isExpired === true || isExpired === 'True',
+                currentStatus: currentStatus
+            });
+        });
+
+        console.log('All selected data:', selectedData);
+        return selectedData;
+    }
+
+    function showBulkActionModal(title, message, type, callback) {
+        $('#bulkActionTitle').text(title);
+        $('#bulkActionMessage').text(message);
+
+        // Show selected vouchers
+        const selectedVouchers = $('.voucher-checkbox:checked').map(function() {
+            const $row = $(this).closest('tr');
+            return $row.data('voucher-code');
+        }).get();
+
+        $('#selectedVouchersList').html(selectedVouchers.join(', '));
+
+        const $confirmBtn = $('#confirmBulkAction');
+        $confirmBtn.removeClass('btn-success btn-danger btn-primary').addClass('btn-' + type);
+
+        // Remove previous click handlers and add new one
+        $confirmBtn.off('click').on('click', function() {
+            $('#bulkActionModal').modal('hide');
+            callback();
+        });
+
+        $('#bulkActionModal').modal('show');
+    }
+
+    function performBulkAction(action, ids) {
+        if (ids.length === 0) {
+            showToast('Không có voucher hợp lệ để thực hiện thao tác', 'warning');
+            return;
+        }
+
+        console.log('Performing bulk action:', action, 'for IDs:', ids); // Debug log
+
+        showLoading();
+
+        // Prepare data for AJAX request
+        const requestData = {
+            action: action,
+            voucherIds: ids
+        };
+
+        console.log('Request data:', requestData); // Debug log
+
+        // Send AJAX request to server
+        $.ajax({
+            url: '/Voucher/BulkUpdateStatus',
+            type: 'POST',
+            data: JSON.stringify(requestData),
+            contentType: 'application/json',
+            dataType: 'json',
+            timeout: 30000, // 30 second timeout
+            beforeSend: function(xhr) {
+                // Add anti-forgery token if available
+                const token = $('input[name="__RequestVerificationToken"]').val();
+                if (token) {
+                    xhr.setRequestHeader('RequestVerificationToken', token);
+                }
+            },
+            success: function(response) {
+                console.log('AJAX Success response:', response); // Debug log
+                hideLoading();
+
+                if (response && response.success) {
+                    if (action === 'activate') {
+                        showToast(`Đã kích hoạt ${ids.length} voucher thành công`, 'success');
+
+                        // Update UI without full reload
+                        ids.forEach(function(id) {
+                            const $row = $(`tr[data-voucher-id="${id}"]`);
+                            const $statusSpan = $row.find('td:nth-child(8) span');
+
+                            // Update status display
+                            $statusSpan.removeClass('badge bg-danger text-danger')
+                                      .addClass('badge bg-success text-success')
+                                      .text('Hoạt động');
+
+                            // Update data attributes
+                            $row.data('current-status', 'active');
+                            $row.data('status', 'active');
+                            $row.attr('data-current-status', 'active');
+                            $row.attr('data-status', 'active');
+                        });
+
+                    } else if (action === 'deactivate') {
+                        showToast(`Đã ngừng hoạt động ${ids.length} voucher thành công`, 'success');
+
+                        // Update UI without full reload
+                        ids.forEach(function(id) {
+                            const $row = $(`tr[data-voucher-id="${id}"]`);
+                            const $statusSpan = $row.find('td:nth-child(8) span');
+
+                            // Update status display
+                            $statusSpan.removeClass('badge bg-success text-success')
+                                      .addClass('badge bg-danger text-danger')
+                                      .text('Ngừng hoạt động');
+
+                            // Update data attributes
+                            $row.data('current-status', 'inactive');
+                            $row.data('status', 'inactive');
+                            $row.attr('data-current-status', 'inactive');
+                            $row.attr('data-status', 'inactive');
+                        });
+                    }
+
+                    // Update statistics
+                    updateStatistics();
+
+                    // Clear selections after successful action
+                    $('.voucher-checkbox').prop('checked', false);
+                    $('#selectAll').prop('checked', false);
+                    updateSelectionInfo();
+
+                } else {
+                    const errorMessage = response && response.message ? response.message : 'Có lỗi xảy ra khi thực hiện thao tác';
+                    showToast(errorMessage, 'error');
+                    console.error('Server returned error:', response);
+                }
+            },
+            error: function(xhr, status, error) {
+                console.error('AJAX Error details:', {
+                    status: status,
+                    error: error,
+                    responseText: xhr.responseText,
+                    statusCode: xhr.status
+                });
+
+                hideLoading();
+
+                // Try to parse error response
+                let errorMessage = 'Có lỗi xảy ra khi thực hiện thao tác';
+
+                if (xhr.status === 404) {
+                    errorMessage = 'Không tìm thấy endpoint /Voucher/BulkUpdateStatus. Vui lòng kiểm tra controller.';
+                } else if (xhr.status === 500) {
+                    errorMessage = 'Lỗi server nội bộ. Vui lòng kiểm tra server logs.';
+                } else if (xhr.status === 0) {
+                    errorMessage = 'Không thể kết nối đến server. Vui lòng kiểm tra mạng.';
+                } else {
+                    try {
+                        const response = JSON.parse(xhr.responseText);
+                        if (response && response.message) {
+                            errorMessage = response.message;
+                        }
+                    } catch (e) {
+                        // Use default error message
+                    }
+                }
+
+                showToast(errorMessage, 'error');
+
+                // Show detailed error in console for debugging
+                console.error('Full error details for debugging:', xhr);
+            },
+            complete: function() {
+                // Ensure loading is hidden even if success/error handlers don't run
+                setTimeout(function() {
+                    hideLoading();
+                }, 1000);
+            }
+        });
+    }
+
+    // Function to update statistics after bulk action
+    function updateStatistics() {
+        const totalVouchers = $('#voucherTable tbody tr').length;
+        const activeVouchers = $('#voucherTable tbody tr[data-status="active"]').length;
+        const inactiveVouchers = $('#voucherTable tbody tr[data-status="inactive"]').length;
+        const expiredVouchers = $('#voucherTable tbody tr[data-status="expired"]').length;
+
+        $('#totalVouchers').text(totalVouchers);
+        $('#activeVouchers').text(activeVouchers);
+        $('#inactiveVouchers').text(inactiveVouchers);
+        $('#expiredVouchers').text(expiredVouchers);
+    }
+
+    // Export Functions - Fixed version
+    function exportAllToExcel() {
+        const data = getAllVoucherData();
+        exportToExcel(data, 'TatCaVoucher.xlsx');
+    }
+
+    function exportSelectedToExcel() {
+        const selectedIds = getSelectedVoucherIds();
+        if (selectedIds.length === 0) {
+            showToast('Vui lòng chọn ít nhất một voucher', 'warning');
+            return;
+        }
+
+        const data = getSelectedVoucherDataForExport(selectedIds);
+        exportToExcel(data, 'VoucherDaChon.xlsx');
+    }
+
+    function getSelectedVoucherIds() {
+        return $('.voucher-checkbox:checked').map(function() {
+            return $(this).val();
+        }).get();
+    }
+
+    function getAllVoucherData() {
+        const data = [];
+        $('#voucherTable tbody tr:visible').each(function() {
+            const $row = $(this);
+            data.push({
+                'Mã Voucher': $row.data('voucher-code'),
+                'Tên Voucher': $row.data('voucher-name'),
+                'Số Lượng': $row.data('voucher-quantity'),
+                'Phần Trăm Giảm': $row.data('voucher-discount'),
+                'Yêu Cầu Tối Thiểu': $row.data('voucher-requirement'),
+                'Ngày Bắt Đầu': $row.data('voucher-start'),
+                'Ngày Kết Thúc': $row.data('voucher-end'),
+                'Trạng Thái': $row.data('voucher-status')
+            });
+        });
+        return data;
+    }
+
+    function getSelectedVoucherDataForExport(selectedIds) {
+        const data = [];
+        selectedIds.forEach(function(id) {
+            const $row = $(`tr[data-voucher-id="${id}"]`);
+            if ($row.length) {
+                data.push({
+                    'Mã Voucher': $row.data('voucher-code'),
+                    'Tên Voucher': $row.data('voucher-name'),
+                    'Số Lượng': $row.data('voucher-quantity'),
+                    'Phần Trăm Giảm': $row.data('voucher-discount'),
+                    'Yêu Cầu Tối Thiểu': $row.data('voucher-requirement'),
+                    'Ngày Bắt Đầu': $row.data('voucher-start'),
+                    'Ngày Kết Thúc': $row.data('voucher-end'),
+                    'Trạng Thái': $row.data('voucher-status')
+                });
+            }
+        });
+        return data;
+    }
+
+    function exportToExcel(data, filename) {
+        if (data.length === 0) {
+            showToast('Không có dữ liệu để xuất', 'warning');
+            return;
+        }
+
+        showLoading();
+
+        // Use setTimeout to ensure loading modal shows before heavy processing
+        setTimeout(function() {
+            try {
+                const wb = XLSX.utils.book_new();
+                const ws = XLSX.utils.json_to_sheet(data);
+
+                // Set column widths
+                const colWidths = [
+                    { wch: 12 }, // Mã Voucher
+                    { wch: 20 }, // Tên Voucher
+                    { wch: 10 }, // Số Lượng
+                    { wch: 15 }, // Phần Trăm Giảm
+                    { wch: 18 }, // Yêu Cầu Tối Thiểu
+                    { wch: 12 }, // Ngày Bắt Đầu
+                    { wch: 12 }, // Ngày Kết Thúc
+                    { wch: 15 }  // Trạng Thái
+                ];
+                ws['!cols'] = colWidths;
+
+                XLSX.utils.book_append_sheet(wb, ws, 'Danh Sách Voucher');
+
+                // Use setTimeout to ensure file is written before hiding loading
+                setTimeout(function() {
+                    XLSX.writeFile(wb, filename);
+
+                    // Hide loading after a short delay to ensure file download starts
+                    setTimeout(function() {
+                        hideLoading();
+                        showToast('Xuất Excel thành công', 'success');
+                    }, 500);
+                }, 100);
+
+            } catch (error) {
+                hideLoading();
+                console.error('Export error:', error);
+                showToast('Có lỗi xảy ra khi xuất file Excel', 'error');
+            }
+        }, 100);
+    }
+
+    function showLoading() {
+        // Force hide any existing modal first
+        $('#loadingModal').modal('hide');
+
+        // Small delay to ensure previous modal is hidden
+        setTimeout(function() {
+            $('#loadingModal').modal({
+                backdrop: 'static',
+                keyboard: false
+            }).modal('show');
+        }, 100);
+    }
+
+    function hideLoading() {
+        // Force hide the modal
+        $('#loadingModal').modal('hide');
+
+        // Also remove backdrop manually if it gets stuck
+        setTimeout(function() {
+            $('.modal-backdrop').remove();
+            $('body').removeClass('modal-open');
+            $('body').css('padding-right', '');
+        }, 300);
+    }
+
+    function showToast(message, type = 'success') {
+        $('.custom-toast').remove();
+
+        const alertClass = type === 'error' ? 'alert-danger' :
+                          type === 'warning' ? 'alert-warning' :
+                          type === 'info' ? 'alert-info' : 'alert-success';
+
+        const iconClass = type === 'error' ? 'fas fa-exclamation-circle' :
+                         type === 'warning' ? 'fas fa-exclamation-triangle' :
+                         type === 'info' ? 'fas fa-info-circle' : 'fas fa-check-circle';
+
+        const toast = $(`
+            <div class="alert ${alertClass} alert-dismissible fade show custom-toast"
+                 style="position: fixed; top: 20px; right: 20px; z-index: 9999; min-width: 300px; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.15);">
+                <i class="${iconClass} me-2"></i>
+                ${message}
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+        `);
+
+        $('body').append(toast);
+
+        setTimeout(function() {
+            toast.fadeOut('slow', function() {
+                $(this).remove();
+            });
+        }, 4000);
+    }
+</script>
+
+<style>
+    .card {
+        border: none;
+        box-shadow: 0 0 20px rgba(0,0,0,0.1);
+        border-radius: 15px;
+    }
+
+    .table {
+        border-radius: 10px;
+        overflow: hidden;
+    }
+
+        .table thead th {
+            background: linear-gradient(45deg, #343a40, #495057);
+            color: white;
+            font-weight: 600;
+            text-align: center;
+            vertical-align: middle;
+            border: none;
+        }
+
+        .table tbody td {
+            vertical-align: middle;
+            text-align: center;
+        }
+
+    .table-hover tbody tr:hover {
+        background-color: rgba(0,123,255,0.1);
+        transform: scale(1.01);
+        transition: all 0.2s ease;
+    }
+
+    .btn-group .btn {
+        margin: 0 2px;
+        border-radius: 6px !important;
+    }
+
+    .btn-sm {
+        padding: 0.375rem 0.5rem;
+    }
+
+    .badge {
+        font-size: 0.8em;
+        padding: 0.5em 0.75em;
+    }
+
+    .card.bg-primary, .card.bg-success, .card.bg-danger, .card.bg-warning {
+        transition: transform 0.2s ease;
+    }
+
+        .card.bg-primary:hover, .card.bg-success:hover, .card.bg-danger:hover, .card.bg-warning:hover {
+            transform: translateY(-5px);
+        }
+
+    .form-control, .form-select {
+        border-radius: 8px;
+        border: 2px solid #e9ecef;
+        transition: all 0.3s ease;
+    }
+
+        .form-control:focus, .form-select:focus {
+            border-color: #007bff;
+            box-shadow: 0 0 0 0.2rem rgba(0,123,255,.25);
+        }
+
+    .input-group-text {
+        background: linear-gradient(45deg, #007bff, #0056b3);
+        color: white;
+        border: none;
+    }
+
+    .modal-content {
+        border-radius: 15px;
+        border: none;
+        box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+    }
+
+    .modal-header {
+        background: linear-gradient(45deg, #007bff, #0056b3);
+        color: white;
+        border-top-left-radius: 15px;
+        border-top-right-radius: 15px;
+    }
+
+    .alert {
+        border-radius: 12px;
+        border: none;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+    }
+
+    .alert-success {
+        background: linear-gradient(135deg, #d4edda 0%, #c3e6cb 100%);
+        border-left: 5px solid #28a745;
+    }
+
+    .alert-danger {
+        background: linear-gradient(135deg, #f8d7da 0%, #f5c6cb 100%);
+        border-left: 5px solid #dc3545;
+    }
+
+    .alert-warning {
+        background: linear-gradient(135deg, #fff3cd 0%, #ffeeba 100%);
+        border-left: 5px solid #ffc107;
+    }
+
+    .alert-info {
+        background: linear-gradient(135deg, #cce7ff 0%, #b3d9ff 100%);
+        border-left: 5px solid #17a2b8;
+    }
+
+    /* Checkbox styling */
+    .form-check-input {
+        width: 1.2em;
+        height: 1.2em;
+        margin-top: 0.1em;
+        border: 2px solid #007bff;
+        border-radius: 4px;
+    }
+
+        .form-check-input:checked {
+            background-color: #007bff;
+            border-color: #007bff;
+        }
+
+        .form-check-input:indeterminate {
+            background-color: #6c757d;
+            border-color: #6c757d;
+        }
+
+    /* Selection info styling */
+    #selectionInfo {
+        background: linear-gradient(135deg, #cce7ff 0%, #b3d9ff 100%);
+        border-left: 5px solid #007bff;
+        animation: fadeIn 0.3s ease;
+    }
+
+    /* Bulk actions dropdown */
+    #bulkActionsDropdown .dropdown-menu {
+        border: none;
+        box-shadow: 0 8px 25px rgba(0,0,0,0.15);
+        border-radius: 10px;
+    }
+
+    #bulkActionsDropdown .dropdown-item {
+        padding: 10px 20px;
+        transition: all 0.2s ease;
+    }
+
+        #bulkActionsDropdown .dropdown-item:hover {
+            background-color: rgba(0,123,255,0.1);
+            transform: translateX(5px);
+        }
+
+    /* Loading spinner */
+    .spinner-border {
+        width: 3rem;
+        height: 3rem;
+    }
+
+    /* Animations */
+    @@keyframes fadeIn {
+        from {
+            opacity: 0;
+            transform: translateY(-10px);
+        }
+
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    .dropdown-toggle::after {
+        margin-left: 0.5em;
+    }
+
+    /* Export buttons */
+    .dropdown-menu .dropdown-item i {
+        width: 20px;
+        margin-right: 8px;
+    }
+
+    /* Responsive design */
+    @@media (max-width: 768px) {
+        .table-responsive {
+            font-size: 0.85em;
+        }
+
+        .btn-group {
+            flex-direction: column;
+        }
+
+            .btn-group .btn {
+                margin: 1px 0;
+            }
+
+        .card-header .d-flex {
+            flex-direction: column;
+            gap: 10px;
+        }
+
+            .card-header .d-flex > div {
+                justify-content: center;
+            }
+
+        #bulkActionsDropdown,
+        .dropdown {
+            width: 100%;
+        }
+
+            #bulkActionsDropdown .btn,
+            .dropdown .btn {
+                width: 100%;
+            }
+    }
+
+    @@media (max-width: 576px) {
+        .row.mb-4 .col-md-4, .row.mb-4 .col-md-3, .row.mb-4 .col-md-2 {
+            margin-bottom: 10px;
+        }
+
+        .card-body {
+            padding: 1rem;
+        }
+
+        .table thead th,
+        .table tbody td {
+            padding: 0.5rem 0.25rem;
+            font-size: 0.8rem;
+        }
+
+        .btn-sm {
+            padding: 0.25rem 0.4rem;
+            font-size: 0.7rem;
+        }
     }
 </style>

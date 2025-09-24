@@ -632,7 +632,7 @@ namespace BE.Repository
                                                && v.Trang_Thai == true
                                                && (v.Ngay_Ket_Thuc == null || v.Ngay_Ket_Thuc >= currentTime));
                     if (voucher == null)
-                        throw new Exception($"Voucher {hoaDonDto.ID_Voucher} không tồn tại hoặc không hợp lệ.");
+                        throw new Exception($"Voucher {hoaDonDto.ID_Voucher} không tồn tại hoặc Voucher đã hết hạn khi bạn thanh toán Vui lòng chọn voucher khác .");
 
                     khachHangVoucher = await _context.KhachHang_Voucher
                         .FirstOrDefaultAsync(khv => khv.ID_Khach_Hang == hoaDonDto.ID_Khach_Hang.Value

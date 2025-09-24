@@ -1,4 +1,4 @@
-﻿@{
+﻿@* @{
     Layout = "~/Views/Shared/_AdminLayout.cshtml";
 }
 @model List<FE.Models.KhuyenMaiCrud>
@@ -382,10 +382,38 @@
             let isEditMode = false;
             let editPromotionId = null;
 
-            // Get current Vietnam time
-            const vnTimeZoneOffset = 7 * 60; // Vietnam is UTC+7
-            const currentDate = new Date(new Date().getTime() + vnTimeZoneOffset * 60 * 1000);
-            const minStartDate = currentDate.toISOString().slice(0, 16);
+            const offsetMs = 7 * 60 * 60 * 1000; // UTC+7 for Vietnam
+
+            // Function to format date to VN local datetime-local string
+            function formatToLocalStr(utcDate) {
+                const formatter = new Intl.DateTimeFormat('default', {
+                    timeZone: 'Asia/Ho_Chi_Minh',
+                    year: 'numeric',
+                    month: 'numeric',
+                    day: 'numeric',
+                    hour: 'numeric',
+                    minute: 'numeric',
+                    hourCycle: 'h23'
+                });
+                const parts = formatter.formatToParts(utcDate);
+                const map = {};
+                parts.forEach(p => map[p.type] = p.value);
+                return `${map.year}-${map.month.padStart(2, '0')}-${map.day.padStart(2, '0')}T${map.hour.padStart(2, '0')}:${map.minute.padStart(2, '0')}`;
+            }
+
+            // Function to convert VN local string to UTC ISO
+            function localToUtcIso(localStr) {
+                if (!localStr) return '';
+                const [datePart, timePart] = localStr.split('T');
+                const [y, m, d] = datePart.split('-').map(Number);
+                const [h, min] = timePart.split(':').map(Number);
+                const fakeUtcMs = Date.UTC(y, m - 1, d, h, min, 0, 0);
+                const actualUtcMs = fakeUtcMs - offsetMs;
+                return new Date(actualUtcMs).toISOString();
+            }
+
+            // Get current Vietnam time string
+            const minStartDate = formatToLocalStr(new Date());
 
             // Set min attribute for startDate to prevent selecting past dates
             startDateInput.setAttribute('min', minStartDate);
@@ -409,9 +437,12 @@
                 toast.addEventListener('hidden.bs.toast', () => toast.remove());
             }
 
-            function formatDateTime(date) {
-                const options = { year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit' };
-                return new Date(date).toLocaleString('vi-VN', options);
+            function formatDateTime(isoString) {
+                const dt = isoString.split('.')[0]; // remove milliseconds if present
+                const [datePart, timePart] = dt.split('T');
+                const [y, m, d] = datePart.split('-');
+                const [h, min] = timePart.split(':');
+                return `${d.padStart(2, '0')}/${m.padStart(2, '0')}/${y} ${h.padStart(2, '0')}:${min.padStart(2, '0')}`;
             }
 
             addPromotionBtn.addEventListener('click', function () {
@@ -427,8 +458,8 @@
 
             savePromotionBtn.addEventListener('click', async function () {
                 const name = document.getElementById('promotionName').value.trim();
-                const startDate = document.getElementById('startDate').value;
-                const endDate = document.getElementById('endDate').value;
+                const startDateStr = document.getElementById('startDate').value;
+                const endDateStr = document.getElementById('endDate').value;
                 const description = document.getElementById('description').value.trim();
                 const status = document.getElementById('status').checked;
 
@@ -436,15 +467,15 @@
                     showAlert('Tên khuyến mãi không hợp lệ!', 'danger');
                     return;
                 }
-                if (!startDate || !endDate) {
+                if (!startDateStr || !endDateStr) {
                     showAlert('Vui lòng điền đầy đủ ngày bắt đầu và ngày kết thúc!', 'danger');
                     return;
                 }
-                if (new Date(startDate) >= new Date(endDate)) {
+                if (startDateStr >= endDateStr) {
                     showAlert('Ngày kết thúc phải sau ngày bắt đầu!', 'danger');
                     return;
                 }
-                if (new Date(startDate) < new Date(minStartDate)) {
+                if (startDateStr < minStartDate) {
                     showAlert('Ngày bắt đầu phải từ ngày hiện tại trở đi!', 'danger');
                     return;
                 }
@@ -456,8 +487,8 @@
                 const requestData = {
                     iD_Khuyen_Mai: isEditMode ? parseInt(editPromotionId) : 0,
                     ten_Khuyen_Mai: name,
-                    ngay_Bat_Dau: new Date(startDate).toISOString(),
-                    ngay_Ket_Thuc: new Date(endDate).toISOString(),
+                    ngay_Bat_Dau: localToUtcIso(startDateStr),
+                    ngay_Ket_Thuc: localToUtcIso(endDateStr),
                     mo_Ta: description || '',
                     trang_Thai: status
                 };
@@ -515,6 +546,17 @@
                         tbody.appendChild(row);
                     });
 
+                    const totalCount = promotions.length;
+                    const activeCount = promotions.filter(p => p.trang_Thai).length;
+                    const inactiveCount = totalCount - activeCount;
+                    const expiredCount = promotions.filter(p => new Date(localToUtcIso(p.ngay_Ket_Thuc.split('.')[0])) < new Date()).length;
+
+                    const statNumbers = document.querySelectorAll('.stat-number');
+                    statNumbers[0].textContent = totalCount;
+                    statNumbers[1].textContent = activeCount;
+                    statNumbers[2].textContent = inactiveCount;
+                    statNumbers[3].textContent = expiredCount;
+
                     document.querySelectorAll('.view-promotion').forEach(btn => btn.addEventListener('click', function() { fetchPromotionDetails(this.dataset.id); }));
                     document.querySelectorAll('.edit-promotion').forEach(btn => btn.addEventListener('click', function() { fetchPromotionForEdit(this.dataset.id); }));
                     document.querySelectorAll('.stop-promotion').forEach(btn => btn.addEventListener('click', function() { updatePromotionStatus(this.dataset.id, false); }));
@@ -547,13 +589,13 @@
                     const p = await response.json();
                     document.getElementById('promotionModalLabel').textContent = 'Sửa khuyến mãi';
                     document.getElementById('promotionName').value = p.ten_Khuyen_Mai;
-                    const startDate = new Date(p.ngay_Bat_Dau);
-                    if (startDate < new Date(minStartDate)) {
+                    const startLocalStr = p.ngay_Bat_Dau.split('.')[0];
+                    if (startLocalStr < minStartDate) {
                         document.getElementById('startDate').value = minStartDate;
                     } else {
-                        document.getElementById('startDate').value = startDate.toISOString().slice(0, 16);
+                        document.getElementById('startDate').value = startLocalStr;
                     }
-                    document.getElementById('endDate').value = new Date(p.ngay_Ket_Thuc).toISOString().slice(0, 16);
+                    document.getElementById('endDate').value = p.ngay_Ket_Thuc.split('.')[0];
                     document.getElementById('description').value = p.mo_Ta || '';
                     document.getElementById('status').checked = p.trang_Thai;
                     isEditMode = true;
@@ -573,8 +615,692 @@
                     const requestData = {
                         iD_Khuyen_Mai: parseInt(id),
                         ten_Khuyen_Mai: promotion.ten_Khuyen_Mai,
-                        ngay_Bat_Dau: status ? new Date(minStartDate).toISOString() : promotion.ngay_Bat_Dau,
-                        ngay_Ket_Thuc: status ? promotion.ngay_Ket_Thuc : new Date(minStartDate).toISOString(),
+                        ngay_Bat_Dau: status ? localToUtcIso(minStartDate) : promotion.ngay_Bat_Dau,
+                        ngay_Ket_Thuc: status ? promotion.ngay_Ket_Thuc : localToUtcIso(minStartDate),
+                        mo_Ta: promotion.mo_Ta,
+                        trang_Thai: status
+                    };
+                    const updateResponse = await fetch(`https://localhost:7169/api/KhuyenMai/${id}`, {
+                        method: 'PUT',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(requestData)
+                    });
+                    if (!updateResponse.ok) throw new Error(`Không thể ${status ? 'kích hoạt' : 'ngừng'} khuyến mãi`);
+                    showAlert(`Đã ${status ? 'kích hoạt' : 'ngừng'} khuyến mãi thành công!`, 'success');
+                    fetchPromotions();
+                } catch (error) {
+                    showAlert(`Lỗi khi ${status ? 'kích hoạt' : 'ngừng'} khuyến mãi!`, 'danger');
+                }
+            }
+
+            fetchPromotions();
+        });
+    </script>
+</body>
+</html> *@
+
+
+
+
+
+
+
+
+
+
+
+
+
+@{
+    Layout = "~/Views/Shared/_AdminLayout.cshtml";
+}
+@model List<FE.Models.KhuyenMaiCrud>
+@{
+    ViewData["Title"] = "Quản lý khuyến mãi";
+    TimeZoneInfo vnTimeZone;
+    try
+    {
+        vnTimeZone = TimeZoneInfo.FindSystemTimeZoneById("SE Asia Standard Time");
+    }
+    catch
+    {
+        vnTimeZone = TimeZoneInfo.FindSystemTimeZoneById("Asia/Ho_Chi_Minh");
+    }
+    var currentDate = TimeZoneInfo.ConvertTimeFromUtc(DateTime.UtcNow, vnTimeZone);
+}
+
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quản lý khuyến mãi</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css">
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Roboto', sans-serif;
+            background-color: #f8f9fa;
+            color: #212529;
+        }
+
+        .card {
+            background: #fff;
+            border: 1px solid #e0e0e0;
+            border-radius: 0.5rem;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+            transition: all 0.3s ease;
+        }
+
+            .card:hover {
+                box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+            }
+
+        .stat-card {
+            background: linear-gradient(135deg, #1D4ED8 0%, #1E40AF 100%);
+            color: white;
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            text-align: center;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+            transition: all 0.3s ease;
+        }
+
+            .stat-card.success {
+                background: linear-gradient(135deg, #059669 0%, #047857 100%);
+            }
+
+            .stat-card.danger {
+                background: linear-gradient(135deg, #DC2626 0%, #B91C1C 100%);
+            }
+
+            .stat-card.warning {
+                background: linear-gradient(135deg, #D97706 0%, #B45309 100%);
+            }
+
+        .stat-number {
+            font-size: 2rem;
+            font-weight: 500;
+        }
+
+        .stat-label {
+            font-size: 0.9rem;
+            opacity: 0.9;
+        }
+
+        .table-container {
+            background: #fff;
+            border: 1px solid #e0e0e0;
+            border-radius: 0.5rem;
+            padding: 1rem;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .table {
+            text-align: center;
+        }
+
+            .table thead th {
+                background: #f8f9fa;
+                color: #212529;
+                font-weight: 500;
+                border-bottom: 2px solid #e0e0e0;
+            }
+
+        .badge-active {
+            background-color: #e6f4ea;
+            color: #1e7e34;
+            padding: 0.5rem 1rem;
+            border-radius: 0.25rem;
+            font-weight: 500;
+        }
+
+        .badge-inactive {
+            background-color: #fbe9e7;
+            color: #d32f2f;
+            padding: 0.5rem 1rem;
+            border-radius: 0.25rem;
+            font-weight: 500;
+        }
+
+        .btn-pill {
+            border-radius: 1.5rem;
+            padding: 0.5rem 1rem;
+            font-size: 0.875rem;
+            transition: all 0.3s ease;
+        }
+
+        .btn-primary-pill {
+            background: #1D4ED8;
+            border-color: #1D4ED8;
+            color: white;
+        }
+
+        .btn-secondary-pill {
+            background: #6c757d;
+            border-color: #6c757d;
+            color: white;
+        }
+
+        .btn-success-pill {
+            background: #059669;
+            border-color: #059669;
+            color: white;
+        }
+
+        .btn-danger-pill {
+            background: #DC2626;
+            border-color: #DC2626;
+            color: white;
+        }
+
+        .btn-warning-pill {
+            background: #D97706;
+            border-color: #D97706;
+            color: white;
+        }
+
+        .modal-content {
+            border-radius: 0.5rem;
+            border: none;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+        }
+
+        .modal-header {
+            background: #1D4ED8;
+            color: white;
+            border-bottom: none;
+        }
+
+        .form-control {
+            border-radius: 0.25rem;
+            border: 1px solid #e0e0e0;
+        }
+
+            .form-control:focus {
+                border-color: #1D4ED8;
+                box-shadow: 0 0 0 0.2rem rgba(29, 78, 216, 0.25);
+            }
+
+        .alert-notification {
+            border-radius: 0.25rem;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+    </style>
+</head>
+<body class="min-vh-100">
+    <div class="container-fluid px-4 py-4">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h1 class="h2 fw-bold">Quản lý khuyến mãi</h1>
+            <button id="addPromotionBtn" class="btn btn-primary-pill">
+                <i class="bi bi-plus-circle me-2"></i>Thêm khuyến mãi
+            </button>
+        </div>
+
+        <div class="row mb-4 g-3">
+            <div class="col-md-3">
+                <div class="stat-card">
+                    <div class="stat-number">@Model.Count</div>
+                    <div class="stat-label">Tổng khuyến mãi</div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="stat-card success">
+                    <div class="stat-number">@Model.Count(k => k.Trang_Thai)</div>
+                    <div class="stat-label">Hoạt động</div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="stat-card danger">
+                    <div class="stat-number">@Model.Count(k => !k.Trang_Thai)</div>
+                    <div class="stat-label">Ngừng hoạt động</div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="stat-card warning">
+                    <div class="stat-number">@Model.Count(k => TimeZoneInfo.ConvertTimeFromUtc(k.Ngay_Ket_Thuc, vnTimeZone) < currentDate)</div>
+                    <div class="stat-label">Hết hạn</div>
+                </div>
+            </div>
+        </div>
+
+        <ul class="nav nav-tabs mb-4">
+            <li class="nav-item">
+                <button class="nav-link active" data-bs-toggle="tab" data-bs-target="#activePromotions">Khuyến mãi hoạt động</button>
+            </li>
+            <li class="nav-item">
+                <button class="nav-link" data-bs-toggle="tab" data-bs-target="#stoppedPromotions">Khuyến mãi ngừng hoạt động</button>
+            </li>
+        </ul>
+
+        <div class="tab-content">
+            <div class="tab-pane fade show active" id="activePromotions">
+                <div class="table-container">
+                    <table class="table table-hover table-light">
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>Tên khuyến mãi</th>
+                                <th>Ngày bắt đầu</th>
+                                <th>Ngày kết thúc</th>
+                                <th>Mô tả</th>
+                                <th>Trạng thái</th>
+                                <th>Hành động</th>
+                            </tr>
+                        </thead>
+                        <tbody id="activePromotionTableBody">
+                            @foreach (var km in Model.Where(k => k.Trang_Thai))
+                            {
+                                <tr>
+                                    <td>@km.ID_Khuyen_Mai</td>
+                                    <td>@km.Ten_Khuyen_Mai</td>
+                                    <td>@TimeZoneInfo.ConvertTimeFromUtc(km.Ngay_Bat_Dau, vnTimeZone).ToString("dd/MM/yyyy HH:mm")</td>
+                                    <td>@TimeZoneInfo.ConvertTimeFromUtc(km.Ngay_Ket_Thuc, vnTimeZone).ToString("dd/MM/yyyy HH:mm")</td>
+                                    <td>@(km.Mo_Ta.Length > 50 ? km.Mo_Ta.Substring(0, 50) + "..." : km.Mo_Ta)</td>
+                                    <td><span class="badge badge-active">Hoạt động</span></td>
+                                    <td>
+                                        <button class="btn btn-secondary-pill me-2 view-promotion" data-id="@km.ID_Khuyen_Mai"><i class="bi bi-eye"></i></button>
+                                        <button class="btn btn-warning-pill me-2 edit-promotion" data-id="@km.ID_Khuyen_Mai"><i class="bi bi-pencil"></i></button>
+                                        <button class="btn btn-danger-pill stop-promotion" data-id="@km.ID_Khuyen_Mai"><i class="bi bi-stop-circle"></i></button>
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div class="tab-pane fade" id="stoppedPromotions">
+                <div class="table-container">
+                    <table class="table table-hover table-light">
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>Tên khuyến mãi</th>
+                                <th>Ngày bắt đầu</th>
+                                <th>Ngày kết thúc</th>
+                                <th>Mô tả</th>
+                                <th>Trạng thái</th>
+                                <th>Hành động</th>
+                            </tr>
+                        </thead>
+                        <tbody id="stoppedPromotionTableBody">
+                            @foreach (var km in Model.Where(k => !k.Trang_Thai))
+                            {
+                                <tr>
+                                    <td>@km.ID_Khuyen_Mai</td>
+                                    <td>@km.Ten_Khuyen_Mai</td>
+                                    <td>@TimeZoneInfo.ConvertTimeFromUtc(km.Ngay_Bat_Dau, vnTimeZone).ToString("dd/MM/yyyy HH:mm")</td>
+                                    <td>@TimeZoneInfo.ConvertTimeFromUtc(km.Ngay_Ket_Thuc, vnTimeZone).ToString("dd/MM/yyyy HH:mm")</td>
+                                    <td>@(km.Mo_Ta.Length > 50 ? km.Mo_Ta.Substring(0, 50) + "..." : km.Mo_Ta)</td>
+                                    <td><span class="badge badge-inactive">Không hoạt động</span></td>
+                                    <td>
+                                        <button class="btn btn-secondary-pill me-2 view-promotion" data-id="@km.ID_Khuyen_Mai"><i class="bi bi-eye"></i></button>
+                                        <button class="btn btn-warning-pill me-2 edit-promotion" data-id="@km.ID_Khuyen_Mai"><i class="bi bi-pencil"></i></button>
+                                        <button class="btn btn-success-pill activate-promotion" data-id="@km.ID_Khuyen_Mai"><i class="bi bi-play-circle"></i></button>
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal fade" id="promotionModal" tabindex="-1" aria-labelledby="promotionModalLabel">
+        <div class="modal-dialog modal-lg modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h2 class="modal-title fs-4 fw-bold" id="promotionModalLabel">Thêm khuyến mãi</h2>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="promotionForm">
+                        <div class="mb-3">
+                            <label for="promotionName" class="form-label">Tên khuyến mãi</label>
+                            <input type="text" class="form-control" id="promotionName" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="startDate" class="form-label">Ngày bắt đầu</label>
+                            <input type="datetime-local" class="form-control" id="startDate" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="endDate" class="form-label">Ngày kết thúc</label>
+                            <input type="datetime-local" class="form-control" id="endDate" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="description" class="form-label">Mô tả</label>
+                            <textarea class="form-control" id="description" rows="4"></textarea>
+                        </div>
+                        <div class="mb-3 form-check">
+                            <input type="checkbox" class="form-check-input" id="status" checked>
+                            <label class="form-check-label" for="status">Hoạt động</label>
+                        </div>
+                        <div class="d-flex justify-content-end">
+                            <button type="button" class="btn btn-primary-pill" id="savePromotionBtn">Lưu</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal fade" id="viewPromotionModal" tabindex="-1" aria-labelledby="viewPromotionModalLabel">
+        <div class="modal-dialog modal-lg modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h2 class="modal-title fs-4 fw-bold" id="viewPromotionModalLabel">Chi tiết khuyến mãi</h2>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label class="form-label">Tên khuyến mãi</label>
+                        <p class="form-control-plaintext" id="viewPromotionName"></p>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Ngày bắt đầu</label>
+                        <p class="form-control-plaintext" id="viewStartDate"></p>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Ngày kết thúc</label>
+                        <p class="form-control-plaintext" id="viewEndDate"></p>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Mô tả</label>
+                        <p class="form-control-plaintext" id="viewDescription"></p>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Trạng thái</label>
+                        <p class="form-control-plaintext" id="viewStatus"></p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="toast-container position-fixed top-0 start-0 p-3"></div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            const addPromotionBtn = document.getElementById('addPromotionBtn');
+            const savePromotionBtn = document.getElementById('savePromotionBtn');
+            const promotionModal = new bootstrap.Modal(document.getElementById('promotionModal'));
+            const viewPromotionModal = new bootstrap.Modal(document.getElementById('viewPromotionModal'));
+            const promotionForm = document.getElementById('promotionForm');
+            const startDateInput = document.getElementById('startDate');
+            const endDateInput = document.getElementById('endDate');
+            let isEditMode = false;
+            let editPromotionId = null;
+
+            const offsetMs = 7 * 60 * 60 * 1000; // UTC+7 for Vietnam
+
+            // Function to format date to VN local datetime-local string
+            function formatToLocalStr(utcDate) {
+                const formatter = new Intl.DateTimeFormat('default', {
+                    timeZone: 'Asia/Ho_Chi_Minh',
+                    year: 'numeric',
+                    month: 'numeric',
+                    day: 'numeric',
+                    hour: 'numeric',
+                    minute: 'numeric',
+                    hourCycle: 'h23'
+                });
+                const parts = formatter.formatToParts(utcDate);
+                const map = {};
+                parts.forEach(p => map[p.type] = p.value);
+                return `${map.year}-${map.month.padStart(2, '0')}-${map.day.padStart(2, '0')}T${map.hour.padStart(2, '0')}:${map.minute.padStart(2, '0')}`;
+            }
+
+            // Function to convert VN local string to UTC ISO
+            function localToUtcIso(localStr) {
+                if (!localStr) return '';
+                const [datePart, timePart] = localStr.split('T');
+                const [y, m, d] = datePart.split('-').map(Number);
+                const [h, min] = timePart.split(':').map(Number);
+                const fakeUtcMs = Date.UTC(y, m - 1, d, h, min, 0, 0);
+                const actualUtcMs = fakeUtcMs - offsetMs;
+                return new Date(actualUtcMs).toISOString();
+            }
+
+            // Get current Vietnam time string
+            const minStartDate = formatToLocalStr(new Date());
+
+            // Set min attribute for startDate to prevent selecting past dates
+            startDateInput.setAttribute('min', minStartDate);
+
+            function showAlert(message, type) {
+                const toastContainer = document.querySelector('.toast-container');
+                const toast = document.createElement('div');
+                toast.className = `toast alert-notification bg-${type} text-white`;
+                toast.innerHTML = `
+                    <div class="d-flex">
+                        <div class="toast-body">
+                            <i class="bi bi-${type === 'success' ? 'check-circle-fill' : 'exclamation-circle-fill'} me-2"></i>
+                            ${message}
+                        </div>
+                        <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
+                    </div>
+                `;
+                toastContainer.appendChild(toast);
+                const bsToast = new bootstrap.Toast(toast);
+                bsToast.show();
+                toast.addEventListener('hidden.bs.toast', () => toast.remove());
+            }
+
+            function formatDateTime(isoString) {
+                const dt = isoString.split('.')[0]; // remove milliseconds if present
+                const [datePart, timePart] = dt.split('T');
+                const [y, m, d] = datePart.split('-');
+                const [h, min] = timePart.split(':');
+                return `${d.padStart(2, '0')}/${m.padStart(2, '0')}/${y} ${h.padStart(2, '0')}:${min.padStart(2, '0')}`;
+            }
+
+            addPromotionBtn.addEventListener('click', function () {
+                isEditMode = false;
+                editPromotionId = null;
+                document.getElementById('promotionModalLabel').textContent = 'Thêm khuyến mãi';
+                promotionForm.reset();
+                document.getElementById('status').checked = true;
+                startDateInput.value = minStartDate; // Set default start date to current time
+                endDateInput.value = ''; // Clear end date
+                promotionModal.show();
+            });
+
+            savePromotionBtn.addEventListener('click', async function () {
+                const name = document.getElementById('promotionName').value.trim();
+                const startDateStr = document.getElementById('startDate').value;
+                const endDateStr = document.getElementById('endDate').value;
+                const description = document.getElementById('description').value.trim();
+                const status = document.getElementById('status').checked;
+
+                if (!name || name === 'string') {
+                    showAlert('Tên khuyến mãi không hợp lệ!', 'danger');
+                    return;
+                }
+                if (!startDateStr || !endDateStr) {
+                    showAlert('Vui lòng điền đầy đủ ngày bắt đầu và ngày kết thúc!', 'danger');
+                    return;
+                }
+                if (startDateStr >= endDateStr) {
+                    showAlert('Ngày kết thúc phải sau ngày bắt đầu!', 'danger');
+                    return;
+                }
+                if (startDateStr < minStartDate) {
+                    showAlert('Ngày bắt đầu phải từ ngày hiện tại trở đi!', 'danger');
+                    return;
+                }
+                if (isEditMode && !editPromotionId) {
+                    showAlert('Không tìm thấy ID khuyến mãi để sửa!', 'danger');
+                    return;
+                }
+
+                const requestData = {
+                    iD_Khuyen_Mai: isEditMode ? parseInt(editPromotionId) : 0,
+                    ten_Khuyen_Mai: name,
+                    ngay_Bat_Dau: localToUtcIso(startDateStr),
+                    ngay_Ket_Thuc: localToUtcIso(endDateStr),
+                    mo_Ta: description || '',
+                    trang_Thai: status
+                };
+
+                try {
+                    const method = isEditMode ? 'PUT' : 'POST';
+                    const url = isEditMode ? `https://localhost:7169/api/KhuyenMai/${editPromotionId}` : 'https://localhost:7169/api/KhuyenMai';
+                    const response = await fetch(url, {
+                        method: method,
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(requestData)
+                    });
+
+                    if (!response.ok) throw new Error(`Không thể ${isEditMode ? 'sửa' : 'thêm'} khuyến mãi`);
+
+                    showAlert(`Đã ${isEditMode ? 'sửa' : 'thêm'} khuyến mãi thành công!`, 'success');
+                    promotionModal.hide();
+                    fetchPromotions();
+                } catch (error) {
+                    showAlert(`Lỗi khi ${isEditMode ? 'sửa' : 'thêm'} khuyến mãi!`, 'danger');
+                }
+            });
+
+            async function fetchPromotions() {
+                try {
+                    const response = await fetch('https://localhost:7169/api/KhuyenMai');
+                    if (!response.ok) throw new Error('Không thể lấy danh sách khuyến mãi');
+                    const promotions = await response.json();
+                    const activeTbody = document.getElementById('activePromotionTableBody');
+                    const stoppedTbody = document.getElementById('stoppedPromotionTableBody');
+                    activeTbody.innerHTML = '';
+                    stoppedTbody.innerHTML = '';
+
+                    promotions.forEach(p => {
+                        const tbody = p.trang_Thai ? activeTbody : stoppedTbody;
+                        const row = document.createElement('tr');
+                        const badgeClass = p.trang_Thai ? 'badge-active' : 'badge-inactive';
+                        const statusText = p.trang_Thai ? 'Hoạt động' : 'Không hoạt động';
+                        const actionBtn = p.trang_Thai
+                            ? `<button class="btn btn-danger-pill stop-promotion" data-id="${p.iD_Khuyen_Mai}"><i class="bi bi-stop-circle"></i></button>`
+                            : `<button class="btn btn-success-pill activate-promotion" data-id="${p.iD_Khuyen_Mai}"><i class="bi bi-play-circle"></i></button>`;
+                        row.innerHTML = `
+                            <td>${p.iD_Khuyen_Mai}</td>
+                            <td>${p.ten_Khuyen_Mai}</td>
+                            <td>${formatDateTime(p.ngay_Bat_Dau)}</td>
+                            <td>${formatDateTime(p.ngay_Ket_Thuc)}</td>
+                            <td>${p.mo_Ta.length > 50 ? p.mo_Ta.substring(0, 50) + '...' : p.mo_Ta}</td>
+                            <td><span class="badge ${badgeClass}">${statusText}</span></td>
+                            <td>
+                                <button class="btn btn-secondary-pill me-2 view-promotion" data-id="${p.iD_Khuyen_Mai}"><i class="bi bi-eye"></i></button>
+                                <button class="btn btn-warning-pill me-2 edit-promotion" data-id="${p.iD_Khuyen_Mai}"><i class="bi bi-pencil"></i></button>
+                                ${actionBtn}
+                            </td>
+                        `;
+                        tbody.appendChild(row);
+                    });
+
+                    // Auto update expired promotions
+                    const expiredPromotions = promotions.filter(p => p.trang_Thai && new Date(p.ngay_Ket_Thuc) < new Date());
+                    for (const p of expiredPromotions) {
+                        await autoUpdatePromotionStatus(p.iD_Khuyen_Mai, false);
+                    }
+
+                    const totalCount = promotions.length;
+                    const activeCount = promotions.filter(p => p.trang_Thai).length;
+                    const inactiveCount = totalCount - activeCount;
+                    const expiredCount = promotions.filter(p => new Date(p.ngay_Ket_Thuc) < new Date()).length;
+
+                    const statNumbers = document.querySelectorAll('.stat-number');
+                    statNumbers[0].textContent = totalCount;
+                    statNumbers[1].textContent = activeCount;
+                    statNumbers[2].textContent = inactiveCount;
+                    statNumbers[3].textContent = expiredCount;
+
+                    document.querySelectorAll('.view-promotion').forEach(btn => btn.addEventListener('click', function() { fetchPromotionDetails(this.dataset.id); }));
+                    document.querySelectorAll('.edit-promotion').forEach(btn => btn.addEventListener('click', function() { fetchPromotionForEdit(this.dataset.id); }));
+                    document.querySelectorAll('.stop-promotion').forEach(btn => btn.addEventListener('click', function() { updatePromotionStatus(this.dataset.id, false); }));
+                    document.querySelectorAll('.activate-promotion').forEach(btn => btn.addEventListener('click', function() { updatePromotionStatus(this.dataset.id, true); }));
+                } catch (error) {
+                    showAlert('Lỗi khi tải danh sách khuyến mãi!', 'danger');
+                }
+            }
+
+            async function autoUpdatePromotionStatus(id, status) {
+                try {
+                    const getResponse = await fetch(`https://localhost:7169/api/KhuyenMai/${id}`);
+                    if (!getResponse.ok) throw new Error('Không thể lấy dữ liệu khuyến mãi');
+                    const promotion = await getResponse.json();
+                    const requestData = {
+                        iD_Khuyen_Mai: parseInt(id),
+                        ten_Khuyen_Mai: promotion.ten_Khuyen_Mai,
+                        ngay_Bat_Dau: promotion.ngay_Bat_Dau,
+                        ngay_Ket_Thuc: promotion.ngay_Ket_Thuc,
+                        mo_Ta: promotion.mo_Ta,
+                        trang_Thai: status
+                    };
+                    const updateResponse = await fetch(`https://localhost:7169/api/KhuyenMai/${id}`, {
+                        method: 'PUT',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(requestData)
+                    });
+                    if (!updateResponse.ok) throw new Error(`Không thể cập nhật khuyến mãi`);
+                    fetchPromotions();
+                } catch (error) {
+                    console.error('Lỗi khi tự động cập nhật khuyến mãi hết hạn:', error);
+                }
+            }
+
+            async function fetchPromotionDetails(id) {
+                try {
+                    const response = await fetch(`https://localhost:7169/api/KhuyenMai/${id}`);
+                    if (!response.ok) throw new Error('Không thể lấy chi tiết khuyến mãi');
+                    const p = await response.json();
+                    document.getElementById('viewPromotionName').textContent = p.ten_Khuyen_Mai;
+                    document.getElementById('viewStartDate').textContent = formatDateTime(p.ngay_Bat_Dau);
+                    document.getElementById('viewEndDate').textContent = formatDateTime(p.ngay_Ket_Thuc);
+                    document.getElementById('viewDescription').textContent = p.mo_Ta || 'Không có mô tả';
+                    document.getElementById('viewStatus').textContent = p.trang_Thai ? 'Hoạt động' : 'Không hoạt động';
+                    viewPromotionModal.show();
+                } catch (error) {
+                    showAlert('Lỗi khi tải chi tiết khuyến mãi!', 'danger');
+                }
+            }
+
+            async function fetchPromotionForEdit(id) {
+                try {
+                    const response = await fetch(`https://localhost:7169/api/KhuyenMai/${id}`);
+                    if (!response.ok) throw new Error('Không thể lấy chi tiết khuyến mãi');
+                    const p = await response.json();
+                    document.getElementById('promotionModalLabel').textContent = 'Sửa khuyến mãi';
+                    document.getElementById('promotionName').value = p.ten_Khuyen_Mai;
+                    const startLocalStr = p.ngay_Bat_Dau.split('.')[0];
+                    if (startLocalStr < minStartDate) {
+                        document.getElementById('startDate').value = minStartDate;
+                    } else {
+                        document.getElementById('startDate').value = startLocalStr;
+                    }
+                    document.getElementById('endDate').value = p.ngay_Ket_Thuc.split('.')[0];
+                    document.getElementById('description').value = p.mo_Ta || '';
+                    document.getElementById('status').checked = p.trang_Thai;
+                    isEditMode = true;
+                    editPromotionId = p.iD_Khuyen_Mai;
+                    promotionModal.show();
+                } catch (error) {
+                    showAlert('Lỗi khi tải dữ liệu để sửa!', 'danger');
+                }
+            }
+
+            async function updatePromotionStatus(id, status) {
+                if (!confirm(`Bạn có chắc chắn muốn ${status ? 'kích hoạt' : 'ngừng'} khuyến mãi này?`)) return;
+                try {
+                    const getResponse = await fetch(`https://localhost:7169/api/KhuyenMai/${id}`);
+                    if (!getResponse.ok) throw new Error('Không thể lấy dữ liệu khuyến mãi');
+                    const promotion = await getResponse.json();
+                    const requestData = {
+                        iD_Khuyen_Mai: parseInt(id),
+                        ten_Khuyen_Mai: promotion.ten_Khuyen_Mai,
+                        ngay_Bat_Dau: status ? localToUtcIso(minStartDate) : promotion.ngay_Bat_Dau,
+                        ngay_Ket_Thuc: status ? promotion.ngay_Ket_Thuc : localToUtcIso(minStartDate),
                         mo_Ta: promotion.mo_Ta,
                         trang_Thai: status
                     };
@@ -596,9 +1322,3 @@
     </script>
 </body>
 </html>
-
-
-
-
-
-
