@@ -339,9 +339,16 @@
                     }
                     else
                     {
+                        // 🔹 Lấy map tên sản phẩm từ ViewBag
+                        var productNameMap = ViewBag.ProductNameMap as Dictionary<int, string> ?? new();
+
                         foreach (var ct in Model.ChiTiets)
                         {
-                            var tenSp = ct.SanPham?.Ten_San_Pham ?? $"SP#{ct.ID_San_Pham}";
+                            // 🔹 Tên sản phẩm ưu tiên từ navigation; nếu thiếu => map; cuối cùng mới fallback SP#id
+                            var tenSp = !string.IsNullOrWhiteSpace(ct.SanPham?.Ten_San_Pham)
+                            ? ct.SanPham.Ten_San_Pham.Trim()
+                            : (productNameMap.TryGetValue(ct.ID_San_Pham, out var pname) ? pname : $"SP#{ct.ID_San_Pham}");
+
                             var sizeTxt = SizeText(ct.ID_Size);
                             var ngotTxt = NgotText(ct.ID_SanPham_DoNgot);
                             var daTxt = DaText(ct.ID_LuongDa);
@@ -355,11 +362,12 @@
                                 if (t?.Topping != null)
                                     return (Ten: (string.IsNullOrWhiteSpace(t.Topping.Ten) ? $"T#{t.ID_Topping}" : t.Topping.Ten.Trim()),
                                                 Gia: (decimal?)t.Topping.Gia ?? 0m);
+
                                 if (t != null && toppingMap.TryGetValue(t.ID_Topping, out var m))
                                     return (Ten: m.Ten, Gia: m.Gia);
+
                                 return (Ten: $"T#{t?.ID_Topping ?? 0}", Gia: 0m);
                             }).ToList();
-
                             var topTxt = topItems.Any() ? string.Join(", ", topItems.Select(x => x.Ten)) : "-";
                             var topSum = topItems.Sum(x => x.Gia);
 
