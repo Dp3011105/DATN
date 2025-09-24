@@ -63,6 +63,7 @@ namespace FE.Controllers
 
             var totalItems = filteredResult.Count();
             var paginatedResult = filteredResult
+                .OrderByDescending(nv => nv.ID_Nhan_Vien)
                 .Skip((page - 1) * pageSize)
                 .Take(pageSize)
                 .ToList();
