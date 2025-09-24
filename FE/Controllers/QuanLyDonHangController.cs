@@ -51,7 +51,7 @@ namespace FE.Controllers
                 ["Huy_Don"] = 5
             };
 
-        // Luồng chuyển hợp lệ (cho các nút bước trạng thái; riêng Hủy cho phép theo quy tắc đặt ra)
+        // Luồng chuyển hợp lệ
         private static readonly Dictionary<string, string[]> AllowedTransitions =
             new(StringComparer.OrdinalIgnoreCase)
             {
@@ -137,10 +137,8 @@ namespace FE.Controllers
         private IActionResult GoBack(string? from, int id)
         {
             if (string.Equals(from, "detail", StringComparison.OrdinalIgnoreCase))
-            {
                 return RedirectToAction(nameof(ChiTiet), new { id });
-            }
-            // mặc định về Index
+
             return RedirectToAction(nameof(Index));
         }
 
@@ -157,7 +155,6 @@ namespace FE.Controllers
 
             try
             {
-                // lấy 1 lần, xử lý in-memory để tránh enumerate nhiều
                 var list = (await _hoaDonService.GetAllAsync())?.ToList() ?? new();
 
                 if (!string.IsNullOrWhiteSpace(vm.TuKhoa))
@@ -175,14 +172,12 @@ namespace FE.Controllers
                     list = list.Where(hd => string.Equals(hd.Trang_Thai, vm.TrangThai, StringComparison.OrdinalIgnoreCase)).ToList();
                 }
 
-                // đọc focus
                 var focusMap = GetFocusMap();
                 var focusIds = new HashSet<int>(focusMap.Keys);
 
-                // tách danh sách
                 var focused = list
                     .Where(h => focusIds.Contains(h.ID_Hoa_Don))
-                    .OrderByDescending(h => focusMap[h.ID_Hoa_Don]) // đơn vừa tương tác lên trên
+                    .OrderByDescending(h => focusMap[h.ID_Hoa_Don])
                     .ThenByDescending(h => h.Ngay_Tao)
                     .ToList();
 
@@ -211,8 +206,21 @@ namespace FE.Controllers
             var hd = await _hoaDonService.GetByIdAsync(id);
             if (hd == null) return NotFound();
 
-            // Mọi lần người dùng vào chi tiết → đẩy lên “khung thao tác nhanh”
+            // Mỗi lần vào chi tiết -> focus
             AddToFocus(id);
+
+            // 🔹 NẠP TÊN SẢN PHẨM (FALLBACK) CHO VIEW
+            var allProducts = await _productService.GetAllProductsAsync() ?? new List<FE.Models.SanPham>();
+            var productNameMap = allProducts
+                .GroupBy(p => p.ID_San_Pham)
+                .ToDictionary(
+                    g => g.Key,
+                    g => {
+                        var last = g.Last();
+                        var name = last?.Ten_San_Pham;
+                        return string.IsNullOrWhiteSpace(name) ? $"SP#{g.Key}" : name.Trim();
+                    });
+            ViewBag.ProductNameMap = productNameMap;
 
             // 🔥 NẠP DANH MỤC TOPPING LÀM FALLBACK
             var allToppings = await _productService.GetToppingsAsync() ?? new List<FE.Models.Topping>();
@@ -244,8 +252,7 @@ namespace FE.Controllers
                 .GroupBy(x => x.ID_Topping)
                 .ToDictionary(
                     g => g.Key,
-                    g =>
-                    {
+                    g => {
                         var last = g.Last();
                         return (Ten: GetTopName(last, last.ID_Topping), Gia: GetTopPrice(last));
                     });
@@ -268,7 +275,7 @@ namespace FE.Controllers
             if (hd == null)
                 return Json(new { ok = false, items = Array.Empty<object>(), msg = "Not found" });
 
-            // Fallback: tải danh sách sản phẩm
+            // Fallback sản phẩm
             var allProducts = await _productService.GetAllProductsAsync() ?? new List<FE.Models.SanPham>();
             var prodMap = allProducts
                 .GroupBy(p => GetIntProp(p, "ID_San_Pham", "Id", "ProductId"))
@@ -282,9 +289,7 @@ namespace FE.Controllers
                 {
                     var pid = ct.ID_San_Pham;
                     if (pid > 0 && prodMap.TryGetValue(pid, out var pObj))
-                    {
                         tenSp = GetStringProp(pObj, "Ten_San_Pham", "Ten", "Name", "TenSP");
-                    }
                 }
                 if (string.IsNullOrWhiteSpace(tenSp)) tenSp = $"SP#{ct.ID_San_Pham}";
 
@@ -463,7 +468,7 @@ namespace FE.Controllers
             return GoBack(from, id);
         }
 
-        // ============== HỦY + KHÔI PHỤC TỒN (theo quy tắc mới) ==============
+        // ============== HỦY + KHÔI PHỤC TỒN ==============
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Huy(int id, string lyDo, int[]? khoiPhucIds, int[]? khoiPhucQtys, string? from)
@@ -479,7 +484,6 @@ namespace FE.Controllers
 
             var curr = hd.Trang_Thai?.Trim() ?? "";
 
-            // Không cho hủy nếu đã hoàn thành hoặc đã hủy
             if (string.Equals(curr, "Hoan_Thanh", StringComparison.OrdinalIgnoreCase) ||
                 string.Equals(curr, "Huy_Don", StringComparison.OrdinalIgnoreCase))
             {
@@ -493,7 +497,7 @@ namespace FE.Controllers
             bool restockOk = true;
             int totalRestockQty = 0;
 
-            // 1) Chua_Xac_Nhan => KHÔI PHỤC TOÀN BỘ TỒN tự động
+            // 1) Chưa xác nhận => auto restock toàn bộ
             if (string.Equals(curr, "Chua_Xac_Nhan", StringComparison.OrdinalIgnoreCase))
             {
                 var restockAll = chiTiets
@@ -519,7 +523,7 @@ namespace FE.Controllers
                 return GoBack(from, id);
             }
 
-            // 2) Dang_Giao_Hang => HỦY KHÔNG KHÔI PHỤC TỒN
+            // 2) Đang giao hàng => hủy nhưng không khôi phục
             if (string.Equals(curr, "Dang_Giao_Hang", StringComparison.OrdinalIgnoreCase))
             {
                 var updateOk = await _hoaDonService.UpdateTrangThaiAsync(id, "Huy_Don", lyDo.Trim());
@@ -532,7 +536,7 @@ namespace FE.Controllers
                 return GoBack(from, id);
             }
 
-            // 3) Da_Xac_Nhan hoặc Dang_Xu_Ly => CHO PHÉP CHỌN SỐ LƯỢNG ĐỂ KHÔI PHỤC
+            // 3) Đã xác nhận / Đang xử lý => cho phép chọn số lượng khôi phục
             if (string.Equals(curr, "Da_Xac_Nhan", StringComparison.OrdinalIgnoreCase) ||
                 string.Equals(curr, "Dang_Xu_Ly", StringComparison.OrdinalIgnoreCase))
             {
@@ -581,14 +585,12 @@ namespace FE.Controllers
                 return GoBack(from, id);
             }
 
-            // Các trạng thái khác (phòng thủ): hủy nhưng không khôi phục
+            // Khác: hủy không khôi phục
             {
                 var updateOk = await _hoaDonService.UpdateTrangThaiAsync(id, "Huy_Don", lyDo.Trim());
                 if (updateOk) AddToFocus(id);
 
-                TempData["msg"] = updateOk
-                    ? "Đã hủy đơn."
-                    : "Hủy đơn thất bại.";
+                TempData["msg"] = updateOk ? "Đã hủy đơn." : "Hủy đơn thất bại.";
                 return GoBack(from, id);
             }
         }
