@@ -82,6 +82,43 @@ namespace BE.Controllers
             }
         }
 
+        //[HttpPut("{id}")]
+        //[ProducesResponseType(typeof(KhuyenMaiDTO), StatusCodes.Status200OK)]
+        //[ProducesResponseType(StatusCodes.Status404NotFound)]
+        //[ProducesResponseType(StatusCodes.Status400BadRequest)]
+        //public async Task<ActionResult> UpdateKhuyenMai(int id, [FromBody] KhuyenMaiDTO khuyenMaiDTO)
+        //{
+        //    if (!ModelState.IsValid)
+        //    {
+        //        return BadRequest(ModelState);
+        //    }
+
+        //    try
+        //    {
+        //        var updated = await _khuyenMaiRepository.UpdateAsync(id, khuyenMaiDTO);
+        //        if (updated == null)
+        //        {
+        //            return NotFound(new { message = "Khuyến mãi không tồn tại" });
+        //        }
+        //        var updatedDTO = new KhuyenMaiDTO
+        //        {
+        //            ID_Khuyen_Mai = updated.ID_Khuyen_Mai,
+        //            Ten_Khuyen_Mai = updated.Ten_Khuyen_Mai,
+        //            Ngay_Bat_Dau = updated.Ngay_Bat_Dau,
+        //            Ngay_Ket_Thuc = updated.Ngay_Ket_Thuc,
+        //            Mo_Ta = updated.Mo_Ta,
+        //            Trang_Thai = updated.Trang_Thai
+        //        };
+        //        return Ok(updatedDTO);
+        //    }
+        //    catch (Exception ex)
+        //    {
+        //        return StatusCode(500, new { message = "Lỗi máy chủ: " + ex.Message });
+        //    }
+        //}
+
+
+
         [HttpPut("{id}")]
         [ProducesResponseType(typeof(KhuyenMaiDTO), StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
@@ -116,6 +153,8 @@ namespace BE.Controllers
                 return StatusCode(500, new { message = "Lỗi máy chủ: " + ex.Message });
             }
         }
+
+
 
     }
 }

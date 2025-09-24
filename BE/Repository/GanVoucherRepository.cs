@@ -38,9 +38,9 @@ namespace BE.Repository
         public async Task<List<Voucher>> GetAllVouchersAsync()
         {
             return await _context.Voucher
-                .Where(v => v.So_Luong > 0)
-                .OrderBy(v => v.Ten)
-                .ToListAsync();
+            .Where(v => v.So_Luong > 0 && v.Trang_Thai == true)
+            .OrderBy(v => v.Ten)
+            .ToListAsync();
         }
 
         public async Task<string> GanVoucherAsync(GanVoucherRequest req)

@@ -38,6 +38,34 @@ namespace FE.Controllers
 
 
 
+        //[HttpGet]
+        //public IActionResult Register()
+        //{
+        //    return View();
+        //}
+
+        //[HttpPost]
+        //public async Task<IActionResult> Register(RegisterModel model)
+        //{
+        //    if (ModelState.IsValid)
+        //    {
+        //        var (success, message) = await _authService.RegisterAsync(model);
+        //        if (success)
+        //        {
+        //            TempData["Success"] = message; // Lưu thông báo thành công vào TempData
+        //            return RedirectToAction("Login");
+        //        }
+        //        else
+        //        {
+        //            TempData["Error"] = message; // Lưu thông báo lỗi vào TempData
+        //            ModelState.AddModelError("", message);
+        //        }
+        //    }
+        //    return View(model);
+        //}
+
+
+
         [HttpGet]
         public IActionResult Register()
         {
@@ -47,21 +75,27 @@ namespace FE.Controllers
         [HttpPost]
         public async Task<IActionResult> Register(RegisterModel model)
         {
-            if (ModelState.IsValid)
+            // Kiểm tra ModelState
+            if (!ModelState.IsValid)
             {
-                var (success, message) = await _authService.RegisterAsync(model);
-                if (success)
-                {
-                    TempData["Success"] = message; // Lưu thông báo thành công vào TempData
-                    return RedirectToAction("Login");
-                }
-                else
-                {
-                    TempData["Error"] = message; // Lưu thông báo lỗi vào TempData
-                    ModelState.AddModelError("", message);
-                }
+                return View(model);
             }
-            return View(model);
+
+          
+
+            // Gọi dịch vụ đăng ký
+            var (success, message) = await _authService.RegisterAsync(model);
+            if (success)
+            {
+                TempData["Success"] = message;
+                return RedirectToAction("Login");
+            }
+            else
+            {
+                TempData["Error"] = message;
+                ModelState.AddModelError("", message);
+                return View(model);
+            }
         }
 
 

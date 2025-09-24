@@ -21,6 +21,8 @@ namespace FE.Models
         [Required(ErrorMessage = "Mật khẩu là bắt buộc.")]
         [StringLength(50, MinimumLength = 6, ErrorMessage = "Mật khẩu phải từ 6 đến 50 ký tự.")]
         public string Mat_Khau { get; set; }
+        [Compare("Mat_Khau", ErrorMessage = "Mật khẩu xác nhận không khớp.")]
+        public string ConfirmPassword { get; set; }
     }
 }
 

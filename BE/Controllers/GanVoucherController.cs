@@ -1,4 +1,5 @@
-﻿using BE.DTOs.Requests;
+﻿using BE.Data;
+using BE.DTOs.Requests;
 using BE.Repository.IRepository;
 using Microsoft.AspNetCore.Mvc;
 
@@ -9,10 +10,11 @@ namespace BE.Controllers
     public class GanVoucherController : ControllerBase
     {
         private readonly IGanVoucherRepository _repo;
-
-        public GanVoucherController(IGanVoucherRepository repo)
+        private readonly MyDbContext _context;
+        public GanVoucherController(IGanVoucherRepository repo , MyDbContext context)
         {
             _repo = repo;
+            _context = context;
         }
 
         [HttpGet("khachhang-all")]
@@ -257,6 +259,49 @@ namespace BE.Controllers
                 });
             }
         }
+
+
+
+        [HttpPost("filter-khachhang")]
+        public IActionResult FilterKhachHang([FromBody] List<int> idVouchers)
+        {
+            try
+            {
+                // Lấy danh sách ID_Khach_Hang có trong bảng KhachHangVoucher với ID_Voucher trong danh sách
+                var khachHangWithVouchers = _context.KhachHang_Voucher
+                    .Where(khv => idVouchers.Contains(khv.ID_Voucher))
+                    .Select(khv => khv.ID_Khach_Hang)
+                    .Distinct()
+                    .ToList();
+
+                // Lấy danh sách khách hàng không nằm trong danh sách ID_Khach_Hang trên
+                var result = _context.Khach_Hang
+                    .Where(kh => !khachHangWithVouchers.Contains(kh.ID_Khach_Hang))
+                    .Select(kh => new
+                    {
+                        kh.ID_Khach_Hang,
+                        kh.Ho_Ten,
+                        kh.Email
+                    })
+                    .ToList();
+
+                return Ok(result);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { message = "Đã xảy ra lỗi: " + ex.Message });
+            }
+        }
+
+
+
+
+
+
+
+
+
+
 
     }
 }

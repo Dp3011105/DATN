@@ -162,7 +162,7 @@
                                     <!-- Tìm kiếm và điều khiển -->
                                     <div class="mb-2 d-flex gap-2">
                                         <input type="text" id="searchCustomer" class="form-control"
-                                               placeholder="🔍 Tìm kiếm theo tên hoặc email..." />
+                                               placeholder="🔍 Tìm kiếm theo email..." />
                                         <button type="button" class="btn btn-sm btn-outline-primary" onclick="toggleAllCustomers()">
                                             <i class="fas fa-check-double"></i>
                                         </button>
@@ -319,13 +319,9 @@
 
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 <script>
-    // Variables to track assigned vouchers
-    var customerVoucherAssignments = {};
-
     $(document).ready(function() {
         resetSubmitButton();
         updateSelectionCounters();
-        loadCustomerVoucherAssignments();
     });
 
     // Reset submit button
@@ -365,99 +361,91 @@
         });
     }
 
-    // Filter customers based on selected vouchers
-    function filterCustomersBySelectedVouchers() {
-        var selectedVoucherIds = [];
-        $('.voucher-checkbox:checked').each(function() {
-            selectedVoucherIds.push($(this).val());
-        });
+    // Fetch unassigned customers from API
+    function fetchUnassignedCustomers() {
+        var selectedVoucherIds = $('.voucher-checkbox:checked').map(function() {
+            return parseInt($(this).val());
+        }).get();
 
-        var hiddenCount = 0;
-        var totalCount = $('.customer-item').length;
-
-        $('.customer-item').each(function() {
-            var customerId = $(this).data('customer-id');
-            var shouldHide = false;
-
-            if (selectedVoucherIds.length > 0) {
-                selectedVoucherIds.forEach(function(voucherId) {
-                    if (customerVoucherAssignments[customerId] &&
-                        customerVoucherAssignments[customerId].includes(voucherId)) {
-                        shouldHide = true;
-                    }
-                });
-            }
-
-            if (shouldHide) {
-                $(this).hide();
-                $(this).find('.customer-checkbox').prop('checked', false);
-                hiddenCount++;
-            } else {
-                var searchTerm = $('#searchCustomer').val().toLowerCase().trim();
-                if (searchTerm === '' || $(this).text().toLowerCase().includes(searchTerm)) {
-                    $(this).show();
-                }
-            }
-        });
-
-        if (hiddenCount > 0 && selectedVoucherIds.length > 0) {
-            $('#filteredCustomerInfo').text(`(Đã ẩn ${hiddenCount}/${totalCount} KH đã có voucher)`);
-        } else {
+        if (selectedVoucherIds.length === 0) {
+            $('.customer-item').show();
             $('#filteredCustomerInfo').text('');
+            applyCustomerSearch();
+            updateSelectionCounters();
+            return;
         }
 
-        updateSelectionCounters();
+        $.ajax({
+            url: 'https://localhost:7169/api/GanVoucher/filter-khachhang',
+            method: 'POST',
+            contentType: 'application/json',
+            data: JSON.stringify(selectedVoucherIds),
+            success: function(response) {
+                var unassignedIds = response.map(function(c) {
+                    return c.iD_Khach_Hang.toString();
+                });
+
+                var hiddenCount = 0;
+                var totalCount = $('.customer-item').length;
+
+                $('.customer-item').each(function() {
+                    var customerId = $(this).data('customer-id').toString();
+                    if (unassignedIds.includes(customerId)) {
+                        $(this).show();
+                    } else {
+                        $(this).hide();
+                        $(this).find('.customer-checkbox').prop('checked', false);
+                        hiddenCount++;
+                    }
+                });
+
+                if (hiddenCount > 0) {
+                    $('#filteredCustomerInfo').text(`(Đã ẩn ${hiddenCount}/${totalCount} KH đã có voucher)`);
+                } else {
+                    $('#filteredCustomerInfo').text('');
+                }
+
+                applyCustomerSearch();
+                updateSelectionCounters();
+            },
+            error: function() {
+                showToast('❌ Lỗi khi tải danh sách khách hàng chưa có voucher!', 'error');
+                $('.customer-item').show();
+                $('#filteredCustomerInfo').text('');
+                applyCustomerSearch();
+                updateSelectionCounters();
+            }
+        });
+    }
+
+    // Apply customer search on visible items
+    function applyCustomerSearch() {
+        var searchTerm = $('#searchCustomer').val().toLowerCase().trim();
+
+        $('.customer-item').each(function() {
+            if ($(this).is(':hidden')) return;
+
+            var itemText = $(this).text().toLowerCase();
+            var isMatch = searchTerm === '' || itemText.includes(searchTerm);
+
+            if (isMatch) {
+                $(this).show();
+            } else {
+                $(this).hide();
+                $(this).find('.customer-checkbox').prop('checked', false);
+            }
+        });
     }
 
     // Event listeners
     $(document).on('change', '.customer-checkbox', updateSelectionCounters);
     $(document).on('change', '.voucher-checkbox', function() {
         updateSelectionCounters();
-        filterCustomersBySelectedVouchers();
+        fetchUnassignedCustomers();
     });
 
     // Search customers
-    $('#searchCustomer').on('input', function() {
-        var searchTerm = $(this).val().toLowerCase().trim();
-
-        $('.customer-item').each(function() {
-            var $item = $(this);
-            var customerId = $item.data('customer-id');
-
-            var hiddenByVoucherFilter = false;
-            var selectedVoucherIds = [];
-            $('.voucher-checkbox:checked').each(function() {
-                selectedVoucherIds.push($(this).val());
-            });
-
-            if (selectedVoucherIds.length > 0) {
-                selectedVoucherIds.forEach(function(voucherId) {
-                    if (customerVoucherAssignments[customerId] &&
-                        customerVoucherAssignments[customerId].includes(voucherId)) {
-                        hiddenByVoucherFilter = true;
-                    }
-                });
-            }
-
-            if (hiddenByVoucherFilter) {
-                $item.hide();
-                $item.find('.customer-checkbox').prop('checked', false);
-                return;
-            }
-
-            var itemText = $item.text().toLowerCase();
-            var isMatch = searchTerm === '' || itemText.includes(searchTerm);
-
-            if (isMatch) {
-                $item.show();
-            } else {
-                $item.hide();
-                $item.find('.customer-checkbox').prop('checked', false);
-            }
-        });
-
-        updateSelectionCounters();
-    });
+    $('#searchCustomer').on('input', applyCustomerSearch);
 
     // Search vouchers
     $('#searchVoucher').on('input', function() {
@@ -477,7 +465,7 @@
         });
 
         updateSelectionCounters();
-        filterCustomersBySelectedVouchers();
+        fetchUnassignedCustomers();
     });
 
     // Toggle functions
@@ -498,13 +486,13 @@
         var allChecked = visibleVouchers.length === visibleVouchers.filter(':checked').length;
         visibleVouchers.prop('checked', !allChecked);
         updateSelectionCounters();
-        filterCustomersBySelectedVouchers();
+        fetchUnassignedCustomers();
     }
 
     function clearAllVouchers() {
         $('.voucher-checkbox').prop('checked', false);
         updateSelectionCounters();
-        filterCustomersBySelectedVouchers();
+        fetchUnassignedCustomers();
     }
 
     // VIP customer selection
@@ -661,31 +649,6 @@
         return true;
     });
 
-    // Load customer-voucher assignments
-    function loadCustomerVoucherAssignments() {
-        var customerIds = [];
-        $('.customer-item').each(function() {
-            customerIds.push($(this).data('customer-id'));
-        });
-
-        var loadPromises = customerIds.map(function(customerId) {
-            return $.ajax({
-                url: `/api/GanVoucher/vouchers-by-customer/${customerId}`,
-                method: 'GET',
-                dataType: 'json'
-            }).done(function(vouchers) {
-                var voucherIds = vouchers.map(function(v) { return v.ID_Voucher.toString(); });
-                customerVoucherAssignments[customerId] = voucherIds;
-            }).fail(function() {
-                customerVoucherAssignments[customerId] = [];
-            });
-        });
-
-        Promise.all(loadPromises).finally(function() {
-            filterCustomersBySelectedVouchers();
-        });
-    }
-
     // Toast notification
     function showToast(message, type = 'success') {
         $('.custom-toast').remove();
@@ -714,11 +677,11 @@
     // Reset button if server error
     @if (TempData["Error"] != null || TempData["Warning"] != null)
     {
-            <text>
-            setTimeout(function() {
-                resetSubmitButton();
-            }, 100);
-            </text>
+                <text>
+                setTimeout(function() {
+                    resetSubmitButton();
+                }, 100);
+                </text>
     }
 
     setTimeout(function() {
@@ -855,33 +818,30 @@
     }
 
     @@media (max-width: 768px) {
-        .col-md-6
+        .col-md-6 {
+            width: 100%;
+            margin-bottom: 10px;
+        }
 
-    {
-        width: 100%;
-        margin-bottom: 10px;
-    }
+        .customer-list, .voucher-list {
+            max-height: 200px !important;
+        }
 
-    .customer-list, .voucher-list {
-        max-height: 200px !important;
-    }
+        .custom-toast {
+            position: fixed !important;
+            top: 10px !important;
+            left: 10px !important;
+            right: 10px !important;
+            min-width: auto !important;
+        }
 
-    .custom-toast {
-        position: fixed !important;
-        top: 10px !important;
-        left: 10px !important;
-        right: 10px !important;
-        min-width: auto !important;
-    }
+        .d-flex.gap-2 {
+            flex-direction: column;
+            gap: 0.5rem !important;
+        }
 
-    .d-flex.gap-2 {
-        flex-direction: column;
-        gap: 0.5rem !important;
-    }
-
-    .flex-fill {
-        width: 100% !important;
-    }
-
+        .flex-fill {
+            width: 100% !important;
+        }
     }
 </style>
