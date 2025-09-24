@@ -142,6 +142,57 @@ namespace FE.Controllers
 
 
 
+        //[HttpPost]
+        //public async Task<IActionResult> Login(LoginModel model)
+        //{
+        //    if (ModelState.IsValid)
+        //    {
+        //        try
+        //        {
+        //            var response = await _authService.LoginAsync(model);
+        //            if (response.VaiTros != null)
+        //            {
+        //                // Lưu dữ liệu vào cookie
+        //                var userDataJson = JsonSerializer.Serialize(response);
+        //                Response.Cookies.Append("UserData", userDataJson, new CookieOptions
+        //                {
+        //                    HttpOnly = false,
+        //                    Secure = true, // Sử dụng true nếu dùng HTTPS
+        //                    Expires = DateTimeOffset.UtcNow.AddHours(24) // Thời gian hết hạn, ví dụ 24 giờ
+        //                });
+
+        //                // Kiểm tra vai trò và chuyển hướng
+        //                if (response.VaiTros.Contains(2) ) // Admin 
+        //                {
+        //                    return RedirectToAction("Index", "ThongKe");
+        //                }
+        //                else if (response.VaiTros.Contains(1)) // Khách Hàng
+        //                {
+        //                    return RedirectToAction("Index", "HomeKhachHang");
+        //                }
+        //                else if (response.VaiTros.Contains(3)) // nhan vien
+        //                {
+        //                    return RedirectToAction("Index", "QuanLyDonHang");
+        //                }
+        //                else
+        //                {
+        //                    ModelState.AddModelError("", "Bạn không có vai trò hợp lệ để truy cập.");
+        //                }
+        //            }
+        //            else
+        //            {
+        //                ModelState.AddModelError("", "Bạn không có quyền truy cập.");
+        //            }
+        //        }
+        //        catch (Exception ex)
+        //        {
+        //            ModelState.AddModelError("", ex.Message);
+        //        }
+        //    }
+        //    return View(model);
+        //}
+
+
         [HttpPost]
         public async Task<IActionResult> Login(LoginModel model)
         {
@@ -157,12 +208,12 @@ namespace FE.Controllers
                         Response.Cookies.Append("UserData", userDataJson, new CookieOptions
                         {
                             HttpOnly = false,
-                            Secure = true, // Sử dụng true nếu dùng HTTPS
-                            Expires = DateTimeOffset.UtcNow.AddHours(24) // Thời gian hết hạn, ví dụ 24 giờ
+                            Secure = true,
+                            Expires = DateTimeOffset.UtcNow.AddHours(24)
                         });
 
                         // Kiểm tra vai trò và chuyển hướng
-                        if (response.VaiTros.Contains(2) ) // Admin 
+                        if (response.VaiTros.Contains(2)) // Admin 
                         {
                             return RedirectToAction("Index", "ThongKe");
                         }
@@ -170,7 +221,7 @@ namespace FE.Controllers
                         {
                             return RedirectToAction("Index", "HomeKhachHang");
                         }
-                        else if (response.VaiTros.Contains(3)) // nhan vien
+                        else if (response.VaiTros.Contains(3)) // Nhân viên
                         {
                             return RedirectToAction("Index", "QuanLyDonHang");
                         }
@@ -191,6 +242,7 @@ namespace FE.Controllers
             }
             return View(model);
         }
+
 
         [HttpGet]
         public IActionResult Logout()

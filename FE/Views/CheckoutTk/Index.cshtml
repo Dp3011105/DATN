@@ -2512,7 +2512,7 @@
                     <input type="hidden" id="customerId" value="@(ViewData["CustomerId"] ?? "0")" />
 
                     <h4 class="text-lg font-semibold text-gray-800 mb-3">Chọn Địa Chỉ</h4>
-                    <p class="text-red-500 text-sm mb-2">Xin lỗi, hiện cửa hàng chỉ có chi nhánh tại Hà Nội.</p>
+                    <p class="text-error text-small margin-bottom">Chúng tôi chỉ hỗ trợ chi nhánh tại Hà Nội.</p>
                     <div id="addresses" class="mb-6">
                         @if (Model.Addresses != null && Model.Addresses.Any())
                         {
@@ -2610,7 +2610,7 @@
     <div id="addAddressModal" class="modal">
         <div class="modal-content">
             <h3 class="text-lg font-bold text-gray-800 mb-4">Thêm Địa Chỉ Mới</h3>
-            <p class="text-red-500 text-sm mb-2">Xin lỗi, hiện cửa hàng chỉ có chi nhánh tại Hà Nội.</p>
+            <p class="text-error text-small margin-bottom">Chúng tôi chỉ hỗ trợ chi nhánh tại Hà Nội.</p>
             <form asp-action="AddAddress" method="post" onsubmit="handleAddAddressSubmit(event)">
                 @Html.AntiForgeryToken()
                 <div class="form-group">
@@ -2650,7 +2650,7 @@
     <div id="editAddressModal" class="modal">
         <div class="modal-content">
             <h3 class="text-lg font-bold text-gray-800 mb-4">Sửa Địa Chỉ</h3>
-            <p class="text-red-500 text-sm mb-2">Xin lỗi, hiện cửa hàng chỉ có chi nhánh tại Hà Nội.</p>
+            <p class="text-error text-small margin-bottom">Chúng tôi chỉ hỗ trợ chi nhánh tại Hà Nội.</p>
             <form asp-action="UpdateAddress" method="post" onsubmit="handleEditAddressSubmit(event)">
                 @Html.AntiForgeryToken()
                 <input type="hidden" id="edit_ID_Dia_Chi" name="ID_Dia_Chi" />
